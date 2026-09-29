@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.4.0
+ * 숨 결투장 — 엔진 핵심 v1.5.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
@@ -9,7 +9,7 @@
   else root.ArenaCore = factory(root.ArenaData.spells);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
 'use strict';
-const VERSION = '1.4.0';
+const VERSION = '1.5.0';
 const DT = 1 / 30;
 
 /* ---------------- 결정론 수학 ----------------
@@ -120,10 +120,12 @@ function addMage(W, spec, side, x, y) {
     id: W.ms.length, name: spec.name || 'm' + W.ms.length, side, x, y, vx: 0, vy: 0, r: BODY.radius,
     hpMax: (spec.hp || BODY.hp) * (W.rules.hpScale ? pow(spec.C ?? 1, W.rules.powerK) : 1), hp: (spec.hp || BODY.hp) * (W.rules.hpScale ? pow(spec.C ?? 1, W.rules.powerK) : 1), glu: spec.glu || BODY.glu, gluMax: spec.glu || BODY.glu, stam: BODY.stam,
     C: spec.C ?? 1, circles: spec.circles ?? 1, noise: spec.noise ?? 0.05, react: spec.react ?? 0.2, dec: spec.dec ?? 0.15,
-    brain: spec.brain || null, autoDodge: !!spec.autoDodge, type: spec.type || '메타', wave: 0, waveT: 0, crash: 0, gear: Object.assign({}, spec.gear), book, mast: spec.mast || {}, hitEst: Object.assign({}, spec.hitEst),
-    tac: Object.assign({ prefR: 7, aggr: 1, trapBias: 0.1, zoneBias: 0.05, dodge: 0.6, focusLow: false, crowd: true, stance: true, rest: 75 }, spec.tac),
+    brain: spec.brain || null, skill: spec.skill || null, autoDodge: !!spec.autoDodge, type: spec.type || '메타', wave: 0, waveT: 0, crash: 0, gear: Object.assign({}, spec.gear), book, mast: spec.mast || {}, hitEst: Object.assign({}, spec.hitEst),
+    tac: Object.assign({ prefR: 7, aggr: 1, trapBias: 0.1, zoneBias: 0.05, dodge: 0.6, focusLow: false, crowd: true, stance: true, rest: 75,
+      // 판단 스위치 (1.5.0, SPEC 13장). 기본값이 1.4.0까지의 두뇌. 판단 수준(skill)이 덮는다
+      readCast: true, lead: 1, combo: true, lever: true, pathTrap: true, slotB: true, terrain: false, readWave: false, cdRead: false, outrange: false, feint: false, learn: false, waveChoose: false, counter: false }, spec.tac),
     st: {}, buf: {}, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
-    mv: { x: 0, y: 0 }, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
+    mv: { x: 0, y: 0 }, mem: {}, waveWant: false, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       dec: { n: 0, cat: {}, form: {}, react: 0, def: 0, combo: 0, atk: 0, trapPath: 0, trap: 0, barrel: 0, slotB: 0, auto: 0, rest: 0 } },
   };
@@ -222,8 +224,9 @@ function release(W, m, c) {
     m.fat += s.cost * (c.B ? 1.3 : 1) * (c.auto ? 0.8 : 1) * 1.6;
     if (W.rules.wave && m.type !== '이단') {
       // 파도: 넘쳐도 굳지 않고 탄다. 너무 깊이(170) 가면 휩쓸린다
-      const enter = m.type === '서퍼' ? 90 : 100;
-      if (!m.wave && m.fat > enter) { m.wave = 1; m.log.waves++; }
+      const enter = m.type === '서퍼' ? 90 : 100, may = !m.tac.waveChoose || m.waveWant;   // 파도 고르기(전설): 끝낼 수 있을 때만 스스로 탄다
+      if (!m.wave && m.fat > enter && may) { m.wave = 1; m.log.waves++; }
+      else if (!m.wave && m.fat > 100 && !may) { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
       if (m.fat > 170) { m.log.over++; m.log.lost++; hurt(W, m, 30, null, '폭주', 'wave'); m.st.stun = Math.max(m.st.stun || 0, 2.5); m.fat = 60; m.wave = 0; m.crash = 3; m.cast = m.castB = m.chan = null; }
     } else if (m.fat > 100) {
       if (W.rules.wave) m.fat = 100;   // 이단: 파도를 못 느낀다. 폭주도 없고 머리는 100에서 멈춘다

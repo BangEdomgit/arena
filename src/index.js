@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.4.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.5.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -23,6 +23,16 @@ const DECKS = Object.assign({
   '자유': Object.keys(core.SPELLS).filter(n => !core.SPELLS[n].banned && !core.SPELLS[n].mundane),
 }, BOOKS);
 const BRAINS = { '기본': brain };
+// 판단 수준 (1.5.0, SPEC 13장). 등급(힘)과 따로 고른다. 없으면 등급의 값과 1.4.0 두뇌 그대로
+const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac });
+const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false, lever: false, pathTrap: false, slotB: false, terrain: false, readWave: false, cdRead: false, outrange: false, focusLow: false };
+const SKILLS = {
+  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false })),
+  '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
+  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true })),
+  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
+};
+SKILLS['전설'] = SK(0.05, 0.01, true, Object.assign({}, SKILLS['대가'].tac, { feint: true, learn: true, waveChoose: true, counter: true }));
 const register = makeRegistry(core, { TIERS, DECKS, BRAINS });
 
 // lib: 장면이 마법·덱을 덮을 때 넘긴다. 없으면 기본값
@@ -31,14 +41,15 @@ function mage(opt = {}, lib = {}) {
   const t = TIERS[opt.tier || '평범']; if (!t) throw new Error('없는 등급: ' + opt.tier);
   const book = opt.book || DK[opt.deck || '합법 최강']; if (!book) throw new Error('없는 덱: ' + opt.deck);
   const br = opt.brain ? BRAINS[opt.brain] : null; if (opt.brain && !br) throw new Error('없는 두뇌: ' + opt.brain);
+  const sk = opt.skill ? SKILLS[opt.skill] : null; if (opt.skill && !sk) throw new Error('없는 판단 수준: ' + opt.skill + ' (' + Object.keys(SKILLS).join(', ') + ')');
   if (opt.type && !core.TYPES.includes(opt.type)) throw new Error('없는 부류: ' + opt.type + ' (' + core.TYPES.join(', ') + ')');
   // 선호 거리: 공격 마법 사거리의 가운데값에 맞춘다 (덱과 거리가 어긋나 아무것도 못 쏘는 일을 막는다)
   const Rs = book.map(n => SP[n]).filter(x => x && ['proj', 'thread', 'area', 'lob', 'cone', 'touch'].includes(x.t)).map(x => x.t === 'cone' ? x.L : x.t === 'touch' ? 1.2 : (x.home ? 10 : x.R)).sort((a, b) => a - b);
   const prefR = Rs.length ? core.clamp(Rs[Math.floor(Rs.length / 2)] * 0.5, 2.5, 10) : 7;
   return Object.assign({
-    name: opt.name, book: book.slice(), C: t.C, circles: t.circles, noise: t.noise, dec: t.dec, autoDodge: t.autoDodge,
+    name: opt.name, book: book.slice(), C: t.C, circles: t.circles, noise: sk ? sk.noise : t.noise, dec: sk ? sk.dec : t.dec, autoDodge: sk ? sk.autoDodge : t.autoDodge, skill: opt.skill,
     gear: Object.assign({ soles: true }, opt.gear), mast: Object.fromEntries(book.map(n => [n, t.mast])),
-    hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, opt.tac), brain: br || undefined, type: opt.type || '메타',
+    hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, sk && sk.tac, opt.tac), brain: br || undefined, type: opt.type || '메타',
   }, opt.spec);
 }
 
@@ -72,7 +83,7 @@ const duel = (a, b, opt) => battle([a], [b], opt);
 // 장면의 한 사람 → 사람 규격. 비워 둔 칸은 등급의 값을 따른다
 const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp'];
 function sceneMage(mm, side, lib) {
-  const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type }, lib);
+  const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type, skill: mm.skill }, lib);
   for (const k of OVERRIDE) if (mm[k] != null && mm[k] !== '') sp[k] = k === 'autoDodge' ? !!mm[k] : +mm[k];
   return sp;
 }
@@ -98,5 +109,5 @@ function learn(spec, m, rate = 0.3) {
   return spec;
 }
 
-return Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, register, mage, place, battle, duel, sceneWorld, runScene, recording, learn });
+return Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, register, mage, place, battle, duel, sceneWorld, runScene, recording, learn });
 });

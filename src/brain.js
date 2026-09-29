@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.4.0
+ * 숨 결투장 — 기본 두뇌 v1.5.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -38,6 +38,27 @@ function estDmg(s) {
   return s.dmg || 0;
 }
 
+// 사람의 공격 마법 최대 사거리 (m)
+function maxRange(m, S) { let r = 0; for (const n of m.book) { const s = S[n]; if (!s || !OFF[s.t]) continue; r = Math.max(r, s.t === 'cone' ? s.L * C.sizeOf(m, s) : s.t === 'touch' ? 1.3 : s.home ? 12 : C.rangeOf(m, s)); } return r; }
+// 내가 (x, y)에 섰을 때 제 손끝의 장악 몫: 적 신호가 옅은 땅일수록 크다 (SPEC 5장의 f, 내 몫은 거리 0)
+function ownShare(W, m, foes, x, y) { const L = W.rules.domainL; let o = 0; for (const q of foes) o += q._sig * (q._act ? 1 : W.rules.passive) / (1 + hyp(x - q.x, y - q.y) / L); return m._sig / (m._sig + o); }
+// 마법의 피해 종류 (덱 읽기)
+function kindOf(s) { return s.kind || (s.hit && s.hit.kind) || (s.burst && s.burst.kind) || (s.tr && s.tr.kind) || (s.t === 'thread' ? 'elec' : s.z ? ({ fire: 'fire', nh3: 'tox', spore: 'tox', acid: 'tox', h2s: 'tox' })[s.z.k] : null) || null; }
+// 덱 읽기 (전설): 이 마법이 상대 책의 피해 종류에 대한 천적이고, 아직 켜져 있지 않은가
+function counters(s, ek, m, W) {
+  if (ek.fire && s.t === 'zone' && ['rain', 'mist', 'absorb'].includes(s.z.k)) return !W.zones.some(z => z.src === m && z.k === s.z.k && hyp(z.x - m.x, z.y - m.y) < 3);
+  if (s.t !== 'buff') return false;
+  if (ek.elec && s.b.elecRes && !s.react) return !m.buf.elecRes;
+  if (ek.blunt && (s.b.bluntRes || s.b.block)) return !m.buf.bluntRes && !m.buf.front;
+  if (ek.tox && s.b.toxRes) return !m.buf.toxRes;
+  return false;
+}
+// 과녁의 방어 마법(반응형 몸·벽·격추)이 모두 간격 중인가. 하나도 없으면 아니다
+function defenseDown(e, S, W) {
+  const def = e.book.filter(n => S[n] && ((S[n].t === 'buff' && S[n].react) || S[n].t === 'wall' || S[n].t === 'shoot'));
+  return def.length > 0 && def.every(n => (e.cd[n] || 0) > 0.3) && !(W.rules.circles && e.circles >= 3 && e.autoCd <= 0 && def.some(n => (e.cd[n] || 0) <= 0));
+}
+
 function think(W, m) {
   const foes = W.foes[m.side], S = W.spells;
   // 파도를 타는 동안: 더 몰아치고, 더 붙고, 덜 피하고, 쉬지 않는다
@@ -47,7 +68,19 @@ function think(W, m) {
   let e = null, bs = 1e9;
   for (const q of foes) { const d = hyp(q.x - m.x, q.y - m.y), sc = T.focusLow ? q.hp / q.hpMax * 40 + d : d; if (sc < bs) { bs = sc; e = q; } }
   // 메타는 상대의 파도를 읽는다: 상대가 파도 위면 물러서고, 꺼짐이면 몰아친다 (1.3.0)
-  if (W.rules.wave && m.type === '메타' && (e.wave || e.crash > 0)) T = Object.assign({}, T, e.wave ? { prefR: T.prefR * 1.4, aggr: T.aggr * 0.7 } : { aggr: T.aggr * 1.6 });
+  if (W.rules.wave && (m.type === '메타' || T.readWave) && (e.wave || e.crash > 0)) T = Object.assign({}, T, e.wave ? { prefR: T.prefR * 1.4, aggr: T.aggr * 0.7 } : { aggr: T.aggr * 1.6 });
+  // 판 중 학습 (전설): 과녁이 구르는 쪽과 방패를 드는 거리를 센다
+  let mem = null;
+  if (T.learn) {
+    mem = m.mem[e.id] || (m.mem[e.id] = { L: 0, R: 0, rollT: -9, sh: [], shT: -9 });
+    const dx = e.x - m.x, dy = e.y - m.y;
+    if (e.roll > 0 && W.t - mem.rollT > 0.3) { if (dx * e.vy - dy * e.vx > 0) mem.L++; else mem.R++; mem.rollT = W.t; }
+    if (e.buf.front && W.t - mem.shT > 0.6) { mem.sh.push(hyp(dx, dy)); if (mem.sh.length > 8) mem.sh.shift(); mem.shT = W.t; }
+  }
+  // 파도 고르기 (전설): 과녁을 끝낼 수 있을 때만 파도를 원한다
+  if (T.waveChoose) m.waveWant = e.hp / e.hpMax < 0.35 && m.hp / m.hpMax > 0.3;
+  // 사거리 밖 (대가): 내 사거리가 더 길면 상대 덱의 최대 사거리 바로 밖에 선다
+  if (T.outrange) { const eR = maxRange(e, S), mR = maxRange(m, S); if (mR > eR + 1) T = Object.assign({}, T, { prefR: Math.min(eR + 1, mR - 0.5) }); }
   const d = hyp(e.x - m.x, e.y - m.y) || 0.01, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
   const los = !C.blocked(W, m.x, m.y, e.x, e.y);
   const vt = (e.vx * -ux + e.vy * -uy);           // 적이 나에게 다가오는 속도 (m/s)
@@ -62,14 +95,14 @@ function think(W, m) {
     const vv = p.vx * p.vx + p.vy * p.vy, t = (rx * p.vx + ry * p.vy) / vv;
     if (t > 0 && t < 0.8 && hyp(p.x + p.vx * t - m.x, p.y + p.vy * t - m.y) < 0.55) { dodge = { x: -p.vy, y: p.vx }; aimed = true; }
   }
-  for (const q of foes) for (const c of [q.cast, q.castB]) {
+  if (T.readCast) for (const q of foes) for (const c of [q.cast, q.castB]) {   // 초보는 날아오는 투사체만 본다: 예비동작·구름·지대를 못 읽는다
     if (!c || !C.THREAT[c.s.t]) continue;
     if (W.rules.wave && q.type === '이단' && c.T - c.t > 0.12) continue;   // 이단의 예비동작은 신호가 조용해 마지막 0.12 s에만 읽힌다 (읽기·자동 진 모두)
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux }; }
   }
-  for (const a of W.areas) if ((a.src.side !== m.side && a.vis || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
-  for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
+  for (const a of W.areas) if ((a.src.side !== m.side && a.vis && T.readCast || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
+  if (T.readCast) for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
   if (dodge && m.rollCd <= 0 && m.stam > 1.5 && W.rng() < 0.4 + T.dodge * 0.4 + (m.autoDodge ? 0.3 : 0)) {
     const l = hyp(dodge.x, dodge.y) || 1; if (W.areas.some(a => a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5)) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
     m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
@@ -112,6 +145,8 @@ function think(W, m) {
     const pr = stance === 'hold' ? d : T.prefR;
     if (d > pr + 1) { vx += ux; vy += uy; } else if (d < pr - 1) { vx -= ux; vy -= uy; }
     if (W.rng() < 0.02) m.sf *= -1; const sw = stance === 'hold' ? 0.3 : 0.8; vx += -uy * m.sf * sw; vy += ux * m.sf * sw;
+    // 자리 판단 (대가): 내 장악권이 짙은 땅 쪽으로 기운다
+    if (T.terrain && W.rules.domain) { const f0 = ownShare(W, m, foes, m.x, m.y); let bx = 0, by = 0, bf = f0; for (let k = 0; k < 8; k++) { const a = k / 8 * 6.2832, px = m.x + C.cos(a) * 2, py = m.y + C.sin(a) * 2; if (px < 1 || py < 1 || px > W.width - 1 || py > W.height - 1) continue; const f = ownShare(W, m, foes, px, py); if (f > bf) { bf = f; bx = C.cos(a); by = C.sin(a); } } const k2 = Math.min(1.2, (bf - f0) * 6); vx += bx * k2; vy += by * k2; }
   }
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < t.r + 1.2) { const l = hyp(m.x - t.x, m.y - t.y) || 1; vx += (m.x - t.x) / l * 1.5; vy += (m.y - t.y) / l * 1.5; }
@@ -136,20 +171,35 @@ function think(W, m) {
     }
   }
 
+  // ---- 속임수 (전설): 큰 예비동작에 상대가 반응했으면 끊고 다른 마법으로 ----
+  if (m.cast && m.cast.feint) {
+    const c = m.cast, f = c.feint, reacted = (e.roll > 0 && !f.roll) || (e.buf.front && !f.front) || e.autoCd > f.auto || W.walls.filter(w => w.own === e.side).length > f.walls;
+    if (reacted) { m.cast = null; m.glu += c.cost * 0.7; m.cd[c.s.n] = Math.min(m.cd[c.s.n] || 0, 1); m.log.dec.feint = (m.log.dec.feint || 0) + 1; }
+    else if (c.T - c.t < 0.1) c.feint = null;   // 반응이 없으면 진짜로 쏜다
+  }
+
   // ---- 5. 칸 고르기 ----
   let slot = 'A';
-  if (m.cast || m.chan) { if (circ >= 2 && !m.castB) slot = 'B'; else return; }
+  if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else return; }   // 두 번째 칸은 대가부터 (기본은 씀)
 
   // ---- 6. 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다 ----
   // 파도가 켜져 있으면 부류마다: 서퍼는 쉬지 않고 탄다, 메타는 이기고 있을 때만 타고 너무 깊으면(140) 내려온다, 이단은 쉰다
-  let restNow = W.rules.fatigue && m.fat > T.rest && !aimed && d > 4;
+  // 방어 간격 세기 (대가): 과녁의 방어 마법이 모두 간격 중이면(자동 진도) 칠 때다. 쉬지 않고, 공격 가치 × 1.4
+  const defDown = T.cdRead && defenseDown(e, S, W);
+  let restNow = W.rules.fatigue && m.fat > T.rest && !aimed && d > 4 && !defDown;
   if (W.rules.wave && restNow) {
-    if (m.type === '서퍼') restNow = false;
+    if (T.waveChoose) restNow = !m.waveWant;   // 전설: 평소엔 메타처럼 쉬고, 끝낼 수 있으면 밀어붙인다
+    else if (m.type === '서퍼') restNow = false;
     else if (m.type === '메타') restNow = !(e.hp / e.hpMax < 0.5 || m.hp / m.hpMax > e.hp / e.hpMax + 0.1);
   }
-  if (restNow || (m.wave && m.type === '메타' && m.fat > 140 && !aimed)) { m.log.dec.rest++; return; }
+  if (restNow || (m.wave && (m.type === '메타' || (T.waveChoose && !m.waveWant)) && m.fat > 140 && !aimed)) { m.log.dec.rest++; return; }
 
   // ---- 7. 마법 고르기 ----
+  const lead = T.lead, cb = T.combo, down = cb && eDown;
+  const ek = {}; if (T.counter) for (const n of e.book) { const k = S[n] && kindOf(S[n]); if (k) ek[k] = 1; }
+  // 학습한 구르기 쪽으로 겨냥을 옮긴다 (믿음은 본 수만큼), 학습한 방패 거리 근처면 투사체·실을 덜 쓴다
+  const roll = mem && e.rollCd <= 0 ? (mem.L - mem.R) / (mem.L + mem.R + 2) * 1.2 : 0;
+  const shieldNear = mem && mem.sh.length >= 2 && Math.abs(d - mem.sh.reduce((a, b) => a + b, 0) / mem.sh.length) < 2.5 && e.book.some(n => S[n] && S[n].b && S[n].b.front && !((e.cd[n] || 0) > 0));
   const cand = [];
   for (const n of m.book) {
     const s = S[n];
@@ -159,12 +209,12 @@ function think(W, m) {
     const he = m.hitEst[n] ?? 0.35, Tw = s.cast * (1 - 0.35 * (m.mast[n] || 0)), R = C.rangeOf(m, s);
     let v = 0, tx = e.x, ty = e.y, barrel = false;
     switch (s.t) {
-      case 'proj': if (d < (s.home ? 12 : R) && (los || s.home)) { const tof = d / s.v; tx = e.x + e.vx * (Tw + tof) * 0.8; ty = e.y + e.vy * (Tw + tof) * 0.8; v = he * estDmg(s) * (eDown ? 1.6 : 1) / (Tw + 0.3); } break;
-      case 'lob': if (d < R) { tx = e.x + e.vx * s.flight * 0.7; ty = e.y + e.vy * s.flight * 0.7; v = he * s.dmg * (eDown ? 2 : 1) / (Tw + 0.3) + (los ? 0 : 0.3); } break;
-      case 'thread': if (d < R && los) { const tt = Tw + d / (32 * (s.fast || 1)); tx = e.x + e.vx * tt * 0.6; ty = e.y + e.vy * tt * 0.6; v = he * estDmg(s) * (e.st.wet > 0 ? 1.5 : 1) * (eDown ? 1.8 : 1) / (tt + 0.3); } break;
-      case 'area': if (d < R) { tx = e.x + e.vx * s.delay * 0.5; ty = e.y + e.vy * s.delay * 0.5; v = he * s.dmg * (eDown ? 2 : 1) / (Tw + s.delay * 0.3 + 0.3); } break;
+      case 'proj': if (d < (s.home ? 12 : R) && (los || s.home)) { const tof = d / s.v; tx = e.x + e.vx * (Tw + tof) * 0.8 * lead; ty = e.y + e.vy * (Tw + tof) * 0.8 * lead; v = he * estDmg(s) * (down ? 1.6 : 1) / (Tw + 0.3); } break;
+      case 'lob': if (d < R) { tx = e.x + e.vx * s.flight * 0.7 * lead; ty = e.y + e.vy * s.flight * 0.7 * lead; v = he * s.dmg * (down ? 2 : 1) / (Tw + 0.3) + (los ? 0 : 0.3); } break;
+      case 'thread': if (d < R && los) { const tt = Tw + d / (32 * (s.fast || 1)); tx = e.x + e.vx * tt * 0.6 * lead; ty = e.y + e.vy * tt * 0.6 * lead; v = he * estDmg(s) * (cb && e.st.wet > 0 ? 1.5 : 1) * (down ? 1.8 : 1) / (tt + 0.3); } break;
+      case 'area': if (d < R) { tx = e.x + e.vx * s.delay * 0.5 * lead; ty = e.y + e.vy * s.delay * 0.5 * lead; v = he * s.dmg * (down ? 2 : 1) / (Tw + s.delay * 0.3 + 0.3); } break;
       case 'touch': if (d < 1.3) v = 1.5 * s.dmg / (Tw + 0.3); break;
-      case 'cone': if (d < s.L * C.sizeOf(m, s)) v = he * s.dps * s.dur / (Tw + 0.3) * (s.wet && !(e.st.wet > 0) && m.book.some(q => S[q].t === 'thread' || S[q].t === 'touch') ? 1.5 : 1); break;
+      case 'cone': if (d < s.L * C.sizeOf(m, s)) v = he * s.dps * s.dur / (Tw + 0.3) * (cb && s.wet && !(e.st.wet > 0) && m.book.some(q => S[q].t === 'thread' || S[q].t === 'touch') ? 1.5 : 1); break;
       case 'zone': {
         const k = s.z.k;
         if ((k === 'fire' || k === 'nh3' || k === 'spore') && d < 9) { v = (vt > 1.2 ? 0.55 : 0.2) + T.zoneBias; tx = (m.x + e.x) / 2; ty = (m.y + e.y) / 2; }
@@ -194,17 +244,21 @@ function think(W, m) {
         if (s.mv === 'vault' && !los && W.obs.some(o => hyp(o.x - m.x, o.y - m.y) < 2.5)) v = Math.max(v, 0.45);
         break;
       case 'trap':
-        if (W.traps.filter(t => t.src === m).length < 3) { v = 0.15 + T.trapBias; if (vt > 1.2 && d < 10) { v += 0.35; tx = e.x + e.vx; ty = e.y + e.vy; } else { tx = m.x + ux * 2; ty = m.y + uy * 2; } }
+        if (W.traps.filter(t => t.src === m).length < 3) { v = 0.15 + T.trapBias; if (T.pathTrap && vt > 1.2 && d < 10) { v += 0.35; tx = e.x + e.vx; ty = e.y + e.vy; } else { tx = m.x + ux * 2; ty = m.y + uy * 2; } }
         break;
       case 'ring': if (W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3.5)) v = 1.2; else if (d < 2.5) v = 0.5; break;
       case 'shoot': { const n2 = W.proj.filter(p => p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < s.r).length; v = n2 ? 0.9 + n2 * 0.2 : 0; break; }
       case 'taunt': { const c = e.cast || e.castB; if (c && e.type !== '이단' && d < R && c.T - c.t > Tw + 0.05) v = he * estDmg(c.s) * (e.wave ? 1 : 0.6) / (Tw + 0.3) * (e.wave ? 1.3 : 1); break; }   // 끊을 부름의 값 × 끊길 확률
       case 'smother': { const need = m.st.burn > 0 || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3) || W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3); v = need ? 1.1 : 0; break; }
     }
+    if (roll && (s.t === 'proj' || s.t === 'thread')) { tx += -uy * roll; ty += ux * roll; }
+    if (shieldNear) { if (s.t === 'proj' || s.t === 'thread') v *= 0.7; else if (s.t === 'area' || s.t === 'lob') v *= 1.25; }
+    // 덱 읽기: 상대가 그 종류를 부르는 중이면 천적을 먼저, 아니면 한가할 때 조금 먼저
+    if (T.counter && d < 14 && counters(s, ek, m, W)) { const hot = [e.cast, e.castB].some(c => c && kindOf(c.s) && counters(s, { [kindOf(c.s)]: 1 }, m, W)); const vc = hot ? 0.9 : 0.25; if (v < vc) { v = vc; if (s.t === 'buff' || (s.z && s.z.k === 'rain')) { tx = m.x; ty = m.y; } } }
     // 돌파 중이면 길을 막은 자를 친다
     if (escape && escape.bl.length && OFF[s.t]) { const b = escape.bl[0], db = hyp(b.x - m.x, b.y - m.y); if (db < (R || 10) && (s.t !== 'thread' || !C.blocked(W, m.x, m.y, b.x, b.y))) { tx = b.x; ty = b.y; v = Math.max(v, 0.8) * 1.8; } }
     // 지렛대: 적이 화약통 옆에 섰다
-    if (W.barrels.length && (s.t === 'area' || s.t === 'thread' || (s.t === 'zone' && s.z.k === 'fire')) && (s.t === 'thread' || s.kind === 'fire' || s.kind === 'elec' || s.t === 'zone')) {
+    if (T.lever && W.barrels.length && (s.t === 'area' || s.t === 'thread' || (s.t === 'zone' && s.z.k === 'fire')) && (s.t === 'thread' || s.kind === 'fire' || s.kind === 'elec' || s.t === 'zone')) {
       for (const b of W.barrels) {
         if (b.ex) continue; const db = hyp(b.x - m.x, b.y - m.y); if (db > (R || 12) || db < 3.3) continue;
         if (s.t === 'thread' && C.blocked(W, m.x, m.y, b.x, b.y)) continue;
@@ -222,7 +276,7 @@ function think(W, m) {
     if (W.rules.fatigue && !s.react && !m.wave) v -= m.fat / 100 * 0.5;
     if (m.wave && !OFF[s.t]) v *= 0.5;   // 파도 위에선 막기보다 친다
     if (slot === 'B') v -= 0.1;
-    if (OFF[s.t]) v *= T.aggr;
+    if (OFF[s.t]) v *= T.aggr * (defDown ? 1.4 : 1);
     if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel });
   }
   if (!cand.length) return;
@@ -235,16 +289,22 @@ function think(W, m) {
     if (!best || v > best.v2) { best = c; best.v2 = v; }
   }
   if (!best || best.v2 <= 0.15) return;
+  // 속임수 시작 (전설): 상대가 자동 진이나 구르기로 반응할 수 있으면, 가끔 가장 큰 예비동작을 먼저 보인다
+  let feint = null;
+  if (T.feint && slot === 'A' && (e.autoDodge || (W.rules.circles && e.circles >= 3 && e.book.some(n => S[n] && ((S[n].t === 'buff' && S[n].react) || S[n].t === 'wall')))) && W.rng() < 0.2) {
+    const big = cand.filter(c => OFF[c.s.t]).sort((a, b) => estDmg(b.s) - estDmg(a.s) || b.Tw - a.Tw)[0];
+    if (big) { best = big; feint = { roll: e.roll > 0, front: !!e.buf.front, auto: e.autoCd, walls: W.walls.filter(w => w.own === e.side).length }; }
+  }
   const s = best.s;
   let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1);
   if (s.t === 'thread') Tc += Math.min(hyp(best.tx - m.x, best.ty - m.y), C.rangeOf(m, s)) / (32 * (s.fast || 1));
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
-  const cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B' };
+  const cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint, cost: best.cost };
   if (slot === 'B') m.castB = cast; else m.cast = cast;
   logDec(m, s, slot, { aimed, combo: eDown || (m.last && W.t - m.lastT < 1.5 && isSetup(S[m.last])), path: s.t === 'trap' && vt > 1.2 && d < 10, barrel: best.barrel });
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.4.0' };
+return { think, catOf, FORMNAME, VERSION: '1.5.0' };
 });

@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.4.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.5.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -155,5 +155,17 @@ ok('도발 (1.4.0): 꺼 두면 책에서 빠지고, 켜면 부름을 끊고, 이
   };
   const me = tryIt('메타'); assert.ok(!me.e.cast && me.e.log.taunted === 1 && me.df === 8 && me.e.st.stun >= 0.3, JSON.stringify(me.e.log));
   const he = tryIt('이단'); assert.ok(he.e.cast && he.e.log.taunted === 0);
+});
+ok('판단 수준 (1.5.0): 다섯 단계, 초보는 예비동작을 못 읽고, 전설은 배우고 속인다', () => {
+  assert.deepStrictEqual(Object.keys(A.SKILLS), ['초보', '중급', '상급', '대가', '전설']);
+  const s = A.mage({ tier: '중간', skill: '초보' }); assert.ok(s.dec === 0.3 && s.noise === 0.14 && s.tac.dodge === 0.15 && s.tac.rest === 60 && !s.tac.readCast && !s.tac.stance);
+  const auto = skill => {   // 상위(5서클)가 적의 예비동작을 읽고 자동 진을 펴는가
+    const W = A.createWorld({ seed: 1, obstacles: 0 }); const d = A.addMage(W, Object.assign(A.mage({ tier: '상위', skill }), { book: ['흘리기 막'] }), 0, 10, 15), q = A.addMage(W, { book: ['라이트닝'] }, 1, 18, 15);
+    A.stepWorld(W); q.cast = { s: W.spells['라이트닝'], tgt: d, tx: d.x, ty: d.y, t: 0.7, T: 1 }; A.brain.think(W, d); return d.log.dec.auto;
+  };
+  assert.strictEqual(auto('초보'), 0); assert.strictEqual(auto('중급'), 1);
+  let feint = 0, learned = 0; for (let k = 1; k <= 4; k++) { const r = A.duel(A.mage({ tier: '중간', skill: '전설' }), A.mage({ tier: '중간', skill: '대가' }), { seed: k }); feint += r.ms[0].log.dec.feint || 0; const mm = Object.values(r.ms[0].mem)[0]; if (mm && mm.L + mm.R > 0) learned++; }
+  assert.ok(feint > 0 && learned > 0, 'feint ' + feint + ' learned ' + learned);
+  assert.throws(() => A.mage({ skill: '신' }));
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

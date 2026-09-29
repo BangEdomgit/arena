@@ -206,6 +206,7 @@ function renderMageEd() {
     el('label', {}, '이름'), el('input', { type: 'text', value: m.name || '', placeholder: side.name + (sel.i + 1), on: { change: e => edit(() => { if (e.target.value) m.name = e.target.value; else delete m.name; }) } }),
     el('label', {}, '등급'), el('select', { on: { change: e => edit(() => { m.tier = e.target.value; }) } }, ...tierOpts(m.tier || '평범')),
     el('label', {}, '덱'), el('select', { on: { change: e => edit(() => { m.deck = e.target.value; delete m.book; }) } }, ...deckOpts(m.deck || '합법 최강')),
+    el('label', {}, '판단 수준'), el('select', { title: '비우면 등급의 값과 기본 두뇌 그대로', on: { change: e => edit(() => { if (e.target.value) m.skill = e.target.value; else delete m.skill; }) } }, el('option', { value: '', selected: !m.skill }, '없음 (등급대로)'), ...Object.keys(A.SKILLS).map(k => el('option', { value: k, selected: k === m.skill }, k))),
     el('label', {}, '부류'), el('select', { title: '파도 규칙이 켜져 있을 때만 다르다', on: { change: e => edit(() => { if (e.target.value === '메타') delete m.type; else m.type = e.target.value; }) } }, ...A.TYPES.map(k => el('option', { value: k, selected: k === (m.type || '메타') }, k + (k === '메타' ? ' (기본)' : '')))),
     ...numField('선명도 C', m, 'C', T.C), ...numField('서클', m, 'circles', T.circles), ...numField('겨냥 흔들림', m, 'noise', T.noise), ...numField('판단 간격 (s)', m, 'dec', T.dec),
     el('label', {}, '자동 구르기'), el('select', { on: { change: e => edit(() => { if (e.target.value === '') delete m.autoDodge; else m.autoDodge = e.target.value === '1'; }) } },

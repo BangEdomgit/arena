@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.4.0 — 표준 시험 묶음
+/* 숨 결투장 v1.5.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -11,19 +11,9 @@ const A = require('../src');
 const BASE = path.join(__dirname, '..', 'suite-baseline.json');
 const Z = 2.58;   // 이보다 크면 "진짜 차이" (양쪽 99%). 줄이 많아 우연히 튀는 것을 줄이려고 1.96보다 높게 잡았다
 
-// 판단 수준: 같은 등급이라도 머리를 얼마나 잘 쓰는가. 등급의 값에 곱하거나 덮는다
-const JUDGE = {
-  '둔함':     { dec: 2, noise: 2, tac: { dodge: 0.2, stance: false }, autoDodge: false },
-  '보통':     {},
-  '날카로움': { dec: 0.5, noise: 0.5, tac: { dodge: 1 }, autoDodge: true },
-};
-// 사람 한 명: '등급' 또는 { tier, deck, type, judge }
-function mk(p) {
-  const o = typeof p === 'string' ? { tier: p } : p, sp = A.mage({ tier: o.tier, deck: o.deck, type: o.type }), j = JUDGE[o.judge || '보통'];
-  if (j.dec) sp.dec *= j.dec; if (j.noise) sp.noise *= j.noise; if (j.tac) Object.assign(sp.tac, j.tac); if (j.autoDodge != null) sp.autoDodge = j.autoDodge;
-  return sp;
-}
-const who = p => typeof p === 'string' ? p : [p.tier, p.judge, p.type, p.deck].filter(Boolean).join(' ');
+// 사람 한 명: '등급' 또는 { tier, skill, deck, type }. 판단 수준(skill)은 엔진의 A.SKILLS (1.5.0)
+function mk(p) { const o = typeof p === 'string' ? { tier: p } : p; return A.mage({ tier: o.tier, skill: o.skill, deck: o.deck, type: o.type }); }
+const who = p => typeof p === 'string' ? p : [p.tier, p.skill, p.type, p.deck].filter(Boolean).join(' ');
 
 // 1대1 N판, 씨앗 1..N, 판마다 자리를 번갈아 (node cli.js duel과 같은 방식)
 function duels(a, b, N, rules) {
@@ -44,8 +34,9 @@ function table() {
   // 등급
   for (const t of ['평범', '중간', '상위']) duel('등급', t, t, 100);
   duel('등급', '중간', '평범', 100); duel('등급', '상위', '중간', 100); duel('등급', '대마법사', '상위', 100);
-  // 판단 수준
-  for (const t of ['평범', '중간']) { duel('판단', { tier: t, judge: '날카로움' }, { tier: t }, 100); duel('판단', { tier: t }, { tier: t, judge: '둔함' }, 100); duel('판단', { tier: t, judge: '날카로움' }, { tier: t, judge: '둔함' }, 100); }
+  // 판단 수준: 같은 등급에서 이웃 단계끼리
+  const SK = ['초보', '중급', '상급', '대가', '전설'];
+  for (const t of ['평범', '중간']) for (let i = 0; i < 4; i++) duel('판단', { tier: t, skill: SK[i + 1] }, { tier: t, skill: SK[i] }, 100);
   // 부류 (파도 켬)
   for (const t of ['평범', '중간']) for (const [a, b] of [['서퍼', '메타'], ['서퍼', '이단'], ['메타', '이단']]) duel('부류', { tier: t, type: a }, { tier: t, type: b }, 100, { wave: true });
   // 덱
@@ -60,10 +51,10 @@ function table() {
   for (const t of ['평범', '중간']) duel('도발', { tier: t, deck: '도발 합법 최강' }, { tier: t }, 100, { taunt: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, { tier: '중간', deck: '도발 합법 최강', type: '이단' }, 100, { taunt: true, wave: true });
-  // 힘 대 판단: 한 등급 위의 둔한 사람 대 한 등급 아래의 날카로운 사람
-  duel('힘 대 판단', { tier: '중간', judge: '둔함' }, { tier: '평범', judge: '날카로움' }, 100);
-  duel('힘 대 판단', { tier: '상위', judge: '둔함' }, { tier: '중간', judge: '날카로움' }, 100);
-  duel('힘 대 판단', { tier: '대마법사', judge: '둔함' }, { tier: '상위', judge: '날카로움' }, 100);
+  // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
+  duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
+  duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
+  duel('힘 대 판단', { tier: '대마법사', skill: '초보' }, { tier: '상위', skill: '전설' }, 100);
   return T;
 }
 const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
@@ -128,4 +119,4 @@ function main(args) {
   console.log(`\n바뀐 줄 ${ch.length} (진짜 차이 ${real}, 운일 수 있음 ${ch.length - real})${added ? ', 새 줄 ' + added : ''}${gone.length ? ', 사라진 줄 ' + gone.length : ''}`);
 }
 
-module.exports = { JUDGE, GROUPS, table, run, summarize, compare, zScore, zTime, verdict, format, main, Z };
+module.exports = { GROUPS, table, run, summarize, compare, zScore, zTime, verdict, format, main, Z };
