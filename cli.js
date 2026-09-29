@@ -8,6 +8,7 @@
  *   node cli.js replay 상위 상위 out.json   한 판 녹화
  *   node cli.js scene sandbox/scenes/duel.json   장면 한 판 (샌드박스와 같은 결과)
  *   node cli.js pack                샌드박스가 읽을 sandbox/data.js 다시 싸기
+ *   node cli.js suite [묶음] [--save]   표준 시험 묶음: 기준(suite-baseline.json)과 비교, --save면 기준 저장
  */
 const A = require('./src');
 const [cmd, ...args] = process.argv.slice(2);
@@ -50,3 +51,4 @@ if (cmd === 'scene') {
   console.log(JSON.stringify({ 장면: sc.name || file, 씨앗: sc.seed, 승자: r.winner === -1 ? '무승부' : (sc.sides[r.winner].name || r.winner), 시간판정: r.byTime, 시간: r.t, 남은: r.ms.filter(m => m.hp > 0).map(m => m.name + ':' + Math.round(m.hp)) }));
 }
 if (cmd === 'pack') console.log('쌈', require('./sandbox/pack').write());
+if (cmd === 'suite') require('./test/suite').main(args);

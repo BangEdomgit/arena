@@ -19,6 +19,8 @@ node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # JSON(spells·books·scenes)을 고쳤으면 sandbox/data.js 다시 싸기
+node cli.js suite [묶음]           # 표준 시험 묶음(약 17 s): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
+node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
 ```
 
 `replay.json` 같은 녹화 파일은 커밋하지 않는다.
@@ -35,6 +37,7 @@ node cli.js pack                  # JSON(spells·books·scenes)을 고쳤으면 
 | `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule` |
 | `cli.js` | 명령줄 |
 | `test/test.js` | 규격 시험. `ok('설명', () => { ... assert ... })` 모양으로 더한다 |
+| `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 그 기준(SPEC 21장). 대진 줄의 id는 기준의 열쇠라 함부로 바꾸지 않는다 |
 | `viewer.html` | 녹화 보기. 혼자 도는 HTML 한 장(보기용 녹화 하나가 박혀 있다) |
 | `sandbox/index.html`, `sandbox/sandbox.js` | 샌드박스 화면. `../src/*.js`를 그대로 읽는다(SPEC 19장) |
 | `sandbox/scenes/*.json` | 예시 장면 |

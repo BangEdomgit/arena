@@ -14,6 +14,7 @@ node cli.js ring 대마법사 병사 40 머스킷 5
 node cli.js league 평범 6                  # 원소 기본책 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json  # 장면 한 판 (샌드박스와 같은 결과)
+node cli.js suite                          # 표준 시험 묶음: 기준과 비교해 바뀐 줄만 (--save로 기준 저장)
 ```
 
 ## 샌드박스 v0.1
@@ -34,6 +35,7 @@ node cli.js scene sandbox/scenes/duel.json  # 장면 한 판 (샌드박스와 �
 | `src/registry.js` | 등록: 마법·덱·등급·두뇌·규칙 |
 | `cli.js` | 명령줄 |
 | `test/test.js` | 규격 시험 |
+| `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 기준 |
 | `viewer.html` | 녹화 보기 |
 | `sandbox/` | 샌드박스 화면, 예시 장면, `data.js`(JSON을 싼 것) |
 
