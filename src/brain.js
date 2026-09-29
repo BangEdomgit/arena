@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.0.0
+ * 숨 결투장 — 기본 두뇌 v1.0.1
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다.
  * ========================================================================= */
@@ -8,6 +8,7 @@ const C = require('./core');
 const { hyp, clamp } = C;
 
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
+const SELF_GAP = 1.5;   // 지연 폭발 반지름 밖으로 둘 여유 (m): 몸 0.3 + 겨냥 흔들림과 지연 동안의 걸음
 function catOf(s) {
   if (s.t === 'trap' || s.role === '함정') return '함정';
   if (s.t === 'move' || (s.t === 'buff' && s.b.speed)) return '이동';
@@ -58,10 +59,11 @@ function think(W, m) {
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux }; }
   }
-  for (const a of W.areas) if (a.src.side !== m.side && a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
+  for (const a of W.areas) if ((a.src.side !== m.side && a.vis || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
   for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
   if (dodge && m.rollCd <= 0 && m.stam > 1.5 && W.rng() < 0.4 + T.dodge * 0.4 + (m.autoDodge ? 0.3 : 0)) {
-    const l = hyp(dodge.x, dodge.y) || 1; m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
+    const l = hyp(dodge.x, dodge.y) || 1; if (W.areas.some(a => a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5)) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
+    m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
   }
 
   // ---- 2. 입장: 둘러싸였을 때 버틸 것인가, 뚫을 것인가 ----
@@ -105,6 +107,8 @@ function think(W, m) {
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < t.r + 1.2) { const l = hyp(m.x - t.x, m.y - t.y) || 1; vx += (m.x - t.x) / l * 1.5; vy += (m.y - t.y) / l * 1.5; }
   for (const b of W.barrels) if (!b.ex && hyp(b.x - m.x, b.y - m.y) < 3.2) { const l = hyp(m.x - b.x, m.y - b.y) || 1; vx += (m.x - b.x) / l * 1.2; vy += (m.y - b.y) / l * 1.2; }
+  // 내가 떨어뜨린 지연 폭발 안으로 걸어 들어가지 않는다. 돌파 중에도 (v1.0.1)
+  for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
   m.mv.x = vx; m.mv.y = vy;
   if (m.st.stun > 0) return;
 
@@ -197,6 +201,8 @@ function think(W, m) {
       const rr = s.t === 'cone' ? 2 : (s.r || (s.z && (s.z.r || (s.z.len || 0) / 2)) || 1.5) * C.sizeOf(m, s);
       let cnt = 0; for (const q of foes) if (hyp(q.x - tx, q.y - ty) < rr + 0.4) cnt++; if (cnt > 1) v *= 1 + 0.6 * (cnt - 1);
     }
+    // 지연 폭발은 쏜 사람도 맞힌다: 떨어질 자리가 내 둘레면 쓰지 않는다 (v1.0.1)
+    if (s.t === 'area' && hyp(tx - m.x, ty - m.y) < s.r * C.sizeOf(m, s) + SELF_GAP) continue;
     if (W.rules.fatigue && !s.react) v -= m.fat / 100 * 0.5;
     if (slot === 'B') v -= 0.1;
     if (OFF[s.t]) v *= T.aggr;
@@ -223,4 +229,4 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-module.exports = { think, catOf, FORMNAME, VERSION: '1.0.0' };
+module.exports = { think, catOf, FORMNAME, VERSION: '1.0.1' };

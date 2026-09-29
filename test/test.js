@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.0.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.0.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -40,5 +40,9 @@ ok('약한 무리에 둘러싸이면 버티고, 총에 둘러싸이면 뚫는다
 ok('대마법사는 평범한 마법사 30명을 버틴다', () => {
   const r = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 30 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 5, layout: 'ring', maxT: 60 });
   assert.ok(r.ms[0].hp > 0, '쓰러짐');
+});
+ok('대마법사는 자기 낙뢰에 맞지 않는다 (1.0.1)', () => {
+  const r = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 50 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 2, layout: 'ring', maxT: 90 });
+  assert.ok(r.ms[0].hp > 0 && !r.ms[0].log.taken.elec, JSON.stringify(r.ms[0].log.taken));
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

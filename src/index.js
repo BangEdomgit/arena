@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.0.0 — 바깥으로 내보내는 API */
+/* 숨 결투장 v1.0.1 — 바깥으로 내보내는 API */
 const core = require('./core');
 const brain = require('./brain');
 const BOOKS = require('./books.json');
