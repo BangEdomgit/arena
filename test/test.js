@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.9.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.10.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -196,5 +196,16 @@ ok('하이 리스크·소금 원 (1.9.0): 꺼 두면 큰 마법이 빠지고, �
   A.release(W2, a, { s: W2.spells['대낙뢰'], tgt: b, tx: b.x, ty: b.y }); assert.ok(a.emptyT > W2.t + 0.8 && a.log.bigCast === 1);
   const W3 = A.createWorld({ seed: 1, obstacles: 0, rules: { saltRing: true } }); W3.t = 80; const q = A.addMage(W3, A.mage({}), 0, 2, 2); A.addMage(W3, A.mage({}), 1, 20, 15);
   assert.strictEqual(A.gAt(W3, q, W3.spells['짧은 실'], 3, 3), 0); const h0 = q.hp; A.stepWorld(W3); assert.ok(q.hp < h0, '소금 밖인데 마르지 않았다');
+});
+ok('위험 규칙 판단 (1.10.0): 구를 쪽 읽기, 빈손은 첫 칸만, 큰 수의 예고 < 묶는 시간', () => {
+  const W = A.createWorld({ seed: 1, obstacles: [{ x: 20, y: 17, r: 1 }], rules: { risk: true } }); const e = A.addMage(W, A.mage({}), 1, 20, 15);
+  assert.strictEqual(A.brain.rollSide(W, e, 1, 0, null), -1, '왼쪽(y+)이 막혔으면 오른쪽');   // 내가 x−에서 x+로 볼 때 왼쪽은 y+
+  assert.strictEqual(A.brain.rollSide(A.createWorld({ seed: 1, obstacles: [] }), e, 1, 0, { L: 3, R: 1 }), 1, '버릇');
+  const empty = skill => { const W2 = A.createWorld({ seed: 1, obstacles: 0, rules: { risk: true } }); const m = A.addMage(W2, A.mage({ tier: '중간', skill }), 0, 10, 15), q = A.addMage(W2, A.mage({ tier: '중간' }), 1, 16, 15);
+    A.stepWorld(W2); m.emptyT = W2.t + 0.9; m.cast = m.castB = null; m.thinkT = 1; A.brain.think(W2, m); return m; };
+  const a = empty('상급'); assert.ok(!a.cast && !a.castB, '상급은 빈손에 아무것도 못 한다');
+  const b = empty('대가'); assert.ok(!b.cast, '대가도 빈손에 첫 칸은 못 쓴다');
+  for (const n of ['대낙뢰', '화산 기둥', '번개 창']) assert.ok(A.SPELLS[n].cast <= 0.6, n);
+  assert.ok(A.SPELLS['대낙뢰'].cast + A.SPELLS['대낙뢰'].delay <= 1.1 && A.SPELLS['화산 기둥'].cast + A.SPELLS['화산 기둥'].delay <= 1.0);
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

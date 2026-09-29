@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.9.0
+ * 숨 결투장 — 엔진 핵심 v1.10.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
@@ -9,7 +9,7 @@
   else root.ArenaCore = factory(root.ArenaData.spells);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
 'use strict';
-const VERSION = '1.9.0';
+const VERSION = '1.10.0';
 const DT = 1 / 30;
 
 /* ---------------- 결정론 수학 ----------------
@@ -132,12 +132,12 @@ function addMage(W, spec, side, x, y) {
       shieldAny: false, shieldSave: false, cancel: false, cover: false, tempo: false, coverW: 1.5,
       // (1.7.0 대가·전설) 몰이, 엄폐 걷어내기, 유도, 동시 착탄, 기회 캔슬 / 방어 미끼, 약한 척 물러서기, 세 마법 겹치기
       herd: false, strip: false, lure: false, simul: false, cancel2: false, bait: false, fakeRetreat: false, triple: false,
-      bigPlan: false }, spec.tac),   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+      bigPlan: false, dodgeAim: false, grab: false }, spec.tac),   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
     st: {}, buf: {}, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
-      starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, backfire: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
+      starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
       dec: { n: 0, cat: {}, form: {}, react: 0, def: 0, combo: 0, atk: 0, trapPath: 0, trap: 0, barrel: 0, slotB: 0, auto: 0, rest: 0 } },
   };
   // 구르는 쪽 버릇 (1.6.0): 좋아하는 쪽(왼 +1·오른 −1)과 그쪽으로 구를 확률을 사람 만들 때 한 번 정한다

@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.9.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.10.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -33,8 +33,8 @@ const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false
 const SKILLS = {
   '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6], shieldAny: true })),
   '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
-  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true })),
-  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, bigPlan: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
+  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, dodgeAim: true })),
+  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, bigPlan: true, dodgeAim: true, grab: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
 };
 // 실제로 쓰는 서클 = 그릇(등급) × 솜씨(판단 수준) (1.7.0)
 const CIRCLES = { '초보': c => Math.max(1, Math.floor(c / 2)), '중급': c => Math.max(1, c - 1), '상급': c => c, '대가': c => c, '전설': c => c + 1 };

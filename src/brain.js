@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.9.0
+ * 숨 결투장 — 기본 두뇌 v1.10.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -40,6 +40,14 @@ function estDmg(s) {
 
 // 큰 수와 짝 (1.9.0): 짝 묶기를 쓰면 그 틈에 큰 수를 꽂는다. bind = 굳힘 시간 안에 닿게, wet = 젖은 동안, ice = 내 빙판 위에 있을 때, herd = 불벽으로 몬 쪽에
 const PAIRS = { '번개 그물': { fin: '번개 창', kind: 'bind' }, '물 대포': { fin: '대낙뢰', kind: 'wet' }, '빙판': { fin: '대낙뢰', kind: 'ice' }, '불벽': { fin: '화산 기둥', kind: 'herd' } };
+// 과녁이 구를 쪽 (내 쪽에서 본 왼쪽 +1, 오른쪽 −1): 한쪽이 바위·벽·가장자리로 막혔으면 다른 쪽, 아니면 본 버릇, 모르면 오른쪽(구르기 기본 방향: 날아오는 쪽의 반시계)
+function rollSide(W, e, ux, uy, mem) {
+  const blockedAt = (sx) => { const px = e.x - uy * sx * 2, py = e.y + ux * sx * 2; return px < 1 || py < 1 || px > W.width - 1 || py > W.height - 1 || W.obs.some(o => hyp(o.x - px, o.y - py) < o.r + 0.4) || W.walls.some(o => hyp(o.x - px, o.y - py) < o.r + 0.4); };
+  const bl = blockedAt(1), br = blockedAt(-1); if (bl && !br) return -1; if (br && !bl) return 1;
+  if (mem && mem.L !== mem.R) return mem.L > mem.R ? 1 : -1; return -1;
+}
+// 붙잡는 마법인가: 굳히기·묶기, 또는 느리게 하기(냉기·빙판)
+function holdsOf(s, e) { return OFF[s.t] || s.t === 'zone' ? (bindOf(s, e) > 0 || !!s.chill || !!(s.hit && s.hit.chill) || !!(s.z && (s.z.k === 'ice' || s.z.k === 'chill'))) : false; }
 // 실제 시전 시간 (s): 숙련을 뺀 예비동작 × 기침·머리 피로·파도·꺼짐
 function castTime(W, m, Tw) { return Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1); }
 // 이 마법이 과녁을 묶거나 굳히는 시간 (s). 안 보이는 발밑 공격은 소금 밑창에 × 0.3, 실은 min(1.2, E/800)
@@ -84,7 +92,7 @@ function think(W, m) {
   if (W.rules.wave && (m.type === '메타' || T.readWave) && (e.wave || e.crash > 0)) T = Object.assign({}, T, e.wave ? { prefR: T.prefR * 1.4, aggr: T.aggr * 0.7 } : { aggr: T.aggr * 1.6 });
   // 판 중 학습 (전설): 과녁이 구르는 쪽과 방패를 드는 거리를 센다
   let mem = null;
-  if (T.learn) {
+  if (T.learn || (T.dodgeAim && W.rules.risk)) {   // 피할 자리 겨냥도 구르는 쪽 기록을 쓴다
     mem = m.mem[e.id] || (m.mem[e.id] = { L: 0, R: 0, rollT: -9, sh: [], shT: -9 });
     const dx = e.x - m.x, dy = e.y - m.y;
     if (e.roll > 0 && W.t - mem.rollT > 0.3) { if (dx * e.vy - dy * e.vx > 0) mem.L++; else mem.R++; mem.rollT = W.t; }
@@ -186,13 +194,14 @@ function think(W, m) {
   for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
   m.mv.x = vx; m.mv.y = vy;
   if (m.st.stun > 0) return;
-  if (W.rules.risk && m.emptyT > W.t) { m.relT = null; return; }   // 빈손: 큰 마법 뒤엔 자동 진도 못 쓴다
+  const empty = W.rules.risk && m.emptyT > W.t;   // 빈손: 큰 마법 뒤엔 첫 칸과 자동 진을 못 쓴다 (두 번째 칸은 쓸 수 있다, 1.10.0)
+  if (empty && !(T.grab && (W.rules.circles ? m.circles : 1) >= 2 && !m.castB)) { m.relT = null; return; }
 
   // ---- 4. 자동 진: 3서클부터, 생각 없이 막는다 ----
   const circ = W.rules.circles ? m.circles : 1;
   // 방패 아끼기 (상급): 큰 공격에만 막는다
   const bigThreat = !!threat && (!T.shieldSave || (bigAttack(threat, S) && (threat.s.t === 'proj' || threat.s.t === 'thread')));   // 앞 방패·벽은 투사체·실만 막는다
-  if (circ >= 3 && aimed && threat && bigThreat && threat.T - threat.t < 0.4 && m.autoCd <= 0) {
+  if (!empty && circ >= 3 && aimed && threat && bigThreat && threat.T - threat.t < 0.4 && m.autoCd <= 0) {
     for (const n of m.book) {
       const s = S[n]; if ((m.cd[n] || 0) > 0) continue;
       if (!((s.t === 'buff' && s.react) || s.t === 'wall' || s.t === 'shoot')) continue;
@@ -227,6 +236,7 @@ function think(W, m) {
   // ---- 5. 칸 고르기 ----
   let slot = 'A';
   if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else return; }   // 두 번째 칸은 대가부터 (기본은 씀)
+  if (empty) slot = 'B';
 
   // ---- 6. 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다 ----
   // 파도가 켜져 있으면 부류마다: 서퍼는 쉬지 않고 탄다, 메타는 이기고 있을 때만 타고 너무 깊으면(140) 내려온다, 이단은 쉰다
@@ -254,8 +264,8 @@ function think(W, m) {
   const lead = T.lead, cb = T.combo, down0 = cb && eDown;
   const ek = {}; if (T.counter) for (const n of e.book) { const k = S[n] && kindOf(S[n]); if (k) ek[k] = 1; }
   // 학습한 구르기 쪽으로 겨냥을 옮긴다 (믿음은 본 수만큼), 학습한 방패 거리 근처면 투사체·실을 덜 쓴다
-  const roll = mem && e.rollCd <= 0 ? (mem.L - mem.R) / (mem.L + mem.R + 2) * 1.2 : 0;
-  const shieldNear = mem && mem.sh.length >= 2 && Math.abs(d - mem.sh.reduce((a, b) => a + b, 0) / mem.sh.length) < 2.5 && e.book.some(n => S[n] && S[n].b && S[n].b.front && !((e.cd[n] || 0) > 0));
+  const roll = T.learn && mem && e.rollCd <= 0 ? (mem.L - mem.R) / (mem.L + mem.R + 2) * 1.2 : 0;
+  const shieldNear = T.learn && mem && mem.sh.length >= 2 && Math.abs(d - mem.sh.reduce((a, b) => a + b, 0) / mem.sh.length) < 2.5 && e.book.some(n => S[n] && S[n].b && S[n].b.front && !((e.cd[n] || 0) > 0));
   const cand = [];
   for (const n of m.book) {
     const s = S[n];
@@ -341,6 +351,10 @@ function think(W, m) {
         }
       }
     }
+    // 피할 자리 겨냥 (상급부터): 큰 구름은 과녁이 구를 수 있으면 구를 쪽으로 1.1 m 기울인다
+    if (W.rules.risk && T.dodgeAim && s.big && s.t === 'area' && e.rollCd <= 0 && e.stam > 1.5 && !eDown) { const sd = rollSide(W, e, ux, uy, mem); tx += -uy * sd * 1.1; ty += ux * sd * 1.1; }
+    // 붙잡기 (대가부터): 내 큰 구름이 떨어지기 전 과녁이 그 안에 있으면, 두 번째 칸으로 그보다 먼저 닿는 굳히기·묶기·느리게 하기 × 3
+    if (W.rules.risk && T.grab && slot === 'B' && holdsOf(s, e)) { const a = W.areas.find(a => a.src === m && a.s.big && hyp(a.x - e.x, a.y - e.y) < a.r + 0.3); if (a && castTime(W, m, Tw) + landDelay(s, d) < a.t) { v = Math.max(v, 0.5) * 3; } }
     if (sim) { if (!sim.fired && n === sim.bind && W.t >= sim.at - 0.02) { const tt = Tw + d / (32 * (s.fast || 1)); v = 50; tx = e.x + e.vx * tt; ty = e.y + e.vy * tt; } else if (sim.b2 && n === sim.b2 && slot === 'B') { v = 40; tx = sim.x; ty = sim.y; } else if (OFF[s.t]) v *= 0.2; }
     // 엄폐 걷어내기 (대가): 과녁이 바위 뒤에 숨었으면 불·산 지대를 그 자리에, 지연 폭발·곡사를 더 쓴다
     if (T.strip && !los && W.obs.some(o => hyp(o.x - e.x, o.y - e.y) < o.r + 1.5)) { if (s.t === 'zone' && (s.z.k === 'fire' || s.z.k === 'acid')) { v = Math.max(v, 0.9); tx = e.x; ty = e.y; } else if (s.t === 'area' || s.t === 'lob') v *= 1.5; }
@@ -400,8 +414,9 @@ function think(W, m) {
   }
   // 동시 착탄 시작 (대가): 지연 폭발 결정타 + 그 직전에 떨어질 묶기(실). 전설은 두 번째 칸에 지연 폭발 하나를 더 겹친다
   if (T.simul && !m.simul && slot === 'A' && !eDown && best && OFF[best.s.t]) {
-    const A2 = cand.filter(c => c.s.t === 'area' && c.s.delay >= 0.3 && !bindOf(c.s, e)).sort((a, b) => estDmg(b.s) - estDmg(a.s))[0];
-    const bd = m.book.map(k => S[k]).filter(x => x && x.t === 'thread' && bindOf(x, e) >= 0.3 && !((m.cd[x.n] || 0) > 0) && d < C.rangeOf(m, x) && los)[0];
+    const A2 = cand.filter(c => c.s.t === 'area' && c.s.delay >= 0.3 && !bindOf(c.s, e) && !c.s.big).sort((a, b) => estDmg(b.s) - estDmg(a.s))[0];
+    // 큰 수는 동시 착탄의 묶기·결정타로 쓰지 않는다: 모으다 끊기면 역류하고, 짝 계획의 '굳은 과녁에만'을 뒷문으로 연다 (1.10.0)
+    const bd = m.book.map(k => S[k]).filter(x => x && x.t === 'thread' && !x.big && bindOf(x, e) >= 0.3 && !((m.cd[x.n] || 0) > 0) && d < C.rangeOf(m, x) && los)[0];
     if (A2 && bd) {
       const TcA = A2.Tw * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1), TwB = bd.cast * (1 - 0.35 * (m.mast[bd.n] || 0));
       // 결정타는 묶기가 떨어질 때 과녁이 있을 자리에: 지금 속도로 그때까지 간 자리
@@ -429,6 +444,7 @@ function think(W, m) {
   if (intent) { const kind = plan && s.n === plan.fin ? 'plan' : 'react'; m.log.comboTry++; m.log.cTry[kind] = (m.log.cTry[kind] || 0) + 1; m.comboPend = { tgt: e, kind, until: W.t + Tc + landDelay(s, hyp(best.tx - m.x, best.ty - m.y)) + 0.6 }; if (plan) m.combo = null; }
   if (m.combo && m.combo.tgt === e && !m.combo.logged) { m.combo.logged = 1; m.log.cPlan = (m.log.cPlan || 0) + 1; }
   // 두 수 콤보를 여는 묶기를 쏘면 결정타를 예약한다 (묶기가 떨어질 때와 묶이는 시간)
+  if (W.rules.risk && T.grab && slot === 'B' && holdsOf(s, e) && W.areas.some(a => a.src === m && a.s.big && hyp(a.x - e.x, a.y - e.y) < a.r + 0.3)) m.log.grab++;
   if (W.rules.risk && T.bigPlan) {
     if (s.big) { if (m.bigp && s.n === m.bigp.fin) { m.log.bigPair++; if (m.bigp.kind === 'bind' && W.t < m.bigp.land) cast.pairLand = m.bigp.land; } m.bigp = null; }
     else if (PAIRS[s.n] && m.book.includes(PAIRS[s.n].fin) && !((m.cd[PAIRS[s.n].fin] || 0) > 0) && (eDown || (PAIRS[s.n].kind === 'wet' && (e.rollCd > 0.4 || e.stam < 1.5)))) { const pr = PAIRS[s.n]; m.bigp = { tgt: e, fin: pr.fin, kind: pr.kind, land: W.t + Tc + landDelay(s, d) + (s.t === 'cone' ? s.dur : 0), bind: bindOf(s, e), until: W.t + Tc + 4 }; }
@@ -444,5 +460,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.9.0' };
+return { think, catOf, FORMNAME, rollSide, VERSION: '1.10.0' };
 });
