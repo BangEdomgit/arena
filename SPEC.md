@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v1.0.1
+# 숨 결투장 규격 v1.1.0
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -7,7 +7,7 @@
 ## 0. 원칙
 
 1. **하나의 규격**: 모든 실험, 리그, 게임 시제품은 이 엔진 위에서 돈다. 따로 고친 사본을 만들지 않는다
-2. **결정론**: 같은 씨앗, 같은 입력이면 같은 결과. 난수는 세계마다 하나(`mulberry32`)
+2. **결정론**: 같은 씨앗, 같은 입력이면 같은 결과. 명령줄(Node)과 브라우저(샌드박스)에서도 같다. 난수는 세계마다 하나(`mulberry32`), 수학 함수는 결정론 수학(20장)만 쓴다
 3. **SI 단위**: m, s, kg, J. 시간 간격 `DT = 1/30 s`
 4. **데이터와 규칙의 분리**: 마법은 `spells.json`(데이터), 규칙은 `core.js`, 판단은 `brain.js`
 5. **규칙은 스위치로**: 새 규칙은 `rules`의 스위치로 넣고, 끄면 이전 동작이 나와야 한다
@@ -28,8 +28,9 @@
 | 항목 | 기본값 |
 |---|---|
 | 넓이 | 40 × 30 m (`width`, `height`) |
-| 바위 | 12개, 반지름 0.7~1.8 m, 겹치지 않게 |
-| 화약통 | `rules.barrels` 켜면 5개 |
+| 바위 | 12개, 반지름 0.7~1.8 m, 겹치지 않게. 장면(19장)이 목록을 주면 그것 |
+| 화약통 | `rules.barrels` 켜면 5개. 장면이 목록을 주면 스위치와 상관없이 그것 |
+| 놓인 벽 | 장면이 준 것만. 반지름 0.6 m, 체력 200, 사라지지 않음, 어느 편 것도 아님 |
 | 편 | 2편 이상, 편마다 여러 명 |
 | 판의 끝 | 한 편만 남으면 끝. `maxT`(120 s)가 되면 편별 평균 체력 비율이 4%p 넘게 앞선 편의 **시간 판정승**, 아니면 무승부 |
 
@@ -187,8 +188,14 @@ const A = require('./src');
 A.duel(A.mage({ tier: '상위', deck: '합법 최강' }), A.mage({ tier: '상위', deck: '기본기' }), { seed: 1 });
 A.battle(teamA, teamB, { seed, layout: 'lines' | 'ring', rules: { barrels: true }, record: true, maxT: 120 });
 A.learn(spec, resultMage);   // 맞힘 기록을 사람 규격에 되먹임
-// 낮은 층: createWorld, addMage, stepWorld, run, release, share, gOf
+A.runScene(scene);            // 장면(19장) 한 판. A.sceneWorld(scene, { record })는 첫 걸음 전의 세계
+A.recording(W);               // 세계 → viewer.html 녹화 형식
+A.register.spell / deck / tier / brain / rule   // 19장
+// 낮은 층: createWorld, addMage, place, stepWorld, over, result, run, release, share, gOf, sin, cos, atan2, pow
 ```
+
+- `A.mage({ ..., brain: '두뇌 이름' })`: 사람마다 두뇌를 고른다. 없으면 기본 두뇌(`A.BRAINS['기본']`)
+- `A.over(W)`: 한 편만 남았거나 시간이 다 됐다. 걸음씩 돌리는 쪽은 `while (!A.over(W)) A.stepWorld(W)` 뒤 `A.result(W)`. `A.run(W)`과 같은 결과
 
 ## 16. 알려진 단순화
 
@@ -203,9 +210,11 @@ A.learn(spec, resultMage);   // 맞힘 기록을 사람 규격에 되먹임
 
 | 측정 | 값 |
 |---|---|
-| 1대1 한 판 | 약 16 ms |
-| 걸음 처리 | 초당 약 18만~21만 걸음 |
-| 1대50 둘러싸기 30초 | 약 0.1 s |
+| 1대1 한 판 | 약 8 ms |
+| 걸음 처리 | 초당 약 33만~35만 걸음 |
+| 1대50 둘러싸기 30초 | 약 0.03 s |
+
+1.1.0에서 `Math.hypot`을 `sqrt(x² + y²)`로 바꾸며 약 두 배 빨라졌다(1.0.1: 16 ms, 18만~19만 걸음).
 
 ## 18. 이전 실험 엔진과 달라진 것
 
@@ -214,3 +223,102 @@ A.learn(spec, resultMage);   // 맞힘 기록을 사람 규격에 되먹임
 - **장악권 적용 범위**: 상대 쪽 자리뿐 아니라 **손끝에서 만드는 마법**에도 적용 (설정 3판대로)
 - **당 회복 1.2 g/s**: 한계가 당이 아니라 머리가 되도록
 - **선호 거리 자동**: 덱과 거리가 어긋나 아무것도 못 쏘는 일을 막음
+
+## 19. 샌드박스 (v0.1)
+
+엔진 위에 올린 브라우저 화면. 무엇이든 넣고 고치고, 여러 편의 AI를 싸움 붙인다. 규칙은 여전히 이 문서가 기준이고, 샌드박스는 엔진 파일을 **그대로** 읽는다.
+
+### 파일과 읽기
+
+| 파일 | 하는 일 |
+|---|---|
+| `sandbox/index.html` | 화면 한 장. 브라우저로 열면(`file://`도) 바로 돈다. 빌드, 서버, 의존성 없음 |
+| `sandbox/sandbox.js` | 화면 논리: 편집, 그리기, 입력 |
+| `sandbox/scenes/*.json` | 예시 장면: `duel`(1대1), `archmage-50`(대마법사 대 50), `musket-arc`(머스킷 반원), `element-league`(원소 여섯 난전) |
+| `sandbox/data.js` | `spells.json`, `books.json`, 예시 장면을 싼 것(전역 `ArenaData`). 브라우저가 `file://`에서 JSON을 못 읽어서다. **만든 파일**: `node cli.js pack`. 기준은 늘 JSON이고, 어긋나면 시험이 실패한다 |
+| `sandbox/pack.js` | `data.js`를 만드는 것 |
+| `src/registry.js` | 등록 함수 |
+
+엔진 파일은 UMD 모양이다. Node에선 `require`, 브라우저에선 전역(`ArenaCore` → `ArenaBrain` → `ArenaRegistry` → `Arena`)이 된다. 브라우저 순서: `data.js`, `core.js`, `brain.js`, `registry.js`, `index.js`, `sandbox.js`.
+
+### 장면 JSON
+
+```json
+{ "v": "1.1.0", "name": "1대1", "seed": 1, "width": 40, "height": 30, "maxT": 120,
+  "layout": "lines",
+  "rules": { "barrels": true },
+  "obstacles": [{ "x": 12, "y": 8, "r": 1.2 }],
+  "barrels": [{ "x": 20, "y": 15 }],
+  "walls": [{ "x": 16, "y": 15, "r": 0.6, "hp": 200 }],
+  "sides": [
+    { "name": "청", "brain": "기본", "mages": [{ "tier": "상위", "deck": "합법 최강", "x": 6, "y": 15 }] },
+    { "name": "적", "brain": "기본", "mages": [{ "tier": "상위", "deck": "기본기", "x": 34, "y": 15 }] } ],
+  "spells": {}, "decks": {} }
+```
+
+| 필드 | 뜻 | 비우면 |
+|---|---|---|
+| `seed`, `width`, `height`, `maxT` | 세계 (2장) | 1, 40, 30, 120 |
+| `rules` | `DEFAULT_RULES`에서 바꿀 것만 | 모두 기본 |
+| `obstacles` | 바위 목록 | 씨앗 따라 12개 |
+| `barrels` | 화약통 목록 | `rules.barrels`면 씨앗 따라 5개 |
+| `walls` | 놓인 벽 | 없음 |
+| `layout` | 자리를 비운 사람을 놓는 법: `lines`(두 편 양쪽 줄), `ring`(첫 편의 첫 사람을 가운데, 나머지가 둘러쌈). 편이 셋 이상이면 `ring`이 아닌 한 둘레에 고루 | `lines` |
+| `sides[].brain` | 그 편의 두뇌. 사람마다 `brain`을 따로 줄 수도 있다 | `기본` |
+| `sides[].mages[]` | `tier`, `deck`(또는 `book` 마법 목록), `x`, `y`, `name`, 덮어쓸 값 `C`·`circles`·`noise`·`dec`·`autoDodge`·`hp`, `gear`{soles·cloak}, `tac`{prefR·aggr·trapBias·zoneBias·dodge·stance·focusLow·crowd·rest} | 등급의 값 |
+| `spells`, `decks` | 이 장면에서만 기본을 덮는 마법(8장 필드)·덱 | 없음 |
+
+- 사람 자리(`x`, `y`)를 모두 비우고 바위를 비우면 `A.battle`과 **같은 판**이 된다. 예: `archmage-50`은 `node cli.js ring 대마법사 평범 50 기본기`의 씨앗 1과 같다
+- `node cli.js scene 장면.json [녹화.json]`: 명령줄에서 장면 한 판
+
+### 등록 (`Arena.register`)
+
+```js
+Arena.register.spell({ n: '새 마법', t: 'proj', m: 0.5, v: 30, R: 20, cost: 3, cast: 0.3, cd: 1, role: '공격' })  // 8장 필드. 같은 이름은 바꾼다
+Arena.register.deck('내 덱', ['새 마법', '돌 압축탄'])
+Arena.register.tier('영웅', { C: 7, circles: 7, noise: 0.03, dec: 0.12, autoDodge: true, mast: 0.8 })
+Arena.register.brain('실험 두뇌', { think(W, m) { ... } })     // 편·사람마다 고른다
+Arena.register.rule('weather', { default: false, apply(W) { ... }, init(W) { ... } })  // 스위치가 켜졌을 때만 걸음마다 apply
+```
+
+- 등록은 그 프로세스(브라우저 탭) 안의 모든 판에 붙는다. 장면 하나에만 붙이려면 장면의 `spells`·`decks`
+- 새 규칙은 **꺼 두면 예전과 같아야 한다**(0장 5). 등록 규칙의 `apply(W)`는 걸음마다 편을 고친 직후, 사람이 움직이기 전에 부른다
+
+### 화면 (v0.1)
+
+| 영역 | 할 수 있는 것 |
+|---|---|
+| 싸움터 | 재생·멈춤·한 걸음·처음으로, 배속(0.25~8배, 최대), 씨앗. 도구: 고르기·옮기기(끌기, Delete로 지우기), 사람·바위·화약통·벽 놓기, 지우기 |
+| 편과 사람 | 편 추가·지우기(2편 이상), 이름, 두뇌. 사람 추가·복제·지우기. 등급, 덱, 선명도·서클·겨냥 흔들림·판단 간격, 자동 구르기, 소금 밑창·외투, 두뇌 성향(선호 거리, 공격 비중, 함정 비중, 구르기, 입장 판단) |
+| 규칙 | `DEFAULT_RULES` 전부(등록한 규칙 포함)를 스위치와 슬라이더로 |
+| 장면 | 이름, 씨앗, 넓이, 시간 제한. "자리 적어 넣기": 씨앗에 맡긴 자리를 장면에 적는다 |
+| 기록 | 판 결과, 사람별 체력·준 피해·맞힘/시전·헛시전·폭주·입장 |
+| 위쪽 | 예시 장면, 장면 불러오기·내보내기(JSON, 끌어다 놓기도), 녹화 내보내기(`viewer.html` 형식) |
+
+- 장면을 고치면 판은 처음으로 돌아간다. 씨앗에 맡긴 자리를 손으로 옮기면 먼저 모든 자리를 장면에 적어 넣는다(그 뒤로는 씨앗을 바꿔도 자리가 그대로)
+- v0.2 후보: 마법 편집기, 장악권 지도, 머릿속 패널(고른 마법과 후보 점수), 여러 판 통계
+
+### 같은 결과의 약속 (시험)
+
+- 자리를 비운 장면 = `A.duel` / `A.battle`
+- 걸음씩 돌린 판(샌드박스) = 한 번에 돌린 판(`A.run`)
+- 브라우저 모양(UMD 전역, `data.js`)으로 읽은 엔진 = Node의 엔진
+- 장면을 JSON으로 내보냈다 다시 읽은 판 = 원래 판
+- `data.js` = JSON 원본
+
+## 20. 결정론 수학
+
+`Math.pow`, `sin`, `cos`, `atan2`, `hypot`, `exp`, `log`는 ECMAScript가 정확한 값을 정하지 않아 JS 엔진마다(같은 V8이라도 판마다) 마지막 자리가 다르다. 1.0.1까지는 Node 22와 Chromium 141에서 `Math.pow`가 달라 원소 난전 한 판이 600걸음째부터 갈라졌다.
+
+1.1.0부터 엔진은 결과가 하나로 정해진 연산(사칙연산, `Math.sqrt`, `Math.round`)만으로 만든 `core`의 `sin`, `cos`, `atan2`, `pow`, `exp`, `log`, `hyp`를 쓴다. 정밀도는 1e-15 안팎이고, 시험이 Math와 1e-14 안에서 맞는지, 엔진에 위 Math 함수가 남아 있지 않은지 본다.
+
+| 함수 | 방법 |
+|---|---|
+| `sin`, `cos` | π/2의 배수를 두 조각(Cody–Waite)으로 빼서 [−π/4, π/4]로 줄이고 테일러 급수 |
+| `atan2` | `atan`을 반각 공식 두 번으로 [0, tan(π/16)]까지 줄이고 급수. 사분면은 부호로 |
+| `exp` | ln 2의 배수를 두 조각으로 빼고 급수, 2의 거듭제곱 표를 곱함 |
+| `log` | 2로 나눠 [√½, √2)로 줄이고 `2·atanh((m−1)/(m+1))` 급수 |
+| `pow` | `exp(y · log x)` |
+| `hyp` | `sqrt(x² + y²)` |
+
+1.0.1과 판 결과가 마지막 자리에서 달라져 긴 판 몇 개의 결과가 바뀌었다(REPORT 9절).

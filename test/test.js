@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.0.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.1.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -44,5 +44,71 @@ ok('대마법사는 평범한 마법사 30명을 버틴다', () => {
 ok('대마법사는 자기 낙뢰에 맞지 않는다 (1.0.1)', () => {
   const r = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 50 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 2, layout: 'ring', maxT: 90 });
   assert.ok(r.ms[0].hp > 0 && !r.ms[0].log.taken.elec, JSON.stringify(r.ms[0].log.taken));
+});
+
+/* ---------------- 1.1.0: 결정론 수학, 장면, 샌드박스, 등록 ---------------- */
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const SRC = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+const dig = r => [r.winner, r.t, r.ms.map(m => m.hp).join('/')].join(';');
+const SCENES = Object.fromEntries(fs.readdirSync(path.join(__dirname, '../sandbox/scenes')).filter(f => f.endsWith('.json')).map(f => [f.slice(0, -5), JSON.parse(SRC('sandbox/scenes/' + f))]));
+
+ok('엔진은 JS 엔진마다 다른 Math 함수를 쓰지 않는다', () => {
+  for (const f of ['src/core.js', 'src/brain.js', 'src/index.js', 'src/registry.js']) {
+    const code = SRC(f).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    const bad = code.match(/Math\.(pow|sin|cos|tan|asin|acos|atan2?|sinh|cosh|tanh|hypot|exp|expm1|log1?p?|log2|log10|cbrt|random)\b/g);
+    assert.ok(!bad, f + ': ' + bad);
+  }
+});
+ok('결정론 수학은 Math와 1e-14 안에서 맞는다', () => {
+  let s = 7; const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+  for (let i = 0; i < 20000; i++) {
+    const a = rnd() * 60 - 30, b = rnd() * 60 - 30, x = rnd() * 50;
+    assert.ok(Math.abs(A.sin(a) - Math.sin(a)) < 1e-14 && Math.abs(A.cos(a) - Math.cos(a)) < 1e-14, 'sin/cos ' + a);
+    assert.ok(Math.abs(A.atan2(a, b) - Math.atan2(a, b)) < 1e-14, 'atan2 ' + a + ',' + b);
+    assert.ok(Math.abs(A.pow(x, b / 10) / Math.pow(x, b / 10) - 1) < 1e-14, 'pow ' + x + ',' + b / 10);
+  }
+  assert.strictEqual(A.pow(10, 2.5).toFixed(9), '316.227766017');
+});
+ok('장면: 자리를 비워 두면 명령줄 싸움과 같다', () => {
+  for (let k = 1; k <= 3; k++) {
+    const sc = { seed: k, sides: [{ mages: [{ tier: '중간' }] }, { mages: [{ tier: '중간', deck: '기본기' }] }] };
+    assert.strictEqual(dig(A.runScene(sc)), dig(A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: k })));
+  }
+  const ring = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 50 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 1, layout: 'ring', maxT: 90 });
+  assert.strictEqual(dig(A.runScene(SCENES['archmage-50'])), dig(ring));
+});
+ok('장면: 걸음씩 돌려도(샌드박스) 한 번에 돌린 것과 같다', () => {
+  const W = A.sceneWorld(SCENES.duel, { record: true }); while (!A.over(W)) A.stepWorld(W);
+  assert.strictEqual(dig(A.result(W)), dig(A.runScene(SCENES.duel)));
+  const rec = A.recording(W); assert.ok(rec.frames.length > 10 && rec.names.length === 2 && rec.winner === A.result(W).winner);
+});
+ok('장면을 내보내고 다시 불러오면 같은 판', () => {
+  for (const sc of Object.values(SCENES)) assert.strictEqual(dig(A.runScene(JSON.parse(JSON.stringify(sc)))), dig(A.runScene(sc)));
+});
+ok('sandbox/data.js는 JSON과 맞다 (어긋나면 node cli.js pack)', () => {
+  assert.strictEqual(SRC('sandbox/data.js'), require('../sandbox/pack').text());
+});
+ok('브라우저 모양(UMD, 전역)으로 읽어도 같은 결과', () => {
+  const ctx = vm.createContext({});
+  for (const f of ['sandbox/data.js', 'src/core.js', 'src/brain.js', 'src/registry.js', 'src/index.js']) vm.runInContext(SRC(f), ctx, { filename: f });
+  const B = ctx.Arena; assert.strictEqual(B.VERSION, A.VERSION);
+  for (const [n, sc] of Object.entries(SCENES)) { const W = B.sceneWorld(sc); while (!B.over(W)) B.stepWorld(W); assert.strictEqual(dig(B.result(W)), dig(A.runScene(sc)), n); }
+});
+ok('편이 셋 이상이어도 돈다', () => {
+  const r = A.runScene({ seed: 2, maxT: 30, sides: ['불', '물', '흙'].map(e => ({ name: e, mages: [{ tier: '중간', deck: e }] })) });
+  assert.ok(r.ms.length === 3 && r.ms.every(m => m.side === m._ref[0]));
+});
+ok('등록: 새 마법·덱·등급·두뇌·규칙이 붙고, 새 규칙은 끄면 예전과 같다', () => {
+  const base = dig(A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: 4 }));
+  let calls = 0; A.register.rule('시험 규칙', { default: false, apply() { calls++; } });
+  assert.strictEqual(dig(A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: 4 })), base); assert.strictEqual(calls, 0);
+  A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: 4, rules: { '시험 규칙': true }, maxT: 1 }); assert.ok(calls > 0);
+  A.register.spell({ n: '시험 돌', el: '흙', t: 'proj', m: 0.5, v: 30, R: 20, cost: 3, cast: 0.3, cd: 1, role: '공격' });
+  A.register.deck('시험 덱', ['시험 돌', '석회 방패']); A.register.tier('영웅', { C: 7, circles: 7 });
+  A.register.brain('가만히', { think(W, m) { m.mv.x = m.mv.y = 0; } });
+  const r = A.runScene({ seed: 1, maxT: 20, sides: [{ mages: [{ tier: '영웅', deck: '시험 덱' }] }, { brain: '가만히', mages: [{ tier: '평범' }] }] });
+  assert.ok(r.ms[0].log.casts['시험 돌'] > 0, '새 마법을 안 씀'); assert.strictEqual(Object.keys(r.ms[1].log.casts).length, 0, '가만히 두뇌가 시전함');
+  assert.throws(() => A.register.spell({ n: '틀 없음', t: 'nope', cost: 1, cast: 1, cd: 1 }));
+  delete A.DEFAULT_RULES['시험 규칙']; A.RULE_HOOKS.length = 0;
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

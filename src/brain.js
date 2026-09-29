@@ -1,10 +1,14 @@
-'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.0.1
+ * 숨 결투장 — 기본 두뇌 v1.1.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
- * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다.
+ * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
+ * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
  * ========================================================================= */
-const C = require('./core');
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'));
+  else root.ArenaBrain = factory(root.ArenaCore);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C) {
+'use strict';
 const { hyp, clamp } = C;
 
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
@@ -28,8 +32,8 @@ function logDec(m, s, slot, ctx) {
 function estDmg(s) {
   if (s.hit && s.hit.flat) return s.hit.flat; if (s.hit && s.hit.dmg) return s.hit.dmg;
   if (s.burst && s.burst.dmg) return s.burst.dmg; if (s.burst) return 14;
-  if (s.t === 'proj') return Math.min((s.hit && s.hit.cap) || 99, 0.55 * Math.pow(0.5 * s.m * s.v * s.v, 0.75)) * (s.multi ? s.multi * 0.5 : 1);
-  if (s.t === 'thread') return 0.8 * Math.pow(s.E, 0.55);
+  if (s.t === 'proj') return Math.min((s.hit && s.hit.cap) || 99, 0.55 * C.pow(0.5 * s.m * s.v * s.v, 0.75)) * (s.multi ? s.multi * 0.5 : 1);
+  if (s.t === 'thread') return 0.8 * C.pow(s.E, 0.55);
   if (s.t === 'cone') return s.dps * s.dur;
   return s.dmg || 0;
 }
@@ -81,7 +85,7 @@ function think(W, m) {
       stance = 'breakout';
       let bd = null, bsc = -1e9;
       for (let k = 0; k < 16; k++) {
-        const a = k / 16 * 6.2832, dx = Math.cos(a), dy = Math.sin(a); let sc = 0;
+        const a = k / 16 * 6.2832, dx = C.cos(a), dy = C.sin(a); let sc = 0;
         for (const q of foes) { const qx = q.x - m.x, qy = q.y - m.y, dq = hyp(qx, qy) || 1; if ((qx * dx + qy * dy) / dq > 0.6) sc -= 3 / Math.max(1, dq / 3); }
         let room = 0; for (let s2 = 1; s2 <= 14; s2++) { const px = m.x + dx * s2, py = m.y + dy * s2; if (px < 1 || py < 1 || px > W.width - 1 || py > W.height - 1) break; if (W.obs.some(o => hyp(o.x - px, o.y - py) < o.r + 0.3)) break; room = s2; }
         sc += room * 0.4; if (sc > bsc) { bsc = sc; bd = { dx, dy }; }
@@ -229,4 +233,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-module.exports = { think, catOf, FORMNAME, VERSION: '1.0.1' };
+return { think, catOf, FORMNAME, VERSION: '1.1.0' };
+});

@@ -1,0 +1,73 @@
+{
+ "v": "1.1.0",
+ "name": "원소 리그: 평범 여섯이 원소 기본책으로 난전",
+ "seed": 4,
+ "width": 40,
+ "height": 30,
+ "maxT": 300,
+ "rules": {},
+ "sides": [
+  {
+   "name": "불",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "불"
+    }
+   ]
+  },
+  {
+   "name": "번개",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "번개"
+    }
+   ]
+  },
+  {
+   "name": "흙",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "흙"
+    }
+   ]
+  },
+  {
+   "name": "물",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "물"
+    }
+   ]
+  },
+  {
+   "name": "얼음",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "얼음"
+    }
+   ]
+  },
+  {
+   "name": "독",
+   "brain": "기본",
+   "mages": [
+    {
+     "tier": "평범",
+     "deck": "독"
+    }
+   ]
+  }
+ ],
+ "spells": {},
+ "decks": {}
+}

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 'use strict';
-/* 숨 결투장 v1.0.1 명령줄
+/* 숨 결투장 v1.1.0 명령줄
  *   node cli.js bench               속도 측정
  *   node cli.js duel 평범 평범 20    같은 등급 결투 20판
  *   node cli.js ring 대마법사 평범 50 [기본기]   한 명을 가운데 두고 둘러쌈
  *   node cli.js league 상위 10      원소 기본책끼리 총당
  *   node cli.js replay 상위 상위 out.json   한 판 녹화
+ *   node cli.js scene sandbox/scenes/duel.json   장면 한 판 (샌드박스와 같은 결과)
+ *   node cli.js pack                샌드박스가 읽을 sandbox/data.js 다시 싸기
  */
 const A = require('./src');
 const [cmd, ...args] = process.argv.slice(2);
@@ -41,3 +43,10 @@ if (cmd === 'replay') {
   require('fs').writeFileSync(file, JSON.stringify({ v: A.VERSION, names: r.ms.map(m => m.name), sides: r.ms.map(m => m.side), hpMax: r.ms.map(m => m.hpMax), winner: r.winner, t: r.t, obs: r.obs, frames: r.rec }));
   console.log('녹화', file, r.rec.length, '프레임, 승자', r.winner);
 }
+if (cmd === 'scene') {
+  const [file, rec] = args; if (!file) throw new Error('장면 파일을 준다: node cli.js scene sandbox/scenes/duel.json [녹화.json]');
+  const sc = JSON.parse(require('fs').readFileSync(file, 'utf8')), W = A.sceneWorld(sc, { record: !!rec }), r = A.run(W);
+  if (rec) require('fs').writeFileSync(rec, JSON.stringify(A.recording(W)));
+  console.log(JSON.stringify({ 장면: sc.name || file, 씨앗: sc.seed, 승자: r.winner === -1 ? '무승부' : (sc.sides[r.winner].name || r.winner), 시간판정: r.byTime, 시간: r.t, 남은: r.ms.filter(m => m.hp > 0).map(m => m.name + ':' + Math.round(m.hp)) }));
+}
+if (cmd === 'pack') console.log('쌈', require('./sandbox/pack').write());
