@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.5.0 — 표준 시험 묶음
+/* 숨 결투장 v1.6.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -12,13 +12,13 @@ const BASE = path.join(__dirname, '..', 'suite-baseline.json');
 const Z = 2.58;   // 이보다 크면 "진짜 차이" (양쪽 99%). 줄이 많아 우연히 튀는 것을 줄이려고 1.96보다 높게 잡았다
 
 // 사람 한 명: '등급' 또는 { tier, skill, deck, type }. 판단 수준(skill)은 엔진의 A.SKILLS (1.5.0)
-function mk(p) { const o = typeof p === 'string' ? { tier: p } : p; return A.mage({ tier: o.tier, skill: o.skill, deck: o.deck, type: o.type }); }
-const who = p => typeof p === 'string' ? p : [p.tier, p.skill, p.type, p.deck].filter(Boolean).join(' ');
+function mk(p) { const o = typeof p === 'string' ? { tier: p } : p, sp = A.mage({ tier: o.tier, skill: o.skill, deck: o.deck, type: o.type }); if (o.C) sp.C = o.C; return sp; }
+const who = p => typeof p === 'string' ? p : [p.tier, p.C ? 'C' + p.C : '', p.skill, p.type, p.deck].filter(Boolean).join(' ');
 
 // 1대1 N판, 씨앗 1..N, 판마다 자리를 번갈아 (node cli.js duel과 같은 방식)
 function duels(a, b, N, rules) {
   const out = [];
-  for (let k = 0; k < N; k++) { const sw = k % 2, x = mk(a), y = mk(b); const r = sw ? A.duel(y, x, { seed: k + 1, rules }) : A.duel(x, y, { seed: k + 1, rules }); out.push({ w: r.winner === -1 ? -1 : (r.winner === 0) !== !!sw ? 0 : 1, t: r.t }); }
+  for (let k = 0; k < N; k++) { const sw = k % 2, x = mk(a), y = mk(b); const r = sw ? A.duel(y, x, { seed: k + 1, rules }) : A.duel(x, y, { seed: k + 1, rules }); out.push({ w: r.winner === -1 ? -1 : (r.winner === 0) !== !!sw ? 0 : 1, t: r.t, bt: r.byTime }); }
   return out;
 }
 // 한 명(가운데) 대 무리 N판
@@ -55,6 +55,9 @@ function table() {
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '대마법사', skill: '초보' }, { tier: '상위', skill: '전설' }, 100);
+  // 판단이 힘을 이기는 경계: 평범 초보의 선명도만 올린다 (1.0이면 판단 줄의 전설 대 초보와 같은 선명도)
+  for (const c of [1.2, 1.5, 2.0]) duel('힘 대 판단', { tier: '평범', skill: '초보', C: c }, { tier: '평범', skill: '전설' }, 100);
+  duel('힘 대 판단', { tier: '평범', skill: '전설' }, { tier: '평범', skill: '초보' }, 100);
   return T;
 }
 const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
@@ -63,7 +66,7 @@ const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '
 function summarize(res) {
   const n = res.length, a = res.filter(r => r.w === 0).length, b = res.filter(r => r.w === 1).length, d = n - a - b;
   const mean = res.reduce((s, r) => s + r.t, 0) / n, sd = Math.sqrt(res.reduce((s, r) => s + (r.t - mean) ** 2, 0) / Math.max(1, n - 1));
-  return { N: n, A: a, B: b, D: d, score: +((a + d / 2) / n).toFixed(4), t: +mean.toFixed(2), sd: +sd.toFixed(2) };
+  return { N: n, A: a, B: b, D: d, score: +((a + d / 2) / n).toFixed(4), t: +mean.toFixed(2), sd: +sd.toFixed(2), bt: res.filter(r => r.bt).length };
 }
 function run(only, log = () => {}) {
   const rows = {}, T = table().filter(r => !only || r.group === only);

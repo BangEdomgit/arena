@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.5.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.6.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -24,7 +24,9 @@ const DECKS = Object.assign({
 }, BOOKS);
 const BRAINS = { '기본': brain };
 // 판단 수준 (1.5.0, SPEC 13장). 등급(힘)과 따로 고른다. 없으면 등급의 값과 1.4.0 두뇌 그대로
-const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac });
+const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac: Object.assign({}, ROLL, tac) });
+// 구르기 상한과 구르는 쪽 버릇 (1.6.0): 다섯 단계 모두. 상한 0.85~0.95 × 버릇 범위를 표준 묶음으로 재서 가장 고른 것 (REPORT 16절)
+const ROLL = { rollCap: 0.85, rollBias: [0.6, 0.9] };
 const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false, lever: false, pathTrap: false, slotB: false, terrain: false, readWave: false, cdRead: false, outrange: false, focusLow: false };
 const SKILLS = {
   '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false })),
