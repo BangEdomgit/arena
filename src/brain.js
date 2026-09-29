@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.2.0
+ * 숨 결투장 — 기본 두뇌 v1.3.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -41,11 +41,13 @@ function estDmg(s) {
 function think(W, m) {
   const foes = W.foes[m.side], S = W.spells;
   // 파도를 타는 동안: 더 몰아치고, 더 붙고, 덜 피하고, 쉬지 않는다
-  const T = m.wave ? Object.assign({}, m.tac, { aggr: m.tac.aggr * 1.6, prefR: m.tac.prefR * 0.7, dodge: m.tac.dodge * 0.5, rest: 999 }) : m.tac;
+  let T = m.wave ? Object.assign({}, m.tac, { aggr: m.tac.aggr * 1.6, prefR: m.tac.prefR * 0.7, dodge: m.tac.dodge * 0.5, rest: 999 }) : m.tac;
   if (!foes.length) { m.mv.x = m.mv.y = 0; return; }
   // 과녁: 약자부터(focusLow) 또는 가장 가까운 자
   let e = null, bs = 1e9;
   for (const q of foes) { const d = hyp(q.x - m.x, q.y - m.y), sc = T.focusLow ? q.hp / q.hpMax * 40 + d : d; if (sc < bs) { bs = sc; e = q; } }
+  // 메타는 상대의 파도를 읽는다: 상대가 파도 위면 물러서고, 꺼짐이면 몰아친다 (1.3.0)
+  if (W.rules.wave && m.type === '메타' && (e.wave || e.crash > 0)) T = Object.assign({}, T, e.wave ? { prefR: T.prefR * 1.4, aggr: T.aggr * 0.7 } : { aggr: T.aggr * 1.6 });
   const d = hyp(e.x - m.x, e.y - m.y) || 0.01, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
   const los = !C.blocked(W, m.x, m.y, e.x, e.y);
   const vt = (e.vx * -ux + e.vy * -uy);           // 적이 나에게 다가오는 속도 (m/s)
@@ -62,6 +64,7 @@ function think(W, m) {
   }
   for (const q of foes) for (const c of [q.cast, q.castB]) {
     if (!c || !C.THREAT[c.s.t]) continue;
+    if (W.rules.wave && q.type === '이단' && c.T - c.t > 0.12) continue;   // 이단의 예비동작은 신호가 조용해 마지막 0.12 s에만 읽힌다 (읽기·자동 진 모두)
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux }; }
   }
@@ -242,5 +245,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.2.0' };
+return { think, catOf, FORMNAME, VERSION: '1.3.0' };
 });
