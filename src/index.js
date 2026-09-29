@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.7.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.8.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -19,6 +19,7 @@ const DECKS = Object.assign({
   '광역': ['낙뢰', '번개 그물', '체인', '불기둥', '화염 방사', '돌 비', '짧은 실', '석회 방패', '석회 기둥', '솟는 발판', '근육 폭주', '불고리', '비 뿌리기', '땅 번개'],
   '기본기': ['돌 압축탄', '라이트닝', '불덩이', '물 망치', '얼음 창', '석회 방패', '다리 자극'],
   '머스킷': ['머스킷'],
+  '기술': ['짧은 실', '체인', '번개 그물', '흙 손', '불기둥', '불벽', '번개 지뢰', '석회 방패', '산 안개'],   // 기술 사다리를 보일 재료가 다 든 덱 (1.7.0, suite 모습)
   '도발 합법 최강': ['도발', '불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물'],   // 도발은 rules.taunt가 켜졌을 때만 남는다
   '자유': Object.keys(core.SPELLS).filter(n => !core.SPELLS[n].banned && !core.SPELLS[n].mundane),
 }, BOOKS);
@@ -29,14 +30,14 @@ const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac: Object
 const ROLL = { rollCap: 0.85, rollBias: [0.6, 0.9] };
 const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false, lever: false, pathTrap: false, slotB: false, terrain: false, readWave: false, cdRead: false, outrange: false, focusLow: false };
 const SKILLS = {
-  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6] })),
+  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6], shieldAny: true })),
   '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
-  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true })),
-  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
+  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true })),
+  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
 };
 // 실제로 쓰는 서클 = 그릇(등급) × 솜씨(판단 수준) (1.7.0)
 const CIRCLES = { '초보': c => Math.max(1, Math.floor(c / 2)), '중급': c => Math.max(1, c - 1), '상급': c => c, '대가': c => c, '전설': c => c + 1 };
-SKILLS['전설'] = SK(0.05, 0.01, true, Object.assign({}, SKILLS['대가'].tac, { feint: true, learn: true, waveChoose: true, counter: true }));
+SKILLS['전설'] = SK(0.05, 0.01, true, Object.assign({}, SKILLS['대가'].tac, { feint: 0.12, learn: true, waveChoose: true, counter: true, coverW: 2.5, bait: true, fakeRetreat: true, triple: true }));
 const register = makeRegistry(core, { TIERS, DECKS, BRAINS });
 
 // lib: 장면이 마법·덱을 덮을 때 넘긴다. 없으면 기본값
@@ -113,7 +114,7 @@ function look(m, t) {
   const mean = iv.length ? iv.reduce((a, b) => a + b, 0) / iv.length : 0, sd = iv.length > 1 ? Math.sqrt(iv.reduce((a, b) => a + (b - mean) ** 2, 0) / (iv.length - 1)) : 0;
   const L = m.log, per = x => x / Math.max(t, 1) * 60;
   return {
-    '분당 시전': per(st.length), '빈틈 (s)': L.gapN ? L.gapSum / L.gapN : 0, '박자 흔들림': mean ? sd / mean : 0,
+    '분당 시전': per(st.length), '빈틈 (s)': L.gaps.length ? L.gaps.slice().sort((a, b) => a - b)[L.gaps.length >> 1] : 0, '박자 흔들림': mean ? sd / mean : 0,
     '분당 콤보': per(L.comboTry), '콤보 성공률': L.comboTry ? L.comboHit / L.comboTry : 0, '분당 동시 시전': per(L.dec.slotB),
     '분당 캔슬': per(L.cancel || 0), '분당 속임수': per(L.dec.feint || 0), '엄폐 시간 비율': t ? (L.coverT || 0) / t : 0,
     '분당 유도 성공': per(L.lure || 0), '분당 동시 착탄': per(L.simul || 0), '방어 적중률': L.defTry ? (L.defHit || 0) / L.defTry : 0,

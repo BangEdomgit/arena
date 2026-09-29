@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.7.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.8.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -177,5 +177,13 @@ ok('기술 사다리 1 (1.7.0): 초보는 서서 쏘고 멈추며, 상급은 바
   assert.ok(b['분당 콤보'] === 0 && m['분당 콤보'] > 0);
   const W = A.createWorld({ seed: 1, obstacles: 0 }); const n = A.addMage(W, A.mage({ skill: '초보' }), 0, 5, 15); A.addMage(W, {}, 1, 25, 15);
   n.cast = { s: W.spells['불기둥'], tx: 25, ty: 15, t: 0, T: 5 }; n.mv.x = 1; n.thinkT = 9; const x0 = n.x; for (let k = 0; k < 10; k++) A.stepWorld(W); assert.strictEqual(n.x, x0, '초보가 쏘면서 걸었다');
+});
+ok('기술 사다리 2 (1.8.0): 굳으면 못 구르고, 상급은 캔슬, 대가는 유도·동시 착탄, 전설은 속임수', () => {
+  const W = A.createWorld({ seed: 1, obstacles: 0 }); const d = A.addMage(W, A.mage({ tier: '상위', skill: '전설' }), 0, 10, 15), q = A.addMage(W, { book: ['라이트닝'] }, 1, 18, 15);
+  A.stepWorld(W); d.st.stun = 1; d.stam = 6; d.rollCd = 0; q.cast = { s: W.spells['라이트닝'], tgt: d, tx: d.x, ty: d.y, t: 0.7, T: 1 }; A.brain.think(W, d); assert.ok(!(d.roll > 0), '굳었는데 굴렀다');
+  const lk = (tier, skill) => { const acc = {}; for (let k = 1; k <= 6; k++) { const sw = k % 2, a = A.mage({ tier, skill, deck: '기술' }), b = A.mage({ tier, skill: '중급', deck: '기술' }); const r = sw ? A.duel(b, a, { seed: k, rules: { barrels: true } }) : A.duel(a, b, { seed: k, rules: { barrels: true } }); const m = r.ms[sw ? 1 : 0]; for (const [x, v] of Object.entries(A.look(m, m.deathT ?? r.t))) acc[x] = (acc[x] || 0) + v; } return acc; };
+  const L = ['중급', '상급', '대가', '전설'].map(s => lk('중간', s));
+  assert.ok(L[0]['분당 캔슬'] === 0 && L[1]['분당 캔슬'] > 0, '캔슬'); assert.ok(L[1]['분당 유도 성공'] === 0 && L[2]['분당 유도 성공'] > 0, '유도');
+  assert.ok(L[1]['분당 속임수'] === 0 && L[3]['분당 속임수'] > 0, '속임수'); assert.ok(L[2]['분당 동시 시전'] > 0 && L[1]['분당 동시 시전'] === 0, '동시 시전');
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

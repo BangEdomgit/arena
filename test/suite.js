@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.7.0 — 표준 시험 묶음
+/* 숨 결투장 v1.8.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -28,12 +28,13 @@ function rings(center, crowd, n, N) {
   return out;
 }
 
-// 싸우는 모습: 같은 단계끼리 N판, 두 사람 모두의 행동 지표(A.look) 평균과 표준편차
+// 싸우는 모습: 그 단계가 정해진 상대(같은 등급 중급)와 N판, 그 단계 쪽의 행동 지표(A.look) 평균과 표준편차.
+// 덱은 기술을 보일 재료가 다 든 '기술', 화약통 켬. 상대를 고정해야 지표가 상대의 솜씨에 흔들리지 않는다
 function looks(tier, skill, N) {
-  const acc = {};
-  for (let k = 1; k <= N; k++) { const r = A.duel(A.mage({ tier, skill }), A.mage({ tier, skill }), { seed: k }); for (const m of r.ms) for (const [key, v] of Object.entries(A.look(m, m.deathT ?? r.t))) (acc[key] = acc[key] || []).push(v); }
+  const acc = {}, rules = { barrels: true };
+  for (let k = 1; k <= N; k++) { const sw = k % 2, a = A.mage({ tier, skill, deck: '기술' }), b = A.mage({ tier, skill: '중급', deck: '기술' }); const r = sw ? A.duel(b, a, { seed: k, rules }) : A.duel(a, b, { seed: k, rules }); const m = r.ms[sw ? 1 : 0]; for (const [key, v] of Object.entries(A.look(m, m.deathT ?? r.t))) (acc[key] = acc[key] || []).push(v); }
   const look = {}; for (const [key, xs] of Object.entries(acc)) { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); look[key] = { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; }
-  return { N: 2 * N, look };
+  return { N, look };
 }
 
 // 대진표. 줄의 id는 기준과 맞춰 보는 열쇠라 바꾸지 않는다 (바꾸면 새 줄·사라진 줄로 나온다)
@@ -60,7 +61,7 @@ function table() {
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, { tier: '중간', deck: '도발 합법 최강', type: '이단' }, 100, { taunt: true, wave: true });
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
-  for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 20, run: () => looks(t, sk, 20) });
+  for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, run: () => looks(t, sk, 40) });
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
