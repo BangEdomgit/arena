@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.3.1 — 표준 시험 묶음
+/* 숨 결투장 v1.4.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -56,13 +56,17 @@ function table() {
   // 둘러싸기
   for (const [c, q, n] of [[{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 50], [{ tier: '대마법사', deck: '광역' }, { tier: '병사', deck: '머스킷' }, 40], [{ tier: '상위', deck: '광역' }, { tier: '평범', deck: '기본기' }, 12]])
     T.push({ id: '둘러싸기: ' + who(c) + ' 대 ' + who(q) + ' ' + n + '명', group: '둘러싸기', N: 10, run: () => rings(c, q, n, 10) });
+  // 도발 (1.4.0)
+  for (const t of ['평범', '중간']) duel('도발', { tier: t, deck: '도발 합법 최강' }, { tier: t }, 100, { taunt: true });
+  duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
+  duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, { tier: '중간', deck: '도발 합법 최강', type: '이단' }, 100, { taunt: true, wave: true });
   // 힘 대 판단: 한 등급 위의 둔한 사람 대 한 등급 아래의 날카로운 사람
   duel('힘 대 판단', { tier: '중간', judge: '둔함' }, { tier: '평범', judge: '날카로움' }, 100);
   duel('힘 대 판단', { tier: '상위', judge: '둔함' }, { tier: '중간', judge: '날카로움' }, 100);
   duel('힘 대 판단', { tier: '대마법사', judge: '둔함' }, { tier: '상위', judge: '날카로움' }, 100);
   return T;
 }
-const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '힘 대 판단'];
+const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
 
 // 한 줄의 요약: A승·B승·무, A의 점수(무 = 0.5), 평균 시간과 표준편차
 function summarize(res) {

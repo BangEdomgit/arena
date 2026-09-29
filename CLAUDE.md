@@ -21,6 +21,7 @@ node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # JSON(spells·books·scenes)을 고쳤으면 sandbox/data.js 다시 싸기
 node cli.js suite [묶음]           # 표준 시험 묶음(약 17 s): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
+# 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (REPORT 13절)
 ```
 
 `replay.json` 같은 녹화 파일은 커밋하지 않는다.
@@ -69,7 +70,7 @@ node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새
 
 ## 새 마법 넣기
 
-`spells.json`에 틀(`t`)과 필드를 맞춰 한 항목 추가 → `node cli.js pack` → 덱에 넣고 `node cli.js duel`로 확인. 새 틀이 필요하면 `core.js`의 `release`에 갈래를 더하고, 두뇌가 쓰게 `brain.js`의 후보 평가에도 더하고, SPEC 8장에 적는다.
+`spells.json`에 틀(`t`)과 필드를 맞춰 한 항목 추가(규칙에 딸린 마법이면 `rule: '스위치 이름'` — 꺼지면 책에서 빠져 예전과 같다) → `node cli.js pack` → 덱에 넣고 `node cli.js duel`로 확인. 새 틀이 필요하면 `core.js`의 `release`에 갈래를 더하고, 두뇌가 쓰게 `brain.js`의 후보 평가에도 더하고, SPEC 8장에 적는다.
 
 ## 샌드박스를 고칠 때
 
