@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.6.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.7.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -167,5 +167,15 @@ ok('판단 수준 (1.5.0): 다섯 단계, 초보는 예비동작을 못 읽고, 
   let feint = 0, learned = 0; for (let k = 1; k <= 4; k++) { const r = A.duel(A.mage({ tier: '중간', skill: '전설' }), A.mage({ tier: '중간', skill: '대가' }), { seed: k }); feint += r.ms[0].log.dec.feint || 0; const mm = Object.values(r.ms[0].mem)[0]; if (mm && mm.L + mm.R > 0) learned++; }
   assert.ok(feint > 0 && learned > 0, 'feint ' + feint + ' learned ' + learned);
   assert.throws(() => A.mage({ skill: '신' }));
+});
+ok('기술 사다리 1 (1.7.0): 초보는 서서 쏘고 멈추며, 상급은 바로 잇고 콤보를 계획하고, 서클은 그릇 × 솜씨', () => {
+  assert.deepStrictEqual(['초보', '중급', '상급', '대가', '전설'].map(skill => A.mage({ tier: '중간', skill }).circles), [1, 2, 3, 3, 4]);
+  assert.deepStrictEqual(['초보', '전설'].map(skill => A.mage({ tier: '평범', skill }).circles), [1, 2]);
+  const lk = skill => { const r = A.duel(A.mage({ tier: '평범', skill }), A.mage({ tier: '평범', skill }), { seed: 2 }); return A.look(r.ms[0], r.ms[0].deathT ?? r.t); };
+  const b = lk('초보'), m = lk('중급'), s = lk('상급');
+  assert.ok(b['빈틈 (s)'] > m['빈틈 (s)'] && m['빈틈 (s)'] > s['빈틈 (s)'], [b, m, s].map(x => x['빈틈 (s)']).join(' > '));
+  assert.ok(b['분당 콤보'] === 0 && m['분당 콤보'] > 0);
+  const W = A.createWorld({ seed: 1, obstacles: 0 }); const n = A.addMage(W, A.mage({ skill: '초보' }), 0, 5, 15); A.addMage(W, {}, 1, 25, 15);
+  n.cast = { s: W.spells['불기둥'], tx: 25, ty: 15, t: 0, T: 5 }; n.mv.x = 1; n.thinkT = 9; const x0 = n.x; for (let k = 0; k < 10; k++) A.stepWorld(W); assert.strictEqual(n.x, x0, '초보가 쏘면서 걸었다');
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

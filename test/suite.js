@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.6.0 — 표준 시험 묶음
+/* 숨 결투장 v1.7.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -28,6 +28,14 @@ function rings(center, crowd, n, N) {
   return out;
 }
 
+// 싸우는 모습: 같은 단계끼리 N판, 두 사람 모두의 행동 지표(A.look) 평균과 표준편차
+function looks(tier, skill, N) {
+  const acc = {};
+  for (let k = 1; k <= N; k++) { const r = A.duel(A.mage({ tier, skill }), A.mage({ tier, skill }), { seed: k }); for (const m of r.ms) for (const [key, v] of Object.entries(A.look(m, m.deathT ?? r.t))) (acc[key] = acc[key] || []).push(v); }
+  const look = {}; for (const [key, xs] of Object.entries(acc)) { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); look[key] = { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; }
+  return { N: 2 * N, look };
+}
+
 // 대진표. 줄의 id는 기준과 맞춰 보는 열쇠라 바꾸지 않는다 (바꾸면 새 줄·사라진 줄로 나온다)
 function table() {
   const T = [], duel = (group, a, b, N, rules) => T.push({ id: group + ': ' + who(a) + ' 대 ' + who(b) + (rules ? ' ' + JSON.stringify(rules) : ''), group, N, run: () => duels(a, b, N, rules) });
@@ -51,6 +59,8 @@ function table() {
   for (const t of ['평범', '중간']) duel('도발', { tier: t, deck: '도발 합법 최강' }, { tier: t }, 100, { taunt: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, { tier: '중간', deck: '도발 합법 최강', type: '이단' }, 100, { taunt: true, wave: true });
+  // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
+  for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 20, run: () => looks(t, sk, 20) });
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
@@ -60,7 +70,7 @@ function table() {
   duel('힘 대 판단', { tier: '평범', skill: '전설' }, { tier: '평범', skill: '초보' }, 100);
   return T;
 }
-const GROUPS = ['등급', '판단', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
+const GROUPS = ['등급', '판단', '모습', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
 
 // 한 줄의 요약: A승·B승·무, A의 점수(무 = 0.5), 평균 시간과 표준편차
 function summarize(res) {
@@ -72,7 +82,7 @@ function run(only, log = () => {}) {
   const rows = {}, T = table().filter(r => !only || r.group === only);
   if (only && !T.length) throw new Error('없는 묶음: ' + only + ' (' + GROUPS.join(', ') + ')');
   const t0 = Date.now();
-  T.forEach((r, i) => { rows[r.id] = Object.assign({ group: r.group }, summarize(r.run())); log(`\r${i + 1}/${T.length} ${r.group}   `); });
+  T.forEach((r, i) => { const x = r.run(); rows[r.id] = Object.assign({ group: r.group }, x.look ? x : summarize(x)); log(`\r${i + 1}/${T.length} ${r.group}   `); });
   log(`\r${T.length}줄, ${((Date.now() - t0) / 1000).toFixed(1)} s\n`);
   return { v: A.VERSION, date: new Date().toISOString().slice(0, 10), z: Z, rows };
 }
@@ -89,6 +99,10 @@ function compare(base, now) {
   for (const [id, n] of Object.entries(now.rows)) {
     const o = base.rows[id];
     if (!o) { out.push({ id, kind: '새 줄', now: n }); continue; }
+    if (n.look) {   // 모습 줄: 지표마다 평균의 차를 표준오차로
+      const ch = Object.keys(n.look).filter(k => !o.look || !o.look[k] || o.look[k].m !== n.look[k].m).map(k => { const a = (o.look && o.look[k]) || { m: 0, sd: 0 }, b = n.look[k], se = Math.sqrt(a.sd ** 2 / o.N + b.sd ** 2 / n.N); return { k, a: a.m, b: b.m, z: se > 0 ? (b.m - a.m) / se : Infinity }; });
+      if (ch.length) out.push({ id, kind: '모습', ch, now: n }); continue;
+    }
     if (o.A === n.A && o.B === n.B && o.D === n.D && o.t === n.t && o.N === n.N) continue;
     out.push({ id, kind: '바뀜', old: o, now: n, zs: zScore(o, n), zt: zTime(o, n) });
   }
@@ -96,6 +110,8 @@ function compare(base, now) {
 }
 const pct = v => (v * 100).toFixed(0) + '%', sgn = v => (v > 0 ? '+' : '') + v;
 function format(d) {
+  if (d.kind === '모습') return d.id + '\n' + d.ch.map(c => `    ${c.k}  ${c.a} → ${c.b}  z=${isFinite(c.z) ? c.z.toFixed(1) : '∞'}  → ${verdict(c.z)}`).join('\n');
+  if (d.kind === '새 줄' && d.now.look) return `${d.id}\n    새 줄: ` + Object.entries(d.now.look).map(([k, v]) => k + ' ' + v.m).join(', ');
   if (d.kind === '새 줄') return `${d.id}\n    새 줄: ${d.now.A}:${d.now.B}:무 ${d.now.D} (${d.now.N}판), 시간 ${d.now.t} s`;
   const o = d.old, n = d.now, dp = Math.round((n.score - o.score) * 100);
   return `${d.id}\n    승패  ${o.A}:${o.B}:무 ${o.D} → ${n.A}:${n.B}:무 ${n.D} (${n.N}판), A 점수 ${pct(o.score)} → ${pct(n.score)} (${sgn(dp)}%p)  z=${d.zs.toFixed(1)}  → ${dp === 0 ? '같음' : verdict(d.zs)}` +
@@ -118,7 +134,7 @@ function main(args) {
   if (!diff.length && !gone.length) { console.log('바뀐 줄 없음'); return; }
   for (const d of diff) console.log(format(d));
   for (const id of gone) console.log(`${id}\n    사라진 줄`);
-  const ch = diff.filter(d => d.kind === '바뀜'), real = ch.filter(d => Math.abs(d.zs) >= Z || Math.abs(d.zt) >= Z).length, added = diff.length - ch.length;
+  const ch = diff.filter(d => d.kind === '바뀜' || d.kind === '모습'), real = ch.filter(d => d.kind === '모습' ? d.ch.some(c => Math.abs(c.z) >= Z) : Math.abs(d.zs) >= Z || Math.abs(d.zt) >= Z).length, added = diff.length - ch.length;
   console.log(`\n바뀐 줄 ${ch.length} (진짜 차이 ${real}, 운일 수 있음 ${ch.length - real})${added ? ', 새 줄 ' + added : ''}${gone.length ? ', 사라진 줄 ' + gone.length : ''}`);
 }
 

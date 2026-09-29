@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.6.0
+ * 숨 결투장 — 기본 두뇌 v1.7.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -38,6 +38,13 @@ function estDmg(s) {
   return s.dmg || 0;
 }
 
+// 이 마법이 과녁을 묶거나 굳히는 시간 (s). 안 보이는 발밑 공격은 소금 밑창에 × 0.3, 실은 min(1.2, E/800)
+function bindOf(s, e) {
+  const b = s.t === 'thread' ? Math.min(1.2, s.E / 800) : Math.max(s.root || 0, s.stun || 0, (s.hit && Math.max(s.hit.root || 0, s.hit.stun || 0)) || 0);
+  return b * (s.t === 'area' && !s.vis && e.gear && e.gear.soles ? 0.3 : 1);
+}
+// 시전이 끝나고 과녁에 닿기까지 (s): 투사체는 날아가는 시간, 지연 폭발·곡사는 지연
+function landDelay(s, d) { return s.t === 'proj' ? d / s.v : s.t === 'area' ? s.delay : s.t === 'lob' ? s.flight : s.t === 'thread' ? d / (32 * (s.fast || 1)) : 0; }
 // 사람의 공격 마법 최대 사거리 (m)
 function maxRange(m, S) { let r = 0; for (const n of m.book) { const s = S[n]; if (!s || !OFF[s.t]) continue; r = Math.max(r, s.t === 'cone' ? s.L * C.sizeOf(m, s) : s.t === 'touch' ? 1.3 : s.home ? 12 : C.rangeOf(m, s)); } return r; }
 // 내가 (x, y)에 섰을 때 제 손끝의 장악 몫: 적 신호가 옅은 땅일수록 크다 (SPEC 5장의 f, 내 몫은 거리 0)
@@ -194,8 +201,12 @@ function think(W, m) {
     else if (m.type === '서퍼') restNow = false;
     else if (m.type === '메타') restNow = !(e.hp / e.hpMax < 0.5 || m.hp / m.hpMax > e.hp / e.hpMax + 0.1);
   }
-  if (restNow || (m.wave && (m.type === '메타' || (T.waveChoose && !m.waveWant)) && m.fat > 140 && !aimed)) { m.log.dec.rest++; return; }
+  if (restNow || (m.wave && (m.type === '메타' || (T.waveChoose && !m.waveWant)) && m.fat > 140 && !aimed)) { m.log.dec.rest++; m.relT = null; return; }
 
+  // 쏜 뒤 멈춤 (초보): 쏘고 나서 정해진 시간 동안 다음을 고르지 않는다
+  if (m.pauseLen && W.t - m.lastRel < m.pauseLen) return;
+  // 두 수 콤보 계획 (상급): 묶기를 쏘았으면 묶인 동안 떨어질 결정타를 기다린다
+  const plan = T.combo2 && m.combo && m.combo.tgt === e && W.t < m.combo.until ? m.combo : null;
   // ---- 7. 마법 고르기 ----
   const lead = T.lead, cb = T.combo, down = cb && eDown;
   const ek = {}; if (T.counter) for (const n of e.book) { const k = S[n] && kindOf(S[n]); if (k) ek[k] = 1; }
@@ -253,6 +264,10 @@ function think(W, m) {
       case 'taunt': { const c = e.cast || e.castB; if (c && e.type !== '이단' && d < R && c.T - c.t > Tw + 0.05) v = he * estDmg(c.s) * (e.wave ? 1 : 0.6) / (Tw + 0.3) * (e.wave ? 1.3 : 1); break; }   // 끊을 부름의 값 × 끊길 확률
       case 'smother': { const need = m.st.burn > 0 || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3) || W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3); v = need ? 1.1 : 0; break; }
     }
+    if (plan && OFF[s.t]) {
+      if (n === plan.fin) { const land = W.t + Tw + landDelay(s, d); if (land >= plan.land - 0.05 && land <= plan.land + plan.bind) { v = Math.max(v, 0.6) * 3; if (e.st.root > 0 || e.st.stun > 0 || plan.land > W.t) { tx = e.x; ty = e.y; } } else if (land < plan.land - 0.05) v = 0; }
+      else if (!isSetup(s) && W.t < plan.land + plan.bind) v *= 0.3;   // 결정타 자리를 비워 둔다
+    }
     if (roll && (s.t === 'proj' || s.t === 'thread')) { tx += -uy * roll; ty += ux * roll; }
     if (shieldNear) { if (s.t === 'proj' || s.t === 'thread') v *= 0.7; else if (s.t === 'area' || s.t === 'lob') v *= 1.25; }
     // 덱 읽기: 상대가 그 종류를 부르는 중이면 천적을 먼저, 아니면 한가할 때 조금 먼저
@@ -281,7 +296,7 @@ function think(W, m) {
     if (OFF[s.t]) v *= T.aggr * (defDown ? 1.4 : 1);
     if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel });
   }
-  if (!cand.length) return;
+  if (!cand.length) { m.relT = null; return; }   // 쏠 게 없으면 빈틈이 아니다
   // 장악권은 비싸니 상위 넷만 따진다
   cand.sort((a, b) => b.v - a.v);
   let best = null;
@@ -290,7 +305,7 @@ function think(W, m) {
     if (W.rules.domain && !c.barrel && !c.s.mundane) v *= C.gAt(W, m, c.s, c.tx, c.ty);
     if (!best || v > best.v2) { best = c; best.v2 = v; }
   }
-  if (!best || best.v2 <= 0.15) return;
+  if (!best || best.v2 <= 0.15) { m.relT = null; return; }
   // 속임수 시작 (전설): 상대가 자동 진이나 구르기로 반응할 수 있으면, 가끔 가장 큰 예비동작을 먼저 보인다
   let feint = null;
   if (T.feint && slot === 'A' && (e.autoDodge || (W.rules.circles && e.circles >= 3 && e.book.some(n => S[n] && ((S[n].t === 'buff' && S[n].react) || S[n].t === 'wall')))) && W.rng() < 0.2) {
@@ -304,9 +319,19 @@ function think(W, m) {
   m.glu -= best.cost; m.cd[best.n] = s.cd;
   const cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint, cost: best.cost };
   if (slot === 'B') m.castB = cast; else m.cast = cast;
+  // 행동 지표: 시작 시각, 빈틈, 콤보 시도
+  m.log.starts.push(W.t); if (m.relT != null && slot === 'A') { m.log.gapSum += W.t - m.relT; m.log.gapN++; m.relT = null; }
+  const intent = OFF[s.t] && ((down || (cb && e.st.wet > 0 && s.t === 'thread')) || (plan && s.n === plan.fin));
+  if (intent) { m.log.comboTry++; m.comboPend = { tgt: e, until: W.t + Tc + landDelay(s, hyp(best.tx - m.x, best.ty - m.y)) + 0.6 }; if (plan) m.combo = null; }
+  // 두 수 콤보를 여는 묶기를 쏘면 결정타를 예약한다 (묶기가 떨어질 때와 묶이는 시간)
+  const bind = T.combo2 && OFF[s.t] ? bindOf(s, e) : 0;
+  if (bind >= 0.3) {
+    const fin = m.book.filter(k => S[k] && OFF[S[k].t] && k !== s.n && !bindOf(S[k], e)).sort((a, b) => estDmg(S[b]) - estDmg(S[a]))[0];
+    if (fin) m.combo = { tgt: e, fin, land: W.t + Tc + landDelay(s, d), bind, until: W.t + Tc + 3 };
+  }
   logDec(m, s, slot, { aimed, combo: eDown || (m.last && W.t - m.lastT < 1.5 && isSetup(S[m.last])), path: s.t === 'trap' && vt > 1.2 && d < 10, barrel: best.barrel });
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.6.0' };
+return { think, catOf, FORMNAME, VERSION: '1.7.0' };
 });

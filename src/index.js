@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.6.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.7.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -29,11 +29,13 @@ const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac: Object
 const ROLL = { rollCap: 0.85, rollBias: [0.6, 0.9] };
 const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false, lever: false, pathTrap: false, slotB: false, terrain: false, readWave: false, cdRead: false, outrange: false, focusLow: false };
 const SKILLS = {
-  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false })),
+  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6] })),
   '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
-  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true })),
-  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
+  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true })),
+  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
 };
+// 실제로 쓰는 서클 = 그릇(등급) × 솜씨(판단 수준) (1.7.0)
+const CIRCLES = { '초보': c => Math.max(1, Math.floor(c / 2)), '중급': c => Math.max(1, c - 1), '상급': c => c, '대가': c => c, '전설': c => c + 1 };
 SKILLS['전설'] = SK(0.05, 0.01, true, Object.assign({}, SKILLS['대가'].tac, { feint: true, learn: true, waveChoose: true, counter: true }));
 const register = makeRegistry(core, { TIERS, DECKS, BRAINS });
 
@@ -49,7 +51,7 @@ function mage(opt = {}, lib = {}) {
   const Rs = book.map(n => SP[n]).filter(x => x && ['proj', 'thread', 'area', 'lob', 'cone', 'touch'].includes(x.t)).map(x => x.t === 'cone' ? x.L : x.t === 'touch' ? 1.2 : (x.home ? 10 : x.R)).sort((a, b) => a - b);
   const prefR = Rs.length ? core.clamp(Rs[Math.floor(Rs.length / 2)] * 0.5, 2.5, 10) : 7;
   return Object.assign({
-    name: opt.name, book: book.slice(), C: t.C, circles: t.circles, noise: sk ? sk.noise : t.noise, dec: sk ? sk.dec : t.dec, autoDodge: sk ? sk.autoDodge : t.autoDodge, skill: opt.skill,
+    name: opt.name, book: book.slice(), C: t.C, circles: sk ? CIRCLES[opt.skill](t.circles) : t.circles, noise: sk ? sk.noise : t.noise, dec: sk ? sk.dec : t.dec, autoDodge: sk ? sk.autoDodge : t.autoDodge, skill: opt.skill,
     gear: Object.assign({ soles: true }, opt.gear), mast: Object.fromEntries(book.map(n => [n, t.mast])),
     hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, sk && sk.tac, opt.tac), brain: br || undefined, type: opt.type || '메타',
   }, opt.spec);
@@ -105,11 +107,24 @@ function recording(W) {
   return { v: core.VERSION, names: W.ms.map(m => m.name), sides: W.ms.map(m => m.side), hpMax: W.ms.map(m => m.hpMax), winner: done ? r.winner : -1, t: r.t, obs: W.obs, frames: W.rec || [] };
 }
 
+// 싸우는 모습 (1.7.0): 판이 끝난 사람의 행동 지표. t = 그 사람이 싸운 시간 (s)
+function look(m, t) {
+  const st = m.log.starts, iv = []; for (let i = 1; i < st.length; i++) iv.push(st[i] - st[i - 1]);
+  const mean = iv.length ? iv.reduce((a, b) => a + b, 0) / iv.length : 0, sd = iv.length > 1 ? Math.sqrt(iv.reduce((a, b) => a + (b - mean) ** 2, 0) / (iv.length - 1)) : 0;
+  const L = m.log, per = x => x / Math.max(t, 1) * 60;
+  return {
+    '분당 시전': per(st.length), '빈틈 (s)': L.gapN ? L.gapSum / L.gapN : 0, '박자 흔들림': mean ? sd / mean : 0,
+    '분당 콤보': per(L.comboTry), '콤보 성공률': L.comboTry ? L.comboHit / L.comboTry : 0, '분당 동시 시전': per(L.dec.slotB),
+    '분당 캔슬': per(L.cancel || 0), '분당 속임수': per(L.dec.feint || 0), '엄폐 시간 비율': t ? (L.coverT || 0) / t : 0,
+    '분당 유도 성공': per(L.lure || 0), '분당 동시 착탄': per(L.simul || 0), '방어 적중률': L.defTry ? (L.defHit || 0) / L.defTry : 0,
+  };
+}
+
 // 판이 끝난 뒤 맞힘 기록을 사람 규격에 되먹인다 (결투자가 배우는 몫)
 function learn(spec, m, rate = 0.3) {
   for (const n of Object.keys(m.log.casts)) { const c = m.log.casts[n], h = m.log.hits[n] || 0; spec.hitEst[n] = (spec.hitEst[n] ?? 0.35) * (1 - rate) + rate * Math.min(1, h / c); }
   return spec;
 }
 
-return Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, register, mage, place, battle, duel, sceneWorld, runScene, recording, learn });
+return Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, register, mage, place, battle, duel, look, sceneWorld, runScene, recording, learn });
 });
