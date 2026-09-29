@@ -1,20 +1,25 @@
-'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.0.0
+ * 숨 결투장 — 기본 두뇌 v1.4.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
- * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다.
+ * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
+ * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
  * ========================================================================= */
-const C = require('./core');
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'));
+  else root.ArenaBrain = factory(root.ArenaCore);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C) {
+'use strict';
 const { hyp, clamp } = C;
 
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
+const SELF_GAP = 1.5;   // 지연 폭발 반지름 밖으로 둘 여유 (m): 몸 0.3 + 겨냥 흔들림과 지연 동안의 걸음
 function catOf(s) {
   if (s.t === 'trap' || s.role === '함정') return '함정';
   if (s.t === 'move' || (s.t === 'buff' && s.b.speed)) return '이동';
   if (s.role === '방어' || s.t === 'wall' || s.t === 'ring' || s.t === 'shoot' || s.t === 'smother' || s.t === 'buff') return '방어';
   return '공격';
 }
-const FORMNAME = { proj: '던지기', lob: '던지기', touch: '몸', cone: '앞으로 뿜기', thread: '실', area: '상대 자리', zone: '자리 깔기', trap: '함정', wall: '내 앞 벽', buff: '몸', move: '이동', ring: '몸', shoot: '몸', smother: '몸' };
+const FORMNAME = { taunt: '상대 자리', proj: '던지기', lob: '던지기', touch: '몸', cone: '앞으로 뿜기', thread: '실', area: '상대 자리', zone: '자리 깔기', trap: '함정', wall: '내 앞 벽', buff: '몸', move: '이동', ring: '몸', shoot: '몸', smother: '몸' };
 const isSetup = s => !!s && (s.t === 'trap' || s.t === 'zone' || (s.hit && (s.hit.wet || s.hit.root || s.hit.stun || s.hit.chill)) || (s.t === 'area' && (s.root || s.stun)) || (s.t === 'cone' && s.wet));
 function logDec(m, s, slot, ctx) {
   const L = m.log.dec; L.n++;
@@ -27,18 +32,22 @@ function logDec(m, s, slot, ctx) {
 function estDmg(s) {
   if (s.hit && s.hit.flat) return s.hit.flat; if (s.hit && s.hit.dmg) return s.hit.dmg;
   if (s.burst && s.burst.dmg) return s.burst.dmg; if (s.burst) return 14;
-  if (s.t === 'proj') return Math.min((s.hit && s.hit.cap) || 99, 0.55 * Math.pow(0.5 * s.m * s.v * s.v, 0.75)) * (s.multi ? s.multi * 0.5 : 1);
-  if (s.t === 'thread') return 0.8 * Math.pow(s.E, 0.55);
+  if (s.t === 'proj') return Math.min((s.hit && s.hit.cap) || 99, 0.55 * C.pow(0.5 * s.m * s.v * s.v, 0.75)) * (s.multi ? s.multi * 0.5 : 1);
+  if (s.t === 'thread') return 0.8 * C.pow(s.E, 0.55);
   if (s.t === 'cone') return s.dps * s.dur;
   return s.dmg || 0;
 }
 
 function think(W, m) {
-  const foes = W.foes[m.side], T = m.tac, S = W.spells;
+  const foes = W.foes[m.side], S = W.spells;
+  // 파도를 타는 동안: 더 몰아치고, 더 붙고, 덜 피하고, 쉬지 않는다
+  let T = m.wave ? Object.assign({}, m.tac, { aggr: m.tac.aggr * 1.6, prefR: m.tac.prefR * 0.7, dodge: m.tac.dodge * 0.5, rest: 999 }) : m.tac;
   if (!foes.length) { m.mv.x = m.mv.y = 0; return; }
   // 과녁: 약자부터(focusLow) 또는 가장 가까운 자
   let e = null, bs = 1e9;
   for (const q of foes) { const d = hyp(q.x - m.x, q.y - m.y), sc = T.focusLow ? q.hp / q.hpMax * 40 + d : d; if (sc < bs) { bs = sc; e = q; } }
+  // 메타는 상대의 파도를 읽는다: 상대가 파도 위면 물러서고, 꺼짐이면 몰아친다 (1.3.0)
+  if (W.rules.wave && m.type === '메타' && (e.wave || e.crash > 0)) T = Object.assign({}, T, e.wave ? { prefR: T.prefR * 1.4, aggr: T.aggr * 0.7 } : { aggr: T.aggr * 1.6 });
   const d = hyp(e.x - m.x, e.y - m.y) || 0.01, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
   const los = !C.blocked(W, m.x, m.y, e.x, e.y);
   const vt = (e.vx * -ux + e.vy * -uy);           // 적이 나에게 다가오는 속도 (m/s)
@@ -55,13 +64,15 @@ function think(W, m) {
   }
   for (const q of foes) for (const c of [q.cast, q.castB]) {
     if (!c || !C.THREAT[c.s.t]) continue;
+    if (W.rules.wave && q.type === '이단' && c.T - c.t > 0.12) continue;   // 이단의 예비동작은 신호가 조용해 마지막 0.12 s에만 읽힌다 (읽기·자동 진 모두)
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux }; }
   }
-  for (const a of W.areas) if (a.src.side !== m.side && a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
+  for (const a of W.areas) if ((a.src.side !== m.side && a.vis || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
   for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
   if (dodge && m.rollCd <= 0 && m.stam > 1.5 && W.rng() < 0.4 + T.dodge * 0.4 + (m.autoDodge ? 0.3 : 0)) {
-    const l = hyp(dodge.x, dodge.y) || 1; m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
+    const l = hyp(dodge.x, dodge.y) || 1; if (W.areas.some(a => a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5)) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
+    m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
   }
 
   // ---- 2. 입장: 둘러싸였을 때 버틸 것인가, 뚫을 것인가 ----
@@ -79,7 +90,7 @@ function think(W, m) {
       stance = 'breakout';
       let bd = null, bsc = -1e9;
       for (let k = 0; k < 16; k++) {
-        const a = k / 16 * 6.2832, dx = Math.cos(a), dy = Math.sin(a); let sc = 0;
+        const a = k / 16 * 6.2832, dx = C.cos(a), dy = C.sin(a); let sc = 0;
         for (const q of foes) { const qx = q.x - m.x, qy = q.y - m.y, dq = hyp(qx, qy) || 1; if ((qx * dx + qy * dy) / dq > 0.6) sc -= 3 / Math.max(1, dq / 3); }
         let room = 0; for (let s2 = 1; s2 <= 14; s2++) { const px = m.x + dx * s2, py = m.y + dy * s2; if (px < 1 || py < 1 || px > W.width - 1 || py > W.height - 1) break; if (W.obs.some(o => hyp(o.x - px, o.y - py) < o.r + 0.3)) break; room = s2; }
         sc += room * 0.4; if (sc > bsc) { bsc = sc; bd = { dx, dy }; }
@@ -105,6 +116,8 @@ function think(W, m) {
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < t.r + 1.2) { const l = hyp(m.x - t.x, m.y - t.y) || 1; vx += (m.x - t.x) / l * 1.5; vy += (m.y - t.y) / l * 1.5; }
   for (const b of W.barrels) if (!b.ex && hyp(b.x - m.x, b.y - m.y) < 3.2) { const l = hyp(m.x - b.x, m.y - b.y) || 1; vx += (m.x - b.x) / l * 1.2; vy += (m.y - b.y) / l * 1.2; }
+  // 내가 떨어뜨린 지연 폭발 안으로 걸어 들어가지 않는다. 돌파 중에도 (v1.0.1)
+  for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
   m.mv.x = vx; m.mv.y = vy;
   if (m.st.stun > 0) return;
 
@@ -128,7 +141,13 @@ function think(W, m) {
   if (m.cast || m.chan) { if (circ >= 2 && !m.castB) slot = 'B'; else return; }
 
   // ---- 6. 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다 ----
-  if (W.rules.fatigue && m.fat > T.rest && !aimed && d > 4) { m.log.dec.rest++; return; }
+  // 파도가 켜져 있으면 부류마다: 서퍼는 쉬지 않고 탄다, 메타는 이기고 있을 때만 타고 너무 깊으면(140) 내려온다, 이단은 쉰다
+  let restNow = W.rules.fatigue && m.fat > T.rest && !aimed && d > 4;
+  if (W.rules.wave && restNow) {
+    if (m.type === '서퍼') restNow = false;
+    else if (m.type === '메타') restNow = !(e.hp / e.hpMax < 0.5 || m.hp / m.hpMax > e.hp / e.hpMax + 0.1);
+  }
+  if (restNow || (m.wave && m.type === '메타' && m.fat > 140 && !aimed)) { m.log.dec.rest++; return; }
 
   // ---- 7. 마법 고르기 ----
   const cand = [];
@@ -179,6 +198,7 @@ function think(W, m) {
         break;
       case 'ring': if (W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3.5)) v = 1.2; else if (d < 2.5) v = 0.5; break;
       case 'shoot': { const n2 = W.proj.filter(p => p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < s.r).length; v = n2 ? 0.9 + n2 * 0.2 : 0; break; }
+      case 'taunt': { const c = e.cast || e.castB; if (c && e.type !== '이단' && d < R && c.T - c.t > Tw + 0.05) v = he * estDmg(c.s) * (e.wave ? 1 : 0.6) / (Tw + 0.3) * (e.wave ? 1.3 : 1); break; }   // 끊을 부름의 값 × 끊길 확률
       case 'smother': { const need = m.st.burn > 0 || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3) || W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3); v = need ? 1.1 : 0; break; }
     }
     // 돌파 중이면 길을 막은 자를 친다
@@ -197,7 +217,10 @@ function think(W, m) {
       const rr = s.t === 'cone' ? 2 : (s.r || (s.z && (s.z.r || (s.z.len || 0) / 2)) || 1.5) * C.sizeOf(m, s);
       let cnt = 0; for (const q of foes) if (hyp(q.x - tx, q.y - ty) < rr + 0.4) cnt++; if (cnt > 1) v *= 1 + 0.6 * (cnt - 1);
     }
-    if (W.rules.fatigue && !s.react) v -= m.fat / 100 * 0.5;
+    // 지연 폭발은 쏜 사람도 맞힌다: 떨어질 자리가 내 둘레면 쓰지 않는다 (v1.0.1)
+    if (s.t === 'area' && hyp(tx - m.x, ty - m.y) < s.r * C.sizeOf(m, s) + SELF_GAP) continue;
+    if (W.rules.fatigue && !s.react && !m.wave) v -= m.fat / 100 * 0.5;
+    if (m.wave && !OFF[s.t]) v *= 0.5;   // 파도 위에선 막기보다 친다
     if (slot === 'B') v -= 0.1;
     if (OFF[s.t]) v *= T.aggr;
     if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel });
@@ -213,7 +236,7 @@ function think(W, m) {
   }
   if (!best || best.v2 <= 0.15) return;
   const s = best.s;
-  let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + m.fat / 200 : 1);
+  let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1);
   if (s.t === 'thread') Tc += Math.min(hyp(best.tx - m.x, best.ty - m.y), C.rangeOf(m, s)) / (32 * (s.fast || 1));
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
@@ -223,4 +246,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-module.exports = { think, catOf, FORMNAME, VERSION: '1.0.0' };
+return { think, catOf, FORMNAME, VERSION: '1.4.0' };
+});
