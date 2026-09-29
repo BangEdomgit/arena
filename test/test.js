@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.3.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.3.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -131,7 +131,7 @@ ok('부류의 이점 (1.3.0): 메타는 문턱 아래 위력·회복·꺼짐 없
   assert.ok(Math.abs(A.power(W1, meta(W1), s) / A.power(W0, meta(W0), s) - 1.08) < 1e-12, '피로 90 위력');
   const down = type => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: { wave: true } }); const m = A.addMage(W, { type }, 0, 5, 15); A.addMage(W, { book: [] }, 1, 35, 15); m.wave = 1; m.fat = 75.05; const f0 = m.fat; A.stepWorld(W); return { m, drop: f0 - m.fat }; };
   const me = down('메타'), su = down('서퍼');
-  assert.ok(!me.m.wave && me.m.crash === 0 && !su.m.wave && su.m.crash > 1.9, '꺼짐'); assert.ok(Math.abs(me.drop / su.drop - 1.15) < 1e-9, '회복 ' + me.drop / su.drop);
+  assert.ok(!me.m.wave && me.m.crash === 0 && !su.m.wave && su.m.crash > 1.9, '꺼짐'); assert.ok(Math.abs(me.drop / su.drop - 1.05) < 1e-9, '회복 ' + me.drop / su.drop);
   const auto = (type, left) => {   // 상위(5서클)가 적의 예비동작을 읽고 자동 진을 펴는가
     const W = A.createWorld({ seed: 1, obstacles: 0, rules: { wave: true } }); const d = A.addMage(W, { C: 5, circles: 5, book: ['흘리기 막'] }, 0, 10, 15), q = A.addMage(W, { type, book: ['라이트닝'] }, 1, 18, 15);
     A.stepWorld(W); d.thinkT = 1; q.cast = { s: W.spells['라이트닝'], tgt: d, tx: d.x, ty: d.y, t: 1 - left, T: 1 }; A.brain.think(W, d); return d.log.dec.auto;

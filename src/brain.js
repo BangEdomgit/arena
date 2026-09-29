@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.3.0
+ * 숨 결투장 — 기본 두뇌 v1.3.1
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -245,5 +245,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.3.0' };
+return { think, catOf, FORMNAME, VERSION: '1.3.1' };
 });

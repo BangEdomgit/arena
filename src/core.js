@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.3.0
+ * 숨 결투장 — 엔진 핵심 v1.3.1
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
@@ -9,7 +9,7 @@
   else root.ArenaCore = factory(root.ArenaData.spells);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
 'use strict';
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 const DT = 1 / 30;
 
 /* ---------------- 결정론 수학 ----------------
@@ -136,8 +136,8 @@ function addMage(W, spec, side, x, y) {
 function ceff(W, m) { return m.C * (W.rules.fatigue ? Math.max(0.45, 1 - Math.min(m.fat, 100) / 150) : 1) * (m.wave ? 1.1 : 1); }
 function power(W, m, s) {
   if (s.mundane) return 1;
-  // 파도 위 서퍼 × 1.45·메타 × 1.3. 파도가 켜져 있으면 이단은 늘 × 0.8, 메타는 파도 문턱 아래(피로 80~100)에서 × 1.08 (자가 피해 없음)
-  const wv = m.wave ? (m.type === '서퍼' ? 1.45 : 1.3) : !W.rules.wave ? 1 : m.type === '이단' ? 0.8 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1;
+  // 파도 위 서퍼 × 2.0(1.3.1, 1.45에서)·메타 × 1.3. 파도가 켜져 있으면 이단은 늘 × 0.8, 메타는 파도 문턱 아래(피로 80~100)에서 × 1.08 (자가 피해 없음)
+  const wv = m.wave ? (m.type === '서퍼' ? 2.0 : 1.3) : !W.rules.wave ? 1 : m.type === '이단' ? 0.8 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1;
   return pow(m.C, W.rules.powerK) * (1 + 0.3 * (m.mast[s.n] || 0)) * (W.rules.fatigue ? Math.max(0.6, 1 - Math.min(m.fat, 100) / 200) : 1) * wv;
 }
 const rangeOf = (m, s) => (s.R || 0) * (s.mundane ? 1 : Math.sqrt(m.C));
@@ -347,7 +347,7 @@ function stepMage(W, m) {
   for (const n in m.cd) m.cd[n] -= DT;
   m.rollCd -= DT; m.autoCd -= DT; if (m.vault > 0) m.vault -= DT;
   m.glu = Math.min(m.gluMax, m.glu + BODY.gluRegen * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;
-  if (m.fat > 0) m.fat = Math.max(0, m.fat - 4 * (W.rules.wave && m.type === '메타' ? 1.15 : 1) * DT);   // 메타: 머리 회복 × 1.15
+  if (m.fat > 0) m.fat = Math.max(0, m.fat - 4 * (W.rules.wave && m.type === '메타' ? 1.05 : 1) * DT);   // 메타: 머리 회복 × 1.05
   if (m.crash > 0) m.crash -= DT;
   if (m.wave) {
     // 파도는 몸을 태운다. 깊을수록 세게. 서퍼는 익숙하고 메타는 조절한다. 피로가 75 아래로 내려오면 꺼짐(crash)
