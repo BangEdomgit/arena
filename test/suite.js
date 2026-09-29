@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.8.0 — 표준 시험 묶음
+/* 숨 결투장 v1.9.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -60,6 +60,8 @@ function table() {
   for (const t of ['평범', '중간']) duel('도발', { tier: t, deck: '도발 합법 최강' }, { tier: t }, 100, { taunt: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, { tier: '중간', deck: '도발 합법 최강', type: '이단' }, 100, { taunt: true, wave: true });
+  // 하이 리스크 (1.9.0): 판단 줄을 risk, risk + 소금 원으로
+  for (const rules of [{ risk: true }, { risk: true, saltRing: true }]) for (const t of ['평범', '중간']) for (let i = 0; i < 4; i++) duel('큰 수', { tier: t, skill: SK[i + 1] }, { tier: t, skill: SK[i] }, 100, rules);
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
   for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, run: () => looks(t, sk, 40) });
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
@@ -71,7 +73,7 @@ function table() {
   duel('힘 대 판단', { tier: '평범', skill: '전설' }, { tier: '평범', skill: '초보' }, 100);
   return T;
 }
-const GROUPS = ['등급', '판단', '모습', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
+const GROUPS = ['등급', '판단', '큰 수', '모습', '부류', '덱', '원소', '둘러싸기', '도발', '힘 대 판단'];
 
 // 한 줄의 요약: A승·B승·무, A의 점수(무 = 0.5), 평균 시간과 표준편차
 function summarize(res) {

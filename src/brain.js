@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.8.0
+ * 숨 결투장 — 기본 두뇌 v1.9.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -38,6 +38,10 @@ function estDmg(s) {
   return s.dmg || 0;
 }
 
+// 큰 수와 짝 (1.9.0): 짝 묶기를 쓰면 그 틈에 큰 수를 꽂는다. bind = 굳힘 시간 안에 닿게, wet = 젖은 동안, ice = 내 빙판 위에 있을 때, herd = 불벽으로 몬 쪽에
+const PAIRS = { '번개 그물': { fin: '번개 창', kind: 'bind' }, '물 대포': { fin: '대낙뢰', kind: 'wet' }, '빙판': { fin: '대낙뢰', kind: 'ice' }, '불벽': { fin: '화산 기둥', kind: 'herd' } };
+// 실제 시전 시간 (s): 숙련을 뺀 예비동작 × 기침·머리 피로·파도·꺼짐
+function castTime(W, m, Tw) { return Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1); }
 // 이 마법이 과녁을 묶거나 굳히는 시간 (s). 안 보이는 발밑 공격은 소금 밑창에 × 0.3, 실은 min(1.2, E/800)
 function bindOf(s, e) {
   const b = s.t === 'thread' ? Math.min(1.2, s.E / 800) : Math.max(s.root || 0, s.stun || 0, (s.hit && Math.max(s.hit.root || 0, s.hit.stun || 0)) || 0);
@@ -173,6 +177,8 @@ function think(W, m) {
     let P = null, bd3 = 8; for (const [px, py, off] of pts) { const ex = px - e.x, ey = py - e.y, el = hyp(ex, ey) || 1, qx = px + ex / el * off, qy = py + ey / el * off, dq = hyp(qx - m.x, qy - m.y); if (dq < bd3 && hyp(px - e.x, py - e.y) < d + 2) { bd3 = dq; P = [qx, qy]; } }
     if (P) { const l = hyp(P[0] - m.x, P[1] - m.y) || 1; vx = (P[0] - m.x) / l * 2.5; vy = (P[1] - m.y) / l * 2.5; m.lureT = W.t; }
   }
+  // 소금 원: 선 가까이(1.5 m) 오면 가운데로 돌아간다 (누구나)
+  if (W.rules.saltRing) { const cx = W.width / 2 - m.x, cy = W.height / 2 - m.y, dc = hyp(cx, cy) || 1; if (dc > C.saltR(W) - 1.5) { vx = cx / dc * 2.5; vy = cy / dc * 2.5; } }
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < t.r + 1.2) { const l = hyp(m.x - t.x, m.y - t.y) || 1; vx += (m.x - t.x) / l * 1.5; vy += (m.y - t.y) / l * 1.5; }
   for (const b of W.barrels) if (!b.ex && hyp(b.x - m.x, b.y - m.y) < 3.2) { const l = hyp(m.x - b.x, m.y - b.y) || 1; vx += (m.x - b.x) / l * 1.2; vy += (m.y - b.y) / l * 1.2; }
@@ -180,6 +186,7 @@ function think(W, m) {
   for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
   m.mv.x = vx; m.mv.y = vy;
   if (m.st.stun > 0) return;
+  if (W.rules.risk && m.emptyT > W.t) { m.relT = null; return; }   // 빈손: 큰 마법 뒤엔 자동 진도 못 쓴다
 
   // ---- 4. 자동 진: 3서클부터, 생각 없이 막는다 ----
   const circ = W.rules.circles ? m.circles : 1;
@@ -198,6 +205,10 @@ function think(W, m) {
     }
   }
 
+  // ---- 짝에 맞춰 모으던 큰 수 (대가·전설): 짝이 떨어졌는데 과녁이 안 굳었으면 끊고, 굳었으면 끝을 과녁에 다시 겨눈다 ----
+  if (W.rules.risk && T.bigPlan && m.cast && m.cast.s.big && m.cast.pairLand && W.t > m.cast.pairLand + 0.05) {
+    const c = m.cast; if (e.st.stun > 0 || e.st.root > 0) { c.tx = e.x; c.ty = e.y; } else { m.cast = null; m.glu += (c.cost || 0) * 0.7; m.cd[c.s.n] = Math.min(m.cd[c.s.n] || 0, 0.5); m.log.cancel++; }
+  }
   // ---- 기회 캔슬 (대가): 과녁이 묶였는데 지금 시전이 그 틈에 맞지 않으면 끊고 결정타로 ----
   if (T.cancel2 && m.cast && !m.cast.feint && !m.cast.down && OFF[m.cast.s.t] && eDown && m.cast.T - m.cast.t > 0.1 && !(m.simul && m.simul.a === m.cast.s.n)) { const c = m.cast; m.cast = null; m.glu += (c.cost || 0) * 0.7; m.cd[c.s.n] = Math.min(m.cd[c.s.n] || 0, 0.5); m.log.cancel++; }
   // ---- 캔슬 (상급): 쏘는 중에 과녁이 구르기 시작했거나, 계획한 콤보의 묶기가 빗나갔으면 끊는다 ----
@@ -303,6 +314,33 @@ function think(W, m) {
       if (n === plan.fin) { const left = Math.max(e.st.root || 0, e.st.stun || 0); if (left > Tw + landDelay(s, d)) { v = Math.max(v, 0.6) * 3; tx = e.x; ty = e.y; } else v = 0; }   // 묶였고 묶인 동안 닿을 때만
       else if (!isSetup(s) && W.t < plan.land + plan.bind) v *= 0.3;   // 결정타 자리를 비워 둔다
     }
+    // 하이 리스크 (risk): 큰 수는 입장 판단이 있으면 때를 가린다, 상대의 큰 수는 빠른 공격으로 끊는다, 빈손은 몰아친다
+    if (W.rules.risk) {
+      const noRoll = e.rollCd > 0.4 || e.stam < 1.5 || eDown;   // 과녁이 당분간 못 구른다
+      if (s.big && T.stance && !(eDown || e.emptyT > W.t || d > Math.max(8, maxRange(e, S)) || !los)) v = 0;   // 멀다 = 과녁의 사거리 밖
+      // 판을 짜는 사람(대가·전설)은 큰 수를 짝의 틈이나, 남은 굳힘 안에 닿을 때만 쓴다 (아래 짝 계획이 다시 연다)
+      if (s.big && T.bigPlan && !(Math.max(e.st.stun || 0, e.st.root || 0) > castTime(W, m, Tw) + landDelay(s, d) + 0.02)) v = 0;
+      else if (s.big && T.bigPlan) { v = Math.max(v, 30); tx = e.x; ty = e.y; }
+      if (OFF[s.t] && !s.big && T.readCast) { const bc = [e.cast, e.castB].find(c => c && c.s.big); if (bc && Tw + landDelay(s, d) < bc.T - bc.t && estDmg(s) >= 3) v *= 2.2; if (e.emptyT > W.t) v *= 1.5; }
+      // 짝 묶기 (대가·전설): 짝을 열 수 있으면 먼저 열고, 연 뒤에는 짝의 틈에 큰 수를 꽂는다
+      if (T.bigPlan) {
+        const bp = m.bigp && m.bigp.tgt === e && W.t < m.bigp.until ? m.bigp : null; if (m.bigp && !bp) m.bigp = null;
+        // 짝은 과녁이 빠져나갈 수 없을 때(이미 묶였거나 굳음, 또는 젖음형은 당분간 못 구를 때) 연다: 예비동작을 읽는 상대는 보이는 짝을 걸어서 피한다
+        const pr = PAIRS[n]; if (!bp && pr && (eDown || (pr.kind === 'wet' && noRoll)) && m.book.includes(pr.fin) && !((m.cd[pr.fin] || 0) > 0) && m.glu > cost + S[pr.fin].cost && v > 0) v = Math.max(v, 1.2);
+        if (bp && n === bp.fin) { const ld = castTime(W, m, Tw) + landDelay(s, d), held = Math.max(e.st.stun || 0, e.st.root || 0); v = 0;
+          // 굳힘형: 짝이 떨어지기 전에 모으기 시작해 굳힘 한가운데 닿게 한다(빗나가면 아래에서 캔슬). 이미 걸렸으면 남은 굳힘 안에 닿을 때만
+          if (bp.kind === 'bind') { const at = W.t + ld;
+            if (held > ld + 0.02) { v = 60; tx = e.x; ty = e.y; }
+            else if (W.t < bp.land && at >= bp.land + 0.05 && at <= bp.land + bp.bind - 0.05) { v = 60; const k = bp.land - W.t; tx = e.x + e.vx * k; ty = e.y + e.vy * k; }
+            else if (W.t < bp.land && at < bp.land + 0.05) m.thinkT = Math.min(m.thinkT, Math.max(0.01, bp.land + 0.05 - at + 0.01));
+            else if (W.t >= bp.land + 0.1) m.bigp = null; }
+          // 젖음·빙판·몰이형: 그 상태이고 과녁이 당분간 못 구르거나 묶였을 때
+          else if (noRoll && ((bp.kind === 'wet' && e.st.wet > 0) || (bp.kind === 'ice' && W.zones.some(z => z.src === m && z.k === 'ice' && C.inZone(z, e.x, e.y))) || (bp.kind === 'herd' && m.herd && W.t < m.herd.until))) {
+            v = 60; const k = held > 0 ? 0 : 0.5; tx = e.x + e.vx * ld * k; ty = e.y + e.vy * ld * k; if (bp.kind === 'herd') { tx += -uy * m.herd.side * 1.2; ty += ux * m.herd.side * 1.2; }
+          }
+        }
+      }
+    }
     if (sim) { if (!sim.fired && n === sim.bind && W.t >= sim.at - 0.02) { const tt = Tw + d / (32 * (s.fast || 1)); v = 50; tx = e.x + e.vx * tt; ty = e.y + e.vy * tt; } else if (sim.b2 && n === sim.b2 && slot === 'B') { v = 40; tx = sim.x; ty = sim.y; } else if (OFF[s.t]) v *= 0.2; }
     // 엄폐 걷어내기 (대가): 과녁이 바위 뒤에 숨었으면 불·산 지대를 그 자리에, 지연 폭발·곡사를 더 쓴다
     if (T.strip && !los && W.obs.some(o => hyp(o.x - e.x, o.y - e.y) < o.r + 1.5)) { if (s.t === 'zone' && (s.z.k === 'fire' || s.z.k === 'acid')) { v = Math.max(v, 0.9); tx = e.x; ty = e.y; } else if (s.t === 'area' || s.t === 'lob') v *= 1.5; }
@@ -379,7 +417,7 @@ function think(W, m) {
     if (big) { best = big; feint = { roll: e.roll > 0, front: !!e.buf.front, auto: e.autoCd, walls: W.walls.filter(w => w.own === e.side).length }; }
   }
   const s = best.s;
-  let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1);
+  let Tc = castTime(W, m, best.Tw);
   if (s.t === 'thread') Tc += Math.min(hyp(best.tx - m.x, best.ty - m.y), C.rangeOf(m, s)) / (32 * (s.fast || 1));
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
@@ -391,6 +429,10 @@ function think(W, m) {
   if (intent) { const kind = plan && s.n === plan.fin ? 'plan' : 'react'; m.log.comboTry++; m.log.cTry[kind] = (m.log.cTry[kind] || 0) + 1; m.comboPend = { tgt: e, kind, until: W.t + Tc + landDelay(s, hyp(best.tx - m.x, best.ty - m.y)) + 0.6 }; if (plan) m.combo = null; }
   if (m.combo && m.combo.tgt === e && !m.combo.logged) { m.combo.logged = 1; m.log.cPlan = (m.log.cPlan || 0) + 1; }
   // 두 수 콤보를 여는 묶기를 쏘면 결정타를 예약한다 (묶기가 떨어질 때와 묶이는 시간)
+  if (W.rules.risk && T.bigPlan) {
+    if (s.big) { if (m.bigp && s.n === m.bigp.fin) { m.log.bigPair++; if (m.bigp.kind === 'bind' && W.t < m.bigp.land) cast.pairLand = m.bigp.land; } m.bigp = null; }
+    else if (PAIRS[s.n] && m.book.includes(PAIRS[s.n].fin) && !((m.cd[PAIRS[s.n].fin] || 0) > 0) && (eDown || (PAIRS[s.n].kind === 'wet' && (e.rollCd > 0.4 || e.stam < 1.5)))) { const pr = PAIRS[s.n]; m.bigp = { tgt: e, fin: pr.fin, kind: pr.kind, land: W.t + Tc + landDelay(s, d) + (s.t === 'cone' ? s.dur : 0), bind: bindOf(s, e), until: W.t + Tc + 4 }; }
+  }
   if (m.simul && s.n === m.simul.bind) { m.simul.fired = 1; m.log.comboTry++; m.log.cTry.simul = (m.log.cTry.simul || 0) + 1; m.comboPend = { tgt: e, kind: 'simul', until: W.t + Tc + 0.8 }; }
   if (T.herd && s.t === 'zone' && s.z.shape === 'line' && s.z.dps && !(m.herd && W.t < m.herd.until)) { const lat = e.vx * -uy + e.vy * ux; m.herd = { side: -(lat > 0 ? 1 : lat < 0 ? -1 : m.sf), until: W.t + 3 }; m.lureT = W.t; }
   const bind = T.combo2 && OFF[s.t] ? bindOf(s, e) : 0;
@@ -402,5 +444,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.8.0' };
+return { think, catOf, FORMNAME, VERSION: '1.9.0' };
 });

@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.8.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.9.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -15,11 +15,12 @@ const TIERS = {
   '대마법사': { C: 10,  circles: 10, noise: 0.02, dec: 0.1,  autoDodge: true,  mast: 1,   tac: { dodge: 1, focusLow: true } },
 };
 const DECKS = Object.assign({
-  '합법 최강': ['불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물'],
+  '합법 최강': ['불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물', '대낙뢰', '화산 기둥', '번개 창'],   // 큰 마법 셋은 rules.risk일 때만 남는다
   '광역': ['낙뢰', '번개 그물', '체인', '불기둥', '화염 방사', '돌 비', '짧은 실', '석회 방패', '석회 기둥', '솟는 발판', '근육 폭주', '불고리', '비 뿌리기', '땅 번개'],
   '기본기': ['돌 압축탄', '라이트닝', '불덩이', '물 망치', '얼음 창', '석회 방패', '다리 자극'],
   '머스킷': ['머스킷'],
-  '기술': ['짧은 실', '체인', '번개 그물', '흙 손', '불기둥', '불벽', '번개 지뢰', '석회 방패', '산 안개'],   // 기술 사다리를 보일 재료가 다 든 덱 (1.7.0, suite 모습)
+  '기술': ['짧은 실', '체인', '번개 그물', '흙 손', '불기둥', '불벽', '번개 지뢰', '석회 방패', '산 안개', '대낙뢰', '화산 기둥', '번개 창'],
+  '큰 수': ['번개 그물', '물 대포', '빙판', '불벽', '짧은 실', '땅 번개', '석회 방패', '대낙뢰', '화산 기둥', '번개 창'],   // 큰 수와 그 짝 묶기 (1.9.0)   // 기술 사다리를 보일 재료가 다 든 덱 (1.7.0, suite 모습)
   '도발 합법 최강': ['도발', '불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물'],   // 도발은 rules.taunt가 켜졌을 때만 남는다
   '자유': Object.keys(core.SPELLS).filter(n => !core.SPELLS[n].banned && !core.SPELLS[n].mundane),
 }, BOOKS);
@@ -33,7 +34,7 @@ const SKILLS = {
   '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6], shieldAny: true })),
   '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
   '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true })),
-  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
+  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, bigPlan: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
 };
 // 실제로 쓰는 서클 = 그릇(등급) × 솜씨(판단 수준) (1.7.0)
 const CIRCLES = { '초보': c => Math.max(1, Math.floor(c / 2)), '중급': c => Math.max(1, c - 1), '상급': c => c, '대가': c => c, '전설': c => c + 1 };
@@ -49,7 +50,8 @@ function mage(opt = {}, lib = {}) {
   const sk = opt.skill ? SKILLS[opt.skill] : null; if (opt.skill && !sk) throw new Error('없는 판단 수준: ' + opt.skill + ' (' + Object.keys(SKILLS).join(', ') + ')');
   if (opt.type && !core.TYPES.includes(opt.type)) throw new Error('없는 부류: ' + opt.type + ' (' + core.TYPES.join(', ') + ')');
   // 선호 거리: 공격 마법 사거리의 가운데값에 맞춘다 (덱과 거리가 어긋나 아무것도 못 쏘는 일을 막는다)
-  const Rs = book.map(n => SP[n]).filter(x => x && ['proj', 'thread', 'area', 'lob', 'cone', 'touch'].includes(x.t)).map(x => x.t === 'cone' ? x.L : x.t === 'touch' ? 1.2 : (x.home ? 10 : x.R)).sort((a, b) => a - b);
+  // 규칙에 딸린 마법(큰 마법 등)은 선호 거리에 넣지 않는다: 그 규칙이 꺼져 있을 때 예전과 같게
+  const Rs = book.map(n => SP[n]).filter(x => x && !x.rule && ['proj', 'thread', 'area', 'lob', 'cone', 'touch'].includes(x.t)).map(x => x.t === 'cone' ? x.L : x.t === 'touch' ? 1.2 : (x.home ? 10 : x.R)).sort((a, b) => a - b);
   const prefR = Rs.length ? core.clamp(Rs[Math.floor(Rs.length / 2)] * 0.5, 2.5, 10) : 7;
   return Object.assign({
     name: opt.name, book: book.slice(), C: t.C, circles: sk ? CIRCLES[opt.skill](t.circles) : t.circles, noise: sk ? sk.noise : t.noise, dec: sk ? sk.dec : t.dec, autoDodge: sk ? sk.autoDodge : t.autoDodge, skill: opt.skill,

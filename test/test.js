@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.8.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.9.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -185,5 +185,16 @@ ok('기술 사다리 2 (1.8.0): 굳으면 못 구르고, 상급은 캔슬, 대�
   const L = ['중급', '상급', '대가', '전설'].map(s => lk('중간', s));
   assert.ok(L[0]['분당 캔슬'] === 0 && L[1]['분당 캔슬'] > 0, '캔슬'); assert.ok(L[1]['분당 유도 성공'] === 0 && L[2]['분당 유도 성공'] > 0, '유도');
   assert.ok(L[1]['분당 속임수'] === 0 && L[3]['분당 속임수'] > 0, '속임수'); assert.ok(L[2]['분당 동시 시전'] > 0 && L[1]['분당 동시 시전'] === 0, '동시 시전');
+});
+ok('하이 리스크·소금 원 (1.9.0): 꺼 두면 큰 마법이 빠지고, 역류·빈손, 소금 선 밖에선 마법이 흩어진다', () => {
+  assert.ok(!A.addMage(A.createWorld({ seed: 1 }), A.mage({}), 0, 5, 5).book.includes('대낙뢰'));
+  const W = A.createWorld({ seed: 1, obstacles: 0, rules: { risk: true } }); const m = A.addMage(W, A.mage({}), 0, 10, 15), e = A.addMage(W, A.mage({}), 1, 20, 15);
+  assert.ok(m.book.includes('번개 창')); A.stepWorld(W);
+  m.cast = { s: W.spells['번개 창'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.8 }; const hp0 = m.hp; A.release(W, e, { s: W.spells['땅 번개'], tgt: m, tx: m.x, ty: m.y }); for (let k = 0; k < 15; k++) A.stepWorld(W);
+  assert.ok(m.log.backfire === 1 && !(m.cast && m.cast.s.big) && hp0 - m.hp >= 22, '역류 ' + m.log.backfire + ' ' + (hp0 - m.hp));
+  const W2 = A.createWorld({ seed: 1, obstacles: 0, rules: { risk: true } }); const a = A.addMage(W2, A.mage({}), 0, 10, 15), b = A.addMage(W2, A.mage({}), 1, 16, 15); A.stepWorld(W2);
+  A.release(W2, a, { s: W2.spells['대낙뢰'], tgt: b, tx: b.x, ty: b.y }); assert.ok(a.emptyT > W2.t + 0.8 && a.log.bigCast === 1);
+  const W3 = A.createWorld({ seed: 1, obstacles: 0, rules: { saltRing: true } }); W3.t = 80; const q = A.addMage(W3, A.mage({}), 0, 2, 2); A.addMage(W3, A.mage({}), 1, 20, 15);
+  assert.strictEqual(A.gAt(W3, q, W3.spells['짧은 실'], 3, 3), 0); const h0 = q.hp; A.stepWorld(W3); assert.ok(q.hp < h0, '소금 밖인데 마르지 않았다');
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);
