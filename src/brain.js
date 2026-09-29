@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.1.0
+ * 숨 결투장 — 기본 두뇌 v1.2.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -39,7 +39,9 @@ function estDmg(s) {
 }
 
 function think(W, m) {
-  const foes = W.foes[m.side], T = m.tac, S = W.spells;
+  const foes = W.foes[m.side], S = W.spells;
+  // 파도를 타는 동안: 더 몰아치고, 더 붙고, 덜 피하고, 쉬지 않는다
+  const T = m.wave ? Object.assign({}, m.tac, { aggr: m.tac.aggr * 1.6, prefR: m.tac.prefR * 0.7, dodge: m.tac.dodge * 0.5, rest: 999 }) : m.tac;
   if (!foes.length) { m.mv.x = m.mv.y = 0; return; }
   // 과녁: 약자부터(focusLow) 또는 가장 가까운 자
   let e = null, bs = 1e9;
@@ -136,7 +138,13 @@ function think(W, m) {
   if (m.cast || m.chan) { if (circ >= 2 && !m.castB) slot = 'B'; else return; }
 
   // ---- 6. 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다 ----
-  if (W.rules.fatigue && m.fat > T.rest && !aimed && d > 4) { m.log.dec.rest++; return; }
+  // 파도가 켜져 있으면 부류마다: 서퍼는 쉬지 않고 탄다, 메타는 이기고 있을 때만 타고 너무 깊으면(140) 내려온다, 이단은 쉰다
+  let restNow = W.rules.fatigue && m.fat > T.rest && !aimed && d > 4;
+  if (W.rules.wave && restNow) {
+    if (m.type === '서퍼') restNow = false;
+    else if (m.type === '메타') restNow = !(e.hp / e.hpMax < 0.5 || m.hp / m.hpMax > e.hp / e.hpMax + 0.1);
+  }
+  if (restNow || (m.wave && m.type === '메타' && m.fat > 140 && !aimed)) { m.log.dec.rest++; return; }
 
   // ---- 7. 마법 고르기 ----
   const cand = [];
@@ -207,7 +215,8 @@ function think(W, m) {
     }
     // 지연 폭발은 쏜 사람도 맞힌다: 떨어질 자리가 내 둘레면 쓰지 않는다 (v1.0.1)
     if (s.t === 'area' && hyp(tx - m.x, ty - m.y) < s.r * C.sizeOf(m, s) + SELF_GAP) continue;
-    if (W.rules.fatigue && !s.react) v -= m.fat / 100 * 0.5;
+    if (W.rules.fatigue && !s.react && !m.wave) v -= m.fat / 100 * 0.5;
+    if (m.wave && !OFF[s.t]) v *= 0.5;   // 파도 위에선 막기보다 친다
     if (slot === 'B') v -= 0.1;
     if (OFF[s.t]) v *= T.aggr;
     if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel });
@@ -223,7 +232,7 @@ function think(W, m) {
   }
   if (!best || best.v2 <= 0.15) return;
   const s = best.s;
-  let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + m.fat / 200 : 1);
+  let Tc = best.Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1);
   if (s.t === 'thread') Tc += Math.min(hyp(best.tx - m.x, best.ty - m.y), C.rangeOf(m, s)) / (32 * (s.fast || 1));
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
@@ -233,5 +242,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, VERSION: '1.1.0' };
+return { think, catOf, FORMNAME, VERSION: '1.2.0' };
 });

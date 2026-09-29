@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.1.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.2.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
@@ -30,13 +30,14 @@ function mage(opt = {}, lib = {}) {
   const t = TIERS[opt.tier || '평범']; if (!t) throw new Error('없는 등급: ' + opt.tier);
   const book = opt.book || DK[opt.deck || '합법 최강']; if (!book) throw new Error('없는 덱: ' + opt.deck);
   const br = opt.brain ? BRAINS[opt.brain] : null; if (opt.brain && !br) throw new Error('없는 두뇌: ' + opt.brain);
+  if (opt.type && !core.TYPES.includes(opt.type)) throw new Error('없는 부류: ' + opt.type + ' (' + core.TYPES.join(', ') + ')');
   // 선호 거리: 공격 마법 사거리의 가운데값에 맞춘다 (덱과 거리가 어긋나 아무것도 못 쏘는 일을 막는다)
   const Rs = book.map(n => SP[n]).filter(x => x && ['proj', 'thread', 'area', 'lob', 'cone', 'touch'].includes(x.t)).map(x => x.t === 'cone' ? x.L : x.t === 'touch' ? 1.2 : (x.home ? 10 : x.R)).sort((a, b) => a - b);
   const prefR = Rs.length ? core.clamp(Rs[Math.floor(Rs.length / 2)] * 0.5, 2.5, 10) : 7;
   return Object.assign({
     name: opt.name, book: book.slice(), C: t.C, circles: t.circles, noise: t.noise, dec: t.dec, autoDodge: t.autoDodge,
     gear: Object.assign({ soles: true }, opt.gear), mast: Object.fromEntries(book.map(n => [n, t.mast])),
-    hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, opt.tac), brain: br || undefined,
+    hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, opt.tac), brain: br || undefined, type: opt.type || '메타',
   }, opt.spec);
 }
 
@@ -70,7 +71,7 @@ const duel = (a, b, opt) => battle([a], [b], opt);
 // 장면의 한 사람 → 사람 규격. 비워 둔 칸은 등급의 값을 따른다
 const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp'];
 function sceneMage(mm, side, lib) {
-  const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain }, lib);
+  const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type }, lib);
   for (const k of OVERRIDE) if (mm[k] != null && mm[k] !== '') sp[k] = k === 'autoDodge' ? !!mm[k] : +mm[k];
   return sp;
 }

@@ -12,7 +12,7 @@ const RULE_TXT = {
   domain: ['장악권', '같은 공기는 가장 선명한 신호를 따른다'], circles: ['서클', '두 번째 칸, 3서클부터 자동 진'], fatigue: ['머리 피로', '피로와 폭주'],
   barrels: ['화약통', '씨앗 따라 5개 놓기 (장면에 화약통 목록이 있으면 그것)'], friendlyFire: ['아군 피해', '투사체와 폭발이 아군도 맞힌다'],
   powerK: ['위력 지수', '위력 = 선명도^K', 1, 4, 0.1], domainL: ['장악 거리', '신호가 반으로 흐려지는 거리 (m)', 1, 20, 0.5], passive: ['쉬는 신호', '시전 중이 아닐 때 장악권의 세기', 0, 1, 0.05],
-  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], hpScale: ['hpScale', '체력도 선명도^K로 키운다'],
+  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], hpScale: ['hpScale', '체력도 선명도^K로 키운다'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
@@ -97,6 +97,7 @@ function draw() {
     ctx.fillStyle = '#1b1c20'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(m.aim) * 13, y + Math.sin(m.aim) * 13); ctx.stroke();
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
+    if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
     if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     const cs = m.cast || m.chan;
     if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
@@ -169,7 +170,7 @@ const CHIPS = 12;   // 편마다 목록에 보일 사람 수
 function renderSides() {
   const box = $('sides'); box.textContent = '';
   S.scene.sides.forEach((s, si) => {
-    const chips = el('div', { className: 'chips' }, ...s.mages.map((m, i) => [m, i]).filter(([, i]) => i < CHIPS || (S.sel && S.sel.k === 'mage' && S.sel.s === si && S.sel.i === i)).map(([m, i]) => el('button', { type: 'button', className: 'chip' + (S.sel && S.sel.k === 'mage' && S.sel.s === si && S.sel.i === i ? ' sel' : ''), on: { click: () => { S.sel = { k: 'mage', s: si, i }; S.side = si; renderAll(); } } }, (m.name || (s.name + (i + 1))) + ' · ' + (m.tier || '평범') + ' · ' + (m.book ? '직접' : (m.deck || '합법 최강')))));
+    const chips = el('div', { className: 'chips' }, ...s.mages.map((m, i) => [m, i]).filter(([, i]) => i < CHIPS || (S.sel && S.sel.k === 'mage' && S.sel.s === si && S.sel.i === i)).map(([m, i]) => el('button', { type: 'button', className: 'chip' + (S.sel && S.sel.k === 'mage' && S.sel.s === si && S.sel.i === i ? ' sel' : ''), on: { click: () => { S.sel = { k: 'mage', s: si, i }; S.side = si; renderAll(); } } }, (m.name || (s.name + (i + 1))) + ' · ' + (m.tier || '평범') + ' · ' + (m.book ? '직접' : (m.deck || '합법 최강')) + (m.type && m.type !== '메타' ? ' · ' + m.type : ''))));
     box.append(el('div', { className: 'side', style: S.side === si ? 'border-color:' + COL[si % COL.length] : '' },
       el('div', { className: 'head' }, el('span', { className: 'sw', style: 'background:' + COL[si % COL.length] }),
         el('input', { type: 'text', value: s.name || '', 'aria-label': '편 이름', on: { change: e => edit(sc => { sc.sides[si].name = e.target.value; }) } }),
@@ -205,6 +206,7 @@ function renderMageEd() {
     el('label', {}, '이름'), el('input', { type: 'text', value: m.name || '', placeholder: side.name + (sel.i + 1), on: { change: e => edit(() => { if (e.target.value) m.name = e.target.value; else delete m.name; }) } }),
     el('label', {}, '등급'), el('select', { on: { change: e => edit(() => { m.tier = e.target.value; }) } }, ...tierOpts(m.tier || '평범')),
     el('label', {}, '덱'), el('select', { on: { change: e => edit(() => { m.deck = e.target.value; delete m.book; }) } }, ...deckOpts(m.deck || '합법 최강')),
+    el('label', {}, '부류'), el('select', { title: '파도 규칙이 켜져 있을 때만 다르다', on: { change: e => edit(() => { if (e.target.value === '메타') delete m.type; else m.type = e.target.value; }) } }, ...A.TYPES.map(k => el('option', { value: k, selected: k === (m.type || '메타') }, k + (k === '메타' ? ' (기본)' : '')))),
     ...numField('선명도 C', m, 'C', T.C), ...numField('서클', m, 'circles', T.circles), ...numField('겨냥 흔들림', m, 'noise', T.noise), ...numField('판단 간격 (s)', m, 'dec', T.dec),
     el('label', {}, '자동 구르기'), el('select', { on: { change: e => edit(() => { if (e.target.value === '') delete m.autoDodge; else m.autoDodge = e.target.value === '1'; }) } },
       el('option', { value: '', selected: m.autoDodge == null }, '등급대로 (' + (T.autoDodge ? '켬' : '끔') + ')'), el('option', { value: '1', selected: m.autoDodge === true }, '켬'), el('option', { value: '0', selected: m.autoDodge === false }, '끔')),
@@ -219,7 +221,7 @@ function renderMageEd() {
     el('div', { className: 'row' },
       el('button', { type: 'button', on: { click: () => edit(sc => { const c = clone(m); if (c.x != null) { c.x = r2(Math.min(sc.width - 1, c.x + 1)); } sc.sides[sel.s].mages.push(c); S.sel = { k: 'mage', s: sel.s, i: sc.sides[sel.s].mages.length - 1 }; }) } }, '복제'),
       el('button', { type: 'button', on: { click: () => removeSel(sel) } }, '지우기')),
-    live && S.W ? el('p', { className: 'hint' }, '지금: 체력 ' + Math.round(Math.max(0, live.hp)) + ', 피로 ' + Math.round(live.fat) + ', 입장 ' + (STANCE[live.stance] || live.stance)) : null);
+    live && S.W ? el('p', { className: 'hint' }, '지금: 체력 ' + Math.round(Math.max(0, live.hp)) + ', 피로 ' + Math.round(live.fat) + ', 입장 ' + (STANCE[live.stance] || live.stance) + (live.wave ? ', 파도를 탄다' : live.crash > 0 ? ', 꺼짐' : '')) : null);
 }
 
 /* ---------------- 패널: 규칙, 장면 ---------------- */
@@ -260,11 +262,11 @@ function renderSceneTab() {
 function renderStats() {
   const W = world(), tb = $('stats'), sum = o => Object.values(o).reduce((a, b) => a + b, 0);
   tb.textContent = '';
-  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '입장'].map(h => el('th', {}, h))));
+  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '파도', '입장'].map(h => el('th', {}, h))));
   const rows = W.ms.length > 40 ? W.ms.filter((m, i) => i < 20 || m.hp > 0).slice(0, 40) : W.ms;
   for (const m of rows) tb.append(el('tr', {}, el('td', { style: 'color:' + COL[m.side % COL.length] }, m.name), el('td', {}, S.scene.sides[m.side] ? S.scene.sides[m.side].name : m.side), el('td', {}, (m.hp > 0 ? Math.max(1, Math.round(m.hp)) : 0) + '/' + Math.round(m.hpMax)),
-    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, STANCE[m.stance] || m.stance)));
-  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 8, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
+    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, m.log.waves + (m.wave ? ' 탐' : '')), el('td', {}, STANCE[m.stance] || m.stance)));
+  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 9, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
   $('result').textContent = S.W && A.over(S.W) ? winText(A.result(S.W)) : '';
 }
 

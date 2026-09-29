@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.1.0
+ * 숨 결투장 — 엔진 핵심 v1.2.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
@@ -9,7 +9,7 @@
   else root.ArenaCore = factory(root.ArenaData.spells);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
 'use strict';
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const DT = 1 / 30;
 
 /* ---------------- 결정론 수학 ----------------
@@ -74,8 +74,11 @@ const DEFAULT_RULES = {
   passive: 0.5,        // 시전 중이 아닐 때 장악권의 세기
   fizzle: 0.15,        // 장악 몫이 이보다 작으면 마법이 흩어진다
   full: 0.6,           // 장악 몫이 이보다 크면 온전한 힘
+  wave: false,         // 파도: 머리가 넘치면 굳는 대신 파도를 탄다. 부류(type: 서퍼·메타·이단)마다 다르게 (SPEC 7장)
   hpScale: false,      // 켜면 체력도 선명도^K로 커져 등급과 상관없이 결투 속도가 비슷해진다 (게임 균형용)
 };
+// 파도의 부류 (WORLD 3-3). 사람 규격의 type. 파도가 꺼져 있으면 셋 다 같다
+const TYPES = ['서퍼', '메타', '이단'];
 // 등록한 규칙(registry.rule)의 걸음마다 할 일. 스위치가 꺼져 있으면 부르지 않는다
 const RULE_HOOKS = [];
 const BODY = { hp: 150, glu: 110, gluRegen: 1.2, stam: 6, stamRegen: 0.8, speed: 5, radius: 0.3 };
@@ -116,11 +119,11 @@ function addMage(W, spec, side, x, y) {
     id: W.ms.length, name: spec.name || 'm' + W.ms.length, side, x, y, vx: 0, vy: 0, r: BODY.radius,
     hpMax: (spec.hp || BODY.hp) * (W.rules.hpScale ? pow(spec.C ?? 1, W.rules.powerK) : 1), hp: (spec.hp || BODY.hp) * (W.rules.hpScale ? pow(spec.C ?? 1, W.rules.powerK) : 1), glu: spec.glu || BODY.glu, gluMax: spec.glu || BODY.glu, stam: BODY.stam,
     C: spec.C ?? 1, circles: spec.circles ?? 1, noise: spec.noise ?? 0.05, react: spec.react ?? 0.2, dec: spec.dec ?? 0.15,
-    brain: spec.brain || null, autoDodge: !!spec.autoDodge, gear: Object.assign({}, spec.gear), book, mast: spec.mast || {}, hitEst: Object.assign({}, spec.hitEst),
+    brain: spec.brain || null, autoDodge: !!spec.autoDodge, type: spec.type || '메타', wave: 0, waveT: 0, crash: 0, gear: Object.assign({}, spec.gear), book, mast: spec.mast || {}, hitEst: Object.assign({}, spec.hitEst),
     tac: Object.assign({ prefR: 7, aggr: 1, trapBias: 0.1, zoneBias: 0.05, dodge: 0.6, focusLow: false, crowd: true, stance: true, rest: 75 }, spec.tac),
     st: {}, buf: {}, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
-    log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {},
+    log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0,
       dec: { n: 0, cat: {}, form: {}, react: 0, def: 0, combo: 0, atk: 0, trapPath: 0, trap: 0, barrel: 0, slotB: 0, auto: 0, rest: 0 } },
   };
   W.ms.push(m);
@@ -129,10 +132,12 @@ function addMage(W, spec, side, x, y) {
 }
 
 /* ---------------- 신호: 선명도, 위력, 장악권 ---------------- */
-function ceff(W, m) { return m.C * (W.rules.fatigue ? Math.max(0.45, 1 - m.fat / 150) : 1); }
+// 파도를 타는 동안 피로는 100을 넘을 수 있지만, 선명도·위력·시전 시간은 100에서 더 나빠지지 않는다 (파도가 없으면 피로는 100을 넘지 않는다)
+function ceff(W, m) { return m.C * (W.rules.fatigue ? Math.max(0.45, 1 - Math.min(m.fat, 100) / 150) : 1) * (m.wave ? 1.1 : 1); }
 function power(W, m, s) {
   if (s.mundane) return 1;
-  return pow(m.C, W.rules.powerK) * (1 + 0.3 * (m.mast[s.n] || 0)) * (W.rules.fatigue ? Math.max(0.6, 1 - m.fat / 200) : 1);
+  const wv = m.wave ? (m.type === '서퍼' ? 1.45 : 1.3) : (W.rules.wave && m.type === '이단' ? 0.8 : 1);
+  return pow(m.C, W.rules.powerK) * (1 + 0.3 * (m.mast[s.n] || 0)) * (W.rules.fatigue ? Math.max(0.6, 1 - Math.min(m.fat, 100) / 200) : 1) * wv;
 }
 const rangeOf = (m, s) => (s.R || 0) * (s.mundane ? 1 : Math.sqrt(m.C));
 const sizeOf = (m, s) => (s.mundane ? 1 : pow(m.C, 0.4));
@@ -213,7 +218,15 @@ function release(W, m, c) {
   m.log.casts[s.n] = (m.log.casts[s.n] || 0) + 1;
   if (W.rules.fatigue && !s.mundane) {
     m.fat += s.cost * (c.B ? 1.3 : 1) * (c.auto ? 0.8 : 1) * 1.6;
-    if (m.fat > 100) { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
+    if (W.rules.wave && m.type !== '이단') {
+      // 파도: 넘쳐도 굳지 않고 탄다. 너무 깊이(170) 가면 휩쓸린다
+      const enter = m.type === '서퍼' ? 90 : 100;
+      if (!m.wave && m.fat > enter) { m.wave = 1; m.log.waves++; }
+      if (m.fat > 170) { m.log.over++; m.log.lost++; hurt(W, m, 30, null, '폭주', 'wave'); m.st.stun = Math.max(m.st.stun || 0, 2.5); m.fat = 60; m.wave = 0; m.crash = 3; m.cast = m.castB = m.chan = null; }
+    } else if (m.fat > 100) {
+      if (W.rules.wave) m.fat = 100;   // 이단: 파도를 못 느낀다. 폭주도 없고 머리는 100에서 멈춘다
+      else { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
+    }
   }
   const g = gAt(W, m, s, tx, ty);
   if (g <= 0.02) { m.log.fizz++; return; }
@@ -334,6 +347,13 @@ function stepMage(W, m) {
   m.rollCd -= DT; m.autoCd -= DT; if (m.vault > 0) m.vault -= DT;
   m.glu = Math.min(m.gluMax, m.glu + BODY.gluRegen * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;
   if (m.fat > 0) m.fat = Math.max(0, m.fat - 4 * DT);
+  if (m.crash > 0) m.crash -= DT;
+  if (m.wave) {
+    // 파도는 몸을 태운다. 깊을수록 세게. 서퍼는 익숙하고 메타는 조절한다. 피로가 75 아래로 내려오면 꺼짐(crash)
+    m.waveT += DT; const wd = (1.5 + (m.fat - 90) * 0.06) * (m.type === '서퍼' ? 0.8 : 0.6) * DT;
+    m.log.waveDmg += Math.max(0, wd); hurt(W, m, wd, null, '파도', 'wave'); if (m.hp <= 0) m.log.waveDeath = 1;
+    if (m.fat < 75) { m.wave = 0; m.crash = 2; }
+  }
   if (m.st.burn > 0) hurt(W, m, 3 * DT, null, '옷에 붙은 불', 'fire');
   for (const z of W.zones) {
     if (!inZone(z, m.x, m.y)) continue;
@@ -371,7 +391,7 @@ function stepMage(W, m) {
   // 움직임
   if (m.roll > 0) m.roll -= DT;
   else {
-    let sp = BODY.speed; if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7;
+    let sp = BODY.speed * (m.wave ? 1.15 : 1) * (m.crash > 0 ? 0.85 : 1); if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7;
     if (m.cast || m.chan) sp *= (m.cast && m.cast.s.lock) ? 0 : 0.5; if (m.st.stun > 0 || m.st.root > 0) sp = 0;
     let onIce = false; for (const z of W.zones) if (z.k === 'ice' && z.src !== m && inZone(z, m.x, m.y)) { onIce = true; break; }
     const acc = onIce ? 1.5 : 9, l = hyp(m.mv.x, m.mv.y), tx = l ? m.mv.x / l * sp : 0, ty = l ? m.mv.y / l * sp : 0, k = Math.min(1, DT * acc);
@@ -487,5 +507,5 @@ function result(W) {
   return { v: VERSION, winner, byTime, t: r2(W.t), ms: W.ms, obs: W.obs, rec: W.rec };
 }
 
-return { VERSION, DT, SPELLS, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, RULE_HOOKS, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };
+return { VERSION, DT, SPELLS, TYPES, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, RULE_HOOKS, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };
 });

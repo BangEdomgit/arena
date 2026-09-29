@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.1.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.2.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -110,5 +110,19 @@ ok('등록: 새 마법·덱·등급·두뇌·규칙이 붙고, 새 규칙은 끄
   assert.ok(r.ms[0].log.casts['시험 돌'] > 0, '새 마법을 안 씀'); assert.strictEqual(Object.keys(r.ms[1].log.casts).length, 0, '가만히 두뇌가 시전함');
   assert.throws(() => A.register.spell({ n: '틀 없음', t: 'nope', cost: 1, cast: 1, cd: 1 }));
   delete A.DEFAULT_RULES['시험 규칙']; A.RULE_HOOKS.length = 0;
+});
+ok('파도 (1.2.0): 꺼 두면 부류와 상관없이 예전과 같고, 켜면 서퍼는 100을 넘어 타다 170에서 휩쓸리고, 이단은 넘치지 않는다', () => {
+  const mm = (type, deck) => A.mage({ tier: '중간', deck, type });
+  assert.strictEqual(dig(A.duel(mm('서퍼'), mm('이단', '기본기'), { seed: 3 })), dig(A.duel(mm(), mm(undefined, '기본기'), { seed: 3 })));
+  const pour = type => {   // 머리를 넘치게 붓는다
+    const W = A.createWorld({ seed: 1, obstacles: 0, rules: { wave: true } }); const m = A.addMage(W, { book: ['돌 창'], type }, 0, 5, 15); A.addMage(W, {}, 1, 25, 15); A.stepWorld(W);
+    const seen = []; for (let k = 0; k < 40; k++) { A.release(W, m, { s: W.spells['돌 창'], tx: 25, ty: 15 }); seen.push({ fat: m.fat, wave: m.wave, stun: m.st.stun || 0 }); }
+    return { m, seen };
+  };
+  const s = pour('서퍼'); assert.ok(s.m.log.waves >= 1 && s.m.log.lost >= 1, JSON.stringify(s.m.log));
+  assert.ok(s.seen.some(x => x.fat > 100 && x.wave && !x.stun), '서퍼가 100을 넘어 파도를 타지 않았다');
+  assert.ok(s.m.st.stun >= 2.5 - 1e-9 && s.m.log.taken.wave >= 30, '휩쓸림(170)의 굳음·피해가 없다');
+  const h = pour('이단'); assert.ok(h.m.log.waves === 0 && h.m.log.over === 0 && h.seen.every(x => x.fat <= 100 && !x.stun), JSON.stringify(h.m.log));
+  assert.throws(() => A.mage({ type: '없는 부류' }));
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);
