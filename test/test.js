@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.10.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.11.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -207,5 +207,35 @@ ok('위험 규칙 판단 (1.10.0): 구를 쪽 읽기, 빈손은 첫 칸만, 큰 
   const b = empty('대가'); assert.ok(!b.cast, '대가도 빈손에 첫 칸은 못 쓴다');
   for (const n of ['대낙뢰', '화산 기둥', '번개 창']) assert.ok(A.SPELLS[n].cast <= 0.6, n);
   assert.ok(A.SPELLS['대낙뢰'].cast + A.SPELLS['대낙뢰'].delay <= 1.1 && A.SPELLS['화산 기둥'].cast + A.SPELLS['화산 기둥'].delay <= 1.0);
+});
+ok('몸 묶기 (1.11.0): 꺼 두면 빠지고, 균사·경직은 구르기를 막고, 족쇄는 젖은 발만, 불·산·비가 푼다, 기둥 넷, 눈멀면 예비동작을 못 읽는다', () => {
+  const NEW = ['균사 그물', '얼음 족쇄', '근육 경직', '석회 굳히기', '가두는 기둥'];
+  assert.ok(!A.addMage(A.createWorld({ seed: 1 }), A.mage({ deck: '기술' }), 0, 5, 5).book.some(n => NEW.includes(n)));
+  const mk = () => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: { bodyBind: true } }); const m = A.addMage(W, A.mage({ tier: '중간', skill: '상급', deck: '기술' }), 0, 10, 15), e = A.addMage(W, A.mage({ tier: '중간', deck: '기술' }), 1, 16, 15); A.stepWorld(W); e.thinkT = 1e9; return [W, m, e]; };   // 상대는 생각하지 않는다
+  let [W, m, e] = mk(); assert.ok(NEW.every(n => m.book.includes(n)));
+  // 균사: 구르지 못하고 × 0.6. 불에 타면 풀린다
+  A.release(W, e, { s: W.spells['균사 그물'], tgt: m, tx: m.x, ty: m.y }); for (let k = 0; k < 12 && !(m.st.mycel > 0); k++) A.stepWorld(W);
+  assert.ok(m.st.mycel > 0.5, '균사 ' + m.st.mycel);
+  m.stam = 6; m.rollCd = 0; m.roll = 0; m.thinkT = 0;
+  e.cast = { s: W.spells['땅 번개'], tgt: m, tx: m.x, ty: m.y, t: 0, T: 0.3 }; A.brain.think(W, m); assert.ok(!(m.roll > 0), '균사에 걸렸는데 굴렀다');
+  m.st.burn = 1; A.stepWorld(W); assert.ok(!(m.st.mycel > 0), '불에 타도 균사가 남았다');
+  // 경직: 굳히지 않고 × 0.5, 절연이 막는다
+  [W, m, e] = mk(); A.release(W, e, { s: W.spells['근육 경직'], tgt: m, tx: m.x, ty: m.y }); assert.ok(m.st.cramp > 0.5 && !(m.st.stun > 0), '경직 ' + m.st.cramp);   // 과녁 발밑이라 장악 g만큼
+  [W, m, e] = mk(); m.buf.elecRes = { v: 0.3, t: 2 }; A.release(W, e, { s: W.spells['근육 경직'], tgt: m, tx: m.x, ty: m.y }); assert.ok(!(m.st.cramp > 0), '절연이 경직을 못 막았다');
+  // 족쇄: 마른 발엔 안 걸리고, 젖은 발은 1.5 s 묶인다
+  [W, m, e] = mk(); const shoot = () => { A.release(W, e, { s: W.spells['얼음 족쇄'], tgt: m, tx: m.x, ty: m.y }); for (let k = 0; k < 12; k++) A.stepWorld(W); };
+  shoot(); assert.ok(!(m.st.root > 0), '마른 발이 묶였다'); m.st.wet = 10; e.cd = {}; shoot(); assert.ok(m.st.root > 1 && m.st.fetter > 1, '젖은 발이 안 묶였다');
+  m.st.burn = 1; A.stepWorld(W); assert.ok(!(m.st.root > 0) && !(m.st.fetter > 0), '불에 족쇄가 안 녹았다');
+  // 석회: 산에 녹는다
+  [W, m, e] = mk(); m.st.lime = 3; A.release(W, e, { s: W.spells['산 안개'], tgt: m, tx: m.x, ty: m.y }); A.stepWorld(W); assert.ok(!(m.st.lime > 0), '산에 석회가 안 녹았다');
+  // 가두는 기둥: 과녁 둘레 3 m에 넷, 나와 과녁 사이는 비운다
+  [W, m, e] = mk(); A.release(W, m, { s: W.spells['가두는 기둥'], tgt: e, tx: e.x, ty: e.y }); const cg = W.walls.filter(w => w.cage);
+  assert.strictEqual(cg.length, 4); assert.ok(cg.every(w => Math.abs(A.hyp(w.x - e.x, w.y - e.y) - 3) < 0.01)); assert.ok(!A.blocked(W, m.x, m.y, e.x, e.y), '기둥이 내 길을 막았다');
+  // 눈멂: 예비동작을 위협으로 못 읽는다. 비가 씻는다 (꺼 두면 안 씻는다)
+  const read = blind => { const [W2, q, f] = mk(); q.st.blind = blind; q.rollCd = 0; q.stam = 6; q.thinkT = 0; f.cast = { s: W2.spells['번개 그물'], tgt: q, tx: q.x, ty: q.y, t: 0.2, T: 0.5, by: f }; let rolled = 0; for (let k = 0; k < 20; k++) { q.thinkT = 0; A.brain.think(W2, q); if (q.roll > 0) rolled++; q.roll = 0; q.rollCd = 0; q.stam = 6; } return rolled; };
+  assert.ok(read(0) > 0 && read(2) === 0, '눈멀어도 예비동작을 읽었다 ' + read(0) + ' ' + read(2));
+  [W, m, e] = mk(); m.st.blind = 2; A.release(W, e, { s: W.spells['비 뿌리기'], tgt: m, tx: m.x, ty: m.y }); assert.ok(!(m.st.blind > 0), '비가 눈을 안 씻었다');
+  const W0 = A.createWorld({ seed: 1, obstacles: 0 }), p = A.addMage(W0, A.mage({}), 0, 10, 15), o = A.addMage(W0, A.mage({}), 1, 14, 15); A.stepWorld(W0); p.st.blind = 2;
+  A.release(W0, o, { s: W0.spells['비 뿌리기'], tgt: p, tx: p.x, ty: p.y }); assert.ok(p.st.blind > 1, '꺼 두었는데 비가 눈을 씻었다');
 });
 console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);

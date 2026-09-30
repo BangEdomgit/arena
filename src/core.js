@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.10.0
+ * 숨 결투장 — 엔진 핵심 v1.11.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
@@ -9,7 +9,7 @@
   else root.ArenaCore = factory(root.ArenaData.spells);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
 'use strict';
-const VERSION = '1.10.0';
+const VERSION = '1.11.0';
 const DT = 1 / 30;
 
 /* ---------------- 결정론 수학 ----------------
@@ -78,6 +78,7 @@ const DEFAULT_RULES = {
   wave: false,         // 파도: 머리가 넘치면 굳는 대신 파도를 탄다. 부류(type: 서퍼·메타·이단)마다 다르게 (SPEC 7장)
   risk: false,         // 하이 리스크 하이 리턴: 큰 마법(big)과 역류·빈손 (1.9.0, SPEC 7장). 끄면 큰 마법이 책에서 빠진다
   saltRing: false,     // 줄어드는 소금 원: 선 밖에선 마법이 흩어지고 몸이 마른다 (1.9.0, SPEC 2장)
+  bodyBind: false,     // 몸 묶기: 발밑이 아니라 몸을 묶는 마법 다섯과 눈멂의 읽기 막기 (1.11.0, SPEC 9장). 끄면 그 마법이 책에서 빠진다
   hpScale: false,      // 켜면 체력도 선명도^K로 커져 등급과 상관없이 결투 속도가 비슷해진다 (게임 균형용)
 };
 // 파도의 부류 (WORLD 3-3). 사람 규격의 type. 파도가 꺼져 있으면 셋 다 같다
@@ -86,7 +87,7 @@ const TYPES = ['서퍼', '메타', '이단'];
 const RULE_HOOKS = [];
 const BODY = { hp: 150, glu: 110, gluRegen: 1.2, stam: 6, stamRegen: 0.8, speed: 5, radius: 0.3 };
 // 마법이 만들어지는 자리
-const FORM = { taunt: 'target', proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
+const FORM = { taunt: 'target', proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', cage: 'target', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
 const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 세계 ---------------- */
@@ -137,7 +138,7 @@ function addMage(W, spec, side, x, y) {
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
-      starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
+      starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
       dec: { n: 0, cat: {}, form: {}, react: 0, def: 0, combo: 0, atk: 0, trapPath: 0, trap: 0, barrel: 0, slotB: 0, auto: 0, rest: 0 } },
   };
   // 구르는 쪽 버릇 (1.6.0): 좋아하는 쪽(왼 +1·오른 −1)과 그쪽으로 구를 확률을 사람 만들 때 한 번 정한다
@@ -209,6 +210,8 @@ function hurt(W, m, v, src, name, kind) {
   if (kind === 'elec' && m.st.wet > 0) v *= 1.5;
   if (kind === 'fire' && m.st.wet > 0) v *= 0.6;
   m.hp -= v; m.log.taken[kind] = (m.log.taken[kind] || 0) + v;
+  // 몸 묶기: 불에 타면 균사가 타고 족쇄가 녹는다 (족쇄로 걸린 묶임만 풀린다)
+  if (kind === 'fire' && (m.st.mycel > 0 || m.st.fetter > 0)) { if (m.st.fetter > 0 && m.st.root <= m.st.fetter + 1e-9) m.st.root = 0; m.st.mycel = 0; m.st.fetter = 0; }
   // 콤보 성공: 콤보로 쏜 마법이 묶이거나 굳은(전기면 젖은) 상대에게 들어갔다
   // 역류 (risk): 큰 마법을 모으는 중에 3 이상 맞으면 끊기고 22 피해, 0.6 s 굳음
   if (W.rules.risk && v >= 3 && ((m.cast && m.cast.s.big) || (m.castB && m.castB.s.big)) && m.hp > 0) { if (m.cast && m.cast.s.big) m.cast = null; if (m.castB && m.castB.s.big) m.castB = null; m.log.backfire++; m.st.stun = Math.max(m.st.stun || 0, 0.6); hurt(W, m, 22, null, '역류', 'backfire'); }
@@ -229,6 +232,11 @@ function eff(m, o, g = 1) {
   if (o.root) m.st.root = Math.max(m.st.root || 0, o.root * g);
   if (o.blind) m.st.blind = Math.max(m.st.blind || 0, o.blind * g);
   if (o.cough) m.st.cough = Math.max(m.st.cough || 0, o.cough * g);
+  // 몸 묶기 (bodyBind): 균사(구르기 불가, 걸음 × 0.6), 경직(구르기 불가, × 0.5, 절연이 막는다), 석회(구르는 거리 절반), 족쇄(젖었을 때만 묶임)
+  if (o.mycel) m.st.mycel = Math.max(m.st.mycel || 0, o.mycel * g);
+  if (o.cramp && !m.buf.elecRes) m.st.cramp = Math.max(m.st.cramp || 0, o.cramp * g);
+  if (o.lime) m.st.lime = Math.max(m.st.lime || 0, o.lime * g);
+  if (o.fetter && m.st.wet > 0) { m.st.fetter = Math.max(m.st.fetter || 0, o.fetter * g); m.st.root = Math.max(m.st.root || 0, o.fetter * g); }
   if (m.st.stun > 0) { m.cast = null; m.castB = null; m.chan = null; }
 }
 const hit = (m, s) => { m.log.hits[s.n] = (m.log.hits[s.n] || 0) + 1; if (s.big) m.log.bigHit++; };
@@ -283,7 +291,7 @@ function release(W, m, c) {
       const R = rangeOf(m, s), ex = d0 > R ? m.x + ux * R : tx, ey = d0 > R ? m.y + uy * R : ty;
       if (!blocked(W, m.x, m.y, ex, ey)) {
         let tgt = null; for (const q of foes) if (hyp(q.x - ex, q.y - ey) < 0.6 * Math.min(rs, 2) + 0.2) { tgt = q; break; }
-        if (tgt && !frontBlock(tgt, m.x, m.y)) { hurt(W, tgt, 0.8 * pow(s.E, 0.55) * P, m, s.n, 'elec'); eff(tgt, { stun: Math.min(1.2, s.E / 800), kind: 'elec' }, g); hit(m, s); }
+        if (tgt && !frontBlock(tgt, m.x, m.y)) { hurt(W, tgt, 0.8 * pow(s.E, 0.55) * P, m, s.n, 'elec'); eff(tgt, s.cramp ? { cramp: s.cramp } : { stun: Math.min(1.2, s.E / 800), kind: 'elec' }, g); hit(m, s); }   // 경직 실은 굳힘 대신 경직
       }
       W.fx.push(['z', m.x, m.y, ex, ey]); ignite(W, ex, ey, 0.7, m); break;
     }
@@ -300,7 +308,7 @@ function release(W, m, c) {
         const rr = s.z.r * rs;
         for (const z of W.zones) if (hyp(z.x - x, z.y - y) < rr + (z.r || 2) && z.k !== 'mist' && z.k !== 'absorb') z.t = 0;
         for (const p of W.proj) if (p.src.side !== m.side && (p.s.home || p.s.n === '불덩이' || p.s.n === '소이 캡슐') && hyp(p.x - x, p.y - y) < rr) p.dead = true;
-        for (const q of W.ms) if (hyp(q.x - x, q.y - y) < rr) { q.st.wet = 15; q.st.burn = 0; }
+        for (const q of W.ms) if (hyp(q.x - x, q.y - y) < rr) { q.st.wet = 15; q.st.burn = 0; if (W.rules.bodyBind) q.st.blind = 0; }   // 몸 묶기: 비가 눈을 씻는다
       } else {
         const z = Object.assign({}, s.z, { n: s.n, r: s.z.r ? s.z.r * rs : undefined, len: s.z.len ? s.z.len * rs : undefined });
         if (s.z.needWet) { const e = c.tgt || foes[0]; if (!(e && e.st.wet > 0)) z.k = 'chill'; }
@@ -335,12 +343,20 @@ function release(W, m, c) {
       const rr = s.r * rs;
       for (const p of W.proj) if (p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
       for (const z of W.zones) if (['h2s', 'nh3', 'spore'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < rr + 1) z.t = 0;
+      if (m.st.mycel > 0) m.st.mycel = 0;   // 제 몸의 균사를 태운다
       let h = false; for (const q of foes) if (hyp(q.x - m.x, q.y - m.y) < rr) { hurt(W, q, s.dmg * P, m, s.n, 'fire'); eff(q, { burn: 1 }); h = true; }
       if (h) hit(m, s); break;
     }
     case 'shoot': {
       let n = 0; for (const p of W.proj) if (p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < s.r * rs) { p.dead = true; n++; W.fx.push(['z', m.x, m.y, p.x, p.y]); }
       if (n) { hit(m, s); m.log.defHit++; } break;
+    }
+    case 'cage': {
+      // 가두는 기둥 (bodyBind): 과녁 자리 둘레 s.r m에 기둥 넷을 ±60°·±120°에. 옆으로 피하는 길은 닫고, 나와 과녁 사이(앞)와 그 뒤는 열어 둔다
+      const a = atan2(uy, ux), hpS = 1 + (m.C - 1) * 0.5, rr = s.r; let h = false;
+      for (let k = 0; k < 4; k++) { const b = a + (k < 2 ? 1 : -1) * (k % 2 ? 2 : 1) * Math.PI / 3; W.walls.push({ x: clamp(tx + cos(b) * rr, 0.4, W.width - 0.4), y: clamp(ty + sin(b) * rr, 0.4, W.height - 0.4), r: s.pr, hp: s.hp * hpS, t: s.dur, own: m.side, cage: 1 }); }
+      for (const q of foes) if (hyp(q.x - tx, q.y - ty) < rr - 0.5) h = true;
+      if (h) hit(m, s); break;
     }
     case 'taunt': {
       // 도발: 과녁의 부름을 끊는다. 확률 = 장악 g × (파도 위면 1, 아니면 0.6). 이단은 걸리지 않는다
@@ -352,7 +368,7 @@ function release(W, m, c) {
     case 'smother': {
       const rr = s.r * rs;
       for (const z of W.zones) if (['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < rr + (z.r || 2)) z.t = 0;
-      m.st.burn = 0; for (const p of W.proj) if (p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
+      m.st.burn = 0; if (W.rules.bodyBind) m.st.blind = 0; for (const p of W.proj) if (p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
       break;
     }
   }
@@ -408,7 +424,7 @@ function stepMage(W, m) {
     if (z.k === 'fire' && !(m.st.wet > 0)) m.st.burn = Math.max(m.st.burn || 0, 1);
     if (z.k === 'nh3') { m.st.blind = Math.max(m.st.blind || 0, 0.3); m.st.cough = Math.max(m.st.cough || 0, 0.5); }
     if (z.k === 'spore') m.st.cough = Math.max(m.st.cough || 0, 0.5);
-    if (z.k === 'acid') m.st.blind = Math.max(m.st.blind || 0, 0.3);
+    if (z.k === 'acid') { m.st.blind = Math.max(m.st.blind || 0, 0.3); if (m.st.lime > 0) m.st.lime = 0; }   // 산이 석회를 녹인다
     if ((z.k === 'ice' || z.k === 'chill') && z.src !== m) m.st.chill = Math.max(m.st.chill || 0, 0.4);
     if (z.k === 'h2s') { m.h2sT = (m.h2sT || 0) + DT; if (m.h2sT > 1.5) m.st.stun = Math.max(m.st.stun || 0, 0.5); }
   }
@@ -438,7 +454,7 @@ function stepMage(W, m) {
   // 움직임
   if (m.roll > 0) m.roll -= DT;
   else {
-    let sp = BODY.speed * (m.wave ? 1.15 : 1) * (m.crash > 0 ? 0.85 : 1) * (m.emptyT > W.t ? 0.6 : 1); if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7;
+    let sp = BODY.speed * (m.wave ? 1.15 : 1) * (m.crash > 0 ? 0.85 : 1) * (m.emptyT > W.t ? 0.6 : 1); if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7; if (m.st.cramp > 0) sp *= 0.5; else if (m.st.mycel > 0) sp *= 0.6;
     if (m.cast || m.chan) sp *= (m.cast && m.cast.s.lock) ? 0 : m.tac.castMove; if (m.st.stun > 0 || m.st.root > 0) sp = 0;
     let onIce = false; for (const z of W.zones) if (z.k === 'ice' && z.src !== m && inZone(z, m.x, m.y)) { onIce = true; break; }
     const acc = onIce ? 1.5 : 9, l = hyp(m.mv.x, m.mv.y), tx = l ? m.mv.x / l * sp : 0, ty = l ? m.mv.y / l * sp : 0, k = Math.min(1, DT * acc);

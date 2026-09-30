@@ -1,5 +1,5 @@
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v1.10.0
+ * 숨 결투장 — 기본 두뇌 v1.11.0
  * 판단 순서: 위협 읽기 → 입장(보통·버티기·돌파·거리 두기) → 움직임 → 자동 진 → 칸 고르기 → 휴식 → 마법 고르기
  * 새 두뇌를 만들 땐 think(W, m) 하나만 같은 모양으로 내보내면 된다. 등록은 Arena.register.brain
  * Node와 브라우저(전역 ArenaBrain, ArenaCore 다음에 읽는다) 양쪽에서 돈다.
@@ -47,13 +47,51 @@ function rollSide(W, e, ux, uy, mem) {
   if (mem && mem.L !== mem.R) return mem.L > mem.R ? 1 : -1; return -1;
 }
 // 붙잡는 마법인가: 굳히기·묶기, 또는 느리게 하기(냉기·빙판)
-function holdsOf(s, e) { return OFF[s.t] || s.t === 'zone' ? (bindOf(s, e) > 0 || !!s.chill || !!(s.hit && s.hit.chill) || !!(s.z && (s.z.k === 'ice' || s.z.k === 'chill'))) : false; }
+function holdsOf(s, e) { return OFF[s.t] || s.t === 'zone' ? (bindOf(s, e) > 0 || !!s.cramp || !!(s.hit && s.hit.mycel) || !!s.chill || !!(s.hit && s.hit.chill) || !!(s.z && (s.z.k === 'ice' || s.z.k === 'chill'))) : false; }
 // 실제 시전 시간 (s): 숙련을 뺀 예비동작 × 기침·머리 피로·파도·꺼짐
 function castTime(W, m, Tw) { return Tw * (m.st.cough > 0 ? 1.5 : 1) * (W.rules.fatigue ? 1 + Math.min(m.fat, 100) / 200 : 1) * (m.wave ? 0.75 : 1) * (m.crash > 0 ? 1.3 : 1); }
 // 이 마법이 과녁을 묶거나 굳히는 시간 (s). 안 보이는 발밑 공격은 소금 밑창에 × 0.3, 실은 min(1.2, E/800)
 function bindOf(s, e) {
-  const b = s.t === 'thread' ? Math.min(1.2, s.E / 800) : Math.max(s.root || 0, s.stun || 0, (s.hit && Math.max(s.hit.root || 0, s.hit.stun || 0)) || 0);
+  const b = s.t === 'thread' ? (s.cramp ? 0 : Math.min(1.2, s.E / 800)) : Math.max(s.root || 0, s.stun || 0, (s.hit && Math.max(s.hit.root || 0, s.hit.stun || 0, s.hit.fetter && e.st && e.st.wet > 0.8 ? s.hit.fetter : 0)) || 0);
   return b * (s.t === 'area' && !s.vis && e.gear && e.gear.soles ? 0.3 : 1);
+}
+// 몸 묶기 (bodyBind, 1.11.0): 과녁이 이 큰 수를 빠져나갈 수 없는가. 과녁은 예비동작의 마지막 0.5 s부터(눈멀었으면 눈이 뜨일 때부터, 못 읽는 사람은 보이는 구름부터)
+// 닿을 때까지 걷고 구른다. 그 거리가 맞는 반지름에 못 미치면 붙잡혔다. 안 보이는 구름은 떨어지기 전까지만 본다. 가두는 기둥 안이면 거리 절반
+function caged(W, q) { let n = 0; for (const w of W.walls) if (w.cage && w.own !== q.side && hyp(w.x - q.x, w.y - q.y) < 3.6) n++; return n >= 3; }
+function pinned(W, m, s, e, ct, d, st0, cg) {
+  const st = st0 || e.st, T = ct + landDelay(s, d); if (Math.max(st.stun || 0, st.root || 0) > T + 0.02) return true;
+  const reads = e.tac && e.tac.readCast, blind = st.blind > 0 ? st.blind : 0;
+  const see = s.t === 'area' ? (s.vis ? T : ct) : ct;   // 실은 시전 끝에 바로 닿는다
+  const from = Math.max(blind, reads ? Math.max(0, ct - 0.5) : T);
+  let tEsc = Math.max(0, see - from - Math.max(st.stun || 0, st.root || 0)); if (tEsc <= 0) return true;
+  const noRoll = st.mycel > from || st.cramp > from || e.stam < 1.5 || e.rollCd > from + tEsc;
+  const sp = 5 * (st.cramp > from ? 0.5 : st.mycel > from ? 0.6 : 1) * (st.chill > from ? 0.7 : 1);
+  const esc = (sp * tEsc + (noRoll ? 0 : 2 * (st.lime > from ? 0.5 : 1))) * (cg || caged(W, e) ? 0.5 : 1);
+  const need = s.t === 'area' ? s.r * C.sizeOf(m, s) + 0.3 : 0.8;
+  return esc < need * 0.85;
+}
+// 과녁이 지금부터 나를 칠 수 있는 가장 이른 때 (s): 모으던 공격이 닿는 때, 또는 간격이 끝난 가장 빠른 공격을 지금 시작해 닿는 때. 굳음·빈손이면 그만큼 늦다
+// 몸 묶기는 굳힘과 달리 시전을 막지 못한다: 붙잡아도 이보다 오래 모으면 역류한다
+function hitBack(W, e, S, d) {
+  let t = 1e9; const lock = Math.max(e.st.stun || 0, W.rules.risk && e.emptyT > W.t ? e.emptyT - W.t : 0);
+  for (const c of [e.cast, e.castB]) if (c && OFF[c.s.t] && !c.s.big) t = Math.min(t, c.T - c.t + landDelay(c.s, d));
+  for (const n of e.book) { const x = S[n]; if (!x || !OFF[x.t] || x.big || (x.t === 'touch' ? d > 1.3 : x.t === 'cone' ? d > x.L * C.sizeOf(e, x) : d > (x.home ? 12 : C.rangeOf(e, x)))) continue; t = Math.min(t, Math.max(lock, e.cd[n] || 0) + castTime(W, e, x.cast) + landDelay(x, d) + e.dec * 0.5); }
+  return t;
+}
+// 붙잡는 마법 s가 걸린 직후 과녁의 상태 (가정). 기둥은 cg
+function afterPin(s, e, st) {
+  const h = s.hit || {}, o = Object.assign({}, st);
+  if (h.mycel) o.mycel = h.mycel; if (h.lime) o.lime = h.lime; if (h.fetter) o.root = Math.max(o.root || 0, h.fetter); if (s.cramp) o.cramp = s.cramp;
+  if (s.t === 'zone' && s.z.k === 'acid') o.blind = Math.max(o.blind || 0, 0.6); if (s.t === 'cone' && s.blind) o.blind = s.blind;   // 산 안개는 안에 있는 동안 0.3 s씩 이어진다
+  return o;
+}
+// 과녁을 큰 수에 붙잡아 둘 수단인가 (몸 묶기·족쇄·기둥·눈멂)
+function pinOf(s, e) {
+  const h = s.hit || {};
+  if (h.mycel) return !(e.st.mycel > 0.5); if (h.lime) return !(e.st.lime > 0.5); if (h.fetter) return e.st.wet > 0.8 && !(e.st.root > 0);
+  if (s.cramp) return !e.buf.elecRes && !(e.st.cramp > 0.5); if (s.t === 'cage') return true;
+  if ((s.t === 'zone' && s.z.k === 'acid') || (s.t === 'cone' && s.blind)) return !(e.st.blind > 0.3);
+  return false;
 }
 // 큰 공격인가: 쏘는 사람의 공격 중 가장 센 것의 60% 이상
 function bigAttack(c, S) { const q = c.by; if (!q) return true; let mx = 0; for (const n of q.book) if (S[n] && OFF[S[n].t]) mx = Math.max(mx, estDmg(S[n])); return estDmg(c.s) >= 0.6 * mx; }
@@ -109,7 +147,8 @@ function think(W, m) {
   const eDown = e.st.stun > 0 || e.st.root > 0;
 
   // ---- 1. 위협 읽기 ----
-  let dodge = null, aimed = false, threat = null;
+  let dodge = null, aimed = false, threat = null, late = null;
+  const blindR = W.rules.bodyBind && m.st.blind > 0;   // 눈멀면 (몸 묶기) 예비동작과 구름을 못 읽고, 자동 진은 마지막 0.2 s에야 반응한다
   for (const p of W.proj) {
     if (p.src === m || (!W.rules.friendlyFire && p.src.side === m.side)) continue;
     const rx = m.x - p.x, ry = m.y - p.y;
@@ -121,16 +160,17 @@ function think(W, m) {
     if (!c || !C.THREAT[c.s.t]) continue;
     if (W.rules.wave && q.type === '이단' && c.T - c.t > 0.12) continue;   // 이단의 예비동작은 신호가 조용해 마지막 0.12 s에만 읽힌다 (읽기·자동 진 모두)
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
+    if (blindR) { if (hyp(c.tx - m.x, c.ty - m.y) < r && c.T - c.t < 0.2) { late = c; late.by = q; } continue; }
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; threat.by = q; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux, perp: 1 }; }
   }
-  for (const a of W.areas) if ((a.src.side !== m.side && a.vis && T.readCast || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
+  for (const a of W.areas) if ((a.src.side !== m.side && a.vis && T.readCast && !blindR || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
   if (T.readCast) for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
   // 옆으로 피할 땐 버릇대로 쪽을 고른다 (1.6.0). 버릇이 없으면 늘 왼쪽(1.5.0까지)
   if (dodge && dodge.perp && m.rollPref && (W.rng() < m.rollPref ? m.rollSide : -m.rollSide) < 0) { dodge.x = -dodge.x; dodge.y = -dodge.y; }
-  // 굳거나 묶이면 구르지 못한다 (1.7.0 버그 수정, SPEC 9장)
-  if (dodge && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0) && W.rng() < Math.min(T.rollCap, 0.4 + T.dodge * 0.4 + (m.autoDodge ? 0.3 : 0))) {
+  // 굳거나 묶이면 구르지 못한다 (1.7.0 버그 수정, SPEC 9장). 균사·경직도 (1.11.0)
+  if (dodge && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0 || m.st.mycel > 0 || m.st.cramp > 0) && W.rng() < Math.min(T.rollCap, 0.4 + T.dodge * 0.4 + (m.autoDodge ? 0.3 : 0))) {
     const l = hyp(dodge.x, dodge.y) || 1; if (W.areas.some(a => a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5)) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
-    m.vx = dodge.x / l * 8; m.vy = dodge.y / l * 8; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;
+    const rv = m.st.lime > 0 ? 4 : 8; m.vx = dodge.x / l * rv; m.vy = dodge.y / l * rv; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;   // 석회가 붙으면 구르는 거리 절반
   }
 
   // ---- 2. 입장: 둘러싸였을 때 버틸 것인가, 뚫을 것인가 ----
@@ -201,7 +241,8 @@ function think(W, m) {
   const circ = W.rules.circles ? m.circles : 1;
   // 방패 아끼기 (상급): 큰 공격에만 막는다
   const bigThreat = !!threat && (!T.shieldSave || (bigAttack(threat, S) && (threat.s.t === 'proj' || threat.s.t === 'thread')));   // 앞 방패·벽은 투사체·실만 막는다
-  if (!empty && circ >= 3 && aimed && threat && bigThreat && threat.T - threat.t < 0.4 && m.autoCd <= 0) {
+  const th = threat || late, bigTh = late && !threat ? (!T.shieldSave || (bigAttack(late, S) && (late.s.t === 'proj' || late.s.t === 'thread'))) : bigThreat;
+  if (!empty && circ >= 3 && (aimed && threat || late) && th && bigTh && th.T - th.t < 0.4 && m.autoCd <= 0) {
     for (const n of m.book) {
       const s = S[n]; if ((m.cd[n] || 0) > 0) continue;
       if (!((s.t === 'buff' && s.react) || s.t === 'wall' || s.t === 'shoot')) continue;
@@ -266,6 +307,13 @@ function think(W, m) {
   // 학습한 구르기 쪽으로 겨냥을 옮긴다 (믿음은 본 수만큼), 학습한 방패 거리 근처면 투사체·실을 덜 쓴다
   const roll = T.learn && mem && e.rollCd <= 0 ? (mem.L - mem.R) / (mem.L + mem.R + 2) * 1.2 : 0;
   const shieldNear = T.learn && mem && mem.sh.length >= 2 && Math.abs(d - mem.sh.reduce((a, b) => a + b, 0) / mem.sh.length) < 2.5 && e.book.some(n => S[n] && S[n].b && S[n].b.front && !((e.cd[n] || 0) > 0));
+  // 몸 묶기 계획 (대가·전설, bodyBind + risk): 준비된 큰 수가 있고 과녁이 아직 붙잡히지 않았으면 붙잡는 마법을 먼저 건다
+  // 붙잡기가 큰 수를 확정시킬 때만(지금 상태 + 이 붙잡기, 또는 + 준비된 다른 붙잡기 하나) 먼저 건다
+  const bigs = W.rules.bodyBind && W.rules.risk && T.bigPlan ? m.book.map(k => S[k]).filter(x => x && x.big && !((m.cd[x.n] || 0) > 0) && m.glu > x.cost + 3 && d < C.rangeOf(m, x) + 1) : [];
+  const ctOf = x => castTime(W, m, x.cast * (1 - 0.35 * (m.mast[x.n] || 0)));
+  const pinNow = bigs.some(x => pinned(W, m, x, e, ctOf(x), d));
+  const holds = bigs.length && !pinNow ? m.book.map(k => S[k]).filter(x => x && !x.big && pinOf(x, e) && !((m.cd[x.n] || 0) > 0)) : [];
+  const pinBy = (x, x2) => { let st = afterPin(x, e, e.st), cg = x.t === 'cage'; if (x2) { st = afterPin(x2, e, st); cg = cg || x2.t === 'cage'; } return bigs.some(b => pinned(W, m, b, e, ctOf(b), d, st, cg)); };
   const cand = [];
   for (const n of m.book) {
     const s = S[n];
@@ -273,7 +321,7 @@ function think(W, m) {
     if ((m.cd[n] || 0) > 0) continue;
     const cost = s.cost * (1 - 0.25 * (m.mast[n] || 0)) * (slot === 'B' ? 1.3 : 1); if (m.glu < cost) continue;
     const he = m.hitEst[n] ?? 0.35, Tw = s.cast * (1 - 0.35 * (m.mast[n] || 0)), R = C.rangeOf(m, s);
-    let v = 0, tx = e.x, ty = e.y, barrel = false;
+    let v = 0, tx = e.x, ty = e.y, barrel = false, pin = false;
     // 콤보의 때 (상급): 남은 묶임 안에 닿는 마법만 묶인 적 보정을 받는다. 중급은 보이는 대로 잇는다
     const down = down0 && (!T.combo2 || Math.max(e.st.root || 0, e.st.stun || 0) > Tw + landDelay(s, d));
     switch (s.t) {
@@ -290,7 +338,7 @@ function think(W, m) {
         if ((k === 'mist' || k === 'absorb') && d < 7 && e.book.some(q => S[q].kind === 'fire' || S[q].t === 'thread')) { v = 0.4 + T.zoneBias; tx = m.x + ux * 2; ty = m.y + uy * 2; }
         if (k === 'ice' && d < 8) v = (vt > 1.2 ? 0.6 : 0.3) + T.zoneBias;
         if (k === 'acid' && d < R) v = 0.35 + (W.walls.some(w => w.own !== m.side && hyp(w.x - e.x, w.y - e.y) < 3) ? 0.6 : 0) + T.zoneBias;
-        if (k === 'rain') { const need = m.st.burn > 0 || W.proj.some(p => p.src.side !== m.side && (p.s.home || p.s.n === '불덩이') && hyp(p.x - m.x, p.y - m.y) < 4) || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3.5); v = need ? 1.1 : 0; tx = m.x; ty = m.y; }
+        if (k === 'rain') { const need = m.st.burn > 0 || blindR || W.proj.some(p => p.src.side !== m.side && (p.s.home || p.s.n === '불덩이') && hyp(p.x - m.x, p.y - m.y) < 4) || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3.5); v = need ? 1.1 : 0; tx = m.x; ty = m.y; }
         break;
       }
       case 'wall':
@@ -311,14 +359,26 @@ function think(W, m) {
         else if (d > T.prefR + 5) v = 0.45;
         if (s.mv === 'glide' && aimed && m.rollCd > 0) { v = 0.8; const sg = W.rng() < 0.5 ? 1 : -1; tx = m.x - uy * 5 * sg; ty = m.y + ux * 5 * sg; }
         if (s.mv === 'vault' && !los && W.obs.some(o => hyp(o.x - m.x, o.y - m.y) < 2.5)) v = Math.max(v, 0.45);
+        if (s.mv === 'vault' && W.rules.bodyBind && caged(W, m)) { v = Math.max(v, 1.0); tx = m.x - uy * m.sf * 4; ty = m.y + ux * m.sf * 4; }   // 가두는 기둥을 넘는다 (옆으로)
         break;
       case 'trap':
         if (W.traps.filter(t => t.src === m).length < 3) { v = 0.15 + T.trapBias; if (T.pathTrap && vt > 1.2 && d < 10) { v += 0.35; tx = e.x + e.vx; ty = e.y + e.vy; } else { tx = m.x + ux * 2; ty = m.y + uy * 2; } }
         break;
-      case 'ring': if (W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3.5)) v = 1.2; else if (d < 2.5) v = 0.5; break;
+      case 'ring': if (W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3.5)) v = 1.2; else if (d < 2.5) v = 0.5; if (m.st.mycel > 0.5) v = Math.max(v, 0.9); break;   // 제 몸의 균사를 태운다
       case 'shoot': { const n2 = W.proj.filter(p => p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < s.r).length; v = n2 ? 0.9 + n2 * 0.2 : 0; break; }
       case 'taunt': { const c = e.cast || e.castB; if (c && e.type !== '이단' && d < R && c.T - c.t > Tw + 0.05) v = he * estDmg(c.s) * (e.wave ? 1 : 0.6) / (Tw + 0.3) * (e.wave ? 1.3 : 1); break; }   // 끊을 부름의 값 × 끊길 확률
-      case 'smother': { const need = m.st.burn > 0 || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3) || W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3); v = need ? 1.1 : 0; break; }
+      case 'smother': { const need = m.st.burn > 0 || blindR || W.zones.some(z => z.src.side !== m.side && ['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < 3) || W.proj.some(p => p.src.side !== m.side && p.s.home && hyp(p.x - m.x, p.y - m.y) < 3); v = need ? 1.1 : 0; break; }
+    }
+    // 몸 묶기 (1.11.0): 붙잡는 마법은 과녁이 아직 안 걸렸을 때 쓴다. 큰 수가 준비됐으면 먼저 건다 (아래 큰 수가 그 틈을 연다)
+    if (W.rules.bodyBind) {
+      const h = s.hit || {};
+      // 약한 공격으로 치지 않는다: 빈 간격을 채우면 머리만 뜨거워진다. 족쇄는 묶기(두 수 콤보가 잇는다), 나머지는 할 일이 없을 때만
+      let ok = pinOf(s, e);
+      if (h.mycel || h.lime || h.fetter || s.cramp || s.t === 'cage') { ok = ok && d < R && (los || s.t === 'cage') && !(s.t === 'cage' && (d < 4 || d > 10)); v = ok ? (h.fetter ? 0.6 : s.t === 'cage' ? 0 : 0.2) : 0; if (s.t === 'cage') { const k = castTime(W, m, Tw) * lead; tx = e.x + e.vx * k; ty = e.y + e.vy * k; } }   // 기둥은 시전이 끝날 때 과녁이 있을 자리에
+      else ok = ok && v > 0;
+      // 투사체 붙잡기는 과녁이 날아가는 동안 구를 수 없을 때만 (구르는 사람은 보이는 탄을 피한다)
+      if (s.t === 'proj' && (h.mycel || h.lime || h.fetter) && e.rollCd <= castTime(W, m, Tw) + d / s.v && e.stam >= 1.5 && !eDown && !(e.st.mycel > 0 || e.st.cramp > 0)) { v = 0; ok = false; }
+      if (holds.length && ok && !eDown && holds.includes(s) && hitBack(W, e, S, d) > castTime(W, m, Tw) + landDelay(s, d) + Math.min(...bigs.map(ctOf)) + 0.05) { if (pinBy(s)) v = Math.max(v, 1.2); else if (s.t !== 'cage' && holds.some(x => x !== s && pinBy(s, x))) v = Math.max(v, 0.7); }   // 기둥은 제 실 길도 가려 혼자 확정시킬 때만
     }
     if (plan && OFF[s.t]) {
       if (n === plan.fin) { const left = Math.max(e.st.root || 0, e.st.stun || 0); if (left > Tw + landDelay(s, d)) { v = Math.max(v, 0.6) * 3; tx = e.x; ty = e.y; } else v = 0; }   // 묶였고 묶인 동안 닿을 때만
@@ -326,10 +386,11 @@ function think(W, m) {
     }
     // 하이 리스크 (risk): 큰 수는 입장 판단이 있으면 때를 가린다, 상대의 큰 수는 빠른 공격으로 끊는다, 빈손은 몰아친다
     if (W.rules.risk) {
-      const noRoll = e.rollCd > 0.4 || e.stam < 1.5 || eDown;   // 과녁이 당분간 못 구른다
-      if (s.big && T.stance && !(eDown || e.emptyT > W.t || d > Math.max(8, maxRange(e, S)) || !los)) v = 0;   // 멀다 = 과녁의 사거리 밖
+      const noRoll = e.rollCd > 0.4 || e.stam < 1.5 || eDown || e.st.mycel > 0.4 || e.st.cramp > 0.4;   // 과녁이 당분간 못 구른다
+      pin = W.rules.bodyBind && s.big && pinned(W, m, s, e, castTime(W, m, Tw), d) && hitBack(W, e, S, d) > castTime(W, m, Tw) + 0.05;   // 몸 묶기: 빠져나갈 수 없게 붙잡혔고, 모으는 동안 맞지 않는다
+      if (s.big && T.stance && !(eDown || pin || e.emptyT > W.t || d > Math.max(8, maxRange(e, S)) || !los)) v = 0;   // 멀다 = 과녁의 사거리 밖
       // 판을 짜는 사람(대가·전설)은 큰 수를 짝의 틈이나, 남은 굳힘 안에 닿을 때만 쓴다 (아래 짝 계획이 다시 연다)
-      if (s.big && T.bigPlan && !(Math.max(e.st.stun || 0, e.st.root || 0) > castTime(W, m, Tw) + landDelay(s, d) + 0.02)) v = 0;
+      if (s.big && T.bigPlan && !(pin || Math.max(e.st.stun || 0, e.st.root || 0) > castTime(W, m, Tw) + landDelay(s, d) + 0.02)) v = 0;
       else if (s.big && T.bigPlan) { v = Math.max(v, 30); tx = e.x; ty = e.y; }
       if (OFF[s.t] && !s.big && T.readCast) { const bc = [e.cast, e.castB].find(c => c && c.s.big); if (bc && Tw + landDelay(s, d) < bc.T - bc.t && estDmg(s) >= 3) v *= 2.2; if (e.emptyT > W.t) v *= 1.5; }
       // 짝 묶기 (대가·전설): 짝을 열 수 있으면 먼저 열고, 연 뒤에는 짝의 틈에 큰 수를 꽂는다
@@ -352,7 +413,7 @@ function think(W, m) {
       }
     }
     // 피할 자리 겨냥 (상급부터): 큰 구름은 과녁이 구를 수 있으면 구를 쪽으로 1.1 m 기울인다
-    if (W.rules.risk && T.dodgeAim && s.big && s.t === 'area' && e.rollCd <= 0 && e.stam > 1.5 && !eDown) { const sd = rollSide(W, e, ux, uy, mem); tx += -uy * sd * 1.1; ty += ux * sd * 1.1; }
+    if (W.rules.risk && T.dodgeAim && s.big && s.t === 'area' && e.rollCd <= 0 && e.stam > 1.5 && !eDown && !(e.st.mycel > 0 || e.st.cramp > 0)) { const sd = rollSide(W, e, ux, uy, mem); tx += -uy * sd * 1.1; ty += ux * sd * 1.1; }
     // 붙잡기 (대가부터): 내 큰 구름이 떨어지기 전 과녁이 그 안에 있으면, 두 번째 칸으로 그보다 먼저 닿는 굳히기·묶기·느리게 하기 × 3
     if (W.rules.risk && T.grab && slot === 'B' && holdsOf(s, e)) { const a = W.areas.find(a => a.src === m && a.s.big && hyp(a.x - e.x, a.y - e.y) < a.r + 0.3); if (a && castTime(W, m, Tw) + landDelay(s, d) < a.t) { v = Math.max(v, 0.5) * 3; } }
     if (sim) { if (!sim.fired && n === sim.bind && W.t >= sim.at - 0.02) { const tt = Tw + d / (32 * (s.fast || 1)); v = 50; tx = e.x + e.vx * tt; ty = e.y + e.vy * tt; } else if (sim.b2 && n === sim.b2 && slot === 'B') { v = 40; tx = sim.x; ty = sim.y; } else if (OFF[s.t]) v *= 0.2; }
@@ -393,7 +454,7 @@ function think(W, m) {
     if (m.wave && !OFF[s.t]) v *= 0.5;   // 파도 위에선 막기보다 친다
     if (slot === 'B') v -= 0.1;
     if (OFF[s.t]) v *= T.aggr * (defDown ? 1.4 : 1);
-    if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel, down });
+    if (v > 0.15) cand.push({ s, n, v, tx, ty, Tw, cost, barrel, down, pin });
   }
   if (!cand.length) { m.relT = null; return; }   // 쏠 게 없으면 빈틈이 아니다
   // 장악권은 비싸니 상위 넷만 따진다
@@ -436,7 +497,7 @@ function think(W, m) {
   if (s.t === 'thread') Tc += Math.min(hyp(best.tx - m.x, best.ty - m.y), C.rangeOf(m, s)) / (32 * (s.fast || 1));
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
-  const cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint, cost: best.cost, bait: m.baitT === W.t, roll0: e.roll > 0, fin: plan && s.n === plan.fin ? plan.land + 0.1 : 0 };
+  const cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint, cost: best.cost, bait: m.baitT === W.t, roll0: e.roll > 0, down: !!(best.down || best.pin), fin: plan && s.n === plan.fin ? plan.land + 0.1 : 0 };
   if (slot === 'B') m.castB = cast; else m.cast = cast;
   // 행동 지표: 시작 시각, 빈틈, 콤보 시도
   m.log.starts.push(W.t); if (m.relT != null) { if (slot === 'A') { m.log.gapSum += W.t - m.relT; m.log.gapN++; if (m.log.gaps.length < 400) m.log.gaps.push(W.t - m.relT); } m.relT = null; }
@@ -445,7 +506,9 @@ function think(W, m) {
   if (m.combo && m.combo.tgt === e && !m.combo.logged) { m.combo.logged = 1; m.log.cPlan = (m.log.cPlan || 0) + 1; }
   // 두 수 콤보를 여는 묶기를 쏘면 결정타를 예약한다 (묶기가 떨어질 때와 묶이는 시간)
   if (W.rules.risk && T.grab && slot === 'B' && holdsOf(s, e) && W.areas.some(a => a.src === m && a.s.big && hyp(a.x - e.x, a.y - e.y) < a.r + 0.3)) m.log.grab++;
+  if (holds.length && holds.includes(s) && best.v >= 0.7) m.log.pinTry++;   // 큰 수를 위해 건 붙잡기
   if (W.rules.risk && T.bigPlan) {
+    if (s.big && best.pin && !(Math.max(e.st.stun || 0, e.st.root || 0) > 0)) m.log.bigPin++;   // 굳힘·묶임 없이 몸 묶기·기둥·눈멂으로 붙잡은 과녁에 큰 수
     if (s.big) { if (m.bigp && s.n === m.bigp.fin) { m.log.bigPair++; if (m.bigp.kind === 'bind' && W.t < m.bigp.land) cast.pairLand = m.bigp.land; } m.bigp = null; }
     else if (PAIRS[s.n] && m.book.includes(PAIRS[s.n].fin) && !((m.cd[PAIRS[s.n].fin] || 0) > 0) && (eDown || (PAIRS[s.n].kind === 'wet' && (e.rollCd > 0.4 || e.stam < 1.5)))) { const pr = PAIRS[s.n]; m.bigp = { tgt: e, fin: pr.fin, kind: pr.kind, land: W.t + Tc + landDelay(s, d) + (s.t === 'cone' ? s.dur : 0), bind: bindOf(s, e), until: W.t + Tc + 4 }; }
   }
@@ -460,5 +523,5 @@ function think(W, m) {
   m.last = s.n; m.lastT = W.t;
 }
 
-return { think, catOf, FORMNAME, rollSide, VERSION: '1.10.0' };
+return { think, catOf, FORMNAME, rollSide, VERSION: '1.11.0' };
 });
