@@ -23,7 +23,13 @@ function main(name) {
     'v2-challenger-3': pick(s => ({ v, name: `평범 전설 1 대 초보 3${tag}`, seed: s, rules: R, sides: [{ name: '전설', mages: [{ tier: '평범', skill: '전설' }] }, { name: '초보', mages: [1, 2, 3].map(() => ({ tier: '평범', skill: '초보' })) }] })),
     'v2-archmage-100': pick(s => ({ v, name: `대마법사 대 평범 100명 둘러싸기${tag}`, seed: s, maxT: 90, layout: 'ring', rules: R, sides: [{ name: '대마법사', mages: [{ tier: '대마법사', deck: '광역' }] }, { name: '평범', mages: Array.from({ length: 100 }, () => ({ tier: '평범', deck: '기본기' })) }] })),
     'v2-musket-40': pick(s => Object.assign(musketScene(40, s, R), { name: `머스킷 반원: 대마법사 대 병사 40명${tag}` })),
+    // 비행 (v2.0): 대마법사끼리 좁은 곳·넓은 곳, 날아다니는 대마법사 대 머스킷 (넓은 곳에 흩어진 스무 정)
+    'v2-sky-narrow': pick(s => ({ v, name: `대마법사 대가 대 상급, 좁은 곳 40×30${tag}`, seed: s, width: 40, height: 30, rules: R, sides: [{ name: '대가', mages: [{ tier: '대마법사', skill: '대가' }] }, { name: '상급', mages: [{ tier: '대마법사', skill: '상급' }] }] })),
+    'v2-sky-wide': pick(s => ({ v, name: `대마법사 전설 대 대가, 넓은 곳 공중전 200×150${tag}`, seed: s, width: 200, height: 150, rules: R, sides: [{ name: '전설', mages: [{ tier: '대마법사', skill: '전설' }] }, { name: '대가', mages: [{ tier: '대마법사', skill: '대가' }] }] })),
+    'v2-sky-musket': pick(s => ({ v, name: `날아다니는 대마법사(비행 판단 초보: 총 앞에서도 난다) 대 머스킷 20정, 200×150${tag}`, seed: s, width: 200, height: 150, maxT: 90, rules: R, sides: [{ name: '대마법사', mages: [{ tier: '대마법사', skill: '대가', deck: '광역', tac: { flySkill: 1 }, x: 100, y: 75 }] }, { name: '총병', mages: Array.from({ length: 20 }, (_, i) => { const a = i / 20 * 6.2832; return { tier: '병사', deck: '머스킷', x: +(100 + Math.cos(a) * 60).toFixed(2), y: +(75 + Math.sin(a) * 50).toFixed(2) }; }) }] })),
   };
+  // 넓이를 적어 둔다: 샌드박스는 넓이가 없으면 40 × 30으로 연다 (엔진은 대마법사가 끼면 200 × 150)
+  for (const sc of Object.values(out)) if (sc.width == null) { const W = A.sceneWorld(sc); sc.width = W.width; sc.height = W.height; }
   for (const [f, sc] of Object.entries(out)) { fs.writeFileSync(path.join(DIR, f + '.json'), JSON.stringify(sc, null, 1) + '\n'); console.log(f, sc.seed, sc.note); }
 }
 if (require.main === module) main(process.argv[2] || 'risk+saltRing+wave');

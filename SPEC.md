@@ -473,7 +473,8 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 |---|---|
 | `sandbox/index.html` | 화면 한 장. 브라우저로 열면(`file://`도) 바로 돈다. 빌드, 서버, 의존성 없음 |
 | `sandbox/sandbox.js` | 화면 논리: 편집, 그리기, 입력 |
-| `sandbox/scenes/*.json` | 예시 장면: `duel`(1대1), `archmage-50`(대마법사 대 50), `musket-arc`(머스킷 반원), `element-league`(원소 여섯 난전) |
+| `sandbox/scenes/*.json` | 예시 장면: `duel`(1대1), `archmage-50`(대마법사 대 50), `musket-arc`(머스킷 반원), `element-league`(원소 여섯 난전), v2.0 대표 판 `v2-*`(`experiments/scenes.js`가 고름: 이웃 둘·챌린저·둘러싸기·머스킷, 비행 셋 `v2-sky-narrow`·`v2-sky-wide`·`v2-sky-musket`). 넓이를 적어 둔다(샌드박스는 넓이가 없으면 40 × 30) |
+| 비행 그리기 (v2.0) | 떠 있는 사람은 땅에 그림자, 몸은 높이만큼(× 3 px, 40 px까지) 위에, 옆에 높이·속도 숫자. 6 m/s 넘게 움직이면 꼬리선(0.3 s 동안 온 길). 규칙 칸에 몸 받침·회피·비행(`DEFAULT_RULES`의 칸을 모두 보인다) |
 | `sandbox/arena.js` | 엔진 모듈(`src/`, `metrics/`)과 데이터(`data/`), 예시 장면을 한 장에 싼 것 (1.12.0). 브라우저가 `file://`에서 모듈도 JSON도 못 읽어서다. **만든 파일**: `node cli.js pack`. 기준은 늘 원본 파일이고, 어긋나면 시험이 실패한다 |
 | `sandbox/pack.js` | `arena.js`를 만드는 것. 빌드 도구 없이 `src/index.js`에서 정적 `require('./…')`를 따라가 파일마다 `function (module, exports, require)`로 감싼다. 코드는 한 글자도 고치지 않는다 |
 | `src/registry.js` | 등록 함수 |

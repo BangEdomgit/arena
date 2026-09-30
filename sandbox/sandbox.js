@@ -12,7 +12,8 @@ const RULE_TXT = {
   domain: ['장악권', '같은 공기는 가장 선명한 신호를 따른다'], circles: ['서클', '두 번째 칸, 3서클부터 자동 진'], fatigue: ['머리 피로', '피로와 폭주'],
   barrels: ['화약통', '씨앗 따라 5개 놓기 (장면에 화약통 목록이 있으면 그것)'], friendlyFire: ['아군 피해', '투사체와 폭발이 아군도 맞힌다'],
   powerK: ['위력 지수', '위력 = 선명도^K', 1, 4, 0.1], domainL: ['장악 거리', '신호가 반으로 흐려지는 거리 (m)', 1, 20, 0.5], passive: ['쉬는 신호', '시전 중이 아닐 때 장악권의 세기', 0, 1, 0.05],
-  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], risk: ['하이 리스크', '큰 마법(대낙뢰·화산 기둥·번개 창), 모으다 맞으면 역류, 쏜 뒤 빈손'], saltRing: ['소금 원', '15 s부터 줄어드는 소금 선. 밖에선 마법이 흩어지고 몸이 마른다'], bodyBind: ['몸 묶기', '균사 그물·얼음 족쇄·근육 경직·석회 굳히기·가두는 기둥. 눈멀면 예비동작을 못 읽는다'], taunt: ['도발', "'도발' 마법으로 상대의 부름을 끊는다. 이단은 걸리지 않는다. 끄면 책에서 빠진다"], hpScale: ['hpScale', '체력도 선명도^K로 키운다'],
+  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], risk: ['하이 리스크', '큰 마법(대낙뢰·화산 기둥·번개 창), 모으다 맞으면 역류, 쏜 뒤 빈손'], saltRing: ['소금 원', '15 s부터 줄어드는 소금 선. 밖에선 마법이 흩어지고 몸이 마른다'], bodyBind: ['몸 묶기', '균사 그물·얼음 족쇄·근육 경직·석회 굳히기·가두는 기둥. 눈멀면 예비동작을 못 읽는다'], taunt: ['도발', "'도발' 마법으로 상대의 부름을 끊는다. 이단은 걸리지 않는다. 끄면 책에서 빠진다"], hpScale: ['체력 비례', '켜면 체력 = 150 × max(C, 바닥)^지수 (v2.0 기본 끔)'], hpK: ['체력 지수', '체력 비례의 선명도 지수', 0, 3, 0.1], hpFloor: ['체력 바닥', '체력 비례에서 이보다 작은 선명도는 이것으로', 0, 2, 0.1],
+  bodyK: ['몸 받침', '받는 마법 피해 ÷ 선명도^K (총·소금·추락·파도는 그대로). 0이면 끔', 0, 4, 0.1], evade: ['회피', '걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)'], flight: ['비행', '출력 75 kW 이상(상위부터)이 뜬다. 대마법사는 계속 날고, 굳으면 떨어진다. 대마법사가 끼면 200 × 150 m'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
@@ -91,8 +92,14 @@ function draw() {
   // 예비동작 선
   for (const m of W.ms) for (const c of [m.cast, m.castB]) if (c && m.hp > 0) { ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(m.x), X(m.y)); ctx.lineTo(X(c.tx), X(c.ty)); ctx.stroke(); ctx.setLineDash([]); }
   const selM = S.sel && S.sel.k === 'mage' ? S.sel : null;
+  // 높이 (비행, v2.0): 땅에 그림자, 몸은 높이만큼 위로 올려 그리고 숫자를 단다. 속도는 꼬리선(0.3 s 동안 온 길)
+  for (const m of W.ms) if (m.hp > 0) {
+    const sp = Math.hypot(m.vx, m.vy), zy = m.z > 0.05 ? Math.min(40, m.z * 3) : 0;
+    if (zy) { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(X(m.x), X(m.y), 8, 4, 0, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(m.x), X(m.y)); ctx.lineTo(X(m.x), X(m.y) - zy); ctx.stroke(); }
+    if (sp > 6) { ctx.strokeStyle = COL[m.side % COL.length]; ctx.globalAlpha = 0.45; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X(m.x), X(m.y) - zy); ctx.lineTo(X(m.x - m.vx * 0.3), X(m.y - m.vy * 0.3) - zy); ctx.stroke(); ctx.globalAlpha = 1; }
+  }
   for (const m of W.ms) {
-    const x = X(m.x), y = X(m.y), c = COL[m.side % COL.length], dead = m.hp <= 0;
+    const zy = m.hp > 0 && m.z > 0.05 ? Math.min(40, m.z * 3) : 0, x = X(m.x), y = X(m.y) - zy, c = COL[m.side % COL.length], dead = m.hp <= 0;
     ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 ? 0.55 : 1);
     if (selM && m._ref && m._ref[0] === selM.s && m._ref[1] === selM.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, 17, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     ctx.fillStyle = '#1b1c20'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.stroke();
@@ -105,6 +112,7 @@ function draw() {
     ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 14, y - 16, 28, 3); ctx.fillStyle = c; ctx.fillRect(x - 14, y - 16, 28 * Math.max(0, m.hp) / m.hpMax, 3);
     ctx.fillStyle = '#ff8a7a'; ctx.fillRect(x - 14, y - 12, 28 * Math.min(1, m.fat / 100), 1.5);
     if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0], x, y - 20); }
+    if (zy) { ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s', x + 12, y + 4); }
   }
   if (S.sel && S.sel.k !== 'mage') { const it = itemOf(S.sel); if (it) { ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(it.x), X(it.y), X(it.r || 0.4) + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); } }
   if (S.W && A.over(S.W)) { const r = A.result(S.W); ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(winText(r), X(W.width) / 2, 34); }
