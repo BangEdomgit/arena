@@ -1,5 +1,10 @@
 # 바뀐 것
 
+## (1.13.0 그대로) 대실험 — v2.0의 기본 규칙 조합
+- 엔진·규칙·두뇌는 바꾸지 않았다. 새 실험 도구: `experiments/v2rules.js`(단계 1·2·3), `experiments/jobs.js`(1 대 무리, 머스킷 반원, 행동 지표 일감), `experiments/scenes.js`(대표 판 → 장면). 결과 `experiments/results/v2-phase*.json`
+- 예시 장면 다섯: `sandbox/scenes/v2-*.json`(risk + saltRing + wave의 대표 판)
+- 보고: `reports/v2.0-rules.md`. 추천 바탕 risk + saltRing + wave, 16조합 모두 기준의 일부를 못 채움(못 미친 항목을 따로 모음)
+
 ## 1.13.0 — 대응(풀기·대비·순간 반응)과 은실 옷: 새 틀의 첫 규칙 모듈
 - `rules.response`(기본 꺼짐, `src/rules/response.js`, 수는 `data/rules/response.json`): 순간 반응(판단 사이에도 0.2 s 안에 닿을 보이는 탄·구름을 피함, 단계마다 0~0.85), 대비(묶인 채 큰 공격이 닿으면 0.6 s 굳혀 피해 × 0.6), 풀기(몸 묶기를 머리 + 12·당 4로 품, 간격 5 s). SPEC 9장
 - `rules.silver`(기본 꺼짐, `src/rules/silver.js`, `data/rules/silver.json`) + `gear.silver`: 붙잡는 효과 × 0.5, 전기 × 1.1. SPEC 10장. 샌드박스에 은실 옷 칸

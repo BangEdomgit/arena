@@ -1,0 +1,31 @@
+{
+ "v": "1.13.0",
+ "name": "중간 대가 대 상급 [risk+saltRing+wave]",
+ "seed": 8,
+ "rules": {
+  "risk": true,
+  "saltRing": true,
+  "wave": true
+ },
+ "sides": [
+  {
+   "name": "대가",
+   "mages": [
+    {
+     "tier": "중간",
+     "skill": "대가"
+    }
+   ]
+  },
+  {
+   "name": "상급",
+   "mages": [
+    {
+     "tier": "중간",
+     "skill": "상급"
+    }
+   ]
+  }
+ ],
+ "note": "대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 8/15)이 이기고 길이(6.57 s)가 가운데값(6.8 s)에 가장 가까운 판"
+}

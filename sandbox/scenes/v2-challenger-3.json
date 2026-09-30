@@ -1,0 +1,39 @@
+{
+ "v": "1.13.0",
+ "name": "평범 전설 1 대 초보 3 [risk+saltRing+wave]",
+ "seed": 6,
+ "rules": {
+  "risk": true,
+  "saltRing": true,
+  "wave": true
+ },
+ "sides": [
+  {
+   "name": "전설",
+   "mages": [
+    {
+     "tier": "평범",
+     "skill": "전설"
+    }
+   ]
+  },
+  {
+   "name": "초보",
+   "mages": [
+    {
+     "tier": "평범",
+     "skill": "초보"
+    },
+    {
+     "tier": "평범",
+     "skill": "초보"
+    },
+    {
+     "tier": "평범",
+     "skill": "초보"
+    }
+   ]
+  }
+ ],
+ "note": "대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 14/15)이 이기고 길이(17.6 s)가 가운데값(17.6 s)에 가장 가까운 판"
+}
