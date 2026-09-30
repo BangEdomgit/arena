@@ -940,7 +940,7 @@ const VERSION = '2.0.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0 };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -951,6 +951,8 @@ const DEFAULT_RULES = {
   domainL: 5,          // 신호가 반으로 흐려지는 거리 (m)
   passive: 0.5,        // 시전 중이 아닐 때 장악권의 세기
   fizzle: 0.15,        // 장악 몫이 이보다 작으면 마법이 흩어진다
+  domainR: 5,          // (v2.0 둘째) 도달 반경: 적의 신호는 제 자리에서 domainR × C m 안에서만 몫을 다툰다. 0이면 끝없음 (SPEC 5장)
+  domainPath: true,    // (v2.0 둘째) 실(thread)은 길 전체를 지어야 한다: 길의 네 점 가운데 가장 낮은 g (SPEC 5장)
   full: 0.6,           // 장악 몫이 이보다 크면 온전한 힘
   taunt: false,        // 도발: 상대의 부름(예비동작)을 끊는 마법 '도발'을 쓸 수 있다. 끄면 책에서 빠진다 (SPEC 8장)
   wave: true,          // (v2.0 기본 켬) 파도: 머리가 넘치면 굳는 대신 파도를 탄다. 부류(type: 서퍼·메타·이단)마다 다르게 (SPEC 7장)
@@ -959,7 +961,8 @@ const DEFAULT_RULES = {
   bodyBind: false,     // 몸 묶기: 발밑이 아니라 몸을 묶는 마법 다섯과 눈멂의 읽기 막기 (1.11.0, SPEC 9장). 끄면 그 마법이 책에서 빠진다
   response: false,     // 대응: 순간 반응(판단 사이의 구르기)·대비(피할 수 없는 것에 몸을 굳힘)·풀기(몸 묶기를 머리로 푼다) (1.13.0, SPEC 9장, rules/response)
   silver: false,       // 은실 옷: gear.silver를 입은 사람에게 붙잡는 효과 × 0.5, 전기 × 1.1 (1.13.0, SPEC 10장, rules/silver)
-  bodyK: 2.3,          // (v2.0) 몸 받침: 받는 마법 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
+  bodyK: 2.3,          // (v2.0) 몸 받침: 받는 에너지 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
+  callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
   flight: true,        // (v2.0) 비행: 출력 75 kW 이상(상위부터)이 난다. 높이 z, 속도 판단 (SPEC 24장, rules/flight)
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
@@ -974,7 +977,7 @@ const BUFK = new Set(['speed', 'elecRes', 'bluntRes', 'toxRes', 'front', 'block'
 const BODY = { hp: 150, glu: 110, gluRegen: 1.2, stam: 6, stamRegen: 0.8, speed: 5, radius: 0.3 };
 // 마법이 만들어지는 자리
 // 규칙 모듈이 더하는 틀(cage·taunt…)은 그 모듈의 form에 있다 (formsOf가 붙인다)
-const FORM = { proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
+const FORM = { proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'path', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
 const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
@@ -1062,7 +1065,7 @@ function addMage(W, spec, side, x, y) {
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
-    _bkC: NaN, _bk: 1, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
+    _bkC: NaN, _bk: 1, _clC: NaN, _cl: 0, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
     z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined,
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
@@ -1098,10 +1101,10 @@ function sigOf(W, m) { if (m._sigN) { m._sigN = false; m._sig = pow(m._sigX, W.r
 // 장악 몫 f: (x,y)의 공기가 m의 신호를 따를 몫. 0~1
 function share(W, m, x, y) {
   if (!W.rules.domain) return 1;
-  const L = W.rules.domainL, foes = W.foes[m.side];
+  const L = W.rules.domainL, foes = W.foes[m.side], Rr = W.rules.domainR;
   const mine = sigOf(W, m) / (1 + hyp(x - m.x, y - m.y) / L);
   let other = 0;
-  for (let i = 0; i < foes.length; i++) { const q = foes[i]; other += sigOf(W, q) * (q._act ? 1 : W.rules.passive) / (1 + hyp(x - q.x, y - q.y) / L); }
+  for (let i = 0; i < foes.length; i++) { const q = foes[i], dq = hyp(x - q.x, y - q.y); if (Rr > 0 && dq > Rr * q.C) continue; other += sigOf(W, q) * (q._act ? 1 : W.rules.passive) / (1 + dq / L); }   // 도달 반경 밖의 적은 다투지 않는다 (v2.0 둘째)
   let f = mine / (mine + other);
   const h = W.H.share; for (let i = 0; i < h.length; i++) f = h[i](W, m, x, y, f);   // 소금 망토 (rules/gear)
   return f;
@@ -1109,7 +1112,7 @@ function share(W, m, x, y) {
 const gOf = (W, f) => clamp((f - W.rules.fizzle) / (W.rules.full - W.rules.fizzle), 0, 1);
 function formPoint(m, s, tx, ty) {
   const k = FORM[s.t];
-  if (k === 'target') return [tx, ty];
+  if (k === 'target' || k === 'path') return [tx, ty];
   if (k === 'front') { const d = hyp(tx - m.x, ty - m.y) || 1, L = Math.min(d, s.L || 3) * 0.4; return [m.x + (tx - m.x) / d * L, m.y + (ty - m.y) / d * L]; }
   if (k === 'self') { const d = hyp(tx - m.x, ty - m.y) || 1; return [m.x + (tx - m.x) / d * 0.5, m.y + (ty - m.y) / d * 0.5]; }
   return null;
@@ -1117,7 +1120,13 @@ function formPoint(m, s, tx, ty) {
 // 이 자리에 마법이 서는 정도 g. 규칙의 문(gate)이 막으면 0 (소금 원, rules/saltRing)
 function gAt(W, m, s, tx, ty) {
   const h = W.H.gate; for (let i = 0; i < h.length; i++) if (h[i](W, m, s, tx, ty)) return 0;
-  if (s.mundane || !W.rules.domain) return 1; const p = formPoint(m, s, tx, ty); return p ? gOf(W, share(W, m, p[0], p[1])) : 1;
+  if (s.mundane || !W.rules.domain) return 1;
+  if (FORM[s.t] === 'path' && W.rules.domainPath) {   // 길 전체를 지어야 한다: 사거리로 자른 길의 ¼·½·¾·끝 가운데 가장 낮은 몫 (v2.0 둘째, SPEC 5장)
+    const dx = tx - m.x, dy = ty - m.y, d = hyp(dx, dy) || 1, R = rangeOf(m, s), k = d > R ? R / d : 1; let f = 1;
+    for (let i = 1; i <= 4; i++) { const q = share(W, m, m.x + dx * k * i / 4, m.y + dy * k * i / 4); if (q < f) f = q; }
+    return gOf(W, f);
+  }
+  const p = formPoint(m, s, tx, ty); return p ? gOf(W, share(W, m, p[0], p[1])) : 1;
 }
 
 /* ---------------- 공간 ---------------- */
@@ -1778,17 +1787,24 @@ module.exports = {
 }, {}];
 D["src/rules/body.js"] = [function (module, exports, require) {
 'use strict';
-/* 규칙: 몸 받침 (rules.bodyK, v2.0 기본 2.3, SPEC 24장)
- * 받는 마법 피해 ÷ max(C, 1)^bodyK. 잔기술과 몸 관리의 서클(굳은 살·지혈·통증 차단·열 차단, WORLD 5장)이 등급만큼 강해진다.
- * 위력이 C^2.5라 같은 등급끼리의 한 방은 C^0.2배로 거의 그대로이고, 등급 차이는 그대로 크다.
- * 받치지 않는 것: 총(mundane), 화약통(마법이 아니다), 소금(몸의 마력을 끊는다), 추락, 제 머리가 넘친 것(파도·폭주, 역류) */
-const { pow } = require('../math');
-const SKIP = { salt: 1, fall: 1, wave: 1, backfire: 1 };
+/* 규칙: 몸 받침 (rules.bodyK, v2.0 기본 2.3, SPEC 24장; 굳은 살은 v2.0 둘째 묶음, 25장)
+ * 에너지 피해(불·번개·독·열선…)는 ÷ max(C, 1)^bodyK: 열 차단·절연 막·폐 거르기.
+ * 부딪히는 피해('blunt': 돌·얼음·곡사·물·총·벽 밀기)는 한 방마다 굳은 살 = callus × log₂ C / log₂ 10 만큼 뺀다. 조약돌은 튕기고 무거운 돌·총알은 들어온다.
+ * callus 0이면 첫 묶음 그대로(부딪힘도 ÷ C^bodyK, 총은 받치지 않는다).
+ * 받치지 않는 것: 화약통(마법이 아니다), 소금(몸의 마력을 끊는다), 추락, 제 머리가 넘친 것(파도·폭주, 역류) */
+const { pow, log } = require('../math');
+const SKIP = { salt: 1, fall: 1, wave: 1, backfire: 1 }, L10 = log(10);
 module.exports = {
   name: 'body', switch: 'bodyK', on: W => W.rules.bodyK > 0,
   engine: () => ({
     hurtMod(W, m, v, kind, name) {
-      if (SKIP[kind] || name === '화약통') return v; const s = W.spells[name]; if (s && s.mundane) return v;
+      if (SKIP[kind] || name === '화약통') return v;
+      const cal = W.rules.callus;
+      if (cal > 0 && kind === 'blunt') {   // 굳은 살 (선명도마다 한 번)
+        if (m._clC !== m.C) { m._clC = m.C; m._cl = m.C > 1 ? cal * log(m.C) / L10 : 0; }
+        return v > m._cl ? v - m._cl : 0;
+      }
+      const s = W.spells[name]; if (s && s.mundane && !(cal > 0)) return v;
       if (m._bkC !== m.C) { m._bkC = m.C; m._bk = pow(Math.max(m.C, 1), W.rules.bodyK); }   // 선명도마다 한 번 (결정론 pow가 비싸다)
       return v / m._bk;
     },

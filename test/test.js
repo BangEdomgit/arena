@@ -297,14 +297,24 @@ ok('v2.0 기본 (SPEC 24장): risk·saltRing·wave 켬, 몸 받침 2.3·회피 �
   const W2 = A.createWorld({ seed: 1, rules: Object.assign({}, V1, { hpScale: true }) }); assert.ok(Math.abs(A.addMage(W2, { C: 0.3 }, 0, 5, 5).hpMax - 150 * Math.pow(0.3, 2.5)) < 1e-9, '1.x의 hpScale');
   const W3 = A.createWorld({ seed: 1, rules: { hpScale: true } }); assert.ok(Math.abs(A.addMage(W3, { C: 2.5 }, 0, 5, 5).hpMax - 150 * Math.pow(2.5, 1.2)) < 1e-9 && A.addMage(W3, { C: 0.3 }, 0, 5, 5).hpMax === 150, 'hpScale C^1.2');
 });
-ok('v2.0 몸 받침·회피: 마법 피해 ÷ C^2.3(총·소금·추락·폭주는 그대로), 걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)', () => {
+ok('v2.0 몸 받침·회피: 에너지 피해 ÷ C^2.3, 부딪힘은 굳은 살(12 × log₁₀ C)만큼 빼기(총도), callus 0이면 첫 묶음, 소금·추락·폭주는 그대로, 걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)', () => {
   const mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false, domain: false }, rules) }); const q = A.addMage(W, { C: 10, book: [] }, 0, 10, 15), f = A.addMage(W, { book: ['짧은 실', '머스킷'], allowBanned: true }, 1, 13, 15); A.stepWorld(W); return [W, q, f]; };
   const taken = (rules, spell, steps = 0) => { const [W, q, f] = mk(rules); const h0 = q.hp; A.release(W, f, { s: W.spells[spell], tx: q.x, ty: q.y, tgt: q }); for (let i = 0; i < steps; i++) A.stepWorld(W); return h0 - q.hp; };
   const a = taken({ bodyK: 0 }, '짧은 실'), b = taken({}, '짧은 실'); assert.ok(a > 0 && Math.abs(b / a - 1 / Math.pow(10, 2.3)) < 1e-9, a + ' → ' + b);
-  const g0 = taken({ bodyK: 0 }, '머스킷', 10), g1 = taken({}, '머스킷', 10); assert.ok(g0 > 0 && g0 === g1, '총은 받치지 않는다 ' + g0 + ' ' + g1);
+  const g0 = taken({ bodyK: 0 }, '머스킷', 10), g1 = taken({}, '머스킷', 10), g2 = taken({ callus: 0 }, '머스킷', 10); assert.ok(g0 === 60 && Math.abs(g1 - 48) < 1e-9 && g2 === 60, '총: 굳은 살 12를 뺀다 (callus 0이면 그대로) ' + g0 + ' ' + g1 + ' ' + g2);
+  const p0 = taken({ bodyK: 0 }, '돌 압축탄', 12), p1 = taken({}, '돌 압축탄', 12); assert.ok(p0 > 0 && p0 < 12 && p1 === 0, '조약돌은 튕긴다 ' + p0 + ' ' + p1);
   const [W, q] = mk({}); W.t = 200; for (let i = 0; i < 3; i++) A.stepWorld(W); assert.ok(q.log.taken.salt > 0 && Math.abs(q.log.taken.salt - 6 * 3 / 30) < 1e-6, '소금은 받치지 않는다 ' + q.log.taken.salt);
   const k = Math.log2(10), [W2, r] = mk({}); A.roll(W2, r, 1, 0, 8, 0.8); assert.ok(Math.abs(r.vx - 8 * (1 + 0.25 * k)) < 1e-9 && Math.abs(r.rollCd - 0.8 / (1 + 0.2 * k)) < 1e-9);
   const [W3, r3] = mk({ evade: false }); A.roll(W3, r3, 1, 0, 8, 0.8); assert.ok(r3.vx === 8 && r3.rollCd === 0.8);
+});
+ok('v2.0 장악권의 원칙 (SPEC 5장): 만드는 것을 빼앗지 가는 것은 못 막는다 — 도달 반경 5 m × C, 실은 길 전체, 발밑은 상대 자리', () => {
+  const mk = rules => { const W = A.createWorld({ seed: 1, width: 400, height: 300, obstacles: 0, rules: Object.assign({ flight: false, saltRing: false }, rules) }); const e = A.addMage(W, A.mage({ tier: '대마법사' }), 0, 100, 150), m = A.addMage(W, A.mage({ tier: '평범', book: ['돌 압축탄', '짧은 실', '라이트닝', '땅 번개'] }), 1, 160, 150); A.stepWorld(W); return [W, e, m]; };
+  const g = (rules, n, d) => { const [W, e, m] = mk(rules); m.x = e.x + d; return A.gAt(W, m, W.spells[n], e.x, e.y); };
+  assert.strictEqual(g({}, '돌 압축탄', 55), 1, '반경 밖 손끝'); assert.strictEqual(g({}, '돌 압축탄', 45), 0, '반경 안 손끝');
+  assert.strictEqual(g({ domainR: 0 }, '돌 압축탄', 55), 0, '예전: 끝없음');
+  assert.strictEqual(g({}, '라이트닝', 55), 0, '실의 길이 반경 안을 지난다'); assert.strictEqual(g({}, '땅 번개', 55), 0, '상대 자리');
+  // 길: 사거리 끝이 반경 밖이면 선다 (평범 라이트닝 12 m, 70 m 떨어져 쏘면 길이 모두 반경 밖)
+  assert.strictEqual(g({}, '라이트닝', 70), 1); assert.ok(g({ domainPath: false }, '짧은 실', 55) === g({}, '짧은 실', 55));
 });
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
