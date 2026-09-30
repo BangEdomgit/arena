@@ -5,13 +5,19 @@ D["data/books.json"] = [function (module, exports, require) {
 module.exports = {"불":["불덩이","화염 방사","소이 캡슐","폭굉 추진","불벽","숨 덫"],"번개":["라이트닝","체인","낙뢰","맨손 방전","다리 자극","흘리기 막","번개 지뢰","근육 경직"],"흙":["돌 창","돌 압축탄","곡사 돌","솟는 발판","석회 기둥","석회 방패","흙 꺼짐","석회 굳히기","가두는 기둥"],"물":["물 망치","물 대포","물길 미끄럼","물 장막","흡수 안개","진흙 웅덩이"],"얼음":["얼음 창","저격 창","서리 깔기","얼음 미끄럼","얼음 기둥","얼음 덫","얼음 족쇄"],"독":["황화수소 캡슐","암모니아 캡슐","초산 분사","유도 포자","독 장막","독 웅덩이","균사 그물"]};
 }, {}];
 D["data/decks.json"] = [function (module, exports, require) {
-module.exports = {"합법 최강":["불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"광역":["낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","석회 기둥","솟는 발판","근육 폭주","불고리","비 뿌리기","땅 번개"],"기본기":["돌 압축탄","라이트닝","불덩이","물 망치","얼음 창","석회 방패","다리 자극"],"머스킷":["머스킷"],"기술":["짧은 실","체인","번개 그물","흙 손","불기둥","불벽","번개 지뢰","석회 방패","산 안개","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"큰 수":["번개 그물","물 대포","빙판","불벽","짧은 실","땅 번개","석회 방패","대낙뢰","화산 기둥","번개 창"],"도발 합법 최강":["도발","불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물"]};
+module.exports = {"합법 최강":["불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"광역":["낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","석회 기둥","솟는 발판","근육 폭주","불고리","비 뿌리기","땅 번개"],"기본기":["돌 압축탄","라이트닝","불덩이","물 망치","얼음 창","석회 방패","다리 자극"],"머스킷":["머스킷"],"박격포":["박격포"],"기술":["짧은 실","체인","번개 그물","흙 손","불기둥","불벽","번개 지뢰","석회 방패","산 안개","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"큰 수":["번개 그물","물 대포","빙판","불벽","짧은 실","땅 번개","석회 방패","대낙뢰","화산 기둥","번개 창"],"도발 합법 최강":["도발","불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물"],"조약돌":["조약돌","근육 폭주"],"무거운 돌":["무거운 돌","조약돌","근육 폭주"],"번쩍 돌":["번쩍임","무거운 돌","조약돌","근육 폭주"],"열선":["열선","번쩍임","짧은 실","석회 방패","근육 폭주"],"대마법사 성":["흙벽","보루","벽 밀기","낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","번쩍임","흙먼지","근육 폭주"]};
 }, {}];
 D["data/gear.json"] = [function (module, exports, require) {
-module.exports = {"default":{"soles":true},"items":{"soles":{"이름":"소금 밑창","설명":"안 보이는 발밑 공격(지연 폭발)의 피해·묶임·굳힘을 × 0.3 (WORLD 148)"},"cloak":{"이름":"소금 망토","설명":"두른 사람 1.6 m 안에서 남의 장악 몫 × 0.3 (WORLD 148)"},"silver":{"이름":"은실 옷","설명":"은이 몸에 닿는 응답을 끊는다(WORLD 3-4): 굳음·묶임·몸 묶기의 길이 × 0.5. 은은 전기를 잘 통해 전기 피해 × 1.1. 수는 data/rules/silver.json. rules.silver가 켜졌을 때만 (SPEC 10장)"}}};
+module.exports = {"default":{"soles":true},"items":{"soles":{"이름":"소금 밑창","설명":"안 보이는 발밑 공격(지연 폭발)의 피해·묶임·굳힘을 × 0.3 (WORLD 148)"},"cloak":{"이름":"소금 망토","설명":"두른 사람 1.6 m 안에서 남의 장악 몫 × 0.3 (WORLD 148)"},"silver":{"이름":"은실 옷","설명":"은이 몸에 닿는 응답을 끊는다(WORLD 3-4): 굳음·묶임·몸 묶기의 길이 × 0.5. 은은 전기를 잘 통해 전기 피해 × 1.1. 수는 data/rules/silver.json. rules.silver가 켜졌을 때만 (SPEC 10장)"},"mirror":{"이름":"유리 비단 거울","설명":"빛을 모아 곧게 보내는 거울. 있어야 열선을 쓴다 (rules.light, SPEC 25장)"},"goggles":{"이름":"연기 안경","설명":"번쩍임의 눈멂 × 0.5 (rules.light, SPEC 25장)"}}};
+}, {}];
+D["data/rules/army.json"] = [function (module, exports, require) {
+module.exports = {"musket":{"R":100,"cast":0.1,"fuse":[0.1,0.5],"reload":[15,20],"aimN":0.004,"aimD":0.0004},"mortar":{"spread":0.05,"min":5},"volleyT":17.5,"farFly":{"z":2,"d":50},"morale":{"every":0.5,"cas":0.2,"casK":2,"shock":0.35,"shockR":10,"shockDmg":50,"decay":0.5,"minSide":3,"skill":{"초보":1,"중급":1.3,"상급":1.6,"대가":2,"전설":2.5},"edge":1}};
+}, {}];
+D["data/rules/bulwark.json"] = [function (module, exports, require) {
+module.exports = {"rate":0.6,"rateP":632000,"block":{"gap":0.8,"r":0.45,"h":1.6,"hpM3":400},"stopThick":0.5,"bullet":2,"heavyM":5,"heavy":500,"water":10,"ice":{"melt":0.5,"fire":20},"pit":{"r":0.7,"out":1.1,"speed":0.5},"upkeep":{"glu":0.8,"max":15},"topple":{"depth":2.5,"reach":6},"maxBuild":20};
 }, {}];
 D["data/rules/flight.json"] = [function (module, exports, require) {
-module.exports = {"P0":2000,"Pk":2.5,"minP":75000,"lift":150000,"liftV":20,"glideVz":4,"mass":80,"g":9.8,"drag":0.135,"zMin":2,"zMax":15,"vzMax":8,"vzAcc":12,"vMax":100,"fwdG":3,"latG":5,"latK":0.08,"latP":300000,"corner":25,"film":60,"filmBlind":0.3,"pow":0.8,"powL":[1.15,0.6,0.5],"fat":[1,6,40],"fall":4,"fallStun":1,"elec":1.3,"cloud":1.3,"arena":[200,150],"arenaC":10,"graze":{"v":15,"within":2},"brain":{"hover":3,"approach":50,"full":100,"slow":15,"z":6,"zLow":3,"zHigh":15,"near":10,"danger":6,"crowd":8,"elecMany":2,"bind":2,"lead":1.5,"leadV":60,"tiredFat":60,"hopN":2,"hopT":3,"restFat":999,"restWave":100,"guns":3,"zCrowd":10,"vCrowd":5,"gunR":30,"feintV":40,"strike":1.5}};
+module.exports = {"P0":2000,"Pk":2.5,"minP":75000,"lift":150000,"liftV":20,"glideVz":4,"mass":80,"g":9.8,"drag":0.135,"zMin":2,"zMax":15,"vzMax":8,"vzAcc":12,"vMax":100,"fwdG":3,"latG":5,"latK":0.08,"latP":300000,"corner":25,"film":60,"filmBlind":0.3,"pow":0.8,"powL":[1.15,0.6,0.5],"fat":[1,6,40],"fall":4,"fallStun":1,"elec":1.3,"cloud":1.3,"arena":[200,150],"arenaC":10,"graze":{"v":15,"within":2},"brain":{"hover":3,"approach":50,"full":100,"slow":15,"z":6,"zLow":3,"zHigh":15,"near":10,"danger":6,"crowd":8,"elecMany":2,"bind":2,"lead":1.5,"leadV":60,"tiredFat":60,"hopN":2,"hopT":3,"restFat":999,"restWave":100,"guns":3,"zCrowd":10,"vCrowd":5,"waveLand":true,"gunFar":110,"ownGap":2,"gunR":30,"feintV":40,"strike":1.5}};
 }, {}];
 D["data/rules/response.json"] = [function (module, exports, require) {
 module.exports = {"reflex":{"window":0.2,"again":0.25},"brace":{"k":0.6,"dur":0.6,"fat":5,"speed":0.3,"within":0.35,"minDmg":12},"unbind":{"fat":12,"glu":4,"cd":5,"min":0.5},"levels":{"초보":{"reflex":0,"brace":false,"unbind":false},"중급":{"reflex":0.3,"brace":true,"unbind":false},"상급":{"reflex":0.5,"brace":true,"unbind":true},"대가":{"reflex":0.7,"brace":true,"unbind":true},"전설":{"reflex":0.85,"brace":true,"unbind":true}},"noSkill":{"autoDodge":{"reflex":0.4,"brace":true,"unbind":false},"plain":{"reflex":0,"brace":false,"unbind":false}}};
@@ -20,7 +26,7 @@ D["data/rules/silver.json"] = [function (module, exports, require) {
 module.exports = {"hold":0.5,"elec":1.1,"speed":1};
 }, {}];
 D["data/skills.json"] = [function (module, exports, require) {
-module.exports = {"roll":{"rollCap":0.85,"rollBias":[0.6,0.9]},"basic":{"readCast":true,"lead":1,"combo":true,"crowd":true,"stance":false,"lever":false,"pathTrap":false,"slotB":false,"terrain":false,"readWave":false,"cdRead":false,"outrange":false,"focusLow":false},"levels":{"초보":{"dec":0.3,"noise":0.14,"autoDodge":false,"circles":"half","from":"basic","tac":{"flySkill":1,"dodge":0.15,"rest":60,"readCast":false,"lead":0.2,"combo":false,"crowd":false,"castMove":0,"pause":[0.3,0.6],"shieldAny":true}},"중급":{"dec":0.2,"noise":0.08,"autoDodge":false,"circles":"minus1","from":"basic","tac":{"flySkill":2,"dodge":0.45,"rest":75}},"상급":{"dec":0.13,"noise":0.04,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":3,"dodge":0.75,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"dodgeAim":true}},"대가":{"dec":0.08,"noise":0.02,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":4,"dodge":1,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"coverW":2,"herd":true,"strip":true,"lure":true,"simul":false,"cancel2":true,"bigPlan":true,"dodgeAim":true,"grab":true,"feint":false,"focusLow":true,"terrain":true,"slotB":true,"slotBOff":false,"readWave":true,"cdRead":true,"outrange":true}},"전설":{"dec":0.05,"noise":0.01,"autoDodge":true,"circles":"plus1","from":"대가","tac":{"flySkill":5,"feint":0.12,"simul":true,"shieldSave":false,"learn":true,"learnAim":"wide","waveChoose":true,"counter":true,"coverW":2.5,"bait":true,"fakeRetreat":true,"triple":true}}}};
+module.exports = {"roll":{"rollCap":0.85,"rollBias":[0.6,0.9]},"basic":{"readCast":true,"lead":1,"combo":true,"crowd":true,"stance":false,"lever":false,"pathTrap":false,"slotB":false,"terrain":false,"readWave":false,"cdRead":false,"outrange":false,"focusLow":false},"levels":{"초보":{"dec":0.3,"noise":0.14,"autoDodge":false,"circles":"half","from":"basic","tac":{"flySkill":1,"dodge":0.15,"rest":60,"readCast":false,"lead":0.2,"combo":false,"crowd":false,"castMove":0,"pause":[0.3,0.6],"shieldAny":true}},"중급":{"dec":0.2,"noise":0.08,"autoDodge":false,"circles":"minus1","from":"basic","tac":{"flySkill":2,"dodge":0.45,"rest":75}},"상급":{"dec":0.13,"noise":0.04,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":3,"wallSite":true,"retreat":true,"dodge":0.75,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"dodgeAim":true}},"대가":{"dec":0.08,"noise":0.02,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":4,"wallSite":true,"retreat":true,"wallBreak":true,"dodge":1,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"coverW":2,"herd":true,"strip":true,"lure":true,"simul":false,"cancel2":true,"bigPlan":true,"dodgeAim":true,"grab":true,"feint":false,"focusLow":true,"terrain":true,"slotB":true,"slotBOff":false,"readWave":true,"cdRead":true,"outrange":true}},"전설":{"dec":0.05,"noise":0.01,"autoDodge":true,"circles":"plus1","from":"대가","tac":{"flySkill":5,"feint":0.12,"simul":true,"shieldSave":false,"learn":true,"learnAim":"wide","waveChoose":true,"counter":true,"coverW":2.5,"bait":true,"fakeRetreat":true,"triple":true}}}};
 }, {}];
 D["data/spells/order.json"] = [function (module, exports, require) {
 module.exports = ["불덩이","화염 방사","소이 캡슐","폭굉 추진","불벽","숨 덫","라이트닝","체인","낙뢰","맨손 방전","다리 자극","흘리기 막","번개 지뢰","돌 창","돌 압축탄","곡사 돌","솟는 발판","석회 기둥","석회 방패","흙 꺼짐","물 망치","물 대포","물길 미끄럼","물 장막","흡수 안개","진흙 웅덩이","얼음 창","저격 창","서리 깔기","얼음 미끄럼","얼음 기둥","얼음 덫","황화수소 캡슐","암모니아 캡슐","초산 분사","유도 포자","독 장막","독 웅덩이","불고리","그을음 연막","갈래 불덩이","불 씨앗","짧은 실","번개 그물","근육 폭주","걸어둔 구름","갈래 돌","흙먼지","흙 손","큰 바위","비 뿌리기","끓는 물","안개 걸음","물 올가미","빙판","얼음 껍질","얼음 산탄","얼음 담","산 안개","마비 포자","포자 벽","독 이끼","불기둥","땅 번개","가시 솟기","발 얼리기","돌 비","공중 격추","흙 이불","얼음 절연","해독 균","바위 박차기","머스킷","도발","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"];
@@ -37,6 +43,9 @@ module.exports = {"라이트닝":{"n":"라이트닝","el":"번개","t":"thread",
 D["data/spells/불.json"] = [function (module, exports, require) {
 module.exports = {"불덩이":{"n":"불덩이","el":"불","t":"proj","m":0.3,"v":26,"R":16,"cost":4,"cast":0.35,"cd":1.4,"hit":{"dmg":10,"kind":"fire","burn":2.5,"zone":{"k":"fire","r":1,"d":2}},"role":"공격"},"화염 방사":{"n":"화염 방사","el":"불","t":"cone","L":3.6,"dur":1,"dps":22,"kind":"fire","burn":2,"cost":5,"cast":0.2,"cd":2.2,"role":"공격"},"소이 캡슐":{"n":"소이 캡슐","el":"불","t":"proj","m":0.5,"v":20,"R":14,"cost":5,"cast":0.4,"cd":1.8,"burst":{"r":1.4,"dmg":16,"kind":"fire","burn":2},"role":"공격"},"폭굉 추진":{"n":"폭굉 추진","el":"불","t":"move","mv":"dash","dist":5,"self":3,"cost":3,"cast":0.1,"cd":2,"role":"이동"},"불벽":{"n":"불벽","el":"불","t":"zone","z":{"k":"fire","shape":"line","len":4,"d":4,"dps":12},"R":7,"cost":5,"cast":0.35,"cd":3,"role":"방어"},"숨 덫":{"n":"숨 덫","el":"불","t":"trap","tr":{"dmg":18,"kind":"fire","burn":2,"r":1.3},"vis":0,"cost":4,"cast":0.3,"cd":2,"role":"함정"},"불고리":{"n":"불고리","el":"불","tags":["spore","tox","close"],"desc":"몸 둘레 3m를 한순간 태워 날아오는 포자와 독을 없앤다","t":"ring","r":3,"dmg":6,"kill":1,"cost":4,"cast":0.15,"cd":3,"role":"방어"},"그을음 연막":{"n":"그을음 연막","el":"불","tags":["ranged","blunt","elec"],"desc":"덜 탄 연기로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":3,"cast":0.2,"cd":5,"role":"방어"},"갈래 불덩이":{"n":"갈래 불덩이","el":"불","tags":["miss"],"desc":"불덩이를 세 갈래로","t":"proj","m":0.3,"v":18,"R":16,"multi":3,"cost":5,"cast":0.4,"cd":1.6,"hit":{"dmg":5,"kind":"fire","burn":1.5},"role":"공격"},"불 씨앗":{"n":"불 씨앗","el":"불","tags":["miss","close"],"desc":"값싼 불 함정을 여러 개","t":"trap","tr":{"dmg":14,"kind":"fire","burn":2,"r":1.2},"vis":0,"cost":2,"cast":0.2,"cd":1,"role":"함정"},"불기둥":{"n":"불기둥","el":"불","t":"area","r":1.2,"delay":0.45,"dmg":16,"kind":"fire","burn":2,"vis":0,"R":9,"cost":5,"cast":0.25,"cd":2.2,"role":"공격","desc":"상대 발밑에 메탄을 모아 솟구치게 한다. 보이지 않는다"},"화산 기둥":{"n":"화산 기둥","el":"불","t":"area","r":1.5,"delay":0.4,"dmg":55,"kind":"fire","burn":3,"vis":0,"R":9,"cost":10,"cast":0.6,"cd":5,"role":"공격","big":1,"rule":"risk","desc":"발밑 깊이 메탄과 열을 모아 터뜨린다. 보이지 않는다"}};
 }, {}];
+D["data/spells/빛.json"] = [function (module, exports, require) {
+module.exports = {"번쩍임":{"n":"번쩍임","el":"빛","t":"flash","desc":"손끝에서 만든 빛이 곧바로 닿는다. 시야가 이어진 적을 눈멀게 한다(1.5 s). 연기·안개·비·흙먼지가 가리고 연기 안경이 절반","R":70,"blind":1.5,"dmg":1,"kind":"heat","cost":4,"cast":0.4,"cd":6,"role":"공격","rule":"light"},"열선":{"n":"열선","el":"빛","t":"beam","desc":"예비동작 동안 핵이 빛나 보인다. 쏘면 곧바로 닿는 열. 거리에 따라 약해지고(반감 15 m) 연기·안개·비를 지나면 × 0.4. 유리 비단 거울이 있어야 쓴다","R":30,"dmg":28,"L":15,"kind":"heat","cost":6,"cast":0.8,"cd":3,"role":"공격","rule":"light","needGear":"mirror"}};
+}, {}];
 D["data/spells/신호.json"] = [function (module, exports, require) {
 module.exports = {"도발":{"n":"도발","el":"신호","t":"taunt","R":10,"cost":2,"cast":0.1,"cd":4,"role":"방어","rule":"taunt","desc":"상대의 부름에 헛신호를 섞어 끊는다. 이단은 걸리지 않는다"}};
 }, {}];
@@ -44,10 +53,10 @@ D["data/spells/얼음.json"] = [function (module, exports, require) {
 module.exports = {"얼음 창":{"n":"얼음 창","el":"얼음","t":"proj","m":0.12,"v":32,"R":18,"cost":3,"cast":0.35,"cd":1.4,"hit":{"kind":"blunt","chill":2},"role":"공격"},"저격 창":{"n":"저격 창","el":"얼음","t":"proj","m":0.2,"v":60,"R":30,"cost":6,"cast":1.1,"cd":3,"lock":1,"hit":{"kind":"blunt","flat":35,"stun":0.5},"role":"공격"},"서리 깔기":{"n":"서리 깔기","el":"얼음","t":"zone","z":{"k":"ice","shape":"circle","r":1.8,"d":6,"needWet":1},"R":7,"cost":3,"cast":0.3,"cd":2.5,"role":"공격"},"얼음 미끄럼":{"n":"얼음 미끄럼","el":"얼음","t":"move","mv":"glide","dist":5,"cost":2,"cast":0.05,"cd":2,"role":"이동"},"얼음 기둥":{"n":"얼음 기둥","el":"얼음","t":"wall","hp":35,"dur":10,"r":0.6,"at":1.4,"cost":3,"cast":0.3,"cd":2.5,"role":"방어"},"얼음 덫":{"n":"얼음 덫","el":"얼음","t":"trap","tr":{"dmg":4,"chill":3,"root":1,"r":1},"vis":1,"cost":3,"cast":0.25,"cd":2,"role":"함정"},"빙판":{"n":"빙판","el":"얼음","tags":["close","kite"],"desc":"물 없이 공기의 습기로 바닥을 얼린다","t":"zone","z":{"k":"ice","shape":"circle","r":2.5,"d":6},"R":7,"cost":4,"cast":0.3,"cd":4,"role":"함정"},"얼음 껍질":{"n":"얼음 껍질","el":"얼음","tags":["blunt"],"desc":"몸을 얼음으로 덮는다","t":"buff","b":{"bluntRes":0.5,"d":2.5},"cost":3,"cast":0.1,"cd":5,"role":"방어"},"얼음 산탄":{"n":"얼음 산탄","el":"얼음","tags":["miss"],"desc":"얼음 조각 네 갈래","t":"proj","m":0.05,"v":30,"R":10,"multi":4,"cost":3,"cast":0.3,"cd":1,"hit":{"kind":"blunt","chill":1},"role":"공격"},"얼음 담":{"n":3,"el":"얼음","tags":["ranged","elec"],"desc":"기둥 셋을 잇는 담","t":"wall","hp":40,"dur":10,"r":0.6,"at":1.4,"cost":5,"cast":0.4,"cd":4,"role":"방어"},"발 얼리기":{"n":"발 얼리기","el":"얼음","t":"area","r":1,"delay":0.5,"dmg":4,"kind":"blunt","root":1.4,"chill":2,"vis":0,"R":9,"cost":3,"cast":0.2,"cd":2,"role":"공격","desc":"발밑 습기를 얼려 신발을 땅에 붙인다"},"얼음 절연":{"n":"얼음 절연","el":"얼음","t":"buff","b":{"elecRes":0.3,"d":2.5},"cost":3,"cast":0.1,"cd":5,"role":"방어","desc":"몸을 맑은 얼음으로 덮어 번개를 막는다"},"얼음 족쇄":{"n":"얼음 족쇄","el":"얼음","t":"proj","m":0.1,"v":22,"R":12,"cost":4,"cast":0.3,"cd":4,"hit":{"dmg":4,"kind":"blunt","fetter":1.5},"role":"공격","rule":"bodyBind","desc":"젖은 발목의 물을 얼려 1.5초 묶는다. 마른 적에겐 듣지 않고, 불에 녹는다"}};
 }, {}];
 D["data/spells/없음.json"] = [function (module, exports, require) {
-module.exports = {"머스킷":{"n":"머스킷","el":"없음","t":"proj","m":0.03,"v":300,"R":60,"cost":0,"cast":0.6,"cd":18,"mundane":1,"hit":{"kind":"blunt","flat":60,"stun":0.4},"role":"공격","desc":"마법이 아닌 총. 장악권이 못 막는다"}};
+module.exports = {"머스킷":{"n":"머스킷","el":"없음","t":"proj","m":0.03,"v":300,"R":60,"cost":0,"cast":0.6,"cd":18,"mundane":1,"hit":{"kind":"blunt","flat":60,"stun":0.4},"role":"공격","desc":"마법이 아닌 총. 장악권이 못 막는다"},"박격포":{"n":"박격포","el":"없음","t":"lob","flight":3,"r":2.5,"dmg":90,"kind":"blunt","R":150,"cost":0,"cast":0.5,"cd":30,"mundane":1,"wallDmg":600,"role":"공격","rule":"army","desc":"높이 쏘아 벽 너머에 떨어뜨리는 포탄. 날아가는 시간이 길어(3 s) 움직이는 과녁은 못 맞힌다. 장전 30 s. 떨어진 자리의 벽을 부순다"}};
 }, {}];
 D["data/spells/흙.json"] = [function (module, exports, require) {
-module.exports = {"돌 창":{"n":"돌 창","el":"흙","t":"proj","m":0.15,"v":28,"R":20,"cost":3,"cast":0.3,"cd":1.2,"hit":{"kind":"blunt"},"role":"공격"},"돌 압축탄":{"n":"돌 압축탄","el":"흙","t":"proj","m":0.06,"v":30,"R":24,"cost":1,"cast":0.25,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"곡사 돌":{"n":"곡사 돌","el":"흙","t":"lob","flight":1.2,"r":1,"dmg":20,"kind":"blunt","R":26,"cost":3,"cast":0.35,"cd":1.2,"role":"공격"},"솟는 발판":{"n":"솟는 발판","el":"흙","t":"move","mv":"vault","dist":4,"cost":3,"cast":0.12,"cd":2.5,"role":"이동"},"석회 기둥":{"n":"석회 기둥","el":"흙","t":"wall","hp":60,"dur":20,"r":0.7,"at":1.4,"cost":5,"cast":0.4,"cd":3,"role":"방어"},"석회 방패":{"n":"석회 방패","el":"흙","t":"buff","b":{"front":1,"block":1,"d":1.6},"cost":2,"cast":0.1,"cd":0.8,"role":"방어","react":1},"흙 꺼짐":{"n":"흙 꺼짐","el":"흙","t":"trap","tr":{"dmg":8,"kind":"blunt","root":1.8,"r":1},"vis":1,"cost":3,"cast":0.35,"cd":2.5,"role":"함정"},"갈래 돌":{"n":"갈래 돌","el":"흙","tags":["miss"],"desc":"다섯 갈래 돌","t":"proj","m":0.06,"v":40,"R":9,"multi":5,"cost":3,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"흙먼지":{"n":"흙먼지","el":"흙","tags":["ranged","elec"],"desc":"먼지로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":2,"cast":0.2,"cd":5,"role":"방어"},"흙 손":{"n":"흙 손","el":"흙","tags":["miss","kite"],"desc":"상대 발밑 흙이 발목을 움켜쥔다","t":"area","r":1.2,"delay":0.6,"dmg":6,"kind":"blunt","root":1.6,"vis":0,"R":10,"cost":4,"cast":0.25,"cd":2.5,"role":"공격"},"큰 바위":{"n":"큰 바위","el":"흙","tags":["wall","ranged"],"desc":"20kg 바위","t":"proj","m":20,"v":22,"R":26,"cost":12,"cast":2.2,"cd":3,"hit":{"kind":"blunt","flat":70,"stun":1},"rad":0.7,"role":"공격"},"가시 솟기":{"n":"가시 솟기","el":"흙","t":"area","r":1,"delay":0.45,"dmg":12,"kind":"blunt","root":1.2,"vis":0,"R":9,"cost":4,"cast":0.25,"cd":2,"role":"공격","desc":"상대 발밑 흙을 가시로 솟게 한다"},"돌 비":{"n":"돌 비","el":"흙","t":"lob","flight":0.9,"r":1.6,"dmg":14,"kind":"blunt","R":20,"cost":4,"cast":0.3,"cd":1.4,"role":"공격","desc":"작은 돌을 높이 흩뿌려 떨어뜨린다"},"흙 이불":{"n":"흙 이불","el":"흙","t":"smother","r":3,"cost":3,"cast":0.15,"cd":3,"role":"방어","desc":"둘레에 흙을 덮어 불과 독과 포자를 끈다"},"바위 박차기":{"n":"바위 박차기","el":"흙","t":"move","mv":"dash","dist":4,"cost":2,"cast":0.05,"cd":2,"role":"이동","desc":"바위를 차고 반동으로 튄다"},"석회 굳히기":{"n":"석회 굳히기","el":"흙","t":"proj","m":0.2,"v":26,"R":12,"cost":3,"cast":0.3,"cd":3,"hit":{"dmg":5,"kind":"blunt","lime":3},"role":"공격","rule":"bodyBind","desc":"석회 반죽을 다리에 붙인다. 3초 동안 구르는 거리가 절반. 산에 녹는다","rad":0.25},"가두는 기둥":{"n":"가두는 기둥","el":"흙","t":"cage","r":3,"pr":1.4,"hp":120,"dur":2.5,"R":10,"cost":6,"cast":0.35,"cd":6,"role":"공격","rule":"bodyBind","desc":"상대 둘레 3m에 석회 기둥 넷을 한꺼번에 세운다. 솟는 발판으로 넘을 수 있다"}};
+module.exports = {"돌 창":{"n":"돌 창","el":"흙","t":"proj","m":0.15,"v":28,"R":20,"cost":3,"cast":0.3,"cd":1.2,"hit":{"kind":"blunt"},"role":"공격"},"돌 압축탄":{"n":"돌 압축탄","el":"흙","t":"proj","m":0.06,"v":30,"R":24,"cost":1,"cast":0.25,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"곡사 돌":{"n":"곡사 돌","el":"흙","t":"lob","flight":1.2,"r":1,"dmg":20,"kind":"blunt","R":26,"cost":3,"cast":0.35,"cd":1.2,"role":"공격"},"솟는 발판":{"n":"솟는 발판","el":"흙","t":"move","mv":"vault","dist":4,"cost":3,"cast":0.12,"cd":2.5,"role":"이동"},"석회 기둥":{"n":"석회 기둥","el":"흙","t":"wall","hp":60,"dur":20,"r":0.7,"at":1.4,"cost":5,"cast":0.4,"cd":3,"role":"방어"},"석회 방패":{"n":"석회 방패","el":"흙","t":"buff","b":{"front":1,"block":1,"d":1.6},"cost":2,"cast":0.1,"cd":0.8,"role":"방어","react":1},"흙 꺼짐":{"n":"흙 꺼짐","el":"흙","t":"trap","tr":{"dmg":8,"kind":"blunt","root":1.8,"r":1},"vis":1,"cost":3,"cast":0.35,"cd":2.5,"role":"함정"},"갈래 돌":{"n":"갈래 돌","el":"흙","tags":["miss"],"desc":"다섯 갈래 돌","t":"proj","m":0.06,"v":40,"R":9,"multi":5,"cost":3,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"흙먼지":{"n":"흙먼지","el":"흙","tags":["ranged","elec"],"desc":"먼지로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":2,"cast":0.2,"cd":5,"role":"방어"},"흙 손":{"n":"흙 손","el":"흙","tags":["miss","kite"],"desc":"상대 발밑 흙이 발목을 움켜쥔다","t":"area","r":1.2,"delay":0.6,"dmg":6,"kind":"blunt","root":1.6,"vis":0,"R":10,"cost":4,"cast":0.25,"cd":2.5,"role":"공격"},"큰 바위":{"n":"큰 바위","el":"흙","tags":["wall","ranged"],"desc":"20kg 바위","t":"proj","m":20,"v":22,"R":26,"cost":12,"cast":2.2,"cd":3,"hit":{"kind":"blunt","flat":70,"stun":1},"rad":0.7,"role":"공격"},"가시 솟기":{"n":"가시 솟기","el":"흙","t":"area","r":1,"delay":0.45,"dmg":12,"kind":"blunt","root":1.2,"vis":0,"R":9,"cost":4,"cast":0.25,"cd":2,"role":"공격","desc":"상대 발밑 흙을 가시로 솟게 한다"},"돌 비":{"n":"돌 비","el":"흙","t":"lob","flight":0.9,"r":1.6,"dmg":14,"kind":"blunt","R":20,"cost":4,"cast":0.3,"cd":1.4,"role":"공격","desc":"작은 돌을 높이 흩뿌려 떨어뜨린다"},"흙 이불":{"n":"흙 이불","el":"흙","t":"smother","r":3,"cost":3,"cast":0.15,"cd":3,"role":"방어","desc":"둘레에 흙을 덮어 불과 독과 포자를 끈다"},"바위 박차기":{"n":"바위 박차기","el":"흙","t":"move","mv":"dash","dist":4,"cost":2,"cast":0.05,"cd":2,"role":"이동","desc":"바위를 차고 반동으로 튄다"},"석회 굳히기":{"n":"석회 굳히기","el":"흙","t":"proj","m":0.2,"v":26,"R":12,"cost":3,"cast":0.3,"cd":3,"hit":{"dmg":5,"kind":"blunt","lime":3},"role":"공격","rule":"bodyBind","desc":"석회 반죽을 다리에 붙인다. 3초 동안 구르는 거리가 절반. 산에 녹는다","rad":0.25},"가두는 기둥":{"n":"가두는 기둥","el":"흙","t":"cage","r":3,"pr":1.4,"hp":120,"dur":2.5,"R":10,"cost":6,"cast":0.35,"cd":6,"role":"공격","rule":"bodyBind","desc":"상대 둘레 3m에 석회 기둥 넷을 한꺼번에 세운다. 솟는 발판으로 넘을 수 있다"},"흙벽":{"n":"흙벽","el":"흙","t":"build","shape":"line","nb":3,"th":0.5,"at":1.3,"mat":"earth","cost":6,"cast":0.2,"cd":4,"lock":1,"role":"방어","rule":"bulwark","desc":"발밑 흙을 끌어와 앞에 벽을 쌓는다(블록 셋, 2.4 × 1.6 × 0.5 m). 세우는 동안 선다. 속도는 출력에 비례(대마법사 초당 0.6 m³, 약 3 s). 체력이 다할 때까지 서고 총알을 막는다. 흙을 끌어온 바깥쪽에 구덩이"},"보루":{"n":"보루","el":"흙","t":"build","shape":"ring","rad":2.2,"th":0.5,"mat":"earth","cost":14,"cast":0.3,"cd":30,"lock":1,"role":"방어","rule":"bulwark","desc":"제 둘레에 사방 벽을 쌓는다(반지름 2.2 m, 블록 열일곱). 대마법사 약 18 s"},"벽 밀기":{"n":"벽 밀기","el":"흙","t":"topple","R":14,"dmg":60,"root":2,"cost":6,"cast":0.5,"cd":5,"role":"공격","rule":"bulwark","desc":"서 있는 벽 아무것이나 한 방향으로 밀어 넘어뜨려 그 너머 한 줄(2.5 m)을 덮는다: 부딪힘 60 + 묶임 2 s. 벽은 무너진다"},"조약돌":{"n":"조약돌","el":"흙","t":"proj","m":0.05,"v":40,"R":70,"cost":1,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격","desc":"손끝에서 튕겨 멀리 던지는 조약돌(약 9). 굳은 살이 두꺼우면 튕긴다","rule":"army"},"무거운 돌":{"n":"무거운 돌","el":"흙","t":"proj","m":3,"v":32,"R":70,"cost":5,"cast":1,"cd":4,"hit":{"kind":"blunt","flat":45},"rad":0.25,"role":"공격","desc":"주먹 둘만 한 돌을 멀리 던진다(45). 굳은 살을 뚫는다","rule":"army"}};
 }, {}];
 D["data/tiers.json"] = [function (module, exports, require) {
 module.exports = {"병사":{"C":0.3,"circles":1,"noise":0.12,"dec":0.3,"autoDodge":false,"mast":0,"tac":{"dodge":0.2}},"평범":{"C":1,"circles":1,"noise":0.08,"dec":0.2,"autoDodge":false,"mast":0.3,"tac":{"dodge":0.4}},"중간":{"C":2.5,"circles":3,"noise":0.05,"dec":0.15,"autoDodge":false,"mast":0.6,"tac":{"dodge":0.6}},"상위":{"C":5,"circles":5,"noise":0.03,"dec":0.12,"autoDodge":true,"mast":0.8,"tac":{"dodge":0.8}},"대마법사":{"C":10,"circles":10,"noise":0.02,"dec":0.1,"autoDodge":true,"mast":1,"tac":{"dodge":1,"focusLow":true}}};
@@ -90,6 +99,7 @@ const { types } = require('./hooks');
 const combo = require('./techniques/combo'), cancel = require('./techniques/cancel'), feint = require('./techniques/feint'), simul = require('./techniques/simul');
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -203,6 +213,8 @@ function pipeOf(W, m) {
   P.push(breakout);                       // 돌파 중이면 길을 막은 자를 친다
   P.push(...bh.valueMid);                 // 지렛대: 적이 화약통 옆에 섰다 (rules/barrels)
   if (T.crowd) P.push(crowd.value);       // 여럿이 뭉친 곳
+  if (T.swarm) P.push(swarm.value);       // 무리: 눈먼 틈의 무거운 수, 벽 뒤엔 곡사 (v2.0 둘째)
+  if (T.siege) P.push(siege.value);       // 성: 벽 세우기·벽 밀기·벽 없애기 (v2.0 둘째)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
@@ -266,7 +278,7 @@ function commit(W, m, K) {
   m.last = s.n; m.lastT = W.t;
 }
 module.exports = { decide, valueSpell, commit };
-}, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/combo":"src/brain/techniques/combo.js","./techniques/cancel":"src/brain/techniques/cancel.js","./techniques/feint":"src/brain/techniques/feint.js","./techniques/simul":"src/brain/techniques/simul.js","./techniques/tempo":"src/brain/techniques/tempo.js","./techniques/bait":"src/brain/techniques/bait.js","./techniques/learn":"src/brain/techniques/learn.js","./techniques/counter":"src/brain/techniques/counter.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/herd":"src/brain/techniques/herd.js","./techniques/crowd":"src/brain/techniques/crowd.js"}];
+}, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/combo":"src/brain/techniques/combo.js","./techniques/cancel":"src/brain/techniques/cancel.js","./techniques/feint":"src/brain/techniques/feint.js","./techniques/simul":"src/brain/techniques/simul.js","./techniques/tempo":"src/brain/techniques/tempo.js","./techniques/bait":"src/brain/techniques/bait.js","./techniques/learn":"src/brain/techniques/learn.js","./techniques/counter":"src/brain/techniques/counter.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/herd":"src/brain/techniques/herd.js","./techniques/crowd":"src/brain/techniques/crowd.js","./techniques/swarm":"src/brain/techniques/swarm.js","./techniques/siege":"src/brain/techniques/siege.js"}];
 D["src/brain/hooks.js"] = [function (module, exports, require) {
 'use strict';
 /* 숨 결투장 — 두뇌 훅 모으기 (brain/hooks, SPEC 22장)
@@ -299,7 +311,7 @@ module.exports = { hooks, types };
 D["src/brain/index.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v2.0.0
+ * 숨 결투장 — 기본 두뇌 v2.1.0
  * 판단 순서: 읽기(read) → 입장(stance) → 움직임(move) → 고르기(choose: 자동 진 → 칸 → 휴식 → 마법 고르기)
  * 기술(콤보·속임수·엄폐·유도·학습·덱 읽기·붙잡기…)은 techniques/에 하나씩, 어느 단계가 어떤 기술을 켜는지는 skills.js(data/skills.json).
  * 규칙(스위치)에 딸린 판단은 그 규칙 파일(src/rules/)의 brain 훅에 있다. 세계마다 켜진 규칙의 훅만 모은다(hooks.js).
@@ -321,7 +333,7 @@ function think(W, m) {
   decide(W, m, K);
 }
 
-module.exports = { think, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.0.0' };
+module.exports = { think, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.1.0' };
 }, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./read":"src/brain/read.js","./stance":"src/brain/stance.js","./move":"src/brain/move.js","./choose":"src/brain/choose.js"}];
 D["src/brain/move.js"] = [function (module, exports, require) {
 'use strict';
@@ -330,6 +342,7 @@ D["src/brain/move.js"] = [function (module, exports, require) {
  * 피하기가 이기고, 알아챈 함정과 내 지연 폭발은 늘 비킨다. 걸음 방향은 K.vx·K.vy를 거쳐 기술·훅이 함께 고친다 */
 const { hyp } = require('./util');
 const cover = require('./techniques/cover'), position = require('./techniques/position'), lure = require('./techniques/lure');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 function steer(W, m, K) {
   const { foes, prefR, d, ux, uy, dodge, stance, escape } = K;
   let vx = 0, vy = 0;
@@ -349,6 +362,8 @@ function steer(W, m, K) {
   }
   K.vx = vx; K.vy = vy;
   lure.steer(W, m, K);   // 유도 (대가), 약한 척 물러서기 (전설)
+  swarm.steer(W, m, K);  // 무리: 장악권 바로 밖에 흩어져 선다 (v2.0 둘째)
+  siege.steer(W, m, K);  // 성: 총 앞에서 벽 뒤·장전 틈, 멀리 떠서 깎기, 물러나기 (v2.0 둘째)
   vx = K.vx; vy = K.vy;
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   // 소금 원: 선 가까이 오면 가운데로 (rules/saltRing). 피하기 걸음보다 뒤: 지대를 피하다 선 밖으로 나가 마르지 않게 (v2.0, 1.x에선 피하기가 이겼다)
@@ -362,7 +377,7 @@ function steer(W, m, K) {
   m.mv.x = vx; m.mv.y = vy;
 }
 module.exports = { steer };
-}, {"./util":"src/brain/util.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/position":"src/brain/techniques/position.js","./techniques/lure":"src/brain/techniques/lure.js"}];
+}, {"./util":"src/brain/util.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/position":"src/brain/techniques/position.js","./techniques/lure":"src/brain/techniques/lure.js","./techniques/swarm":"src/brain/techniques/swarm.js","./techniques/siege":"src/brain/techniques/siege.js"}];
 D["src/brain/read.js"] = [function (module, exports, require) {
 'use strict';
 /* 숨 결투장 — 두뇌 1: 읽기 (과녁과 성향, 위협)
@@ -390,7 +405,7 @@ function aimAt(W, m, K) {
   return true;
 }
 // 규칙이 이 예비동작을 숨기는가 (이단, rules/wave)
-function hidden(h, W, q, c) { for (let i = 0; i < h.length; i++) if (h[i](W, q, c)) return true; return false; }
+function hidden(h, W, q, c, m) { for (let i = 0; i < h.length; i++) if (h[i](W, q, c, m)) return true; return false; }
 function readThreats(W, m, K) {
   const { foes, T, dodgeK, ux, uy } = K;
   let dodge = null, aimed = false, threat = null, late = null;
@@ -406,7 +421,7 @@ function readThreats(W, m, K) {
   if (T.readCast) for (let i = 0; i < foes.length; i++) for (let j = 0; j < 2; j++) {   // 초보는 날아오는 투사체만 본다: 예비동작·구름·지대를 못 읽는다
     const q = foes[i], c = j ? q.castB : q.cast;
     if (!c || !C.THREAT[c.s.t]) continue;
-    if (hc.length && hidden(hc, W, q, c)) continue;
+    if (hc.length && hidden(hc, W, q, c, m)) continue;
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (blindR) { if (hyp(c.tx - m.x, c.ty - m.y) < r && c.T - c.t < 0.2) { late = c; late.by = q; } continue; }
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; threat.by = q; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux, perp: 1 }; }
@@ -437,7 +452,7 @@ const D = require('../../data/skills.json');
 // 실제로 쓰는 서클 = 그릇(등급) × 솜씨 (1.7.0)
 const CIRC = { half: c => Math.max(1, Math.floor(c / 2)), minus1: c => Math.max(1, c - 1), same: c => c, plus1: c => c + 1 };
 // 기술 스위치(tac) → 기술 파일 (techniques/). 무슨 단계가 무슨 기술을 켜는지 보일 때 쓴다
-const TECH = { combo: 'combo', combo2: 'combo', plan: 'combo', cancel: 'cancel', cancel2: 'cancel', feint: 'feint', simul: 'simul', triple: 'simul', pause: 'tempo', tempo: 'tempo', bait: 'bait', learn: 'learn', counter: 'counter', cover: 'cover', strip: 'cover', outrange: 'position', terrain: 'position', lure: 'lure', fakeRetreat: 'lure', herd: 'herd', crowd: 'crowd', dodgeAim: 'dodgeAim', grab: 'grab' };
+const TECH = { combo: 'combo', combo2: 'combo', plan: 'combo', cancel: 'cancel', cancel2: 'cancel', feint: 'feint', simul: 'simul', triple: 'simul', pause: 'tempo', tempo: 'tempo', bait: 'bait', learn: 'learn', counter: 'counter', cover: 'cover', strip: 'cover', outrange: 'position', terrain: 'position', lure: 'lure', fakeRetreat: 'lure', herd: 'herd', crowd: 'crowd', dodgeAim: 'dodgeAim', grab: 'grab', swarm: 'swarm', siege: 'siege', wallSite: 'siege', wallBreak: 'siege', retreat: 'siege' };
 const SKILLS = {}, CIRCLES = {};
 for (const name in D.levels) {
   const L = D.levels[name], base = L.from === 'basic' ? D.basic : SKILLS[L.from].tac;
@@ -724,6 +739,67 @@ function terrain(W, m, K, covering) {
 }
 module.exports = { outrange, terrain };
 }, {"../util":"src/brain/util.js"}];
+D["src/brain/techniques/siege.js"] = [function (module, exports, require) {
+'use strict';
+/* 기술: 성 (tac.siege, 모두, v2.0 둘째 묶음 SPEC 25장) — 선명도 5 이상이 다섯 넘는 적이나 총 둘 이상을 상대할 때만
+ * 총(머스킷 등 총이 든 적, 110 m 안)이 있으면:
+ *   날고 있으면 가장 가까운 총에서 62 m 쯤(총은 50 m 넘게 멀리 뜬 과녁을 쏘지 않는다, rules/army)에서 구름·곡사로 깎는다
+ *   땅이면 먼저 벽(흙벽 3 s, 총 쪽으로)을 세우고, 총 대부분이 장전 중일 때 벽 옆으로 나와 치고, 장전이 끝나 가면 벽 뒤로
+ * 벽 밀기: 벽 너머에 적이 있으면(깔리는 적 × 0.6)
+ * 벽 자리(상급부터, tac.wallSite): 세울 자리 5 m 안에 적이 있으면 세우지 않는다(적의 엄폐가 된다)
+ * 벽 없애기(대가부터, tac.wallBreak): 적이 벽 뒤에 숨었으면 그 벽을 미는 값 × 2, 물·산·큰 바위 × 2
+ * 머리: 적이 다섯 넘으면 피로 88 넘어서는 공격하지 않는다(무리 앞에서 파도를 타면 제 몸을 태운다)
+ * 물러나기(상급부터, tac.retreat): 체력 35% 아래에서 적이 다섯 넘거나 총이 셋 넘으면 싸우지 않는다: 높이 떠(15 m) 사거리 밖으로(m.retreat, rules/flight가 본다) */
+const { C, hyp } = require('../util');
+function guns(W, m) { let n = 0; for (const q of W.foes[m.side]) if (!q.flee && q._gun && hyp(q.x - m.x, q.y - m.y) < 110) n++; return n; }
+function on(W, m, K) { if (!(m.tac.siege && m.C >= 5 && W.rules.army)) return 0; for (const q of K.foes) if (q._gun === undefined) q._gun = q.book.some(n => { const s = K.S[n]; return s && s.mundane && s.t === 'proj'; }); const g = guns(W, m); return g >= 2 || K.foes.length > 5 ? 1 + g : 0; }
+// 나와 총들 사이에 벽이 있는가 (내 곁 2 m 안의 벽)
+function covered(W, m, gx, gy) { const ws = W.walls, a = ws.length ? C.wallsIn(W, m.x - 2, m.y - 2, m.x + 2, m.y + 2) : ws; for (let i = 0; i < a.length; i++) { const w = ws[a[i]]; if (w.cage || hyp(w.x - m.x, w.y - m.y) > 2) continue; const dx = gx - m.x, dy = gy - m.y, l = hyp(dx, dy) || 1; if (((w.x - m.x) * dx + (w.y - m.y) * dy) / l > 0) return true; } return false; }
+function centroid(W, m) { let x = 0, y = 0, n = 0; for (const q of W.foes[m.side]) if (q._gun && !q.flee && hyp(q.x - m.x, q.y - m.y) < 110) { x += q.x; y += q.y; n++; } return n ? [x / n, y / n] : null; }
+function steer(W, m, K) {
+  const k = on(W, m, K); m.retreat = 0; if (!k) return;
+  const T = m.tac;
+  if (T.retreat && m.hp < 0.35 * m.hpMax && (K.foes.length > 5 || k - 1 > 3)) { m.retreat = 1; let rx = 0, ry = 0; for (const q of K.foes) { const dx = m.x - q.x, dy = m.y - q.y, l = hyp(dx, dy) || 1; rx += dx / l; ry += dy / l; } K.vx = rx; K.vy = ry; return; }
+  if (k - 1 < 2) return;   // 총이 둘 넘지 않으면 예전 그대로
+  const c = centroid(W, m); if (!c) return;
+  let near = null, nd = 1e9; for (const q of W.foes[m.side]) if (q._gun && !q.flee) { const d = hyp(q.x - m.x, q.y - m.y); if (d < nd) { nd = d; near = q; } }
+  if (m.z >= 1 && near) { const d = nd || 1, ux = (near.x - m.x) / d, uy = (near.y - m.y) / d, want = d - 62; K.vx = ux * (want > 3 ? 1 : want < -3 ? -1.5 : 0) - uy * m.sf * 0.6; K.vy = uy * (want > 3 ? 1 : want < -3 ? -1.5 : 0) + ux * m.sf * 0.6; return; }
+  // 땅: 벽 뒤에 있다가 장전 틈에 나온다
+  if (!covered(W, m, c[0], c[1])) return;
+  let ready = 0, all = 0; for (const q of W.foes[m.side]) if (q._gun && !q.flee && hyp(q.x - m.x, q.y - m.y) < 110) { all++; if (!((q.cd['머스킷'] || 0) > 2.5)) ready++; }
+  const dx = c[0] - m.x, dy = c[1] - m.y, l = hyp(dx, dy) || 1;
+  if (ready / all > 0.3) { K.vx = -dx / l * 0.5; K.vy = -dy / l * 0.5; }   // 벽 뒤에 붙는다
+  else { K.vx = -dy / l * m.sf * 2; K.vy = dx / l * m.sf * 2; }            // 옆으로 나와 친다
+}
+function value(W, m, K, o) {
+  const s = o.s, k = on(W, m, K); if (!k) return;
+  const T = m.tac, g = k - 1;
+  if (m.retreat && o.isOff) { o.v *= 0.3; return; }
+  if (o.isOff && m.fat > 88 && !m.wave && K.foes.length > 5) { o.v = 0; return; }   // 무리 앞에서 머리가 넘치면(파도) 제 몸을 태운다: 문턱 앞에서 공격을 쉰다
+  if (s.t === 'build') {
+    if (m.z >= 1 || g < 2) return;
+    const c = centroid(W, m); if (!c || covered(W, m, c[0], c[1])) return;
+    const B = W.mods.find(r => r.name === 'bulwark'); if (!B || B.api.buildT(m, s) > 20) return;
+    if (s.shape === 'ring' && !(K.foes.length > 12 && g > 8)) return;
+    o.tx = c[0]; o.ty = c[1];
+    if (T.wallSite) { const d = hyp(c[0] - m.x, c[1] - m.y) || 1, wx = m.x + (c[0] - m.x) / d * 1.3, wy = m.y + (c[1] - m.y) / d * 1.3; for (const q of K.foes) if (hyp(q.x - wx, q.y - wy) < 5) return; }
+    o.v = s.shape === 'ring' ? 15 : 20;   // 총 앞 땅에선 먼저 벽 (어떤 공격보다 먼저)
+  }
+  if (s.t === 'topple') {
+    const B = W.mods.find(r => r.name === 'bulwark'); if (!B) return;
+    const R = C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {}, near = W.walls.length ? C.wallsIn(W, m.x - R, m.y - R, m.x + R, m.y + R).slice() : [];
+    for (let i = 0; i < near.length; i++) {
+      const w = W.walls[near[i]]; if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
+      const blocks = w.grp >= 0 ? W.walls.filter(x => x.grp === w.grp) : [w], dx = w.x - m.x, dy = w.y - m.y, l = hyp(dx, dy) || 1;
+      let foes = 0, mine = 0; for (const q of B.api.crushed(W, blocks, dx / l, dy / l)) { if (q.side === m.side) mine++; else foes++; }
+      if (mine) continue; const v = foes * 0.6 * (T.wallBreak ? 2 : 1); if (v > best) { best = v; bx = w.x; by = w.y; }
+    }
+    if (best > 0) { o.v = best; o.tx = bx; o.ty = by; }
+  }
+  if (T.wallBreak && !K.los && W.walls.some(w => hyp(w.x - K.e.x, w.y - K.e.y) < 3) && (s.el === '물' || (s.hit && s.hit.flat >= 60) || (s.t === 'zone' && s.z.k === 'acid'))) o.v *= 2;
+}
+module.exports = { on, steer, value };
+}, {"../util":"src/brain/util.js"}];
 D["src/brain/techniques/simul.js"] = [function (module, exports, require) {
 'use strict';
 /* 기술: 동시 착탄 (대가 tac.simul, 전설 tac.triple)
@@ -761,6 +837,39 @@ function start(W, m, K) {
 // 시전을 건 뒤: 묶기를 쐈다
 function fired(W, m, K, s, Tc) { if (m.simul && s.n === m.simul.bind) { m.simul.fired = 1; m.log.comboTry++; m.log.cTry.simul = (m.log.cTry.simul || 0) + 1; m.comboPend = { tgt: K.e, kind: 'simul', until: W.t + Tc + 0.8 }; } }
 module.exports = { wait, value, start, fired };
+}, {"../util":"src/brain/util.js"}];
+D["src/brain/techniques/swarm.js"] = [function (module, exports, require) {
+'use strict';
+/* 기술: 무리 (tac.swarm, 모두, v2.0 둘째 묶음 SPEC 25장) — 셋 넘는 편이 훨씬 선명한 적(선명도 3배 이상) 하나를 상대할 때만
+ * 자리: 적의 장악권 반경(domainR × C) 바로 밖(+ 5 m)에 흩어져 선다: 내 마법의 사거리가 그보다 길면(총은 장악권과 상관없어 제자리). 동료와 4 m 안이면 서로 밀어낸다(뭉치면 구름 하나에 무너진다)
+ *   총: 적이 멀리(50 m 넘게) 떠 있으면 쏘지 않으니(rules/army) 흩어지거나 가까운 바위·벽 뒤로
+ * 값: 적이 눈멀었으면 무거운 수(한 방 45 이상) × 3, 동료가 번쩍임을 모으는 중이면 × 2 (읽지 못하는 틈에 동시에)
+ *   적이 벽 뒤(시야 없음, 곁에 벽)면 곡사·박격포·산·물 × 2 */
+const { C, hyp } = require('../util');
+// 이 사람이 무리 싸움 중인가: 과녁이 선명도 3배 이상, 내 편이 셋 넘게 살아 있다. 장악권 반경이 있을 때만(rules.domainR)
+function on(W, m, e) { if (!(m.tac.swarm && W.rules.domainR > 0 && e.C >= 3 * m.C)) return false; let n = 0; for (const q of W.ms) if (q.side === m.side && q.hp > 0 && ++n > 3) return true; return false; }
+const heavyOf = s => s.hit && s.hit.flat >= 45;
+function steer(W, m, K) {
+  const e = K.e; if (!on(W, m, e) || K.stance === 'breakout' || m.flee) return;
+  let R = 0; for (const n of m.book) { const s = K.S[n]; if (s && !s.mundane && s.role === '공격') { const r = C.rangeOf(m, s); if (r > R) R = r; } }   // 마법의 사거리만 (총은 장악권과 상관없다)
+  const D = W.rules.domainR * e.C + 5, d = hyp(e.x - m.x, e.y - m.y) || 1, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
+  let vx = K.vx, vy = K.vy;
+  const gun = m.book.some(n => { const s = K.S[n]; return s && s.mundane && s.t === 'proj'; });
+  if (gun && e.z >= 2 && d > 50) {   // 탄을 아낀다: 가까운 가림 뒤로 (없으면 흩어진다)
+    let best = null, bd = 15; for (const o of W.obs) { const q = hyp(o.x - m.x, o.y - m.y); if (q < bd) { bd = q; best = o; } } const ws = W.walls, a = ws.length ? C.wallsIn(W, m.x - 15, m.y - 15, m.x + 15, m.y + 15) : ws; for (let i = 0; i < a.length; i++) { const o = ws[a[i]]; const q = hyp(o.x - m.x, o.y - m.y); if (q < bd) { bd = q; best = o; } }
+    if (best) { const ox = best.x - e.x, oy = best.y - e.y, ol = hyp(ox, oy) || 1, tx = best.x + ox / ol * (best.r + 0.6), ty = best.y + oy / ol * (best.r + 0.6); vx = tx - m.x; vy = ty - m.y; }
+    else { vx = 0; vy = 0; }
+  } else if (R > D) { const want = d - D; vx = ux * (want > 2 ? 1 : want < -1 ? -2 : 0) - uy * m.sf * 0.4; vy = uy * (want > 2 ? 1 : want < -1 ? -2 : 0) + ux * m.sf * 0.4; }   // 반경 바로 밖, 옆으로 돈다
+  else return;
+  for (const q of W.ms) { if (q === m || q.side !== m.side || q.hp <= 0) continue; const dx = m.x - q.x, dy = m.y - q.y; if (dx > 4 || dx < -4 || dy > 4 || dy < -4) continue; const l = hyp(dx, dy) || 0.1; if (l < 4) { vx += dx / l * (4 - l) * 0.5; vy += dy / l * (4 - l) * 0.5; } }   // 흩어진다
+  K.vx = vx; K.vy = vy;
+}
+function value(W, m, K, o) {
+  const e = K.e, s = o.s; if (!(o.v > 0) || !on(W, m, e)) return;
+  if (heavyOf(s)) { if (e.st.blind > 0.2) o.v *= 3; else for (const q of W.ms) if (q.side === m.side && q !== m && q.hp > 0 && q.cast && q.cast.s.t === 'flash') { o.v *= 2; break; } }
+  if (!K.los && W.walls.some(w => hyp(w.x - e.x, w.y - e.y) < 3) && (s.t === 'lob' || (s.t === 'zone' && s.z.k === 'acid') || s.el === '물')) o.v *= 2;   // 벽 뒤의 적
+}
+module.exports = { on, steer, value };
 }, {"../util":"src/brain/util.js"}];
 D["src/brain/techniques/tempo.js"] = [function (module, exports, require) {
 'use strict';
@@ -927,7 +1036,7 @@ module.exports = { C, hyp, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORM
 D["src/core.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.0.0
+ * 숨 결투장 — 엔진 핵심 v2.1.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -936,11 +1045,11 @@ D["src/core.js"] = [function (module, exports, require) {
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -951,6 +1060,8 @@ const DEFAULT_RULES = {
   domainL: 5,          // 신호가 반으로 흐려지는 거리 (m)
   passive: 0.5,        // 시전 중이 아닐 때 장악권의 세기
   fizzle: 0.15,        // 장악 몫이 이보다 작으면 마법이 흩어진다
+  domainR: 5,          // (v2.0 둘째) 도달 반경: 적의 신호는 제 자리에서 domainR × C m 안에서만 몫을 다툰다. 0이면 끝없음 (SPEC 5장)
+  domainPath: true,    // (v2.0 둘째) 실(thread)은 길 전체를 지어야 한다: 길의 네 점 가운데 가장 낮은 g (SPEC 5장)
   full: 0.6,           // 장악 몫이 이보다 크면 온전한 힘
   taunt: false,        // 도발: 상대의 부름(예비동작)을 끊는 마법 '도발'을 쓸 수 있다. 끄면 책에서 빠진다 (SPEC 8장)
   wave: true,          // (v2.0 기본 켬) 파도: 머리가 넘치면 굳는 대신 파도를 탄다. 부류(type: 서퍼·메타·이단)마다 다르게 (SPEC 7장)
@@ -959,8 +1070,13 @@ const DEFAULT_RULES = {
   bodyBind: false,     // 몸 묶기: 발밑이 아니라 몸을 묶는 마법 다섯과 눈멂의 읽기 막기 (1.11.0, SPEC 9장). 끄면 그 마법이 책에서 빠진다
   response: false,     // 대응: 순간 반응(판단 사이의 구르기)·대비(피할 수 없는 것에 몸을 굳힘)·풀기(몸 묶기를 머리로 푼다) (1.13.0, SPEC 9장, rules/response)
   silver: false,       // 은실 옷: gear.silver를 입은 사람에게 붙잡는 효과 × 0.5, 전기 × 1.1 (1.13.0, SPEC 10장, rules/silver)
-  bodyK: 2.3,          // (v2.0) 몸 받침: 받는 마법 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
+  bodyK: 2.3,          // (v2.0) 몸 받침: 받는 에너지 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
+  callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
+  army: true,          // (v2.0 둘째) 군대: 머스킷의 장전·화승·사거리 100 m, 박격포, 돌아가며 쏘기 (SPEC 25장, rules/army)
+  morale: true,        // (v2.0 둘째) 사기: 셋 이상인 편은 사상자·큰 수의 충격에 도망친다 (SPEC 25장, rules/morale)
+  bulwark: true,       // (v2.0 둘째) 벽: 세우는 데만 힘, 흙·석회는 무너질 때까지, 총알을 막음, 벽 밀기, 벽 뒤는 안 보임 (SPEC 25장, rules/bulwark)
+  light: true,         // (v2.0 둘째) 빛: 번쩍임(눈멂)·열선(거울) (SPEC 25장, rules/light)
   flight: true,        // (v2.0) 비행: 출력 75 kW 이상(상위부터)이 난다. 높이 z, 속도 판단 (SPEC 24장, rules/flight)
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
@@ -974,12 +1090,12 @@ const BUFK = new Set(['speed', 'elecRes', 'bluntRes', 'toxRes', 'front', 'block'
 const BODY = { hp: 150, glu: 110, gluRegen: 1.2, stam: 6, stamRegen: 0.8, speed: 5, radius: 0.3 };
 // 마법이 만들어지는 자리
 // 규칙 모듈이 더하는 틀(cage·taunt…)은 그 모듈의 form에 있다 (formsOf가 붙인다)
-const FORM = { proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
+const FORM = { proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'path', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
 const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
+function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -989,7 +1105,7 @@ function engineOf(r) { if (!r.engine) return null; let e = ENG.get(r); if (!e) {
 function formsOf() {
   if (tfxVer === R.ver()) return; tfxVer = R.ver();
   for (const k in TFX) TFX[k] = null;
-  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.types) Object.assign(TFX, r.types(X)); }
+  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.threat) Object.assign(THREAT, r.threat); if (r.types) Object.assign(TFX, r.types(X)); }
 }
 // 세계를 만들 때: 켜진 규칙만 골라 그 훅을 차례대로 모은다. 꺼진 규칙은 걸음마다 비용 0
 function hooksFor(W, opt) {
@@ -1007,8 +1123,8 @@ const TA = { aim: 0, foes: null, g: 0 };   // 틀 방출에 넘기는 값 (새�
 // 마법 모양 맞추기 (속도, 1.11.1): 사람의 책에 든 마법을 세계마다 같은 필드·같은 차례의 새 객체로 옮긴다(없는 필드는 undefined, 읽는 값은 그대로).
 // 원본은 82개가 51가지 모양이라 's.t' 같은 읽기가 느린 길로 갔다. 객체 리터럴로 만들어야 빠른 모양이 된다(하나씩 넣으면 사전 모양이 된다).
 // 목록에 없는 필드(등록한 마법)는 뒤에 붙인다. 속 객체(hit·z·b…)는 원본을 가리킨다. 원본은 고치지 않는다
-const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr"]);
-function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
+const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr", "needGear", "aimN", "aimD", "fuse", "reload", "wallDmg"]);
+function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr, needGear: s.needGear, aimN: s.aimN, aimD: s.aimD, fuse: s.fuse, reload: s.reload, wallDmg: s.wallDmg }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
 const SHAPED = new WeakSet();   // 이 세계에서 모양을 맞춘 사본 (원본 마법은 여기 없다)
 function shapeBook(W, book) { for (const n of book) { const s = W.spells[n]; if (s && !SHAPED.has(s)) { const o = shapeOne(s); SHAPED.add(o); W.spells[n] = o; } } }
 function createWorld(opt = {}) {
@@ -1018,7 +1134,9 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
-    H: null, mods: null, _bh: null, _fly: false,   // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
+    H: null, mods: null, _bh: null, _fly: false, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [],   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
+    salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
+      // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
   };
   hooksFor(W, opt);
   W.rnd = (a, b) => a + W.rng() * (b - a);
@@ -1032,7 +1150,7 @@ function createWorld(opt = {}) {
     W.obs.push(o);
   }
   for (const h of W.H.place) h(W, opt);   // 규칙이 놓는 것 (화약통)
-  if (Array.isArray(opt.walls)) for (const w of opt.walls) W.walls.push({ x: w.x, y: w.y, r: w.r || 0.6, hp: w.hp || 200, t: 1e9, own: -1 });
+  if (Array.isArray(opt.walls)) for (const w of opt.walls) addWall(W, { x: w.x, y: w.y, r: w.r || 0.6, hp: w.hp || 200, t: 1e9, own: -1, mat: w.mat || 'lime', thick: w.thick ?? (w.r || 0.6) * 2, grp: w.grp ?? -1 });
   for (const h of W.H.init) h(W);
   return W;
 }
@@ -1040,7 +1158,7 @@ function createWorld(opt = {}) {
 // 체력 배수 (SPEC 3장): hpScale이면 max(C, hpFloor)^hpK
 const hpMul = (W, spec) => W.rules.hpScale ? pow(Math.max(spec.C ?? 1, W.rules.hpFloor), W.rules.hpK) : 1;
 function addMage(W, spec, side, x, y) {
-  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만
+  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]) && (!W.spells[n].needGear || (spec.gear && spec.gear[W.spells[n].needGear])));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만, 장비가 드는 마법(열선: 거울)은 그 장비가 있을 때만
   shapeBook(W, book);
   const m = {
     id: W.ms.length, name: spec.name || 'm' + W.ms.length, side, x, y, vx: 0, vy: 0, r: BODY.radius,
@@ -1056,17 +1174,21 @@ function addMage(W, spec, side, x, y) {
       shieldAny: false, shieldSave: false, cancel: false, cover: false, tempo: false, coverW: 1.5,
       // (1.7.0 대가·전설) 몰이, 엄폐 걷어내기, 유도, 동시 착탄, 기회 캔슬 / 방어 미끼, 약한 척 물러서기, 세 마법 겹치기
       herd: false, strip: false, lure: false, simul: false, cancel2: false, bait: false, fakeRetreat: false, triple: false,
-      bigPlan: false, dodgeAim: false, grab: false }, spec.tac),   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+      bigPlan: false, dodgeAim: false, grab: false,
+      swarm: true, siege: true, wallSite: false, wallBreak: false, retreat: false }, spec.tac),   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
     st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
-    _bkC: NaN, _bk: 1, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
+    _bkC: NaN, _bk: 1, _clC: NaN, _cl: 0, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
-    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined,
+    z: spec.z > 0 ? spec.z : 0, vz: 0, fly: spec.z >= 1 ? 1 : 0, flyWant: spec.z >= 1,   // 장면은 떠서 시작할 수 있다 (z)
+    fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9, flee: 0, shock: 0, retreat: 0,   // 사기 (rules/morale): 도망 중, 충격
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
     flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0 },
+    // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
+    alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
       starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
@@ -1098,10 +1220,10 @@ function sigOf(W, m) { if (m._sigN) { m._sigN = false; m._sig = pow(m._sigX, W.r
 // 장악 몫 f: (x,y)의 공기가 m의 신호를 따를 몫. 0~1
 function share(W, m, x, y) {
   if (!W.rules.domain) return 1;
-  const L = W.rules.domainL, foes = W.foes[m.side];
+  const L = W.rules.domainL, foes = W.foes[m.side], Rr = W.rules.domainR;
   const mine = sigOf(W, m) / (1 + hyp(x - m.x, y - m.y) / L);
   let other = 0;
-  for (let i = 0; i < foes.length; i++) { const q = foes[i]; other += sigOf(W, q) * (q._act ? 1 : W.rules.passive) / (1 + hyp(x - q.x, y - q.y) / L); }
+  for (let i = 0; i < foes.length; i++) { const q = foes[i], dq = hyp(x - q.x, y - q.y); if (Rr > 0 && dq > Rr * q.C) continue; other += sigOf(W, q) * (q._act ? 1 : W.rules.passive) / (1 + dq / L); }   // 도달 반경 밖의 적은 다투지 않는다 (v2.0 둘째)
   let f = mine / (mine + other);
   const h = W.H.share; for (let i = 0; i < h.length; i++) f = h[i](W, m, x, y, f);   // 소금 망토 (rules/gear)
   return f;
@@ -1109,7 +1231,7 @@ function share(W, m, x, y) {
 const gOf = (W, f) => clamp((f - W.rules.fizzle) / (W.rules.full - W.rules.fizzle), 0, 1);
 function formPoint(m, s, tx, ty) {
   const k = FORM[s.t];
-  if (k === 'target') return [tx, ty];
+  if (k === 'target' || k === 'path') return [tx, ty];
   if (k === 'front') { const d = hyp(tx - m.x, ty - m.y) || 1, L = Math.min(d, s.L || 3) * 0.4; return [m.x + (tx - m.x) / d * L, m.y + (ty - m.y) / d * L]; }
   if (k === 'self') { const d = hyp(tx - m.x, ty - m.y) || 1; return [m.x + (tx - m.x) / d * 0.5, m.y + (ty - m.y) / d * 0.5]; }
   return null;
@@ -1117,7 +1239,13 @@ function formPoint(m, s, tx, ty) {
 // 이 자리에 마법이 서는 정도 g. 규칙의 문(gate)이 막으면 0 (소금 원, rules/saltRing)
 function gAt(W, m, s, tx, ty) {
   const h = W.H.gate; for (let i = 0; i < h.length; i++) if (h[i](W, m, s, tx, ty)) return 0;
-  if (s.mundane || !W.rules.domain) return 1; const p = formPoint(m, s, tx, ty); return p ? gOf(W, share(W, m, p[0], p[1])) : 1;
+  if (s.mundane || !W.rules.domain) return 1;
+  if (FORM[s.t] === 'path' && W.rules.domainPath) {   // 길 전체를 지어야 한다: 사거리로 자른 길의 ¼·½·¾·끝 가운데 가장 낮은 몫 (v2.0 둘째, SPEC 5장)
+    const dx = tx - m.x, dy = ty - m.y, d = hyp(dx, dy) || 1, R = rangeOf(m, s), k = d > R ? R / d : 1; let f = 1;
+    for (let i = 1; i <= 4; i++) { const q = share(W, m, m.x + dx * k * i / 4, m.y + dy * k * i / 4); if (q < f) f = q; }
+    return gOf(W, f);
+  }
+  const p = formPoint(m, s, tx, ty); return p ? gOf(W, share(W, m, p[0], p[1])) : 1;
 }
 
 /* ---------------- 공간 ---------------- */
@@ -1127,12 +1255,39 @@ function segBox(x1, y1, x2, y2, cx, cy, r) { const e = r + 1e-9; return cx < (x1
 function blocked(W, x1, y1, x2, y2, z) {
   if (!(z > 2)) {   // 시선 끝 하나라도 2 m 넘게 떠 있으면 바위·벽이 가리지 않는다 (v2.0)
   for (const o of W.obs) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true;
-  for (const o of W.walls) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true;
+  const ws = W.walls;
+  if (ws.length <= WMIN) { for (const o of ws) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true; }
+  else { const q = wallsIn(W, (x1 < x2 ? x1 : x2) - WRMAX, (y1 < y2 ? y1 : y2) - WRMAX, (x1 > x2 ? x1 : x2) + WRMAX, (y1 > y2 ? y1 : y2) + WRMAX); for (let i = 0; i < q.length; i++) { const o = ws[q[i]]; if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true; } }
   }
   for (const z of W.zones) if (z.k === 'smoke' && z.shape === 'circle' && segCircle(x1, y1, x2, y2, z.x, z.y, z.r)) return true;
   return false;
 }
 function inZone(z, x, y) { if (z.shape === 'circle') return hyp(x - z.x, y - z.y) < z.r; const dx = cos(z.a), dy = sin(z.a), rx = x - z.x, ry = y - z.y; return Math.abs(rx * dx + ry * dy) < z.len / 2 && Math.abs(-rx * dy + ry * dx) < 0.6; }
+// 벽 세우기: 모든 벽이 이것으로 선다. 모양이 늘 같은 리터럴로 옮기고(속도) 규칙이 고친다(재료의 수명, rules/bulwark)
+function addWall(W, w) {
+  const o = { x: w.x, y: w.y, r: w.r, hp: w.hp, hp0: w.hp, t: w.t, own: w.own, by: w.by || null, used: 0, cage: w.cage || 0, mat: w.mat || 'lime', thick: w.thick || w.r * 2, grp: w.grp ?? -1 };
+  const h = W.H.wall; for (let i = 0; i < h.length; i++) h[i](W, o); W.walls.push(o); W._wv++; return o;
+}
+// 벽 격자 (속도, v2.0 둘째): 벽이 WMIN개 넘게 서면 8 m 칸마다 벽의 번호를 적어 두고, 가까운 칸의 벽만 원래 차례(번호 순)로 본다.
+// 벽이 적으면 예전처럼 모두 훑는다(결과가 비트까지 같다). 많아도 같은 벽을 같은 차례로 보니 결과는 모두 훑은 것과 같다
+const WG = 8, WMIN = 16, WRMAX = 1.5;
+function wallGrid(W) {
+  if (W._wgN === W._wv) return W._wg;
+  const g = new Map(), ws = W.walls;
+  for (let i = 0; i < ws.length; i++) { const w = ws[i], x0 = Math.floor((w.x - w.r) / WG), x1 = Math.floor((w.x + w.r) / WG), y0 = Math.floor((w.y - w.r) / WG), y1 = Math.floor((w.y + w.r) / WG); for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) { const k = cx * 65536 + cy; let a = g.get(k); if (!a) g.set(k, a = []); a.push(i); } }
+  W._wg = g; W._wgN = W._wv; return g;
+}
+// 사각형 [x0, x1] × [y0, y1] 에 닿을 수 있는 벽의 번호 (차례대로, 겹침 없이). W._wq를 다시 쓴다
+function wallsIn(W, x0, y0, x1, y1) {
+  const g = wallGrid(W), q = W._wq; q.length = 0;
+  const a0 = Math.floor(x0 / WG), a1 = Math.floor(x1 / WG), b0 = Math.floor(y0 / WG), b1 = Math.floor(y1 / WG);
+  for (let cx = a0; cx <= a1; cx++) for (let cy = b0; cy <= b1; cy++) { const a = g.get(cx * 65536 + cy); if (a) for (let i = 0; i < a.length; i++) q.push(a[i]); }
+  if (q.length > 1) { q.sort(numUp); let j = 1; for (let i = 1; i < q.length; i++) if (q[i] !== q[j - 1]) q[j++] = q[i]; q.length = j; }
+  return q;
+}
+const numUp = (a, b) => a - b;
+// 소금 땅 위인가 (장면의 사각형, rules/saltLand)
+function onSalt(W, x, y) { const a = W.salt; for (let i = 0; i < a.length; i++) { const r = a[i]; if (x >= r.x && y >= r.y && x <= r.x + r.w && y <= r.y + r.h) return true; } return false; }
 function frontBlock(e, sx, sy) { if (!e.buf.front) return false; const a = atan2(sy - e.y, sx - e.x), b = Math.abs(((a - e.aim + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 1.1; if (b && !e.buf.front.used) { e.buf.front.used = 1; e.log.defHit++; } return b; }   // 막은 방패는 방어 적중으로 한 번 센다
 
 /* ---------------- 피해와 상태 ---------------- */
@@ -1196,7 +1351,7 @@ function release(W, m, c) {
     case 'proj': {
       const n = s.multi || 1;
       for (let j = 0; j < n; j++) {
-        const a = atan2(uy, ux) + (n > 1 ? (j / (n - 1) - 0.5) * 0.26 : 0) + (W.rng() - 0.5) * 2 * m.noise * m._nm * (m.st.blind > 0 ? 3 : 1);
+        const a = atan2(uy, ux) + (n > 1 ? (j / (n - 1) - 0.5) * 0.26 : 0) + (W.rng() - 0.5) * 2 * (s.aimN != null ? s.aimN + s.aimD * d0 : m.noise) * m._nm * (m.st.blind > 0 ? 3 : 1);   // 총의 흔들림은 총이 정한다(멀수록 크다, rules/army)
         // 높이 (v2.0): 쏜 사람의 높이에서 과녁의 높이로 곧게. 날며 쏘면 내 속도가 더해진다
         const tz = c.tgt && c.tgt.hp > 0 ? c.tgt.z : 0, vz = tz !== m.z ? (tz - m.z) / (d0 / s.v) : 0, fl = m.z > 0;
         W.proj.push({ x: m.x, y: m.y, vx: cos(a) * s.v + (fl ? m.vx : 0), vy: sin(a) * s.v + (fl ? m.vy : 0), z: m.z, vz, home: s.home, life: s.home ? s.life : rangeOf(m, s) / s.v, s, src: m, pow: P / (n > 1 ? n * 0.55 : 1), rad: (s.rad || 0.1) * (s.mundane ? 1 : Math.min(rs, 3)) });
@@ -1235,7 +1390,8 @@ function release(W, m, c) {
     }
     case 'wall': {
       const n = s.n === '얼음 담' ? 3 : 1, a = atan2(uy, ux), px = -sin(a), py = cos(a), hpS = 1 + (m.C - 1) * 0.5;
-      for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.1; W.walls.push({ x: m.x + ux * s.at + px * off, y: m.y + uy * s.at + py * off, r: s.r, hp: s.hp * hpS, t: s.dur, by: m, own: m.side }); }
+      const grp = W._grp++, mat = s.el === '얼음' ? 'ice' : 'lime';
+      for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.1; addWall(W, { x: m.x + ux * s.at + px * off, y: m.y + uy * s.at + py * off, r: s.r, hp: s.hp * hpS, t: s.dur, by: m, own: m.side, mat, thick: s.r * 2, grp }); }
       break;
     }
     case 'buff': {
@@ -1369,7 +1525,8 @@ function stepMage(W, m) {
   m.x = clamp(m.x + m.vx * DT, 0.4, W.width - 0.4); m.y = clamp(m.y + m.vy * DT, 0.4, W.height - 0.4);
   if (!(m.vault > 0) && !(m.z > 2)) {   // 2 m 넘게 뜨면 바위·벽을 넘는다 (v2.0)
     for (const o of W.obs) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
-    for (const o of W.walls) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
+    const ws = W.walls, few = ws.length <= WMIN, q = few ? null : wallsIn(W, m.x - WRMAX - m.r, m.y - WRMAX - m.r, m.x + WRMAX + m.r, m.y + WRMAX + m.r), nq = few ? ws.length : q.length;
+    for (let i = 0; i < nq; i++) { const o = few ? ws[i] : ws[q[i]]; const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
   }
 }
 // 구르기 (SPEC 3장): 두뇌·대응이 모두 이것으로 구른다. 속도 v와 간격 cd는 규칙이 고친다(회피, rules/evade)
@@ -1400,7 +1557,8 @@ function stepWorld(W) {
       const low = !(p.z >= 2);   // 2 m 넘게 뜬 투사체는 바위·벽을 넘는다 (v2.0)
       if (low) for (const o of W.obs) if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; burst(W, p); break; }
       if (p.dead) break;
-      if (low) for (const o of W.walls) if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; if (o.by && !o.used && o.by !== p.src) { o.used = 1; o.by.log.defHit++; } o.hp -= (p.s.hit && p.s.hit.flat > 50) ? 80 : 5 * Math.min(p.pow, 20); burst(W, p); break; }
+      if (low) { const ws = W.walls, few = ws.length <= WMIN, q = few ? null : wallsIn(W, p.x - WRMAX - p.rad, p.y - WRMAX - p.rad, p.x + WRMAX + p.rad, p.y + WRMAX + p.rad), nq = few ? ws.length : q.length;
+      for (let i = 0; i < nq; i++) { const o = few ? ws[i] : ws[q[i]]; if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; if (o.by && !o.used && o.by !== p.src) { o.used = 1; o.by.log.defHit++; } let wd = (p.s.hit && p.s.hit.flat > 50) ? 80 : 5 * Math.min(p.pow, 20); const hw = H.wallHit; for (let i = 0; i < hw.length; i++) wd = hw[i](W, p, o, wd); o.hp -= wd; burst(W, p); break; } } }   // 벽이 받는 것: 재료·두께 (rules/bulwark)
       if (p.dead) break;
       const hp = H.projSub; for (let i = 0; i < hp.length && !p.dead; i++) hp[i](W, p);   // 화약통 (rules/barrels)
       if (p.dead) break;
@@ -1416,7 +1574,8 @@ function stepWorld(W) {
     if (!p.dead && p.life <= 0) { p.dead = true; burst(W, p); }
   }
   keepIf(W.proj, projLive);
-  for (const l of W.lobs) { l.t -= DT; if (l.t <= 0) { for (const q of W.ms) if (q.hp > 0 && q !== l.src && hyp(q.x - l.x, q.y - l.y) < l.r + 0.3 && !(q.z >= 2) && (W.rules.friendlyFire || q.side !== l.src.side)) { hurt(W, q, l.s.dmg * l.pow, l.src, l.s.n, l.s.kind); hit(l.src, l.s); } if (W.rec) W.fx.push(['a', l.x, l.y, l.r]); } }
+  for (const l of W.lobs) { l.t -= DT; if (l.t <= 0) { const hl = H.lobLand; for (let i = 0; i < hl.length; i++) hl[i](W, l);   // 떨어진 돌이 벽을 부순다 (rules/bulwark)
+    for (const q of W.ms) if (q.hp > 0 && q !== l.src && hyp(q.x - l.x, q.y - l.y) < l.r + 0.3 && !(q.z >= 2) && (W.rules.friendlyFire || q.side !== l.src.side)) { hurt(W, q, l.s.dmg * l.pow, l.src, l.s.n, l.s.kind); hit(l.src, l.s); } if (W.rec) W.fx.push(['a', l.x, l.y, l.r]); } }
   keepIf(W.lobs, timeLeft);
   for (const a of W.areas) {
     a.t -= DT; if (a.t > 0) continue;
@@ -1436,7 +1595,7 @@ function stepWorld(W) {
   keepIf(W.areas, timeLeft);
   const hz = H.zoneTick; for (let i = 0; i < hz.length; i++) hz[i](W);   // 지대의 시간, 산이 벽을 녹인다 (rules/terrain)
   keepIf(W.zones, timeLeft);
-  keepIf(W.walls, wallLive);
+  const nw = W.walls.length; keepIf(W.walls, wallLive); if (W.walls.length !== nw) W._wv++;
   for (const t of W.traps) {
     t.arm -= DT; if (t.arm > 0) continue;
     let e = null, bd = 1e9; for (const q of W.foes[t.src.side]) { const d = hyp(q.x - t.x, q.y - t.y); if (d < bd) { bd = d; e = q; } }
@@ -1492,10 +1651,10 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, hyp3, clamp, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
+X = { DT, hyp, hyp3, clamp, addWall, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
-module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, onSalt, wallsIn, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
 }, {"./math":"src/math.js","./data":"src/data.js","./rules":"src/rules/index.js","./rules/saltRing":"src/rules/saltRing.js"}];
 D["src/data.js"] = [function (module, exports, require) {
 'use strict';
@@ -1504,7 +1663,7 @@ D["src/data.js"] = [function (module, exports, require) {
  * 차례 목록에 없는 새 마법은 아래 파일 차례대로 뒤에 붙는다(그래서 새 마법을 넣을 때 order.json을 안 고쳐도 된다).
  * 파일 목록은 require를 그대로 적어 둔다: 샌드박스 묶음(pack)이 이것을 보고 함께 싼다 */
 const FILES = [require('../data/spells/불.json'), require('../data/spells/번개.json'), require('../data/spells/흙.json'), require('../data/spells/물.json'),
-  require('../data/spells/얼음.json'), require('../data/spells/독.json'), require('../data/spells/없음.json'), require('../data/spells/신호.json')];
+  require('../data/spells/얼음.json'), require('../data/spells/독.json'), require('../data/spells/없음.json'), require('../data/spells/신호.json'), require('../data/spells/빛.json')];
 const ORDER = require('../data/spells/order.json');
 function spells() {
   const all = {}; for (const f of FILES) Object.assign(all, f);
@@ -1513,10 +1672,10 @@ function spells() {
   return out;
 }
 module.exports = { SPELLS: spells(), BOOKS: require('../data/books.json'), DECKS: require('../data/decks.json'), TIERS: require('../data/tiers.json'), SKILLS: require('../data/skills.json'), GEAR: require('../data/gear.json') };
-}, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
+}, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/빛.json":"data/spells/빛.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
 D["src/index.js"] = [function (module, exports, require) {
 'use strict';
-/* 숨 결투장 v2.0.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v2.1.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (sandbox/arena.js 묶음, node cli.js pack)
  * 데이터(마법·마법책·덱·등급·판단 수준·장비)는 data/에 JSON으로 있다. 판단 수준은 brain/skills.js, 행동 지표는 metrics/look.js */
 const core = require('./core'), brain = require('./brain'), makeRegistry = require('./registry');
@@ -1584,7 +1743,7 @@ const duel = (a, b, opt) => battle([a], [b], opt);
 
 /* ---------------- 장면 (SPEC 19장) ---------------- */
 // 장면의 한 사람 → 사람 규격. 비워 둔 칸은 등급의 값을 따른다
-const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp'];
+const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp', 'z'];
 function sceneMage(mm, side, lib) {
   const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type, skill: mm.skill }, lib);
   for (const k of OVERRIDE) if (mm[k] != null && mm[k] !== '') sp[k] = k === 'autoDodge' ? !!mm[k] : +mm[k];
@@ -1595,7 +1754,7 @@ function sceneLib(sc) { return { spells: Object.assign({}, core.SPELLS, sc.spell
 function sceneWorld(sc, opt = {}) {
   const lib = sceneLib(sc), sides = sc.sides || [], specs = sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; }));
   const A = arena(sc, sc.rules, [].concat(...specs));
-  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, spells: lib.spells, brain });
+  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, salt: sc.salt, spells: lib.spells, brain });
   place(W, specs, sc.layout, sides.map(s => s.mages));
   return W;
 }
@@ -1673,7 +1832,7 @@ module.exports = { sin, cos, atan, atan2, exp, log, pow, hyp, hyp3, clamp, mulbe
 D["src/registry.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 등록 v2.0.0
+ * 숨 결투장 — 등록 v2.1.0
  * 새 마법·덱·등급·두뇌·규칙을 붙이는 곳. Arena.register.spell(...) 모양으로 쓴다.
  * 등록한 것은 그 프로세스(브라우저 탭) 안의 모든 판에 붙는다. 한 장면에서만 덮으려면 장면의 spells·decks를 쓴다.
  * 규칙은 규칙 모듈(SPEC 22장)로 붙는다: src/rules/의 파일과 같은 모양
@@ -1725,6 +1884,36 @@ module.exports = function makeRegistry(core, T) {
   };
 };
 }, {"./rules":"src/rules/index.js"}];
+D["src/rules/army.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 군대 (rules.army, v2.0 둘째 묶음, SPEC 25장, 수는 data/rules/army.json)
+ * 머스킷(이 규칙이 켜진 세계에선 2판의 수): 장전 15~20 s(쏠 때마다 뽑는다), 화승 점화 지연 0.1~0.5 s(예비동작에 더한다),
+ *   사거리 100 m, 흔들림 = 0.004 + 0.0004 × 거리(rad: 50 m에서 ±1.2 m, 100 m에서 ±4.4 m). 두뇌가 겨눈 자리를 흐리지 않는다(총이 흔든다)
+ * 박격포(마법 '박격포', 규칙에 딸림): 높이 쏘아 벽 너머에 떨어뜨린다(곡사 3 s, 반지름 2.5 m, 90, 벽 600). 겨눈 자리 ± max(5 m, 5% × 거리)
+ * 돌아가며 쏘기(tac.volley = 줄 수 n): 사람마다 줄 번호(id mod n), 17.5/n s마다 한 줄씩 쏜다
+ * 탄 낭비 금지: 과녁이 2 m 넘게 떠 있고 50 m 넘게 멀면 쏘지 않는다 */
+const A = require('../../data/rules/army.json');
+module.exports = {
+  name: 'army', switch: 'army', on: W => W.rules.army, api: { A },
+  engine: () => ({
+    init(W) { const s = W.spells['머스킷']; if (s) W.spells['머스킷'] = Object.assign({}, s, A.musket); },   // 이 세계의 머스킷만 바꾼다 (원본 데이터는 그대로)
+    release(W, m, c) { const r = c.s.reload; if (r) m.cd[c.s.n] = W.rnd(r[0], r[1]); },   // 장전
+  }),
+  brain: () => ({
+    commit(W, m, K, best, cast) {
+      const s = best.s; if (!s.mundane) return;
+      cast.tx = best.tx; cast.ty = best.ty;   // 총은 두뇌가 흐리지 않는다 (흔들림은 총이, core)
+      if (s.fuse) cast.T += W.rnd(0, s.fuse[1] - s.fuse[0]);   // 화승 점화 지연
+      if (s.t === 'lob') { const d = Math.max(A.mortar.min, Math.sqrt((best.tx - m.x) * (best.tx - m.x) + (best.ty - m.y) * (best.ty - m.y)) * A.mortar.spread); cast.tx += W.rnd(-d, d); cast.ty += W.rnd(-d, d); }   // 박격포는 ± max(5 m, 5% × 거리)
+    },
+    value(W, m, K, o) {
+      const s = o.s; if (!s.mundane || !(o.v > 0)) return;
+      const n = m.tac.volley; if (n > 1 && s.t === 'proj' && m.id % n !== Math.floor(W.t / (A.volleyT / n)) % n) { o.v = 0; return; }   // 제 줄 차례가 아니다
+      if (K.e.z >= A.farFly.z && K.d > A.farFly.d) o.v = 0;   // 멀리 떠 있는 과녁에 탄을 버리지 않는다
+    },
+  }),
+};
+}, {"../../data/rules/army.json":"data/rules/army.json"}];
 D["src/rules/barrels.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 지렛대 — 화약통 (rules.barrels, 또는 장면이 화약통을 놓으면, SPEC 11장)
@@ -1778,23 +1967,139 @@ module.exports = {
 }, {}];
 D["src/rules/body.js"] = [function (module, exports, require) {
 'use strict';
-/* 규칙: 몸 받침 (rules.bodyK, v2.0 기본 2.3, SPEC 24장)
- * 받는 마법 피해 ÷ max(C, 1)^bodyK. 잔기술과 몸 관리의 서클(굳은 살·지혈·통증 차단·열 차단, WORLD 5장)이 등급만큼 강해진다.
- * 위력이 C^2.5라 같은 등급끼리의 한 방은 C^0.2배로 거의 그대로이고, 등급 차이는 그대로 크다.
- * 받치지 않는 것: 총(mundane), 화약통(마법이 아니다), 소금(몸의 마력을 끊는다), 추락, 제 머리가 넘친 것(파도·폭주, 역류) */
-const { pow } = require('../math');
-const SKIP = { salt: 1, fall: 1, wave: 1, backfire: 1 };
+/* 규칙: 몸 받침 (rules.bodyK, v2.0 기본 2.3, SPEC 24장; 굳은 살은 v2.0 둘째 묶음, 25장)
+ * 에너지 피해(불·번개·독·열선…)는 ÷ max(C, 1)^bodyK: 열 차단·절연 막·폐 거르기.
+ * 부딪히는 피해('blunt': 돌·얼음·곡사·물·총·벽 밀기)는 한 방마다 굳은 살 = callus × log₂ C / log₂ 10 만큼 뺀다. 조약돌은 튕기고 무거운 돌·총알은 들어온다.
+ * callus 0이면 첫 묶음 그대로(부딪힘도 ÷ C^bodyK, 총은 받치지 않는다).
+ * 받치지 않는 것: 화약통(마법이 아니다), 소금(몸의 마력을 끊는다), 추락, 제 머리가 넘친 것(파도·폭주, 역류) */
+const { pow, log } = require('../math');
+const SKIP = { salt: 1, fall: 1, wave: 1, backfire: 1 }, L10 = log(10);
 module.exports = {
   name: 'body', switch: 'bodyK', on: W => W.rules.bodyK > 0,
   engine: () => ({
     hurtMod(W, m, v, kind, name) {
-      if (SKIP[kind] || name === '화약통') return v; const s = W.spells[name]; if (s && s.mundane) return v;
+      if (SKIP[kind] || name === '화약통') return v;
+      const cal = W.rules.callus;
+      if (cal > 0 && kind === 'blunt') {   // 굳은 살 (선명도마다 한 번)
+        if (m._clC !== m.C) { m._clC = m.C; m._cl = m.C > 1 ? cal * log(m.C) / L10 : 0; }
+        return v > m._cl ? v - m._cl : 0;
+      }
+      const s = W.spells[name]; if (s && s.mundane && !(cal > 0)) return v;
       if (m._bkC !== m.C) { m._bkC = m.C; m._bk = pow(Math.max(m.C, 1), W.rules.bodyK); }   // 선명도마다 한 번 (결정론 pow가 비싸다)
       return v / m._bk;
     },
   }),
 };
 }, {"../math":"src/math.js"}];
+D["src/rules/bulwark.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 벽 (rules.bulwark, v2.0 둘째 묶음, SPEC 25장, 수는 data/rules/bulwark.json)
+ * 세울 때만 힘이 들고 고체는 유지 비용이 없다.
+ *   흙·석회: 시간으로 사라지지 않고 체력이 다할 때까지 선다. 세우는 속도는 출력에 비례(초당 0.6 m³ × 출력/632 kW: 대마법사 흙벽 약 3 s, 보루 약 18 s, 평범은 사실상 못 한다)
+ *   얼음: 유지 비용 없이 조금씩 녹고(초당 0.5) 불 지대 곁에선 빨리 녹는다(초당 20)
+ *   불·물 벽(불벽·물 장막): 세운 사람이 버티는 동안(굳지 않고 당이 있는 동안, 15 s까지) 남고 당과 서클 하나를 쓴다. 멈추면 사라진다
+ *   흙벽이 0.5 m 넘게 두꺼우면 총알이 멈춘다(2만 깎임). 큰 바위(무게 5 kg 넘는 투사체)·박격포는 부수고, 물은 흙벽을 진흙으로(× 10), 산은 석회를 녹인다(지대, rules/terrain)
+ *   한 번 선 벽은 누구의 것도 아니다(own −1): 양쪽 모두 엄폐로 쓰고 양쪽 모두 막힌다. 흙을 끌어온 바깥쪽에 구덩이(걸음 × 0.5, 날면 없다)
+ *   벽 뒤에선 시야가 막혀 예비동작을 못 읽는다(두뇌 hideCast). 날고 있으면(2 m 위) 벽이 없다(core)
+ *   벽 밀기(틀 topple): 서 있는 벽 무리 하나를 한 방향으로 넘어뜨려 그 너머 한 줄(2.5 m)을 덮는다. 부딪힘 60 + 묶임 2 s. 벽은 무너진다 */
+const { hyp, sin, cos, atan2 } = require('../math');
+const P = require('../../data/rules/bulwark.json');
+const { outP } = require('./flight').api;
+const B0 = P.block, EARTH = { earth: 1, lime: 1 };
+const rateOf = m => P.rate * outP(m) / P.rateP;   // 세우는 속도 m³/s
+const volOf = s => B0.gap * B0.h * s.th;           // 블록 하나의 부피 m³
+function nOf(s) { return s.shape === 'ring' ? Math.max(6, Math.round(2 * Math.PI * s.rad / B0.gap)) : s.nb; }
+const buildT = (m, s) => s.cast + nOf(s) * volOf(s) / (rateOf(m) || 1e-9);   // 세우는 데 드는 시간 (예비동작 포함)
+// 블록 k의 자리와 바깥 방향: 한 줄(겨눈 쪽 앞, 겨눈 쪽에 수직) 또는 제 둘레 고리
+function spot(s, cx, cy, a, k, n) {
+  if (s.shape === 'ring') { const b = a + k / n * 2 * Math.PI; return [cx + cos(b) * s.rad, cy + sin(b) * s.rad, cos(b), sin(b)]; }
+  const off = (k - (n - 1) / 2) * B0.gap, ux = cos(a), uy = sin(a); return [cx + ux * s.at - uy * off, cy + uy * s.at + ux * off, ux, uy];
+}
+// 벽 무리를 넘어뜨릴 때 덮이는 사람 (무리의 블록마다 민 방향으로 depth m, 폭은 블록 간격)
+function crushed(W, blocks, ux, uy) {
+  const out = []; const D = P.topple.depth;
+  for (const q of W.ms) { if (q.hp <= 0 || q.z >= 1) continue; for (const b of blocks) { const rx = q.x - b.x, ry = q.y - b.y, t = rx * ux + ry * uy, w = -rx * uy + ry * ux; if (t > -0.3 && t < D + 0.3 && w > -B0.gap && w < B0.gap) { out.push(q); break; } } }
+  return out;
+}
+// 세우는 중인 벽: 블록을 upto개까지 (시전 c에 자리를 적어 둔다). 한 줄 끝·고리가 싸움터 밖으로 나가면 그 블록은 건너뛴다
+function begin(W, m, c) { if (!c.bw) c.bw = { x: m.x, y: m.y, a: atan2(c.ty - m.y, c.tx - m.x), k: 0, grp: W._grp++, done: 0 }; return c.bw; }
+function place(W, m, c, upto, addWall) {
+  const s = c.s, n = nOf(s), bw = begin(W, m, c);
+  while (bw.k < upto && bw.k < n) {
+    const [x, y, ox, oy] = spot(s, bw.x, bw.y, bw.a, bw.k, n); bw.k++;
+    if (x < 0.5 || y < 0.5 || x > W.width - 0.5 || y > W.height - 0.5) continue;
+    addWall(W, { x, y, r: B0.r, hp: B0.hpM3 * volOf(s), t: 1e9, own: -1, mat: s.mat, thick: s.th, grp: bw.grp });
+    W.zones.push({ k: 'pit', shape: 'circle', r: P.pit.r, x: x + ox * P.pit.out, y: y + oy * P.pit.out, a: 0, src: m, dps: 0, t: 1e9, n: '구덩이' });   // 흙을 끌어온 바깥쪽
+  }
+  if (bw.k >= n && !bw.done) { bw.done = 1; m.alog.walls++; }
+}
+function segHit(x1, y1, x2, y2, w) { const dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy || 1; let t = ((w.x - x1) * dx + (w.y - y1) * dy) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t; return hyp(x1 + dx * t - w.x, y1 + dy * t - w.y) < w.r; }
+module.exports = {
+  name: 'bulwark', switch: 'bulwark', on: W => W.rules.bulwark, form: { build: 'self', topple: 'target' }, api: { rateOf, buildT, nOf, volOf, crushed },
+  engine: X => {
+    const { DT, addWall } = X;
+    return {
+      // 흙·석회·얼음 벽은 시간으로 사라지지 않는다 (가두는 기둥은 그대로 짧다)
+      wall(W, w) { if (!w.cage && (EARTH[w.mat] || w.mat === 'ice')) w.t = 1e9; },
+      wallHit(W, p, o, wd) {
+        const s = p.s; if (!EARTH[o.mat]) return wd;
+        if ((s.m || 0) >= P.heavyM) return P.heavy;                            // 큰 바위는 부순다
+        if (s.mundane) return o.thick >= P.stopThick ? P.bullet : wd;          // 0.5 m 흙벽이면 총알이 멈춘다
+        if (s.el === '물') return wd * P.water;                                 // 물은 흙벽을 진흙으로
+        return wd;
+      },
+      lobLand(W, l) { const d = l.s.wallDmg; if (d) for (const w of W.walls) if (hyp(w.x - l.x, w.y - l.y) < l.r + w.r) w.hp -= d; },   // 박격포는 벽을 부순다
+      world(W) {
+        for (const w of W.walls) if (w.mat === 'ice') {   // 얼음은 녹는다, 불 곁에선 빨리
+          let k = P.ice.melt; for (const z of W.zones) if (z.k === 'fire' && hyp(z.x - w.x, z.y - w.y) < (z.r || (z.len || 2) / 2) + w.r + 0.5) { k = P.ice.fire; break; }
+          w.hp -= k * DT;
+        }
+        // 버티는 벽(불벽·물 장막): 세운 사람이 굳지 않고 당이 있는 동안 남는다. 멈추면 사라진다
+        for (const z of W.zones) {
+          if (z.up === undefined) z.up = (z.n === '불벽' || z.n === '물 장막') ? 1 : 0;
+          if (!z.up) continue; const q = z.src; z.age = (z.age || 0) + DT;
+          if (q.hp <= 0 || q.st.stun > 0 || q.glu < P.upkeep.glu * DT || z.age > P.upkeep.max) { z.t = 0; z.up = 0; continue; }
+          q.glu -= P.upkeep.glu * DT; if (z.t < 1) z.t = 1;
+        }
+      },
+      mageStep(W, m) {
+        const c = m.cast; if (c && c.s.t === 'build') {
+          if (m.z >= 1) { m.cast = null; return; }   // 떠서는 흙을 못 끌어온다
+          const t = c.t - c.s.cast; begin(W, m, c); if (t > 0) place(W, m, c, Math.floor(t * rateOf(m) / volOf(c.s) + 1e-9), addWall);
+        }
+        if ((W.step + m.id) % 6 === 0 && W.walls.length) { const ws = W.walls, q = X.wallsIn(W, m.x - 3, m.y - 3, m.x + 3, m.y + 3); for (let i = 0; i < q.length; i++) { const w = ws[q[i]]; if (w.grp >= 0 && !w.cage && hyp(w.x - m.x, w.y - m.y) < w.r + 1.2) { m.alog.wallT += 6 * DT; break; } } }   // 벽 곁에 있던 시간 (지표, 벽 격자)
+      },
+      speedLate(W, m, sp) { if (m.z < 1) for (const z of W.zones) if (z.k === 'pit' && hyp(z.x - m.x, z.y - m.y) < z.r) return sp * P.pit.speed; return sp; },   // 구덩이
+    };
+  },
+  types: X => ({
+    // 세우기가 끝났다: 남은 블록을 모두 (예비동작만으로 바로 방출하면 한꺼번에 선다)
+    build(W, m, c) { if (m.z < 1) place(W, m, c, 1e9, X.addWall); },
+    topple(W, m, c, a) {
+      const s = c.s; let best = null, bd = P.topple.reach;
+      for (const w of W.walls) { if (w.cage) continue; const d = hyp(w.x - c.tx, w.y - c.ty); if (d < bd) { bd = d; best = w; } }
+      if (!best) return;
+      const blocks = best.grp >= 0 ? W.walls.filter(w => w.grp === best.grp) : [best];
+      const dx = c.tx - m.x, dy = c.ty - m.y, l = hyp(dx, dy) || 1, ux = dx / l, uy = dy / l;
+      const hitQ = crushed(W, blocks, ux, uy);
+      for (const w of blocks) w.hp = 0;
+      for (const q of hitQ) { X.hurt(W, q, s.dmg * a.g, q === m ? null : m, s.n, 'blunt'); X.eff(W, q, { root: s.root }, a.g); }
+      if (hitQ.some(q => q.side !== m.side)) X.hit(m, s);
+      if (W.rec) for (const w of blocks) W.fx.push(['b', w.x + ux, w.y + uy, 1.5]);
+    },
+  }),
+  brainTypes: B => ({
+    build(W, m, K, o) { o.v = 0; },    // 값은 두뇌 훅(value)이 매긴다 (총·둘레를 본다, 25장)
+    topple(W, m, K, o) { o.v = 0; },
+  }),
+  brain: B => ({
+    circles(W, q, c) { let n = 0; for (const z of W.zones) if (z.up && z.src === q) n++; return n ? Math.max(1, c - n) : c; },   // 버티는 벽은 서클 하나씩
+    hideCast(W, q, c, m) { if (!m || q.z > 2 || m.z > 2 || !W.walls.length) return false; const ws = W.walls, a = B.C.wallsIn(W, Math.min(q.x, m.x) - 1.5, Math.min(q.y, m.y) - 1.5, Math.max(q.x, m.x) + 1.5, Math.max(q.y, m.y) + 1.5); for (let i = 0; i < a.length; i++) { const w = ws[a[i]]; if (!w.cage && segHit(q.x, q.y, m.x, m.y, w)) return true; } return false; },   // 벽 뒤의 예비동작은 안 보인다
+    // 세우기의 시간: 블록이 모두 찰 때까지
+    commit(W, m, K, best, cast) { if (best.s.t === 'build') cast.T = buildT(m, best.s); },
+  }),
+};
+}, {"../math":"src/math.js","../../data/rules/bulwark.json":"data/rules/bulwark.json","./flight":"src/rules/flight.js"}];
 D["src/rules/control.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 몸 묶기 (rules.bodyBind, 1.11.0, SPEC 7·9장)
@@ -1819,8 +2124,8 @@ module.exports = {
   // 가두는 기둥: 과녁 자리 둘레 s.r m에 기둥 넷을 ±60°·±120°에. 옆으로 피하는 길은 닫고, 나와 과녁 사이(앞)와 그 뒤는 열어 둔다
   types: X => ({
     cage(W, m, c, a) {
-      const { cos, sin, clamp, hyp, hit } = X, s = c.s, tx = c.tx, ty = c.ty, hpS = 1 + (m.C - 1) * 0.5, rr = s.r; let h = false;
-      for (let k = 0; k < 4; k++) { const b = a.aim + (k < 2 ? 1 : -1) * (k % 2 ? 2 : 1) * Math.PI / 3; W.walls.push({ x: clamp(tx + cos(b) * rr, 0.4, W.width - 0.4), y: clamp(ty + sin(b) * rr, 0.4, W.height - 0.4), r: s.pr, hp: s.hp * hpS, t: s.dur, own: m.side, cage: 1 }); }
+      const { cos, sin, clamp, hyp, hit } = X, s = c.s, tx = c.tx, ty = c.ty, hpS = 1 + (m.C - 1) * 0.5, rr = s.r, grp = W._grp++; let h = false;
+      for (let k = 0; k < 4; k++) { const b = a.aim + (k < 2 ? 1 : -1) * (k % 2 ? 2 : 1) * Math.PI / 3; X.addWall(W, { x: clamp(tx + cos(b) * rr, 0.4, W.width - 0.4), y: clamp(ty + sin(b) * rr, 0.4, W.height - 0.4), r: s.pr, hp: s.hp * hpS, t: s.dur, own: m.side, cage: 1, mat: 'lime', grp }); }
       for (const q of a.foes) if (hyp(q.x - tx, q.y - ty) < rr - 0.5) h = true;
       if (h) hit(m, s);
     },
@@ -1923,7 +2228,7 @@ module.exports = {
       // 걸음: 나는 사람·떨어지는 사람은 여기서 움직인다 (땅의 걸음을 건너뛴다)
       move(W, m) {
         if (m.fly === 0) {
-          if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m))) return false;
+          if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m) && !(W.salt.length && X.onSalt(W, m.x, m.y)))) return false;
           m.fly = 1; m.vz = 0; m._flT0 = W.t;   // 이륙
         }
         if (m.roll > 0) m.roll -= DT;
@@ -1932,7 +2237,7 @@ module.exports = {
           if (m.z <= 0) { m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.flog.falls++; hurt(W, m, m.fallZ * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun); m.cast = m.castB = m.chan = null; }
           return true;
         }
-        const P = outP(m), want = m.flyWant && P >= F.minP, fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
+        const P = outP(m), want = m.flyWant && P >= F.minP && !(W.salt.length && X.onSalt(W, m.x, m.y)), fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
         let v = hyp(m.vx, m.vy);
         // 오르내림 (목표 높이로)
         const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax); m.vz += clamp(vzT - m.vz, -F.vzAcc * DT, F.vzAcc * DT);
@@ -1990,7 +2295,7 @@ module.exports = {
         for (const a of W.areas) if (a.src.side !== m.side && hyp(a.x - m.x, a.y - m.y) < a.r + Bn.danger) { if (!a.vis) ground++; else if (a.s.kind === 'elec') elec++; }
         for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < Bn.danger) ground++;
         for (const z of W.zones) if (z.src.side !== m.side && z.dps && hyp(z.x - m.x, z.y - m.y) < (z.r || 2) + Bn.danger) ground++;
-        let near = 0, guns = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; } if (near >= 3) ground++;
+        let near = 0, guns = 0, gunsFar = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; if (q._gun && dq < Bn.gunFar) gunsFar++; } if (near >= 3) ground++;
         if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
         const ec = T.readCast ? e.cast : null, eBig = !!(ec && ec.s.big), myBig = !!(m.cast && m.cast.s.big), far = K.stance === 'kite' || K.stance === 'breakout';
         let want = true, fv = F.corner, fz = Bn.z;
@@ -2005,13 +2310,16 @@ module.exports = {
           if (ec.T - ec.t < 0.3) { fv = Bn.hover; fz = Math.min(F.zMax, m.z + 6); if (m._feC !== ec) { m._feC = ec; m.flog.feint++; } } else fv = Bn.feintV;
         }
         if (K.dodge && L >= 2) fv = Math.max(fv, F.corner);   // 피할 땐 구르지 않고 옆으로 내달린다 (걸음 방향은 피하기가 정했다)
-        if (sustain && m.fat > Bn.restFat) want = false;   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
+        if (sustain && (m.fat > Bn.restFat || (m.wave && Bn.waveLand && !gunsFar))) want = false;   // 머리가 뜨겁거나 파도를 타면 내려앉아 식힌다 (떠 있으면 비행 피로로 파도에서 못 내려온다, v2.0 둘째)   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
         if (ground) { want = true; if (near >= 3) { fz = Bn.zCrowd; fv = Math.min(fv, Bn.vCrowd); } }   // 발밑·함정·무리가 많으면 뜬다 (무리 위에선 낮게 천천히)
-        if (L >= 2 && guns >= Bn.guns) want = false;   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
+        if (L >= 2 && guns >= Bn.guns) want = false;
+        if (m.retreat) { want = true; fz = F.zMax; fv = F.vMax; }   // 물러나기: 높이 떠 사거리 밖으로 (brain/techniques/siege)   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
         else if (L >= 3 && T.readCast && (elecT || elec >= Bn.elecMany)) want = false;   // 번개 위협엔 내려앉는다
         if (!sustain) { want = want && (ground >= Bn.hopN || K.stance === 'breakout') && m.fat < Bn.tiredFat && (m.fly !== 1 || W.t - m._flT0 < Bn.hopT); fv = Math.max(fv, F.corner); fz = Bn.zLow; }   // 상위: 떠오르기·도약·활공만 (hopT 초까지)
         // 브레이크를 잡을 거리가 모자라면 늦춘다 (끝·소금 선)
         const v = hyp(m.vx, m.vy); if (v > 1) { const d = room(W, m, m.vx / v, m.vy / v) - 2, cap = Math.sqrt(2 * F.fwdG * G * (d > 0 ? d : 0)); if (fv > cap) fv = cap < Bn.slow ? Bn.slow : cap; }
+        // 제 구름이 터질 때 있을 자리를 미리 비킨다 (날면 관성이 커서 지금 자리만 보면 늦다, v2.0 둘째)
+        if (m.fly === 1) for (const a of W.areas) { if (a.src !== m) continue; const px = m.x + m.vx * a.t, py = m.y + m.vy * a.t, dx = px - a.x, dy = py - a.y, l = hyp(dx, dy); if (l < a.r + Bn.ownGap) { K.vx = (dx || 0.1) / (l || 1) * 3; K.vy = (dy || 0.1) / (l || 1) * 3; if (fv < F.corner) fv = F.corner; } }
         m.flyWant = want; m.fv = fv; m.fz = fz;
       },
       // 하늘에서 쉬기: 떠 있고 파도가 깊으면(restWave) 쏘기를 멈추고 머리를 식힌다 (땅의 무리는 쉽게 닿지 못한다)
@@ -2060,9 +2368,9 @@ D["src/rules/index.js"] = [function (module, exports, require) {
  *   types·brainTypes: 새 마법 틀의 방출과 두뇌의 값. 틀은 스위치와 상관없이 늘 붙는다(마법이 규칙에 딸리면 rule 필드가 책에서 뺀다)
  *   brain: 두뇌 훅. 기본 두뇌가 세계마다 켜진 규칙의 것만 모은다 (brain/hooks.js)
  * 차례가 곧 같은 훅 안의 부르는 차례다. 예전 한 덩어리의 계산 차례를 그대로 따른다(결과가 비트 하나 안 바뀌게). 새 규칙은 뒤에 붙는다 */
-const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight')];
+const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light'), require('./bulwark'), require('./army'), require('./morale'), require('./saltLand')];
 // 엔진 훅의 이름과 부르는 자리 (SPEC 22장 표). 값을 돌려주는 훅은 받은 값을 고쳐 돌려준다
-const ENGINE_HOOKS = ['place', 'init', 'world', 'ceff', 'power', 'gate', 'share', 'release', 'overload', 'roll', 'hurtMod', 'hurt', 'effHold', 'eff', 'rain', 'smother', 'ring', 'fatRecover', 'mageStep', 'mageZones', 'move', 'speed', 'speedLate', 'accel', 'chan', 'projSub', 'ignite', 'areaHit', 'zoneTick', 'notice'];
+const ENGINE_HOOKS = ['place', 'init', 'world', 'wall', 'wallHit', 'lobLand', 'ceff', 'power', 'gate', 'share', 'release', 'overload', 'roll', 'hurtMod', 'hurt', 'effHold', 'eff', 'rain', 'smother', 'ring', 'fatRecover', 'mageStep', 'mageZones', 'move', 'speed', 'speedLate', 'accel', 'chan', 'projSub', 'ignite', 'areaHit', 'zoneTick', 'notice'];
 const BRAIN_HOOKS = ['aim', 'read', 'hideCast', 'steer', 'avoid', 'empty', 'circles', 'react', 'cancel', 'rest', 'prep', 'value', 'valueRisk', 'valueMid', 'valueLate', 'commit', 'castTime'];
 let ver = 0;   // 목록이 바뀐 횟수 (엔진이 틀 표를 다시 만든다)
 const onOf = r => r.on || (r.switch ? W => !!W.rules[r.switch] : () => true);
@@ -2074,7 +2382,122 @@ function add(r) {
 }
 function remove(name) { const i = RULES.findIndex(x => x.name === name); if (i >= 0) { RULES.splice(i, 1); ver++; } }
 module.exports = { RULES, ENGINE_HOOKS, BRAIN_HOOKS, onOf, add, remove, ver: () => ver };
-}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js"}];
+}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js","./bulwark":"src/rules/bulwark.js","./army":"src/rules/army.js","./morale":"src/rules/morale.js","./saltLand":"src/rules/saltLand.js"}];
+D["src/rules/light.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 빛 — 번쩍임·열선 (rules.light, v2.0 둘째 묶음, SPEC 25장, 마법은 data/spells/빛.json)
+ * 손끝에서 만들어 곧바로 닿는다(장악권은 손끝만 본다, 피할 수 없다). 시야가 이어져야 하고(바위·벽·연기가 막는다), 연기·안개·비·흙먼지가 가린다.
+ *   번쩍임(틀 flash): 사거리 안, 시야가 이어진 적 모두를 눈멀게 한다(blind × g, 연기 안경 × 0.5, 가림 × 0.4). 피해는 거의 없다
+ *   열선(틀 beam): 예비동작 동안 핵이 빛나 보인다(읽힌다). 과녁 하나에 곧바로 닿는 열(에너지 피해 'heat', 몸 받침이 받는다).
+ *     피해 = dmg × 위력 × g / (1 + 거리/L), 가림을 지나면 × 0.4. 유리 비단 거울(gear.mirror)이 있어야 책에 든다(core의 needGear)
+ * 눈멀면 예비동작을 못 읽는다(두뇌 read 훅, 몸 묶기와 같은 뜻). 두뇌: 번쩍임·열선의 예비동작(빛이 오름)을 보면 가림(바위·벽) 뒤나 연기로 */
+const { hyp } = require('../math');
+const OBSC = { smoke: 1, mist: 1, rain: 1, absorb: 1 };   // 빛을 가리는 지대 (연기·흙먼지·안개·물 장막·비)
+// 선분이 가리는 지대를 지나는가 (원이면 반지름, 선이면 길이의 반으로 넉넉히)
+function veiled(W, x1, y1, x2, y2) {
+  for (const z of W.zones) {
+    if (!OBSC[z.k]) continue; const r = z.shape === 'circle' ? z.r : (z.len || 2) / 2;
+    const dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy || 1; let t = ((z.x - x1) * dx + (z.y - y1) * dy) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    if (hyp(x1 + dx * t - z.x, y1 + dy * t - z.y) < r) return true;
+  }
+  return false;
+}
+module.exports = {
+  name: 'light', switch: 'light', on: W => W.rules.light, form: { flash: 'self', beam: 'self' }, threat: { flash: 1, beam: 1 }, api: { veiled },
+  types: X => ({
+    flash(W, m, c, a) {
+      const s = c.s, R = X.rangeOf(m, s), g = a.g; let n = 0;
+      for (const q of a.foes) {
+        if (X.hyp3(q.x - m.x, q.y - m.y, q.z - m.z) > R || X.blocked(W, m.x, m.y, q.x, q.y, m.z > q.z ? m.z : q.z)) continue;
+        const k = (veiled(W, m.x, m.y, q.x, q.y) ? 0.4 : 1) * (q.gear.goggles ? 0.5 : 1) * g;
+        q.st.blind = Math.max(q.st.blind, s.blind * k); q.cast = q.castB = null;   // 눈이 멀면 모으던 수를 놓친다
+        X.hurt(W, q, s.dmg, m, s.n, s.kind); q.alog.blinded++; n++;
+      }
+      if (n) { X.hit(m, s); m.alog.flash++; m.alog.flashHit += n; }
+      if (W.rec) W.fx.push(['f', m.x, m.y, R]);
+    },
+    beam(W, m, c, a) {
+      const s = c.s, q = c.tgt; if (!q || q.hp <= 0) return;
+      const d = X.hyp3(q.x - m.x, q.y - m.y, q.z - m.z); if (d > X.rangeOf(m, s) || X.blocked(W, m.x, m.y, q.x, q.y, m.z > q.z ? m.z : q.z)) return;
+      const P = X.power(W, m, s) * a.g * (veiled(W, m.x, m.y, q.x, q.y) ? 0.4 : 1) / (1 + d / s.L);
+      X.hurt(W, q, s.dmg * P, m, s.n, s.kind); X.hit(m, s);
+      if (W.rec) W.fx.push(['z', m.x, m.y, q.x, q.y]);
+    },
+  }),
+  // 두뇌: 틀의 값과 읽기
+  brainTypes: B => ({
+    flash(W, m, K, o) {
+      const e = K.e, s = o.s; o.v = 0;
+      if (!(K.d < B.C.rangeOf(m, s) && K.los) || e.st.blind > 0.3) return;
+      // 눈먼 틈에 칠 무거운 수가 곧 있으면 먼저 번쩍인다 (무리 두뇌, 25장): 아니면 모으는 적의 수를 끊는 값
+      const heavy = m.book.some(n => { const x = K.S[n]; return x && x.hit && x.hit.flat >= 50 && !((m.cd[n] || 0) > 0); });
+      o.v = (heavy ? 1.3 : 0.35) + (e.cast || e.castB ? 0.4 : 0);
+    },
+    beam(W, m, K, o) {
+      const e = K.e, s = o.s; o.v = 0;
+      if (!(K.d < B.C.rangeOf(m, s) && K.los)) return;
+      o.v = o.he * s.dmg * B.C.power(W, m, s) / (1 + K.d / s.L) / 20 / (o.Tw + 0.3);   // 20 = 실 한 줄 쯤의 값에 맞춘다
+    },
+  }),
+  brain: B => ({
+    read(W, m, K) { if (m.st.blind > 0) K.blindR = true; },   // 눈멀면 예비동작을 못 읽는다 (몸 묶기와 같은 뜻)
+    // 빛이 오르는 것을 보면(번쩍임·열선의 예비동작, 나를 볼 수 있는 자리) 가림 뒤로 (바위·벽의 반대편)
+    steer(W, m, K) {
+      if (!m.tac.readCast || K.blindR || m.z >= 2) return;
+      let q = null; for (const f of K.foes) { const c = f.cast; if (c && (c.s.t === 'flash' || (c.s.t === 'beam' && c.tgt === m)) && !B.C.blocked(W, f.x, f.y, m.x, m.y, 0)) { q = f; break; } }
+      if (!q) return;
+      let best = null, bd = 9; for (const o of W.obs) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } } const ws = W.walls, wa = ws.length ? B.C.wallsIn(W, m.x - 9, m.y - 9, m.x + 9, m.y + 9) : ws; for (let i = 0; i < wa.length; i++) { const o = ws[wa[i]]; const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } }
+      if (best) { const dx = best.x - q.x, dy = best.y - q.y, l = hyp(dx, dy) || 1, tx = best.x + dx / l * (best.r + 0.6), ty = best.y + dy / l * (best.r + 0.6); K.vx = (tx - m.x) * 2; K.vy = (ty - m.y) * 2; }
+      m._ltT = W.t;
+    },
+    // 가림이 없으면 연기·안개로 (빛이 오르는 것을 본 뒤 1 s 안)
+    value(W, m, K, o) { const s = o.s; if (W.t - m._ltT < 1 && s.t === 'zone' && s.z && (s.z.k === 'smoke' || s.z.k === 'mist' || s.z.k === 'absorb')) { o.v = Math.max(o.v, 1.2); o.tx = m.x; o.ty = m.y; } },
+  }),
+};
+}, {"../math":"src/math.js"}];
+D["src/rules/morale.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 사기 (rules.morale, v2.0 둘째 묶음, SPEC 25장, 수는 data/rules/army.json의 morale)
+ * 셋 이상인 편만. 0.5 s마다 도망칠 확률 = (편 사상자 몫 − 0.2) × 2 (넘을 때만) + 충격 × 0.35, 을 단단함으로 나눈다.
+ *   충격: 10 m 안의 동료가 큰 수(한 방 50 이상)에 쓰러질 때마다 + 1, 초당 반으로 준다
+ *   단단함 = √C × 판단 단계(초보 1, 중급 1.3, 상급 1.6, 대가 2, 전설 2.5, 없으면 1): 병사 0.55, 평범 1, 대마법사 3.2
+ * 도망치는 사람은 가장 가까운 싸움터 끝으로 달리고 공격하지 않는다(alog.fledT = 도망을 시작한 때). 끝에 닿으면 싸움에서 빠진다(체력 0으로 센다, alog.fled) */
+const { hyp, pow } = require('../math');
+const M = require('../../data/rules/army.json').morale;
+const hard = m => Math.sqrt(Math.max(m.C, 0.01)) * (m.skill ? M.skill[m.skill] || 1 : 1);
+module.exports = {
+  name: 'morale', switch: 'morale', on: W => W.rules.morale, api: { hard },
+  engine: X => ({
+    world(W) {
+      if (!W._sideN) { W._sideN = []; for (const m of W.ms) W._sideN[m.side] = (W._sideN[m.side] || 0) + 1; }
+      const every = Math.round(M.every / X.DT); if (W.step % every) return;
+      const down = []; for (const m of W.ms) if (m.hp <= 0) down[m.side] = (down[m.side] || 0) + 1;
+      const k = pow(M.decay, M.every);   // 충격은 초당 반으로
+      for (const m of W.ms) {
+        if (m.hp <= 0 || m.flee || W._sideN[m.side] < M.minSide) continue;
+        const cas = (down[m.side] || 0) / W._sideN[m.side], p = (cas > M.cas ? (cas - M.cas) * M.casK : 0) + m.shock * M.shock;
+        m.shock *= k;
+        if (p > 0 && W.rng() < p / hard(m) * M.every) { m.flee = 1; m.alog.fledT = W.t; m.cast = m.castB = m.chan = null; }   // fledT: 도망을 시작한 때
+      }
+    },
+    // 동료가 큰 수에 쓰러졌다
+    hurt(W, m, v, src, name, kind) {
+      if (m.hp > 0 || v < M.shockDmg || W._sideN == null || W._sideN[m.side] < M.minSide) return;
+      for (const q of W.ms) if (q !== m && q.hp > 0 && q.side === m.side && hyp(q.x - m.x, q.y - m.y) < M.shockR) q.shock += 1;
+    },
+    // 끝에 닿으면 빠진다
+    mageStep(W, m) {
+      if (!m.flee) return; const e = M.edge;
+      if (m.x < e || m.y < e || m.x > W.width - e || m.y > W.height - e) { m.alog.fled = 1; m.hp = 0; m.deathT = W.t; }
+    },
+  }),
+  brain: () => ({
+    // 도망: 가장 가까운 끝으로 곧장, 쏘지 않는다
+    steer(W, m, K) { if (!m.flee) return; const dl = m.x, dr = W.width - m.x, dt = m.y, db = W.height - m.y, mn = Math.min(dl, dr, dt, db); K.vx = mn === dl ? -3 : mn === dr ? 3 : 0; K.vy = mn === dt ? -3 : mn === db ? 3 : 0; if (!K.vx && !K.vy) K.vx = 3; },
+    rest(W, m, K, restNow) { return restNow || !!m.flee; },
+  }),
+};
+}, {"../math":"src/math.js","../../data/rules/army.json":"data/rules/army.json"}];
 D["src/rules/multiSlot.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 서클 (rules.circles, 기본 켬, SPEC 6장)
@@ -2231,6 +2654,22 @@ module.exports = {
   },
 };
 }, {"../brain/techniques/dodgeAim":"src/brain/techniques/dodgeAim.js","../brain/techniques/grab":"src/brain/techniques/grab.js","../brain/techniques/cancel":"src/brain/techniques/cancel.js"}];
+D["src/rules/saltLand.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 소금 땅 (장면의 salt 사각형이 있을 때만, v2.0 둘째 묶음, SPEC 25장)
+ * 소금은 마력을 끊는다(WORLD 148): 소금 땅 위에서 만들어지는 마법은 흩어진다(g = 0, 총은 그대로), 소금 땅 위에선 뜰 수 없다(rules/flight가 본다).
+ * 소금 도시 장면: 싸움터 대부분이 소금 땅이고 광장만 맨땅이다 */
+module.exports = {
+  name: 'saltLand', on: W => W.salt.length > 0,
+  engine: X => ({
+    gate(W, m, s, tx, ty) { if (s.mundane) return false; const p = X.formPoint(m, s, tx, ty) || [m.x, m.y]; return X.onSalt(W, p[0], p[1]); },
+  }),
+  brain: B => ({
+    // 소금 땅 위에 설 자리의 마법은 버린다 (흩어질 것을 쏘지 않는다)
+    value(W, m, K, o) { const s = o.s; if (!(o.v > 0) || s.mundane) return; const k = s.t; const at = k === 'area' || k === 'zone' || k === 'trap' || k === 'thread' ? [o.tx, o.ty] : [m.x, m.y]; if (B.C.onSalt(W, at[0], at[1])) o.v = 0; },
+  }),
+};
+}, {}];
 D["src/rules/saltRing.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 줄어드는 소금 원 (rules.saltRing, 1.9.0, SPEC 2장)
@@ -2398,5 +2837,5 @@ function load(id) {
 }
 G.Arena = load("src/index.js");
 G.ArenaCore = load('src/core.js'); G.ArenaBrain = load('src/brain/index.js'); G.ArenaRegistry = load('src/registry.js');
-G.ArenaData = { spells: G.ArenaCore.SPELLS, books: load('data/books.json'), scenes: {"archmage-50":{"v":"2.0.0","name":"대마법사 대 평범 50명 (둘러싸기, node cli.js ring 씨앗 1과 같다)","seed":1,"width":40,"height":30,"maxT":90,"layout":"ring","rules":{},"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역"}]},{"name":"무리","brain":"기본","mages":[{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"}]}],"spells":{},"decks":{}},"duel":{"v":"2.0.0","name":"1대1: 중간 합법 최강 대 중간 기본기","seed":1,"width":40,"height":30,"maxT":120,"rules":{"barrels":true},"obstacles":[{"x":14,"y":9,"r":1.4},{"x":26,"y":21,"r":1.4},{"x":20,"y":15,"r":1},{"x":11,"y":22,"r":1.1},{"x":29,"y":8,"r":1.1}],"barrels":[{"x":20,"y":9},{"x":20,"y":21}],"walls":[],"sides":[{"name":"청","brain":"기본","mages":[{"tier":"중간","deck":"합법 최강","x":6,"y":15}]},{"name":"적","brain":"기본","mages":[{"tier":"중간","deck":"기본기","x":34,"y":15}]}],"spells":{},"decks":{}},"element-league":{"v":"2.0.0","name":"원소 리그: 평범 여섯이 원소 기본책으로 난전","seed":4,"width":40,"height":30,"maxT":300,"rules":{},"sides":[{"name":"불","brain":"기본","mages":[{"tier":"평범","deck":"불"}]},{"name":"번개","brain":"기본","mages":[{"tier":"평범","deck":"번개"}]},{"name":"흙","brain":"기본","mages":[{"tier":"평범","deck":"흙"}]},{"name":"물","brain":"기본","mages":[{"tier":"평범","deck":"물"}]},{"name":"얼음","brain":"기본","mages":[{"tier":"평범","deck":"얼음"}]},{"name":"독","brain":"기본","mages":[{"tier":"평범","deck":"독"}]}],"spells":{},"decks":{}},"musket-arc":{"v":"2.0.0","name":"머스킷 반원: 대마법사 대 병사 20명","seed":1,"width":40,"height":30,"maxT":90,"rules":{},"obstacles":[{"x":17,"y":11,"r":1},{"x":17,"y":19,"r":1}],"barrels":[],"walls":[{"x":13,"y":13,"r":0.6,"hp":200},{"x":13,"y":17,"r":0.6,"hp":200}],"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역","x":6,"y":15}]},{"name":"총병","brain":"기본","mages":[{"tier":"병사","deck":"머스킷","x":12.43,"y":3.18},{"tier":"병사","deck":"머스킷","x":14.42,"y":3.61},{"tier":"병사","deck":"머스킷","x":16.32,"y":4.29},{"tier":"병사","deck":"머스킷","x":18.08,"y":5.2},{"tier":"병사","deck":"머스킷","x":19.67,"y":6.32},{"tier":"병사","deck":"머스킷","x":21.05,"y":7.63},{"tier":"병사","deck":"머스킷","x":22.19,"y":9.1},{"tier":"병사","deck":"머스킷","x":23.07,"y":10.69},{"tier":"병사","deck":"머스킷","x":23.66,"y":12.38},{"tier":"병사","deck":"머스킷","x":23.96,"y":14.12},{"tier":"병사","deck":"머스킷","x":23.96,"y":15.88},{"tier":"병사","deck":"머스킷","x":23.66,"y":17.62},{"tier":"병사","deck":"머스킷","x":23.07,"y":19.31},{"tier":"병사","deck":"머스킷","x":22.19,"y":20.9},{"tier":"병사","deck":"머스킷","x":21.05,"y":22.37},{"tier":"병사","deck":"머스킷","x":19.67,"y":23.68},{"tier":"병사","deck":"머스킷","x":18.08,"y":24.8},{"tier":"병사","deck":"머스킷","x":16.32,"y":25.71},{"tier":"병사","deck":"머스킷","x":14.42,"y":26.39},{"tier":"병사","deck":"머스킷","x":12.43,"y":26.82}]}],"spells":{},"decks":{}},"v2-archmage-100":{"v":"2.0.0","name":"대마법사 대 평범 100명 둘러싸기 [risk+saltRing+wave]","seed":3,"maxT":90,"layout":"ring","rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대마법사","mages":[{"tier":"대마법사","deck":"광역"}]},{"name":"평범","mages":[{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 15/15)이 이기고 길이(90.03 s)가 가운데값(90.03 s)에 가장 가까운 판","width":200,"height":150},"v2-challenger-3":{"v":"2.0.0","name":"평범 전설 1 대 초보 3 [risk+saltRing+wave]","seed":2,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"평범","skill":"전설"}]},{"name":"초보","mages":[{"tier":"평범","skill":"초보"},{"tier":"평범","skill":"초보"},{"tier":"평범","skill":"초보"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 15/15)이 이기고 길이(22.9 s)가 가운데값(22.9 s)에 가장 가까운 판","width":40,"height":30},"v2-musket-40":{"v":"2.0.0","name":"머스킷 반원: 대마법사 대 병사 40명 [risk+saltRing+wave]","seed":13,"width":40,"height":30,"maxT":90,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"obstacles":[],"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역","x":6,"y":15}]},{"name":"총병","brain":"기본","mages":[{"tier":"병사","deck":"머스킷","x":6.55,"y":1.71},{"tier":"병사","deck":"머스킷","x":7.65,"y":1.79},{"tier":"병사","deck":"머스킷","x":8.73,"y":1.96},{"tier":"병사","deck":"머스킷","x":9.8,"y":2.2},{"tier":"병사","deck":"머스킷","x":10.85,"y":2.52},{"tier":"병사","deck":"머스킷","x":11.86,"y":2.92},{"tier":"병사","deck":"머스킷","x":12.84,"y":3.4},{"tier":"병사","deck":"머스킷","x":13.78,"y":3.94},{"tier":"병사","deck":"머스킷","x":14.67,"y":4.56},{"tier":"병사","deck":"머스킷","x":15.5,"y":5.23},{"tier":"병사","deck":"머스킷","x":16.28,"y":5.97},{"tier":"병사","deck":"머스킷","x":16.99,"y":6.77},{"tier":"병사","deck":"머스킷","x":17.64,"y":7.61},{"tier":"병사","deck":"머스킷","x":18.21,"y":8.5},{"tier":"병사","deck":"머스킷","x":18.71,"y":9.43},{"tier":"병사","deck":"머스킷","x":19.13,"y":10.4},{"tier":"병사","deck":"머스킷","x":19.47,"y":11.39},{"tier":"병사","deck":"머스킷","x":19.73,"y":12.41},{"tier":"병사","deck":"머스킷","x":19.9,"y":13.44},{"tier":"병사","deck":"머스킷","x":19.99,"y":14.48},{"tier":"병사","deck":"머스킷","x":19.99,"y":15.52},{"tier":"병사","deck":"머스킷","x":19.9,"y":16.56},{"tier":"병사","deck":"머스킷","x":19.73,"y":17.59},{"tier":"병사","deck":"머스킷","x":19.47,"y":18.61},{"tier":"병사","deck":"머스킷","x":19.13,"y":19.6},{"tier":"병사","deck":"머스킷","x":18.71,"y":20.57},{"tier":"병사","deck":"머스킷","x":18.21,"y":21.5},{"tier":"병사","deck":"머스킷","x":17.64,"y":22.39},{"tier":"병사","deck":"머스킷","x":16.99,"y":23.23},{"tier":"병사","deck":"머스킷","x":16.28,"y":24.03},{"tier":"병사","deck":"머스킷","x":15.5,"y":24.77},{"tier":"병사","deck":"머스킷","x":14.67,"y":25.44},{"tier":"병사","deck":"머스킷","x":13.78,"y":26.06},{"tier":"병사","deck":"머스킷","x":12.84,"y":26.6},{"tier":"병사","deck":"머스킷","x":11.86,"y":27.08},{"tier":"병사","deck":"머스킷","x":10.85,"y":27.48},{"tier":"병사","deck":"머스킷","x":9.8,"y":27.8},{"tier":"병사","deck":"머스킷","x":8.73,"y":28.04},{"tier":"병사","deck":"머스킷","x":7.65,"y":28.21},{"tier":"병사","deck":"머스킷","x":6.55,"y":28.29}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 11/15)이 이기고 길이(34.13 s)가 가운데값(34.13 s)에 가장 가까운 판"},"v2-neighbor-mid":{"v":"2.0.0","name":"중간 대가 대 상급 [risk+saltRing+wave]","seed":15,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대가","mages":[{"tier":"중간","skill":"대가"}]},{"name":"상급","mages":[{"tier":"중간","skill":"상급"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 8/15)이 이기고 길이(25.97 s)가 가운데값(25.97 s)에 가장 가까운 판","width":40,"height":30},"v2-neighbor-plain":{"v":"2.0.0","name":"평범 전설 대 대가 [risk+saltRing+wave]","seed":12,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"평범","skill":"전설"}]},{"name":"대가","mages":[{"tier":"평범","skill":"대가"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 12/15)이 이기고 길이(109.2 s)가 가운데값(109.2 s)에 가장 가까운 판","width":40,"height":30},"v2-sky-musket":{"v":"2.0.0","name":"날아다니는 대마법사(비행 판단 초보: 총 앞에서도 난다) 대 머스킷 20정, 200×150 [risk+saltRing+wave]","seed":2,"width":200,"height":150,"maxT":90,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대마법사","mages":[{"tier":"대마법사","skill":"대가","deck":"광역","tac":{"flySkill":1},"x":100,"y":75}]},{"name":"총병","mages":[{"tier":"병사","deck":"머스킷","x":160,"y":75},{"tier":"병사","deck":"머스킷","x":157.06,"y":90.45},{"tier":"병사","deck":"머스킷","x":148.54,"y":104.39},{"tier":"병사","deck":"머스킷","x":135.27,"y":115.45},{"tier":"병사","deck":"머스킷","x":118.54,"y":122.55},{"tier":"병사","deck":"머스킷","x":100,"y":125},{"tier":"병사","deck":"머스킷","x":81.46,"y":122.55},{"tier":"병사","deck":"머스킷","x":64.73,"y":115.45},{"tier":"병사","deck":"머스킷","x":51.46,"y":104.39},{"tier":"병사","deck":"머스킷","x":42.94,"y":90.45},{"tier":"병사","deck":"머스킷","x":40,"y":75},{"tier":"병사","deck":"머스킷","x":42.94,"y":59.55},{"tier":"병사","deck":"머스킷","x":51.46,"y":45.61},{"tier":"병사","deck":"머스킷","x":64.73,"y":34.55},{"tier":"병사","deck":"머스킷","x":81.46,"y":27.45},{"tier":"병사","deck":"머스킷","x":100,"y":25},{"tier":"병사","deck":"머스킷","x":118.54,"y":27.45},{"tier":"병사","deck":"머스킷","x":135.27,"y":34.55},{"tier":"병사","deck":"머스킷","x":148.54,"y":45.61},{"tier":"병사","deck":"머스킷","x":157.06,"y":59.55}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 13/15)이 이기고 길이(36.63 s)가 가운데값(36.63 s)에 가장 가까운 판"},"v2-sky-narrow":{"v":"2.0.0","name":"대마법사 대가 대 상급, 좁은 곳 40×30 [risk+saltRing+wave]","seed":2,"width":40,"height":30,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대가","mages":[{"tier":"대마법사","skill":"대가"}]},{"name":"상급","mages":[{"tier":"대마법사","skill":"상급"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 11/15)이 이기고 길이(9.07 s)가 가운데값(9.07 s)에 가장 가까운 판"},"v2-sky-wide":{"v":"2.0.0","name":"대마법사 전설 대 대가, 넓은 곳 공중전 200×150 [risk+saltRing+wave]","seed":6,"width":200,"height":150,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 10/15)이 이기고 길이(15.33 s)가 가운데값(15.33 s)에 가장 가까운 판"}} };
+G.ArenaData = { spells: G.ArenaCore.SPELLS, books: load('data/books.json'), scenes: {"archmage-50":{"v":"2.1.0","name":"대마법사 대 평범 50명 (둘러싸기, node cli.js ring 씨앗 1과 같다)","seed":1,"width":40,"height":30,"maxT":90,"layout":"ring","rules":{},"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역"}]},{"name":"무리","brain":"기본","mages":[{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"}]}],"spells":{},"decks":{}},"duel":{"v":"2.1.0","name":"1대1: 중간 합법 최강 대 중간 기본기","seed":1,"width":40,"height":30,"maxT":120,"rules":{"barrels":true},"obstacles":[{"x":14,"y":9,"r":1.4},{"x":26,"y":21,"r":1.4},{"x":20,"y":15,"r":1},{"x":11,"y":22,"r":1.1},{"x":29,"y":8,"r":1.1}],"barrels":[{"x":20,"y":9},{"x":20,"y":21}],"walls":[],"sides":[{"name":"청","brain":"기본","mages":[{"tier":"중간","deck":"합법 최강","x":6,"y":15}]},{"name":"적","brain":"기본","mages":[{"tier":"중간","deck":"기본기","x":34,"y":15}]}],"spells":{},"decks":{}},"element-league":{"v":"2.1.0","name":"원소 리그: 평범 여섯이 원소 기본책으로 난전","seed":4,"width":40,"height":30,"maxT":300,"rules":{},"sides":[{"name":"불","brain":"기본","mages":[{"tier":"평범","deck":"불"}]},{"name":"번개","brain":"기본","mages":[{"tier":"평범","deck":"번개"}]},{"name":"흙","brain":"기본","mages":[{"tier":"평범","deck":"흙"}]},{"name":"물","brain":"기본","mages":[{"tier":"평범","deck":"물"}]},{"name":"얼음","brain":"기본","mages":[{"tier":"평범","deck":"얼음"}]},{"name":"독","brain":"기본","mages":[{"tier":"평범","deck":"독"}]}],"spells":{},"decks":{}},"musket-arc":{"v":"2.1.0","name":"머스킷 반원: 대마법사 대 병사 20명","seed":1,"width":40,"height":30,"maxT":90,"rules":{},"obstacles":[{"x":17,"y":11,"r":1},{"x":17,"y":19,"r":1}],"barrels":[],"walls":[{"x":13,"y":13,"r":0.6,"hp":200},{"x":13,"y":17,"r":0.6,"hp":200}],"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역","x":6,"y":15}]},{"name":"총병","brain":"기본","mages":[{"tier":"병사","deck":"머스킷","x":12.43,"y":3.18},{"tier":"병사","deck":"머스킷","x":14.42,"y":3.61},{"tier":"병사","deck":"머스킷","x":16.32,"y":4.29},{"tier":"병사","deck":"머스킷","x":18.08,"y":5.2},{"tier":"병사","deck":"머스킷","x":19.67,"y":6.32},{"tier":"병사","deck":"머스킷","x":21.05,"y":7.63},{"tier":"병사","deck":"머스킷","x":22.19,"y":9.1},{"tier":"병사","deck":"머스킷","x":23.07,"y":10.69},{"tier":"병사","deck":"머스킷","x":23.66,"y":12.38},{"tier":"병사","deck":"머스킷","x":23.96,"y":14.12},{"tier":"병사","deck":"머스킷","x":23.96,"y":15.88},{"tier":"병사","deck":"머스킷","x":23.66,"y":17.62},{"tier":"병사","deck":"머스킷","x":23.07,"y":19.31},{"tier":"병사","deck":"머스킷","x":22.19,"y":20.9},{"tier":"병사","deck":"머스킷","x":21.05,"y":22.37},{"tier":"병사","deck":"머스킷","x":19.67,"y":23.68},{"tier":"병사","deck":"머스킷","x":18.08,"y":24.8},{"tier":"병사","deck":"머스킷","x":16.32,"y":25.71},{"tier":"병사","deck":"머스킷","x":14.42,"y":26.39},{"tier":"병사","deck":"머스킷","x":12.43,"y":26.82}]}],"spells":{},"decks":{}},"v2-archmage-100":{"v":"2.1.0","name":"대마법사 대 평범 100명 둘러싸기 [risk+saltRing+wave]","seed":3,"maxT":90,"layout":"ring","rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대마법사","mages":[{"tier":"대마법사","deck":"광역"}]},{"name":"평범","mages":[{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"},{"tier":"평범","deck":"기본기"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 15/15)이 이기고 길이(90.03 s)가 가운데값(90.03 s)에 가장 가까운 판","width":200,"height":150},"v2-army-ambush":{"v":"2.1.0","name":"기습: 대마법사 대 머스킷 40 반원 (14 m, 벽 없이)","seed":5,"width":40,"height":30,"maxT":90,"obstacles":[],"rules":{"saltRing":false},"sides":[{"name":"대마법사","mages":[{"x":6,"y":15,"tier":"대마법사","skill":"대가","deck":"대마법사 성"}]},{"name":"총병","mages":[{"x":6.55,"y":1.71,"tier":"병사","deck":"머스킷"},{"x":7.65,"y":1.79,"tier":"병사","deck":"머스킷"},{"x":8.73,"y":1.96,"tier":"병사","deck":"머스킷"},{"x":9.8,"y":2.2,"tier":"병사","deck":"머스킷"},{"x":10.85,"y":2.52,"tier":"병사","deck":"머스킷"},{"x":11.86,"y":2.92,"tier":"병사","deck":"머스킷"},{"x":12.84,"y":3.4,"tier":"병사","deck":"머스킷"},{"x":13.78,"y":3.94,"tier":"병사","deck":"머스킷"},{"x":14.67,"y":4.56,"tier":"병사","deck":"머스킷"},{"x":15.5,"y":5.23,"tier":"병사","deck":"머스킷"},{"x":16.28,"y":5.97,"tier":"병사","deck":"머스킷"},{"x":16.99,"y":6.77,"tier":"병사","deck":"머스킷"},{"x":17.64,"y":7.61,"tier":"병사","deck":"머스킷"},{"x":18.21,"y":8.5,"tier":"병사","deck":"머스킷"},{"x":18.71,"y":9.43,"tier":"병사","deck":"머스킷"},{"x":19.13,"y":10.4,"tier":"병사","deck":"머스킷"},{"x":19.47,"y":11.39,"tier":"병사","deck":"머스킷"},{"x":19.73,"y":12.41,"tier":"병사","deck":"머스킷"},{"x":19.9,"y":13.44,"tier":"병사","deck":"머스킷"},{"x":19.99,"y":14.48,"tier":"병사","deck":"머스킷"},{"x":19.99,"y":15.52,"tier":"병사","deck":"머스킷"},{"x":19.9,"y":16.56,"tier":"병사","deck":"머스킷"},{"x":19.73,"y":17.59,"tier":"병사","deck":"머스킷"},{"x":19.47,"y":18.61,"tier":"병사","deck":"머스킷"},{"x":19.13,"y":19.6,"tier":"병사","deck":"머스킷"},{"x":18.71,"y":20.57,"tier":"병사","deck":"머스킷"},{"x":18.21,"y":21.5,"tier":"병사","deck":"머스킷"},{"x":17.64,"y":22.39,"tier":"병사","deck":"머스킷"},{"x":16.99,"y":23.23,"tier":"병사","deck":"머스킷"},{"x":16.28,"y":24.03,"tier":"병사","deck":"머스킷"},{"x":15.5,"y":24.77,"tier":"병사","deck":"머스킷"},{"x":14.67,"y":25.44,"tier":"병사","deck":"머스킷"},{"x":13.78,"y":26.06,"tier":"병사","deck":"머스킷"},{"x":12.84,"y":26.6,"tier":"병사","deck":"머스킷"},{"x":11.86,"y":27.08,"tier":"병사","deck":"머스킷"},{"x":10.85,"y":27.48,"tier":"병사","deck":"머스킷"},{"x":9.8,"y":27.8,"tier":"병사","deck":"머스킷"},{"x":8.73,"y":28.04,"tier":"병사","deck":"머스킷"},{"x":7.65,"y":28.21,"tier":"병사","deck":"머스킷"},{"x":6.55,"y":28.29,"tier":"병사","deck":"머스킷"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(5.5 s)가 가운데값(5.5 s)에 가장 가까운 판"},"v2-army-field":{"v":"2.1.0","name":"들판: 대마법사 대 머스킷 100 (넷 줄, 돌아가며 쏘기)","seed":1,"width":1000,"height":600,"maxT":360,"obstacles":0,"rules":{"saltRing":false},"sides":[{"name":"대마법사","mages":[{"x":350,"y":300,"z":10,"tier":"대마법사","skill":"대가","deck":"대마법사 성"}]},{"name":"군대","mages":[{"tier":"병사","deck":"머스킷","x":600,"y":263,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":266,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":269,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":272,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":275,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":278,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":281,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":284,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":287,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":290,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":293,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":296,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":299,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":302,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":305,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":308,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":311,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":314,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":317,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":320,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":323,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":326,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":329,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":332,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":600,"y":335,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":263,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":266,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":269,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":272,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":275,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":278,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":281,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":284,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":287,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":290,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":293,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":296,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":299,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":302,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":305,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":308,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":311,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":314,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":317,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":320,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":323,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":326,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":329,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":332,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":603,"y":335,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":263,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":266,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":269,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":272,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":275,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":278,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":281,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":284,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":287,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":290,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":293,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":296,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":299,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":302,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":305,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":308,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":311,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":314,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":317,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":320,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":323,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":326,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":329,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":332,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":606,"y":335,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":263,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":266,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":269,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":272,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":275,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":278,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":281,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":284,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":287,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":290,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":293,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":296,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":299,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":302,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":305,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":308,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":311,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":314,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":317,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":320,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":323,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":326,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":329,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":332,"tac":{"volley":4}},{"tier":"병사","deck":"머스킷","x":609,"y":335,"tac":{"volley":4}}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 7/9)이 이기고 길이(261.47 s)가 가운데값(261.47 s)에 가장 가까운 판"},"v2-army-prepared":{"v":"2.1.0","name":"준비: 보루 안의 대마법사 대 머스킷 40 반원","seed":3,"width":40,"height":30,"maxT":90,"obstacles":[],"rules":{"saltRing":false},"sides":[{"name":"대마법사","mages":[{"x":6,"y":15,"tier":"대마법사","skill":"대가","deck":"대마법사 성"}]},{"name":"총병","mages":[{"x":6.55,"y":1.71,"tier":"병사","deck":"머스킷"},{"x":7.65,"y":1.79,"tier":"병사","deck":"머스킷"},{"x":8.73,"y":1.96,"tier":"병사","deck":"머스킷"},{"x":9.8,"y":2.2,"tier":"병사","deck":"머스킷"},{"x":10.85,"y":2.52,"tier":"병사","deck":"머스킷"},{"x":11.86,"y":2.92,"tier":"병사","deck":"머스킷"},{"x":12.84,"y":3.4,"tier":"병사","deck":"머스킷"},{"x":13.78,"y":3.94,"tier":"병사","deck":"머스킷"},{"x":14.67,"y":4.56,"tier":"병사","deck":"머스킷"},{"x":15.5,"y":5.23,"tier":"병사","deck":"머스킷"},{"x":16.28,"y":5.97,"tier":"병사","deck":"머스킷"},{"x":16.99,"y":6.77,"tier":"병사","deck":"머스킷"},{"x":17.64,"y":7.61,"tier":"병사","deck":"머스킷"},{"x":18.21,"y":8.5,"tier":"병사","deck":"머스킷"},{"x":18.71,"y":9.43,"tier":"병사","deck":"머스킷"},{"x":19.13,"y":10.4,"tier":"병사","deck":"머스킷"},{"x":19.47,"y":11.39,"tier":"병사","deck":"머스킷"},{"x":19.73,"y":12.41,"tier":"병사","deck":"머스킷"},{"x":19.9,"y":13.44,"tier":"병사","deck":"머스킷"},{"x":19.99,"y":14.48,"tier":"병사","deck":"머스킷"},{"x":19.99,"y":15.52,"tier":"병사","deck":"머스킷"},{"x":19.9,"y":16.56,"tier":"병사","deck":"머스킷"},{"x":19.73,"y":17.59,"tier":"병사","deck":"머스킷"},{"x":19.47,"y":18.61,"tier":"병사","deck":"머스킷"},{"x":19.13,"y":19.6,"tier":"병사","deck":"머스킷"},{"x":18.71,"y":20.57,"tier":"병사","deck":"머스킷"},{"x":18.21,"y":21.5,"tier":"병사","deck":"머스킷"},{"x":17.64,"y":22.39,"tier":"병사","deck":"머스킷"},{"x":16.99,"y":23.23,"tier":"병사","deck":"머스킷"},{"x":16.28,"y":24.03,"tier":"병사","deck":"머스킷"},{"x":15.5,"y":24.77,"tier":"병사","deck":"머스킷"},{"x":14.67,"y":25.44,"tier":"병사","deck":"머스킷"},{"x":13.78,"y":26.06,"tier":"병사","deck":"머스킷"},{"x":12.84,"y":26.6,"tier":"병사","deck":"머스킷"},{"x":11.86,"y":27.08,"tier":"병사","deck":"머스킷"},{"x":10.85,"y":27.48,"tier":"병사","deck":"머스킷"},{"x":9.8,"y":27.8,"tier":"병사","deck":"머스킷"},{"x":8.73,"y":28.04,"tier":"병사","deck":"머스킷"},{"x":7.65,"y":28.21,"tier":"병사","deck":"머스킷"},{"x":6.55,"y":28.29,"tier":"병사","deck":"머스킷"}]}],"walls":[{"x":8.2,"y":15,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":8.05,"y":15.79,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":7.63,"y":16.48,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":6.98,"y":16.97,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":6.2,"y":17.19,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":5.4,"y":17.12,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":4.67,"y":16.76,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":4.13,"y":16.16,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":3.84,"y":15.4,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":3.84,"y":14.6,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":4.13,"y":13.84,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":4.67,"y":13.24,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":5.4,"y":12.88,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":6.2,"y":12.81,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":6.98,"y":13.03,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":7.63,"y":13.52,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000},{"x":8.05,"y":14.21,"r":0.45,"hp":256,"mat":"earth","thick":0.5,"grp":1000}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(5.5 s)가 가운데값(5.5 s)에 가장 가까운 판"},"v2-army-salt-city":{"v":"2.1.0","name":"소금 도시: 걸어 들어가는 대마법사 대 머스킷 60 (골목, 광장 셋만 맨땅)","seed":9,"width":200,"height":150,"maxT":240,"obstacles":[{"x":18,"y":8,"r":3.5},{"x":18,"y":19,"r":3.5},{"x":18,"y":30,"r":3.5},{"x":18,"y":41,"r":3.5},{"x":18,"y":52,"r":3.5},{"x":18,"y":63,"r":3.5},{"x":18,"y":74,"r":3.5},{"x":18,"y":85,"r":3.5},{"x":18,"y":96,"r":3.5},{"x":18,"y":107,"r":3.5},{"x":18,"y":118,"r":3.5},{"x":18,"y":129,"r":3.5},{"x":18,"y":140,"r":3.5},{"x":29,"y":8,"r":3.5},{"x":29,"y":19,"r":3.5},{"x":29,"y":30,"r":3.5},{"x":29,"y":41,"r":3.5},{"x":29,"y":52,"r":3.5},{"x":29,"y":63,"r":3.5},{"x":29,"y":74,"r":3.5},{"x":29,"y":85,"r":3.5},{"x":29,"y":96,"r":3.5},{"x":29,"y":107,"r":3.5},{"x":29,"y":118,"r":3.5},{"x":29,"y":129,"r":3.5},{"x":29,"y":140,"r":3.5},{"x":40,"y":8,"r":3.5},{"x":40,"y":19,"r":3.5},{"x":40,"y":30,"r":3.5},{"x":40,"y":41,"r":3.5},{"x":40,"y":52,"r":3.5},{"x":40,"y":63,"r":3.5},{"x":40,"y":74,"r":3.5},{"x":40,"y":85,"r":3.5},{"x":40,"y":96,"r":3.5},{"x":40,"y":107,"r":3.5},{"x":40,"y":118,"r":3.5},{"x":40,"y":129,"r":3.5},{"x":40,"y":140,"r":3.5},{"x":51,"y":8,"r":3.5},{"x":51,"y":19,"r":3.5},{"x":51,"y":63,"r":3.5},{"x":51,"y":74,"r":3.5},{"x":51,"y":85,"r":3.5},{"x":51,"y":96,"r":3.5},{"x":51,"y":107,"r":3.5},{"x":51,"y":118,"r":3.5},{"x":51,"y":129,"r":3.5},{"x":51,"y":140,"r":3.5},{"x":62,"y":19,"r":3.5},{"x":62,"y":63,"r":3.5},{"x":62,"y":74,"r":3.5},{"x":62,"y":85,"r":3.5},{"x":62,"y":96,"r":3.5},{"x":62,"y":107,"r":3.5},{"x":62,"y":118,"r":3.5},{"x":62,"y":129,"r":3.5},{"x":62,"y":140,"r":3.5},{"x":73,"y":8,"r":3.5},{"x":73,"y":19,"r":3.5},{"x":73,"y":96,"r":3.5},{"x":73,"y":107,"r":3.5},{"x":73,"y":118,"r":3.5},{"x":73,"y":129,"r":3.5},{"x":73,"y":140,"r":3.5},{"x":84,"y":8,"r":3.5},{"x":84,"y":19,"r":3.5},{"x":84,"y":30,"r":3.5},{"x":84,"y":41,"r":3.5},{"x":84,"y":52,"r":3.5},{"x":84,"y":63,"r":3.5},{"x":84,"y":74,"r":3.5},{"x":84,"y":85,"r":3.5},{"x":84,"y":96,"r":3.5},{"x":84,"y":107,"r":3.5},{"x":84,"y":118,"r":3.5},{"x":84,"y":129,"r":3.5},{"x":84,"y":140,"r":3.5},{"x":95,"y":8,"r":3.5},{"x":95,"y":19,"r":3.5},{"x":95,"y":74,"r":3.5},{"x":95,"y":85,"r":3.5},{"x":95,"y":96,"r":3.5},{"x":95,"y":107,"r":3.5},{"x":95,"y":118,"r":3.5},{"x":95,"y":129,"r":3.5},{"x":95,"y":140,"r":3.5},{"x":106,"y":8,"r":3.5},{"x":106,"y":19,"r":3.5},{"x":106,"y":30,"r":3.5},{"x":106,"y":41,"r":3.5},{"x":106,"y":52,"r":3.5},{"x":106,"y":63,"r":3.5},{"x":106,"y":74,"r":3.5},{"x":106,"y":85,"r":3.5},{"x":106,"y":129,"r":3.5},{"x":106,"y":140,"r":3.5},{"x":117,"y":8,"r":3.5},{"x":117,"y":30,"r":3.5},{"x":117,"y":41,"r":3.5},{"x":117,"y":52,"r":3.5},{"x":117,"y":63,"r":3.5},{"x":117,"y":74,"r":3.5},{"x":117,"y":85,"r":3.5},{"x":117,"y":118,"r":3.5},{"x":117,"y":129,"r":3.5},{"x":117,"y":140,"r":3.5},{"x":128,"y":8,"r":3.5},{"x":128,"y":19,"r":3.5},{"x":128,"y":30,"r":3.5},{"x":128,"y":41,"r":3.5},{"x":128,"y":52,"r":3.5},{"x":128,"y":107,"r":3.5},{"x":128,"y":118,"r":3.5},{"x":128,"y":129,"r":3.5},{"x":128,"y":140,"r":3.5},{"x":139,"y":8,"r":3.5},{"x":139,"y":19,"r":3.5},{"x":139,"y":30,"r":3.5},{"x":139,"y":41,"r":3.5},{"x":139,"y":52,"r":3.5},{"x":139,"y":63,"r":3.5},{"x":139,"y":74,"r":3.5},{"x":139,"y":85,"r":3.5},{"x":139,"y":96,"r":3.5},{"x":139,"y":118,"r":3.5},{"x":139,"y":129,"r":3.5},{"x":139,"y":140,"r":3.5},{"x":150,"y":8,"r":3.5},{"x":150,"y":19,"r":3.5},{"x":150,"y":30,"r":3.5},{"x":150,"y":85,"r":3.5},{"x":150,"y":96,"r":3.5},{"x":150,"y":107,"r":3.5},{"x":150,"y":118,"r":3.5},{"x":150,"y":129,"r":3.5},{"x":150,"y":140,"r":3.5},{"x":161,"y":8,"r":3.5},{"x":161,"y":19,"r":3.5},{"x":161,"y":30,"r":3.5},{"x":161,"y":41,"r":3.5},{"x":161,"y":74,"r":3.5},{"x":161,"y":85,"r":3.5},{"x":161,"y":96,"r":3.5},{"x":161,"y":107,"r":3.5},{"x":161,"y":140,"r":3.5},{"x":172,"y":8,"r":3.5},{"x":172,"y":19,"r":3.5},{"x":172,"y":74,"r":3.5},{"x":172,"y":85,"r":3.5},{"x":172,"y":96,"r":3.5},{"x":172,"y":107,"r":3.5},{"x":172,"y":118,"r":3.5},{"x":172,"y":129,"r":3.5},{"x":172,"y":140,"r":3.5},{"x":183,"y":8,"r":3.5},{"x":183,"y":19,"r":3.5},{"x":183,"y":30,"r":3.5},{"x":183,"y":41,"r":3.5},{"x":183,"y":52,"r":3.5},{"x":183,"y":74,"r":3.5},{"x":183,"y":129,"r":3.5},{"x":183,"y":140,"r":3.5},{"x":194,"y":8,"r":3.5},{"x":194,"y":19,"r":3.5},{"x":194,"y":30,"r":3.5},{"x":194,"y":41,"r":3.5},{"x":194,"y":52,"r":3.5},{"x":194,"y":63,"r":3.5},{"x":194,"y":74,"r":3.5},{"x":194,"y":85,"r":3.5},{"x":194,"y":96,"r":3.5},{"x":194,"y":107,"r":3.5},{"x":194,"y":118,"r":3.5},{"x":194,"y":129,"r":3.5},{"x":194,"y":140,"r":3.5}],"salt":[{"x":10,"y":0,"w":38,"h":150},{"x":72,"y":0,"w":26,"h":150},{"x":122,"y":0,"w":26,"h":150},{"x":172,"y":0,"w":28,"h":150},{"x":148,"y":0,"w":24,"h":43},{"x":148,"y":67,"w":24,"h":83},{"x":98,"y":0,"w":24,"h":88},{"x":98,"y":112,"w":24,"h":38},{"x":48,"y":0,"w":24,"h":28},{"x":48,"y":52,"w":24,"h":98}],"rules":{"saltRing":false},"sides":[{"name":"대마법사","mages":[{"x":4,"y":75,"tier":"대마법사","skill":"대가","deck":"대마법사 성"}]},{"name":"총병","mages":[{"tier":"병사","deck":"머스킷","x":60,"y":12},{"tier":"병사","deck":"머스킷","x":134,"y":118},{"tier":"병사","deck":"머스킷","x":201,"y":45},{"tier":"병사","deck":"머스킷","x":78,"y":98},{"tier":"병사","deck":"머스킷","x":115,"y":25},{"tier":"병사","deck":"머스킷","x":152,"y":78},{"tier":"병사","deck":"머스킷","x":189,"y":131},{"tier":"병사","deck":"머스킷","x":96,"y":58},{"tier":"병사","deck":"머스킷","x":133,"y":111},{"tier":"병사","deck":"머스킷","x":77,"y":91},{"tier":"병사","deck":"머스킷","x":188,"y":124},{"tier":"병사","deck":"머스킷","x":132,"y":104},{"tier":"병사","deck":"머스킷","x":113,"y":137},{"tier":"병사","deck":"머스킷","x":187,"y":117},{"tier":"병사","deck":"머스킷","x":168,"y":24},{"tier":"병사","deck":"머스킷","x":112,"y":130},{"tier":"병사","deck":"머스킷","x":179,"y":57},{"tier":"병사","deck":"머스킷","x":186,"y":110},{"tier":"병사","deck":"머스킷","x":93,"y":37},{"tier":"병사","deck":"머스킷","x":130,"y":90},{"tier":"병사","deck":"머스킷","x":167,"y":17},{"tier":"병사","deck":"머스킷","x":74,"y":70},{"tier":"병사","deck":"머스킷","x":111,"y":123},{"tier":"병사","deck":"머스킷","x":178,"y":50},{"tier":"병사","deck":"머스킷","x":185,"y":103},{"tier":"병사","deck":"머스킷","x":166,"y":136},{"tier":"병사","deck":"머스킷","x":110,"y":116},{"tier":"병사","deck":"머스킷","x":91,"y":23},{"tier":"병사","deck":"머스킷","x":165,"y":129},{"tier":"병사","deck":"머스킷","x":72,"y":56},{"tier":"병사","deck":"머스킷","x":146,"y":36},{"tier":"병사","deck":"머스킷","x":183,"y":89},{"tier":"병사","deck":"머스킷","x":90,"y":16},{"tier":"병사","deck":"머스킷","x":127,"y":69},{"tier":"병사","deck":"머스킷","x":164,"y":122},{"tier":"병사","deck":"머스킷","x":101,"y":49},{"tier":"병사","deck":"머스킷","x":138,"y":102},{"tier":"병사","deck":"머스킷","x":145,"y":29},{"tier":"병사","deck":"머스킷","x":89,"y":135}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 1, 8/9)이 이기고 길이(77.07 s)가 가운데값(134.4 s)에 가장 가까운 판"},"v2-challenger-3":{"v":"2.1.0","name":"평범 전설 1 대 초보 3 [risk+saltRing+wave]","seed":2,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"평범","skill":"전설"}]},{"name":"초보","mages":[{"tier":"평범","skill":"초보"},{"tier":"평범","skill":"초보"},{"tier":"평범","skill":"초보"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 15/15)이 이기고 길이(22.9 s)가 가운데값(22.9 s)에 가장 가까운 판","width":40,"height":30},"v2-musket-40":{"v":"2.1.0","name":"머스킷 반원: 대마법사 대 병사 40명 [risk+saltRing+wave]","seed":13,"width":40,"height":30,"maxT":90,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"obstacles":[],"sides":[{"name":"대마법사","brain":"기본","mages":[{"tier":"대마법사","deck":"광역","x":6,"y":15}]},{"name":"총병","brain":"기본","mages":[{"tier":"병사","deck":"머스킷","x":6.55,"y":1.71},{"tier":"병사","deck":"머스킷","x":7.65,"y":1.79},{"tier":"병사","deck":"머스킷","x":8.73,"y":1.96},{"tier":"병사","deck":"머스킷","x":9.8,"y":2.2},{"tier":"병사","deck":"머스킷","x":10.85,"y":2.52},{"tier":"병사","deck":"머스킷","x":11.86,"y":2.92},{"tier":"병사","deck":"머스킷","x":12.84,"y":3.4},{"tier":"병사","deck":"머스킷","x":13.78,"y":3.94},{"tier":"병사","deck":"머스킷","x":14.67,"y":4.56},{"tier":"병사","deck":"머스킷","x":15.5,"y":5.23},{"tier":"병사","deck":"머스킷","x":16.28,"y":5.97},{"tier":"병사","deck":"머스킷","x":16.99,"y":6.77},{"tier":"병사","deck":"머스킷","x":17.64,"y":7.61},{"tier":"병사","deck":"머스킷","x":18.21,"y":8.5},{"tier":"병사","deck":"머스킷","x":18.71,"y":9.43},{"tier":"병사","deck":"머스킷","x":19.13,"y":10.4},{"tier":"병사","deck":"머스킷","x":19.47,"y":11.39},{"tier":"병사","deck":"머스킷","x":19.73,"y":12.41},{"tier":"병사","deck":"머스킷","x":19.9,"y":13.44},{"tier":"병사","deck":"머스킷","x":19.99,"y":14.48},{"tier":"병사","deck":"머스킷","x":19.99,"y":15.52},{"tier":"병사","deck":"머스킷","x":19.9,"y":16.56},{"tier":"병사","deck":"머스킷","x":19.73,"y":17.59},{"tier":"병사","deck":"머스킷","x":19.47,"y":18.61},{"tier":"병사","deck":"머스킷","x":19.13,"y":19.6},{"tier":"병사","deck":"머스킷","x":18.71,"y":20.57},{"tier":"병사","deck":"머스킷","x":18.21,"y":21.5},{"tier":"병사","deck":"머스킷","x":17.64,"y":22.39},{"tier":"병사","deck":"머스킷","x":16.99,"y":23.23},{"tier":"병사","deck":"머스킷","x":16.28,"y":24.03},{"tier":"병사","deck":"머스킷","x":15.5,"y":24.77},{"tier":"병사","deck":"머스킷","x":14.67,"y":25.44},{"tier":"병사","deck":"머스킷","x":13.78,"y":26.06},{"tier":"병사","deck":"머스킷","x":12.84,"y":26.6},{"tier":"병사","deck":"머스킷","x":11.86,"y":27.08},{"tier":"병사","deck":"머스킷","x":10.85,"y":27.48},{"tier":"병사","deck":"머스킷","x":9.8,"y":27.8},{"tier":"병사","deck":"머스킷","x":8.73,"y":28.04},{"tier":"병사","deck":"머스킷","x":7.65,"y":28.21},{"tier":"병사","deck":"머스킷","x":6.55,"y":28.29}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 11/15)이 이기고 길이(34.13 s)가 가운데값(34.13 s)에 가장 가까운 판"},"v2-neighbor-mid":{"v":"2.1.0","name":"중간 대가 대 상급 [risk+saltRing+wave]","seed":15,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대가","mages":[{"tier":"중간","skill":"대가"}]},{"name":"상급","mages":[{"tier":"중간","skill":"상급"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 8/15)이 이기고 길이(25.97 s)가 가운데값(25.97 s)에 가장 가까운 판","width":40,"height":30},"v2-neighbor-plain":{"v":"2.1.0","name":"평범 전설 대 대가 [risk+saltRing+wave]","seed":12,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"평범","skill":"전설"}]},{"name":"대가","mages":[{"tier":"평범","skill":"대가"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 12/15)이 이기고 길이(109.2 s)가 가운데값(109.2 s)에 가장 가까운 판","width":40,"height":30},"v2-sky-musket":{"v":"2.1.0","name":"날아다니는 대마법사(비행 판단 초보: 총 앞에서도 난다) 대 머스킷 20정, 200×150 [risk+saltRing+wave]","seed":2,"width":200,"height":150,"maxT":90,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대마법사","mages":[{"tier":"대마법사","skill":"대가","deck":"광역","tac":{"flySkill":1},"x":100,"y":75}]},{"name":"총병","mages":[{"tier":"병사","deck":"머스킷","x":160,"y":75},{"tier":"병사","deck":"머스킷","x":157.06,"y":90.45},{"tier":"병사","deck":"머스킷","x":148.54,"y":104.39},{"tier":"병사","deck":"머스킷","x":135.27,"y":115.45},{"tier":"병사","deck":"머스킷","x":118.54,"y":122.55},{"tier":"병사","deck":"머스킷","x":100,"y":125},{"tier":"병사","deck":"머스킷","x":81.46,"y":122.55},{"tier":"병사","deck":"머스킷","x":64.73,"y":115.45},{"tier":"병사","deck":"머스킷","x":51.46,"y":104.39},{"tier":"병사","deck":"머스킷","x":42.94,"y":90.45},{"tier":"병사","deck":"머스킷","x":40,"y":75},{"tier":"병사","deck":"머스킷","x":42.94,"y":59.55},{"tier":"병사","deck":"머스킷","x":51.46,"y":45.61},{"tier":"병사","deck":"머스킷","x":64.73,"y":34.55},{"tier":"병사","deck":"머스킷","x":81.46,"y":27.45},{"tier":"병사","deck":"머스킷","x":100,"y":25},{"tier":"병사","deck":"머스킷","x":118.54,"y":27.45},{"tier":"병사","deck":"머스킷","x":135.27,"y":34.55},{"tier":"병사","deck":"머스킷","x":148.54,"y":45.61},{"tier":"병사","deck":"머스킷","x":157.06,"y":59.55}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 1, 13/15)이 이기고 길이(36.63 s)가 가운데값(36.63 s)에 가장 가까운 판"},"v2-sky-narrow":{"v":"2.1.0","name":"대마법사 대가 대 상급, 좁은 곳 40×30 [risk+saltRing+wave]","seed":2,"width":40,"height":30,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"대가","mages":[{"tier":"대마법사","skill":"대가"}]},{"name":"상급","mages":[{"tier":"대마법사","skill":"상급"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 11/15)이 이기고 길이(9.07 s)가 가운데값(9.07 s)에 가장 가까운 판"},"v2-sky-wide":{"v":"2.1.0","name":"대마법사 전설 대 대가, 넓은 곳 공중전 200×150 [risk+saltRing+wave]","seed":6,"width":200,"height":150,"rules":{"risk":true,"bodyBind":false,"response":false,"saltRing":true,"wave":true},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가"}]}],"note":"대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 10/15)이 이기고 길이(15.33 s)가 가운데값(15.33 s)에 가장 가까운 판"}} };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
