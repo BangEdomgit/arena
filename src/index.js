@@ -50,9 +50,16 @@ function place(W, teams, layout, at = []) {
   }
 }
 
+// 결투장 넓이 (SPEC 24장): 비행이 켜졌고 대마법사(C ≥ 10)가 끼면, 넓이를 주지 않았을 때 200 × 150 m
+const FL = require('./rules/flight').api.F;
+function arena(o, rules, specs) {
+  if (o.width != null || o.height != null || !((rules && rules.flight != null) ? rules.flight : core.DEFAULT_RULES.flight) || !specs.some(s => (s.C ?? 1) >= FL.arenaC)) return o;
+  return { width: FL.arena[0], height: FL.arena[1] };
+}
 // 두 편의 싸움
 function battle(teamA, teamB, opt = {}) {
-  const W = core.createWorld({ seed: opt.seed, rules: opt.rules, record: opt.record, maxT: opt.maxT, width: opt.width, height: opt.height, obstacles: opt.obstacles, brain });
+  const A = arena(opt, opt.rules, teamA.concat(teamB));
+  const W = core.createWorld({ seed: opt.seed, rules: opt.rules, record: opt.record, maxT: opt.maxT, width: A.width, height: A.height, obstacles: opt.obstacles, brain });
   place(W, [teamA, teamB], opt.layout);
   return core.run(W);
 }
@@ -69,10 +76,10 @@ function sceneMage(mm, side, lib) {
 function sceneLib(sc) { return { spells: Object.assign({}, core.SPELLS, sc.spells), decks: Object.assign({}, DECKS, sc.decks) }; }
 // 장면 → 첫 걸음 전의 세계. opt.record: 녹화
 function sceneWorld(sc, opt = {}) {
-  const lib = sceneLib(sc);
-  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: sc.width, height: sc.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, spells: lib.spells, brain });
-  const sides = sc.sides || [];
-  place(W, sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; })), sc.layout, sides.map(s => s.mages));
+  const lib = sceneLib(sc), sides = sc.sides || [], specs = sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; }));
+  const A = arena(sc, sc.rules, [].concat(...specs));
+  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, spells: lib.spells, brain });
+  place(W, specs, sc.layout, sides.map(s => s.mages));
   return W;
 }
 const runScene = (sc, opt) => core.run(sceneWorld(sc, opt));

@@ -291,6 +291,7 @@ legacy(false);   // 여기부터 v2.0의 기본 (일꾼도 v2.0 기본으로 돈
 ok('v2.0 기본 (SPEC 24장): risk·saltRing·wave 켬, 몸 받침 2.3·회피 켬, 체력은 150, V1_RULES면 1.x', () => {
   const W = A.createWorld({ seed: 1, rules: { flight: false } }); assert.ok(W.rules.risk && W.rules.saltRing && W.rules.wave && W.rules.bodyK === 2.3 && W.rules.evade && !W.rules.hpScale);
   assert.ok(['gear', 'terrain', 'saltRing', 'wave', 'risk', 'multiSlot', 'body', 'evade'].every(n => W.mods.some(r => r.name === n)), W.mods.map(r => r.name).join());
+  assert.ok(A.createWorld({ seed: 1 }).rules.flight === true && A.createWorld({ seed: 1 }).mods.some(r => r.name === 'flight'), '비행 기본 켬');
   const hp = C => A.addMage(W, { C }, 0, 5, 5).hpMax; assert.strictEqual(hp(1), 150); assert.strictEqual(hp(10), 150);
   const W1 = A.createWorld({ seed: 1, rules: V1 }); assert.strictEqual(W1.mods.map(r => r.name).join(','), 'gear,terrain,multiSlot'); assert.strictEqual(A.addMage(W1, { C: 2.5 }, 0, 5, 5).hpMax, 150);
   const W2 = A.createWorld({ seed: 1, rules: Object.assign({}, V1, { hpScale: true }) }); assert.ok(Math.abs(A.addMage(W2, { C: 0.3 }, 0, 5, 5).hpMax - 150 * Math.pow(0.3, 2.5)) < 1e-9, '1.x의 hpScale');
@@ -304,6 +305,31 @@ ok('v2.0 몸 받침·회피: 마법 피해 ÷ C^2.3(총·소금·추락·폭주�
   const [W, q] = mk({}); W.t = 200; for (let i = 0; i < 3; i++) A.stepWorld(W); assert.ok(q.log.taken.salt > 0 && Math.abs(q.log.taken.salt - 6 * 3 / 30) < 1e-6, '소금은 받치지 않는다 ' + q.log.taken.salt);
   const k = Math.log2(10), [W2, r] = mk({}); A.roll(W2, r, 1, 0, 8, 0.8); assert.ok(Math.abs(r.vx - 8 * (1 + 0.25 * k)) < 1e-9 && Math.abs(r.rollCd - 0.8 / (1 + 0.2 * k)) < 1e-9);
   const [W3, r3] = mk({ evade: false }); A.roll(W3, r3, 1, 0, 8, 0.8); assert.ok(r3.vx === 8 && r3.rollCd === 0.8);
+});
+ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
+  const FL = A.RULES.find(r => r.name === 'flight').api;
+  assert.ok(FL.canFly({ C: 10, fat: 0 }) && FL.canFly({ C: 5, fat: 0 }) && !FL.canFly({ C: 2.5, fat: 0 }) && !FL.canFly({ C: 5, fat: 100 }), '출력 75 kW');
+  const mk = (rules, C = 10) => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 200, height: 150, rules: Object.assign({ domain: false, saltRing: false }, rules) }); const q = A.addMage(W, { C, book: [] }, 0, 100, 75), f = A.addMage(W, { book: ['머스킷', '번개 지뢰'], allowBanned: true }, 1, 110, 75); return [W, q, f]; };
+  const up = (W, q, n = 60) => { for (let i = 0; i < n; i++) { q.flyWant = true; q.fz = 6; q.fv = 0; q.mv.x = q.mv.y = 0; q.thinkT = 9; A.stepWorld(W); } };
+  const [W, q, f] = mk({}); f.thinkT = 1e9; up(W, q); assert.ok(q.fly === 1 && q.z > 5 && q.z <= 6.5, '떴다 ' + q.z); assert.ok(W._fly && A.snapshot(W).m[0].length === 12, '녹화에 높이·속도');
+  // 안 보이는 지연 폭발·함정은 닿지 않는다
+  const h0 = q.hp; W.areas.push({ x: q.x, y: q.y, r: 2, t: 0, s: { n: '시험', dmg: 50, kind: 'blunt', stun: 1 }, src: f, pow: 1, vis: false, g: 1 }); W.traps.push({ x: q.x, y: q.y, r: 1, s: W.spells['번개 지뢰'], src: f, pow: 1, seen: new Set(), t: 30 }); up(W, q, 3);
+  assert.ok(q.hp === h0 && q.fly === 1, '발밑 공격에 닿았다 ' + (h0 - q.hp));
+  // 총은 그대로 맞는다 (높이로 겨냥한다)
+  const hits = []; for (let s = 1; s <= 12 && !hits.length; s++) { const [W2, q2, f2] = mk({}); f2.thinkT = 1e9; up(W2, q2); f2.noise = 0; const g0 = q2.hp; A.release(W2, f2, { s: W2.spells['머스킷'], tx: q2.x, ty: q2.y, tgt: q2 }); up(W2, q2, 20); if (q2.hp < g0) hits.push(g0 - q2.hp); }
+  assert.ok(hits.length && hits[0] > 20, '총이 안 맞았다');
+  // 굳으면 떨어진다: 피해 = 떨어지기 시작한 높이 × 4, 땅에서 1 s 굳음. 몸 받침은 받치지 않는다
+  const [W3, q3, f3] = mk({}); f3.thinkT = 1e9; up(W3, q3); const z0 = q3.z, h3 = q3.hp; q3.st.stun = 0.5; let n = 0; while (q3.z > 0 && n++ < 90) A.stepWorld(W3);
+  assert.ok(q3.fly === 0 && q3.flog.falls === 1 && Math.abs(h3 - q3.hp - z0 * 4) < 1e-6 && q3.st.stun > 0.9, '추락 ' + (h3 - q3.hp) + ' / ' + z0);
+  // 중간은 못 난다, 비행을 끄면 늘 땅
+  const [W4, q4] = mk({}, 2.5); up(W4, q4, 10); assert.ok(q4.z === 0 && q4.fly === 0);
+  const [W5, q5] = mk({ flight: false }); up(W5, q5, 10); assert.ok(q5.z === 0 && q5.fly === 0 && !W5._fly);
+  // 결투장: 대마법사가 끼면 200 × 150 (넓이를 주면 그대로, 비행을 끄면 40 × 30)
+  const ar = o => { const W = A.sceneWorld(Object.assign({ seed: 1, sides: [{ mages: [{ tier: '대마법사' }] }, { mages: [{ tier: '평범' }] }] }, o)); return W.width + 'x' + W.height; };
+  assert.strictEqual(ar({}), '200x150'); assert.strictEqual(ar({ width: 40, height: 30 }), '40x30'); assert.strictEqual(ar({ rules: { flight: false } }), '40x30');
+  // 대마법사끼리: 날고, 같은 씨앗이면 같다
+  const d = () => A.duel(A.mage({ tier: '대마법사', skill: '상급' }), A.mage({ tier: '대마법사', skill: '상급' }), { seed: 4 });
+  const r1 = d(), r2 = d(); assert.ok(r1.ms[0].flog.t > 1 && r1.t === r2.t && r1.ms[0].hp === r2.ms[0].hp && r1.ms[1].flog.v === r2.ms[1].flog.v);
 });
 ok('v2.0 판단: 떨어지는 돌을 읽고, 소금 선 가까이선 피하기보다 가운데로, 선 밖에 떨어질 이동은 안 한다, 단계 데이터', () => {
   const mk = (tac, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, A.mage({ tier: '평범', skill: '상급', tac }), 0, 15, 15), e = A.addMage(W, A.mage({ tier: '평범', deck: '흙' }), 1, 25, 15); A.stepWorld(W); return [W, m, e]; };

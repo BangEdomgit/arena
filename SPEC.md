@@ -652,30 +652,31 @@ module.exports = {
 | 훅 | 부르는 자리 | 인자 → 돌려줌 | 쓰는 규칙 |
 |---|---|---|---|
 | `place` | 세계를 만들 때, 바위를 놓은 뒤·벽 앞 | `(W, opt)` | barrels |
-| `init` | 세계를 만든 끝 | `(W)` | (등록한 규칙) |
+| `init` | 세계를 만든 끝 | `(W)` | flight (등록한 규칙) |
 | `world` | 걸음마다, 편을 고친 직후·사람 앞 | `(W)` | (등록한 규칙) |
 | `ceff` | 선명도 | `(W, m, x) → x` | wave |
-| `power` | 위력의 끝 | `(W, m, s, x) → x` | wave |
+| `power` | 위력의 끝 | `(W, m, s, x) → x` | wave, flight |
 | `gate` | 이 자리에 마법이 서는가(`gAt`) 첫머리 | `(W, m, s, tx, ty) → true면 g = 0` | saltRing |
 | `share` | 장악 몫 `f`의 끝 | `(W, m, x, y, f) → f` | gear(망토) |
-| `release` | 방출, 시전 기록 뒤·피로 앞 | `(W, m, c)` | risk |
+| `release` | 방출, 시전 기록 뒤·피로 앞 | `(W, m, c)` | risk, flight |
 | `overload` | 피로를 더한 뒤 | `(W, m) → true면 넘침을 맡는다`(기본 폭주를 건너뜀) | wave |
-| `roll` | 구르기(`core.roll`, 두뇌·대응) (v2.0) | `(W, m, o)`: `o.v` 속도·`o.cd` 간격을 고친다 | evade |
-| `hurtMod` | 피해, 몸 효과 저항 뒤·젖음 앞 | `(W, m, v, kind, name) → v` | terrain, response, silver, body |
-| `hurt` | 피해, 체력을 깎은 뒤 | `(W, m, v, src, name, kind)` | control, risk |
+| `roll` | 구르기(`core.roll`, 두뇌·대응) (v2.0) | `(W, m, o)`: `o.v` 속도·`o.cd` 간격을 고친다, `o.skip`이면 구르지 않는다 | evade, flight |
+| `hurtMod` | 피해, 몸 효과 저항 뒤·젖음 앞 | `(W, m, v, kind, name) → v` | terrain, response, silver, body, flight |
+| `hurt` | 피해, 체력을 깎은 뒤 | `(W, m, v, src, name, kind)` | control, risk, flight |
 | `effHold` | 상태 걸기 첫머리: 붙잡는 효과(굳음·묶임, 그리고 `eff` 훅에 넘기는 몫)의 몫 (1.13.0) | `(W, m, o, g) → g` | silver |
 | `eff` | 상태 걸기, 굳음이 시전을 끊기 앞 | `(W, m, o, g)` | control |
 | `rain`, `smother`, `ring` | 비가 적실 때, 흙 이불, 불고리 | `(W, m)` | control |
 | `fatRecover` | 머리 회복(기본 초당 4) | `(W, m, k) → k` | wave |
-| `mageStep` | 사람의 걸음, 회복 뒤·옷의 불 앞 | `(W, m)` | saltRing, wave, response |
-| `mageZones` | 옷의 불 뒤·판단 앞 | `(W, m)` | terrain |
+| `mageStep` | 사람의 걸음, 회복 뒤·옷의 불 앞 | `(W, m)` | saltRing, wave, response, flight |
+| `mageZones` | 옷의 불 뒤·판단 앞 (1 m 넘게 뜬 사람은 지대가 건너뛴다) | `(W, m)` | terrain |
+| `move` | 움직임 첫머리 (v2.0) | `(W, m) → true면 규칙이 속도(와 높이)를 맡아 땅의 걸음을 건너뛴다` | flight |
 | `speed` | 걸음 속도의 첫머리(기본 5 m/s) | `(W, m, sp) → sp` | wave, risk, silver, evade |
 | `speedLate` | 몸 효과·냉기 뒤, 시전 중 걷기 앞 | `(W, m, sp) → sp` | control, response |
 | `accel` | 걸음 가속(기본 9) | `(W, m, acc) → acc` | terrain |
 | `chan` | 원뿔을 뿜는 걸음, 사람을 친 뒤 | `(W, m, ch)` | barrels |
 | `projSub` | 투사체의 잘게 나눈 걸음, 벽 뒤·사람 앞 | `(W, p)` | barrels |
 | `ignite` | 불·전기가 닿았다(불 지대, 실의 끝, 불 터짐, 지연 폭발) | `(W, x, y, r, src)` | barrels |
-| `areaHit` | 지연 폭발이 사람에게 닿는 몫(기본 1) | `(W, q, a, k) → k` | gear(밑창) |
+| `areaHit` | 지연 폭발이 사람에게 닿는 몫(기본 1, 0이면 닿지 않음) | `(W, q, a, k) → k` | gear(밑창), flight |
 | `zoneTick` | 지대의 시간 | `(W)` | terrain |
 | `notice` | 안 보이는 함정을 알아챌 걸음당 확률(기본 DT × 0.25) | `(W, t, k) → k` | wave |
 
@@ -686,15 +687,15 @@ module.exports = {
 | `aim` | 과녁을 고른 뒤. 성향 `K.prefR`·`aggr`·`dodgeK`·`rest` | `(W, m, K)` | wave, risk |
 | `read` | 위협 읽기 첫머리. `K.blindR` | `(W, m, K)` | control |
 | `hideCast` | 예비동작 하나를 읽을 때 | `(W, q, c) → true면 못 읽음` | wave |
-| `steer` | 움직임, 유도 뒤·피하기 앞. `K.vx`·`K.vy` | `(W, m, K)` | saltRing |
+| `steer` | 움직임, 피하기 뒤. `K.vx`·`K.vy` (비행은 `m.flyWant`·`fv`·`fz`) | `(W, m, K)` | saltRing, flight |
 | `avoid` | 알아챈 함정 비키기 뒤 | `(W, m, K)` | barrels |
 | `empty` | 고르기 첫머리 | `(W, m, K) → true면 빈손` | risk |
-| `circles` | 쓰는 서클 수(기본 1) | `(W, q, c) → c` | multiSlot |
+| `circles` | 쓰는 서클 수(기본 1) | `(W, q, c) → c` | multiSlot, flight |
 | `react` | 자동 진, 대비·풀기 청하기 | `(W, m, K)` | multiSlot, response |
 | `cancel` | 캔슬 첫머리 | `(W, m, K)` | risk |
 | `rest` | 휴식 | `(W, m, K, restNow) → restNow` | wave |
 | `prep` | 마법 고르기 앞. `K.bigs`·`holds`·`pinBy`… | `(W, m, K)` | control |
-| `value` | 틀의 값 바로 뒤 | `(W, m, K, o)` | control |
+| `value` | 틀의 값 바로 뒤 | `(W, m, K, o)` | control, saltRing, flight |
 | `valueRisk` | 콤보 계획 뒤 | `(W, m, K, o)` | risk |
 | `valueMid` | 돌파 뒤·뭉친 곳 앞 | `(W, m, K, o)` | barrels |
 | `valueLate` | 피로 뒤·두 번째 칸 앞 | `(W, m, K, o)` | wave |
@@ -709,7 +710,7 @@ module.exports = {
 |---|---|---|---|---|
 | `gear` 장비 (10장) | 늘 | share, areaHit | | |
 | `terrain` 지대 (8장 zone) | 늘 | hurtMod, mageZones, accel, zoneTick | | |
-| `saltRing` 소금 원 (2장) | `saltRing` | gate, mageStep | steer | |
+| `saltRing` 소금 원 (2장) | `saltRing` | gate, mageStep | steer, value | |
 | `wave` 파도 (7장) | `wave` | ceff, power, overload, fatRecover, mageStep, speed, notice | aim, hideCast, rest, castTime, valueLate | |
 | `control` 몸 묶기 (7·9장) | `bodyBind` | hurt, eff, rain, smother, ring, speedLate | read, prep, value, commit | `cage` |
 | `risk` 하이 리스크 (7장) | `risk` | release, hurt, speed | aim, empty, cancel, valueRisk, commit | |
@@ -720,6 +721,7 @@ module.exports = {
 | `silver` 은실 옷 (10장, 1.13.0) | `silver` | effHold, hurtMod, speed | | |
 | `body` 몸 받침 (24장, v2.0) | `bodyK` > 0 | hurtMod | | |
 | `evade` 회피 (24장, v2.0) | `evade` | speed, roll | | |
+| `flight` 비행 (24장, v2.0) | `flight` | init, mageStep, move, power, hurtMod, areaHit, roll, release, hurt | circles, steer, value | |
 
 `response`와 `silver`는 이 틀로 처음 넣은 규칙이다(1.13.0). 핵심에 더한 것은 훅 자리 하나(`effHold`)와 사람의 칸 다섯(`reflexT`·`braceT`·`unbindCd`·`unbindReq`·`braceReq`)뿐이고, 둘 다 끄면 지문 넷이 1.12.0과 같다.
 
@@ -817,7 +819,7 @@ module.exports = {
 | 대가 | + 속도와 높이 맞바꾸기(상대가 큰 수를 모으면 솟구쳤다 내리꽂기), 스쳐 치기의 때(시전이 끝날 때 과녁과의 거리가 가장 가깝게) |
 | 전설 | + 속도 속임: 일정 속도로 앞길을 읽게 한 뒤 상대가 모으는 수가 곧 떨어질 때 급감속·급상승, 상대가 꺾지 못하는 순간(상대 속도 > 코너 속도 × 1.5)을 친다 |
 
-행동 지표(13장)에 더한다: 속도 흔들림(날 때 속도의 표준편차 / 평균), 코너 속도 근처 비율(날 때 |v − 코너| < 5), 분당 속도 속임, 분당 높이 변화(m), 추락 수.
+행동 지표(13장)에 더한다: 속도 흔들림(날 때 속도의 표준편차 / 평균), 코너 속도 근처 비율(날 때 |v − 코너| < 5), 분당 속도 속임, 분당 높이 변화(m), 추락 수. 엔진은 사람의 `flog`(`t`·`v`·`v2`·`corner`·`feint`·`dz`·`falls`·`grazeTry`·`grazeHit`)에 적고(`log`와 따로 두어 비행을 끄면 결과 지문이 그대로), `A.look`은 날았거나 떨어진 사람에게만 이 지표를 더한다. 스쳐 치기 명중률 = 15 m/s 넘게 날며 쏜 공격이 2 s 안에 맞은 몫.
 
 ### 두뇌의 새 기준 (v2.0, 판단 수준 `data/skills.json`과 `tac`)
 

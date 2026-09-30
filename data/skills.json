@@ -3,14 +3,14 @@
  "basic": { "readCast": true, "lead": 1, "combo": true, "crowd": true, "stance": false, "lever": false, "pathTrap": false, "slotB": false, "terrain": false, "readWave": false, "cdRead": false, "outrange": false, "focusLow": false },
  "levels": {
   "초보": { "dec": 0.3, "noise": 0.14, "autoDodge": false, "circles": "half", "from": "basic",
-   "tac": { "dodge": 0.15, "rest": 60, "readCast": false, "lead": 0.2, "combo": false, "crowd": false, "castMove": 0, "pause": [0.3, 0.6], "shieldAny": true } },
+   "tac": { "flySkill": 1, "dodge": 0.15, "rest": 60, "readCast": false, "lead": 0.2, "combo": false, "crowd": false, "castMove": 0, "pause": [0.3, 0.6], "shieldAny": true } },
   "중급": { "dec": 0.2, "noise": 0.08, "autoDodge": false, "circles": "minus1", "from": "basic",
-   "tac": { "dodge": 0.45, "rest": 75 } },
+   "tac": { "flySkill": 2, "dodge": 0.45, "rest": 75 } },
   "상급": { "dec": 0.13, "noise": 0.04, "autoDodge": true, "circles": "same", "from": "basic",
-   "tac": { "dodge": 0.75, "rest": 80, "stance": true, "lever": true, "pathTrap": true, "plan": true, "combo2": true, "shieldSave": true, "cancel": true, "cover": true, "tempo": true, "dodgeAim": true } },
+   "tac": { "flySkill": 3, "dodge": 0.75, "rest": 80, "stance": true, "lever": true, "pathTrap": true, "plan": true, "combo2": true, "shieldSave": true, "cancel": true, "cover": true, "tempo": true, "dodgeAim": true } },
   "대가": { "dec": 0.08, "noise": 0.02, "autoDodge": true, "circles": "same", "from": "basic",
-   "tac": { "dodge": 1, "rest": 80, "stance": true, "lever": true, "pathTrap": true, "plan": true, "combo2": true, "shieldSave": true, "cancel": true, "cover": true, "tempo": true, "coverW": 2, "herd": true, "strip": true, "lure": true, "simul": false, "cancel2": true, "bigPlan": true, "dodgeAim": true, "grab": true, "feint": false, "focusLow": true, "terrain": true, "slotB": true, "slotBOff": false, "readWave": true, "cdRead": true, "outrange": true } },
+   "tac": { "flySkill": 4, "dodge": 1, "rest": 80, "stance": true, "lever": true, "pathTrap": true, "plan": true, "combo2": true, "shieldSave": true, "cancel": true, "cover": true, "tempo": true, "coverW": 2, "herd": true, "strip": true, "lure": true, "simul": false, "cancel2": true, "bigPlan": true, "dodgeAim": true, "grab": true, "feint": false, "focusLow": true, "terrain": true, "slotB": true, "slotBOff": false, "readWave": true, "cdRead": true, "outrange": true } },
   "전설": { "dec": 0.05, "noise": 0.01, "autoDodge": true, "circles": "plus1", "from": "대가",
-   "tac": { "feint": 0.12, "simul": true, "shieldSave": false, "learn": true, "learnAim": "wide", "waveChoose": true, "counter": true, "coverW": 2.5, "bait": true, "fakeRetreat": true, "triple": true } }
+   "tac": { "flySkill": 5, "feint": 0.12, "simul": true, "shieldSave": false, "learn": true, "learnAim": "wide", "waveChoose": true, "counter": true, "coverW": 2.5, "bait": true, "fakeRetreat": true, "triple": true } }
  }
 }
