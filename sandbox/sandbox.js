@@ -7,13 +7,18 @@
 'use strict';
 const A = window.Arena, D = window.ArenaData;
 const COL = ['#6fb7ff', '#ff7a6b', '#9ad07a', '#f0c35a', '#c79bf2', '#6fd6c9', '#f29bd0', '#b8b0a2'];
-const ZC = { fire: 'rgba(255,120,50,.35)', h2s: 'rgba(200,190,80,.3)', nh3: 'rgba(200,170,230,.3)', acid: 'rgba(190,220,80,.3)', spore: 'rgba(150,200,100,.3)', ice: 'rgba(215,235,255,.4)', chill: 'rgba(215,235,255,.2)', smoke: 'rgba(200,200,200,.45)', mist: 'rgba(170,210,240,.25)', absorb: 'rgba(120,180,230,.2)' };
+const ZC = { fire: 'rgba(255,120,50,.35)', h2s: 'rgba(200,190,80,.3)', nh3: 'rgba(200,170,230,.3)', acid: 'rgba(190,220,80,.3)', spore: 'rgba(150,200,100,.3)', ice: 'rgba(215,235,255,.4)', chill: 'rgba(215,235,255,.2)', smoke: 'rgba(200,200,200,.45)', mist: 'rgba(170,210,240,.25)', absorb: 'rgba(120,180,230,.2)', pit: 'rgba(15,12,8,.55)' };
+// 벽의 재료 (v2.0 둘째, rules/bulwark): 흙·석회·얼음
+const WC = { earth: '#8a6a45', lime: '#c9c2b0', ice: '#a8d8ef' };
 const RULE_TXT = {
   domain: ['장악권', '같은 공기는 가장 선명한 신호를 따른다'], circles: ['서클', '두 번째 칸, 3서클부터 자동 진'], fatigue: ['머리 피로', '피로와 폭주'],
   barrels: ['화약통', '씨앗 따라 5개 놓기 (장면에 화약통 목록이 있으면 그것)'], friendlyFire: ['아군 피해', '투사체와 폭발이 아군도 맞힌다'],
   powerK: ['위력 지수', '위력 = 선명도^K', 1, 4, 0.1], domainL: ['장악 거리', '신호가 반으로 흐려지는 거리 (m)', 1, 20, 0.5], passive: ['쉬는 신호', '시전 중이 아닐 때 장악권의 세기', 0, 1, 0.05],
   fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], risk: ['하이 리스크', '큰 마법(대낙뢰·화산 기둥·번개 창), 모으다 맞으면 역류, 쏜 뒤 빈손'], saltRing: ['소금 원', '15 s부터 줄어드는 소금 선. 밖에선 마법이 흩어지고 몸이 마른다'], bodyBind: ['몸 묶기', '균사 그물·얼음 족쇄·근육 경직·석회 굳히기·가두는 기둥. 눈멀면 예비동작을 못 읽는다'], taunt: ['도발', "'도발' 마법으로 상대의 부름을 끊는다. 이단은 걸리지 않는다. 끄면 책에서 빠진다"], hpScale: ['체력 비례', '켜면 체력 = 150 × max(C, 바닥)^지수 (v2.0 기본 끔)'], hpK: ['체력 지수', '체력 비례의 선명도 지수', 0, 3, 0.1], hpFloor: ['체력 바닥', '체력 비례에서 이보다 작은 선명도는 이것으로', 0, 2, 0.1],
-  bodyK: ['몸 받침', '받는 마법 피해 ÷ 선명도^K (총·소금·추락·파도는 그대로). 0이면 끔', 0, 4, 0.1], evade: ['회피', '걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)'], flight: ['비행', '출력 75 kW 이상(상위부터)이 뜬다. 대마법사는 계속 날고, 굳으면 떨어진다. 대마법사가 끼면 200 × 150 m'],
+  bodyK: ['몸 받침', '받는 에너지 피해(불·번개·독·열) ÷ 선명도^K. 0이면 끔', 0, 4, 0.1], callus: ['굳은 살', '부딪히는 피해(돌·얼음·총·벽 밀기)는 한 방마다 이것 × log₁₀ C만큼 뺀다. 0이면 부딪힘도 ÷ C^K', 0, 30, 1],
+  domainR: ['장악권 반경', '적의 신호는 제 자리에서 이것 × C m 안에서만 몫을 다툰다(대마법사 50 m). 0이면 끝없음', 0, 10, 0.5], domainPath: ['실은 길 전체', '실은 길의 네 점 가운데 가장 낮은 몫으로 선다'],
+  light: ['빛', '번쩍임(시야 안의 적 눈멂 1.5 s)·열선(거울이 있어야)'], bulwark: ['벽', '세울 때만 힘이 든다. 흙·석회는 무너질 때까지, 0.5 m 흙벽은 총알을 막는다, 벽 밀기, 벽 뒤는 안 보인다'],
+  army: ['군대', '머스킷 장전 15~20 s·화승·사거리 100 m, 박격포, 돌아가며 쏘기'], morale: ['사기', '셋 넘는 편은 사상자·큰 수의 충격에 도망친다'], evade: ['회피', '걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)'], flight: ['비행', '출력 75 kW 이상(상위부터)이 뜬다. 대마법사는 계속 날고, 굳으면 떨어진다. 대마법사가 끼면 200 × 150 m'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
@@ -77,13 +82,14 @@ function draw() {
   const W = world(); S.sc = Math.min(800 / W.width, 600 / W.height); const sc = S.sc, X = v => v * sc;
   ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
   ctx.fillStyle = '#34322d'; ctx.fillRect(0, 0, X(W.width), X(W.height));
+  ctx.fillStyle = 'rgba(235,232,220,.13)'; for (const r of W.salt || []) ctx.fillRect(X(r.x), X(r.y), X(r.w), X(r.h));   // 소금 땅 (rules/saltLand)
   ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 1; ctx.beginPath();
   for (let x = 5; x < W.width; x += 5) { ctx.moveTo(X(x), 0); ctx.lineTo(X(x), X(W.height)); } for (let y = 5; y < W.height; y += 5) { ctx.moveTo(0, X(y)); ctx.lineTo(X(W.width), X(y)); } ctx.stroke();
   for (const z of W.zones) { ctx.fillStyle = ZC[z.k] || 'rgba(255,255,255,.1)'; if (z.shape !== 'circle' && z.len) { ctx.save(); ctx.translate(X(z.x), X(z.y)); ctx.rotate(z.a || 0); ctx.fillRect(-X(z.len) / 2, -X(0.6), X(z.len), X(1.2)); ctx.restore(); } else { ctx.beginPath(); ctx.arc(X(z.x), X(z.y), X(z.r || 1), 0, 7); ctx.fill(); } }
   if (W.rules.saltRing) { ctx.strokeStyle = 'rgba(245,245,235,.75)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.arc(X(W.width / 2), X(W.height / 2), X(A.saltR(W)), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const o of W.obs) { ctx.fillStyle = '#6e685f'; ctx.beginPath(); ctx.arc(X(o.x), X(o.y), X(o.r), 0, 7); ctx.fill(); }
   for (const b of W.barrels) { ctx.fillStyle = b.ex ? '#3a2a20' : '#a8744a'; ctx.beginPath(); ctx.arc(X(b.x), X(b.y), Math.max(5, X(0.35)), 0, 7); ctx.fill(); }
-  for (const w of W.walls) { ctx.fillStyle = '#9a938a'; ctx.beginPath(); ctx.arc(X(w.x), X(w.y), X(w.r), 0, 7); ctx.fill(); }
+  for (const w of W.walls) { ctx.fillStyle = WC[w.mat] || '#9a938a'; ctx.globalAlpha = w.hp0 ? Math.max(0.35, Math.min(1, w.hp / w.hp0)) : 1; ctx.beginPath(); ctx.arc(X(w.x), X(w.y), Math.max(2, X(w.r)), 0, 7); ctx.fill(); } ctx.globalAlpha = 1;   // 흐려질수록 깎였다
   for (const a of W.areas) { ctx.strokeStyle = 'rgba(230,240,255,.7)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(X(a.x), X(a.y), X(a.r), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const l of W.lobs) { ctx.strokeStyle = 'rgba(255,220,160,.6)'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(X(l.x), X(l.y), X(l.r), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const t of W.traps) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.moveTo(X(t.x), X(t.y) - 6); ctx.lineTo(X(t.x) + 5, X(t.y) + 4); ctx.lineTo(X(t.x) - 5, X(t.y) + 4); ctx.fill(); }
@@ -100,11 +106,12 @@ function draw() {
   }
   for (const m of W.ms) {
     const zy = m.hp > 0 && m.z > 0.05 ? Math.min(40, m.z * 3) : 0, x = X(m.x), y = X(m.y) - zy, c = COL[m.side % COL.length], dead = m.hp <= 0;
-    ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 ? 0.55 : 1);
+    ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 || m.flee ? 0.55 : 1);
     if (selM && m._ref && m._ref[0] === selM.s && m._ref[1] === selM.i) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, 17, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     ctx.fillStyle = '#1b1c20'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(m.aim) * 13, y + Math.sin(m.aim) * 13); ctx.stroke();
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
+    if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]); if (W.ms.length <= 60) { ctx.font = '9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
     if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     const cs = m.cast || m.chan;

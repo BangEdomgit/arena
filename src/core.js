@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.0.0
+ * 숨 결투장 — 엔진 핵심 v2.1.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -98,7 +98,8 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
-    H: null, mods: null, _bh: null, _fly: false, _grp: 0, _sideN: null, salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
+    H: null, mods: null, _bh: null, _fly: false, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [],   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
+    salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
       // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
   };
   hooksFor(W, opt);
@@ -218,7 +219,9 @@ function segBox(x1, y1, x2, y2, cx, cy, r) { const e = r + 1e-9; return cx < (x1
 function blocked(W, x1, y1, x2, y2, z) {
   if (!(z > 2)) {   // 시선 끝 하나라도 2 m 넘게 떠 있으면 바위·벽이 가리지 않는다 (v2.0)
   for (const o of W.obs) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true;
-  for (const o of W.walls) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true;
+  const ws = W.walls;
+  if (ws.length <= WMIN) { for (const o of ws) if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true; }
+  else { const q = wallsIn(W, (x1 < x2 ? x1 : x2) - WRMAX, (y1 < y2 ? y1 : y2) - WRMAX, (x1 > x2 ? x1 : x2) + WRMAX, (y1 > y2 ? y1 : y2) + WRMAX); for (let i = 0; i < q.length; i++) { const o = ws[q[i]]; if (!segBox(x1, y1, x2, y2, o.x, o.y, o.r) && segCircle(x1, y1, x2, y2, o.x, o.y, o.r)) return true; } }
   }
   for (const z of W.zones) if (z.k === 'smoke' && z.shape === 'circle' && segCircle(x1, y1, x2, y2, z.x, z.y, z.r)) return true;
   return false;
@@ -227,8 +230,26 @@ function inZone(z, x, y) { if (z.shape === 'circle') return hyp(x - z.x, y - z.y
 // 벽 세우기: 모든 벽이 이것으로 선다. 모양이 늘 같은 리터럴로 옮기고(속도) 규칙이 고친다(재료의 수명, rules/bulwark)
 function addWall(W, w) {
   const o = { x: w.x, y: w.y, r: w.r, hp: w.hp, hp0: w.hp, t: w.t, own: w.own, by: w.by || null, used: 0, cage: w.cage || 0, mat: w.mat || 'lime', thick: w.thick || w.r * 2, grp: w.grp ?? -1 };
-  const h = W.H.wall; for (let i = 0; i < h.length; i++) h[i](W, o); W.walls.push(o); return o;
+  const h = W.H.wall; for (let i = 0; i < h.length; i++) h[i](W, o); W.walls.push(o); W._wv++; return o;
 }
+// 벽 격자 (속도, v2.0 둘째): 벽이 WMIN개 넘게 서면 8 m 칸마다 벽의 번호를 적어 두고, 가까운 칸의 벽만 원래 차례(번호 순)로 본다.
+// 벽이 적으면 예전처럼 모두 훑는다(결과가 비트까지 같다). 많아도 같은 벽을 같은 차례로 보니 결과는 모두 훑은 것과 같다
+const WG = 8, WMIN = 16, WRMAX = 1.5;
+function wallGrid(W) {
+  if (W._wgN === W._wv) return W._wg;
+  const g = new Map(), ws = W.walls;
+  for (let i = 0; i < ws.length; i++) { const w = ws[i], x0 = Math.floor((w.x - w.r) / WG), x1 = Math.floor((w.x + w.r) / WG), y0 = Math.floor((w.y - w.r) / WG), y1 = Math.floor((w.y + w.r) / WG); for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) { const k = cx * 65536 + cy; let a = g.get(k); if (!a) g.set(k, a = []); a.push(i); } }
+  W._wg = g; W._wgN = W._wv; return g;
+}
+// 사각형 [x0, x1] × [y0, y1] 에 닿을 수 있는 벽의 번호 (차례대로, 겹침 없이). W._wq를 다시 쓴다
+function wallsIn(W, x0, y0, x1, y1) {
+  const g = wallGrid(W), q = W._wq; q.length = 0;
+  const a0 = Math.floor(x0 / WG), a1 = Math.floor(x1 / WG), b0 = Math.floor(y0 / WG), b1 = Math.floor(y1 / WG);
+  for (let cx = a0; cx <= a1; cx++) for (let cy = b0; cy <= b1; cy++) { const a = g.get(cx * 65536 + cy); if (a) for (let i = 0; i < a.length; i++) q.push(a[i]); }
+  if (q.length > 1) { q.sort(numUp); let j = 1; for (let i = 1; i < q.length; i++) if (q[i] !== q[j - 1]) q[j++] = q[i]; q.length = j; }
+  return q;
+}
+const numUp = (a, b) => a - b;
 // 소금 땅 위인가 (장면의 사각형, rules/saltLand)
 function onSalt(W, x, y) { const a = W.salt; for (let i = 0; i < a.length; i++) { const r = a[i]; if (x >= r.x && y >= r.y && x <= r.x + r.w && y <= r.y + r.h) return true; } return false; }
 function frontBlock(e, sx, sy) { if (!e.buf.front) return false; const a = atan2(sy - e.y, sx - e.x), b = Math.abs(((a - e.aim + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 1.1; if (b && !e.buf.front.used) { e.buf.front.used = 1; e.log.defHit++; } return b; }   // 막은 방패는 방어 적중으로 한 번 센다
@@ -468,7 +489,8 @@ function stepMage(W, m) {
   m.x = clamp(m.x + m.vx * DT, 0.4, W.width - 0.4); m.y = clamp(m.y + m.vy * DT, 0.4, W.height - 0.4);
   if (!(m.vault > 0) && !(m.z > 2)) {   // 2 m 넘게 뜨면 바위·벽을 넘는다 (v2.0)
     for (const o of W.obs) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
-    for (const o of W.walls) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
+    const ws = W.walls, few = ws.length <= WMIN, q = few ? null : wallsIn(W, m.x - WRMAX - m.r, m.y - WRMAX - m.r, m.x + WRMAX + m.r, m.y + WRMAX + m.r), nq = few ? ws.length : q.length;
+    for (let i = 0; i < nq; i++) { const o = few ? ws[i] : ws[q[i]]; const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
   }
 }
 // 구르기 (SPEC 3장): 두뇌·대응이 모두 이것으로 구른다. 속도 v와 간격 cd는 규칙이 고친다(회피, rules/evade)
@@ -499,7 +521,8 @@ function stepWorld(W) {
       const low = !(p.z >= 2);   // 2 m 넘게 뜬 투사체는 바위·벽을 넘는다 (v2.0)
       if (low) for (const o of W.obs) if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; burst(W, p); break; }
       if (p.dead) break;
-      if (low) for (const o of W.walls) if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; if (o.by && !o.used && o.by !== p.src) { o.used = 1; o.by.log.defHit++; } let wd = (p.s.hit && p.s.hit.flat > 50) ? 80 : 5 * Math.min(p.pow, 20); const hw = H.wallHit; for (let i = 0; i < hw.length; i++) wd = hw[i](W, p, o, wd); o.hp -= wd; burst(W, p); break; }   // 벽이 받는 것: 재료·두께 (rules/bulwark)
+      if (low) { const ws = W.walls, few = ws.length <= WMIN, q = few ? null : wallsIn(W, p.x - WRMAX - p.rad, p.y - WRMAX - p.rad, p.x + WRMAX + p.rad, p.y + WRMAX + p.rad), nq = few ? ws.length : q.length;
+      for (let i = 0; i < nq; i++) { const o = few ? ws[i] : ws[q[i]]; if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; if (o.by && !o.used && o.by !== p.src) { o.used = 1; o.by.log.defHit++; } let wd = (p.s.hit && p.s.hit.flat > 50) ? 80 : 5 * Math.min(p.pow, 20); const hw = H.wallHit; for (let i = 0; i < hw.length; i++) wd = hw[i](W, p, o, wd); o.hp -= wd; burst(W, p); break; } } }   // 벽이 받는 것: 재료·두께 (rules/bulwark)
       if (p.dead) break;
       const hp = H.projSub; for (let i = 0; i < hp.length && !p.dead; i++) hp[i](W, p);   // 화약통 (rules/barrels)
       if (p.dead) break;
@@ -536,7 +559,7 @@ function stepWorld(W) {
   keepIf(W.areas, timeLeft);
   const hz = H.zoneTick; for (let i = 0; i < hz.length; i++) hz[i](W);   // 지대의 시간, 산이 벽을 녹인다 (rules/terrain)
   keepIf(W.zones, timeLeft);
-  keepIf(W.walls, wallLive);
+  const nw = W.walls.length; keepIf(W.walls, wallLive); if (W.walls.length !== nw) W._wv++;
   for (const t of W.traps) {
     t.arm -= DT; if (t.arm > 0) continue;
     let e = null, bd = 1e9; for (const q of W.foes[t.src.side]) { const d = hyp(q.x - t.x, q.y - t.y); if (d < bd) { bd = d; e = q; } }
@@ -592,7 +615,7 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, hyp3, clamp, addWall, keepIf, onSalt, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
+X = { DT, hyp, hyp3, clamp, addWall, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
-module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, onSalt, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, onSalt, wallsIn, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };

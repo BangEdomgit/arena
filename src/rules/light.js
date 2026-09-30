@@ -60,7 +60,7 @@ module.exports = {
       if (!m.tac.readCast || K.blindR || m.z >= 2) return;
       let q = null; for (const f of K.foes) { const c = f.cast; if (c && (c.s.t === 'flash' || (c.s.t === 'beam' && c.tgt === m)) && !B.C.blocked(W, f.x, f.y, m.x, m.y, 0)) { q = f; break; } }
       if (!q) return;
-      let best = null, bd = 9; for (const o of W.obs) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } } for (const o of W.walls) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } }
+      let best = null, bd = 9; for (const o of W.obs) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } } const ws = W.walls, wa = ws.length ? B.C.wallsIn(W, m.x - 9, m.y - 9, m.x + 9, m.y + 9) : ws; for (let i = 0; i < wa.length; i++) { const o = ws[wa[i]]; const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } }
       if (best) { const dx = best.x - q.x, dy = best.y - q.y, l = hyp(dx, dy) || 1, tx = best.x + dx / l * (best.r + 0.6), ty = best.y + dy / l * (best.r + 0.6); K.vx = (tx - m.x) * 2; K.vy = (ty - m.y) * 2; }
       m._ltT = W.t;
     },

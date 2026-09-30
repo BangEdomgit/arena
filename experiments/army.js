@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.0.0 — 대마법사 대 무리 (v2.0 둘째 묶음, SPEC 25장 끝, reports/v2.0.1.md)
+/* 숨 결투장 v2.1.0 — 대마법사 대 무리 (v2.0 둘째 묶음, SPEC 25장 끝, reports/v2.1.0.md)
  *   node experiments/army.js [장면,…] [N]      장면마다 씨앗 1..N (병렬). 기본: 모든 장면, N = 20 → results/army.json
  *   node experiments/army.js scenes            대표 장면을 sandbox/scenes/v2-army-*.json으로 (그다음 node cli.js pack)
  * 장면 (모두 결정론, 대마법사 = 편 0의 첫 사람):

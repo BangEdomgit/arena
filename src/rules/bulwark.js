@@ -73,7 +73,7 @@ module.exports = {
           if (m.z >= 1) { m.cast = null; return; }   // 떠서는 흙을 못 끌어온다
           const t = c.t - c.s.cast; begin(W, m, c); if (t > 0) place(W, m, c, Math.floor(t * rateOf(m) / volOf(c.s) + 1e-9), addWall);
         }
-        if ((W.step + m.id) % 6 === 0) { for (const w of W.walls) if (w.grp >= 0 && !w.cage && hyp(w.x - m.x, w.y - m.y) < w.r + 1.2) { m.alog.wallT += 6 * DT; break; } }   // 벽 곁에 있던 시간 (지표)
+        if ((W.step + m.id) % 6 === 0 && W.walls.length) { const ws = W.walls, q = X.wallsIn(W, m.x - 3, m.y - 3, m.x + 3, m.y + 3); for (let i = 0; i < q.length; i++) { const w = ws[q[i]]; if (w.grp >= 0 && !w.cage && hyp(w.x - m.x, w.y - m.y) < w.r + 1.2) { m.alog.wallT += 6 * DT; break; } } }   // 벽 곁에 있던 시간 (지표, 벽 격자)
       },
       speedLate(W, m, sp) { if (m.z < 1) for (const z of W.zones) if (z.k === 'pit' && hyp(z.x - m.x, z.y - m.y) < z.r) return sp * P.pit.speed; return sp; },   // 구덩이
     };
@@ -100,7 +100,7 @@ module.exports = {
   }),
   brain: B => ({
     circles(W, q, c) { let n = 0; for (const z of W.zones) if (z.up && z.src === q) n++; return n ? Math.max(1, c - n) : c; },   // 버티는 벽은 서클 하나씩
-    hideCast(W, q, c, m) { if (!m || q.z > 2 || m.z > 2) return false; for (const w of W.walls) if (!w.cage && segHit(q.x, q.y, m.x, m.y, w)) return true; return false; },   // 벽 뒤의 예비동작은 안 보인다
+    hideCast(W, q, c, m) { if (!m || q.z > 2 || m.z > 2 || !W.walls.length) return false; const ws = W.walls, a = B.C.wallsIn(W, Math.min(q.x, m.x) - 1.5, Math.min(q.y, m.y) - 1.5, Math.max(q.x, m.x) + 1.5, Math.max(q.y, m.y) + 1.5); for (let i = 0; i < a.length; i++) { const w = ws[a[i]]; if (!w.cage && segHit(q.x, q.y, m.x, m.y, w)) return true; } return false; },   // 벽 뒤의 예비동작은 안 보인다
     // 세우기의 시간: 블록이 모두 찰 때까지
     commit(W, m, K, best, cast) { if (best.s.t === 'build') cast.T = buildT(m, best.s); },
   }),

@@ -12,7 +12,7 @@ const { C, hyp } = require('../util');
 function guns(W, m) { let n = 0; for (const q of W.foes[m.side]) if (!q.flee && q._gun && hyp(q.x - m.x, q.y - m.y) < 110) n++; return n; }
 function on(W, m, K) { if (!(m.tac.siege && m.C >= 5 && W.rules.army)) return 0; for (const q of K.foes) if (q._gun === undefined) q._gun = q.book.some(n => { const s = K.S[n]; return s && s.mundane && s.t === 'proj'; }); const g = guns(W, m); return g >= 2 || K.foes.length > 5 ? 1 + g : 0; }
 // 나와 총들 사이에 벽이 있는가 (내 곁 2 m 안의 벽)
-function covered(W, m, gx, gy) { for (const w of W.walls) { if (w.cage || hyp(w.x - m.x, w.y - m.y) > 2) continue; const dx = gx - m.x, dy = gy - m.y, l = hyp(dx, dy) || 1; if (((w.x - m.x) * dx + (w.y - m.y) * dy) / l > 0) return true; } return false; }
+function covered(W, m, gx, gy) { const ws = W.walls, a = ws.length ? C.wallsIn(W, m.x - 2, m.y - 2, m.x + 2, m.y + 2) : ws; for (let i = 0; i < a.length; i++) { const w = ws[a[i]]; if (w.cage || hyp(w.x - m.x, w.y - m.y) > 2) continue; const dx = gx - m.x, dy = gy - m.y, l = hyp(dx, dy) || 1; if (((w.x - m.x) * dx + (w.y - m.y) * dy) / l > 0) return true; } return false; }
 function centroid(W, m) { let x = 0, y = 0, n = 0; for (const q of W.foes[m.side]) if (q._gun && !q.flee && hyp(q.x - m.x, q.y - m.y) < 110) { x += q.x; y += q.y; n++; } return n ? [x / n, y / n] : null; }
 function steer(W, m, K) {
   const k = on(W, m, K); m.retreat = 0; if (!k) return;
@@ -45,9 +45,9 @@ function value(W, m, K, o) {
   }
   if (s.t === 'topple') {
     const B = W.mods.find(r => r.name === 'bulwark'); if (!B) return;
-    const R = C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {};
-    for (const w of W.walls) {
-      if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
+    const R = C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {}, near = W.walls.length ? C.wallsIn(W, m.x - R, m.y - R, m.x + R, m.y + R).slice() : [];
+    for (let i = 0; i < near.length; i++) {
+      const w = W.walls[near[i]]; if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
       const blocks = w.grp >= 0 ? W.walls.filter(x => x.grp === w.grp) : [w], dx = w.x - m.x, dy = w.y - m.y, l = hyp(dx, dy) || 1;
       let foes = 0, mine = 0; for (const q of B.api.crushed(W, blocks, dx / l, dy / l)) { if (q.side === m.side) mine++; else foes++; }
       if (mine) continue; const v = foes * 0.6 * (T.wallBreak ? 2 : 1); if (v > best) { best = v; bx = w.x; by = w.y; }

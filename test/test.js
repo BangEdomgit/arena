@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.0.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.1.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
