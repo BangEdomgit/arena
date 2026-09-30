@@ -10,6 +10,7 @@ const combo = require('./techniques/combo'), cancel = require('./techniques/canc
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
 const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
+const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -47,6 +48,7 @@ function decide(W, m, K) {
   K.lead = T.lead; K.cb = T.combo; K.down0 = K.cb && eDown;
   K.ek = T.counter ? De.kinds : NOKIND;
   learn.prep(W, m, K);
+  efficacy.prep(W, m, K);   // 마법마다의 효과 (대가부터, v2.2)
   K.bigs = NONE; K.ctOf = null; K.pinNow = false; K.holds = NONE; K.pinBy = 0;
   h = bh.prep; for (let i = 0; i < h.length; i++) h[i](W, m, K);   // 몸 묶기 계획 (rules/control)
   // 후보 객체는 사람마다 모아 두고 다시 쓴다(쓰레기 줄이기). 이번 판단 밖으로 나가지 않는다
@@ -125,13 +127,16 @@ function pipeOf(W, m) {
   if (T.crowd) P.push(crowd.value);       // 여럿이 뭉친 곳
   if (T.swarm) P.push(swarm.value);       // 무리: 눈먼 틈의 무거운 수, 벽 뒤엔 곡사 (v2.0 둘째)
   if (T.siege) P.push(siege.value);       // 성: 벽 세우기·벽 밀기·벽 없애기 (v2.0 둘째)
+  if (T.rhythm) P.push(rhythm.value);     // 리듬: 떠보기엔 가볍게, 빠지기엔 방어 (v2.2)
+  if (T.efficacy || T.buffNeed) P.push(efficacy.value);   // 효과 학습(대가), 강화의 때(상급) (v2.2)
+  if (T.shape || T.roles) P.push(shape.value);   // 지형 설계·칸의 역할 (대가, v2.2)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
 function valueSpell(W, m, K, bi) {
   const { T, e, Dm, d, slot } = K, bh = W._bh;   // 드물게 쓰는 값은 쓸 때 K에서 읽는다
   const n = Dm.nm[bi], s = Dm.sp[bi], mastN = Dm.mast[bi], isOff = Dm.off[bi];
-  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n) || (isOff && !T.slotBOff))) return;   // slotBOff가 꺼지면 두 번째 칸엔 공격을 겹치지 않는다(묶기·준비 수는 된다, v2.0)
+  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n) || (isOff && !T.slotBOff && !K.pressB))) return;   // slotBOff가 꺼지면 두 번째 칸엔 공격을 겹치지 않는다(묶기·준비 수는 된다, v2.0)
   if ((m.cd[n] || 0) > 0) return;
   const cost = s.cost * (1 - 0.25 * mastN) * (slot === 'B' ? 1.3 : 1); if (m.glu < cost) return;
   const Tw = s.cast * (1 - 0.35 * mastN);

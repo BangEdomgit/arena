@@ -21,6 +21,7 @@ const RULE_TXT = {
   army: ['군대', '머스킷 장전 15~20 s·화승·사거리 100 m, 박격포, 돌아가며 쏘기'], morale: ['사기', '셋 넘는 편은 사상자·큰 수의 충격에 도망친다'], evade: ['회피', '걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)'], flight: ['비행', '출력 75 kW 이상(상위부터)이 뜬다. 대마법사는 계속 날고, 굳으면 떨어진다. 대마법사가 끼면 200 × 150 m'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
+const PHASE = { probe: '떠보기', in: '들어가기', out: '빠지기' };
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
 const clone = o => JSON.parse(JSON.stringify(o)), r2 = v => Math.round(v * 100) / 100;
 
@@ -118,7 +119,7 @@ function draw() {
     if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
     ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 14, y - 16, 28, 3); ctx.fillStyle = c; ctx.fillRect(x - 14, y - 16, 28 * Math.max(0, m.hp) / m.hpMax, 3);
     ctx.fillStyle = '#ff8a7a'; ctx.fillRect(x - 14, y - 12, 28 * Math.min(1, m.fat / 100), 1.5);
-    if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0], x, y - 20); }
+    if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0] + (m.tac.rhythm && m.C >= 5 && !dead ? ' · ' + PHASE[m.phase] : ''), x, y - 20); }   // 리듬 단계 (v2.2)
     if (zy) { ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s', x + 12, y + 4); }
   }
   if (S.sel && S.sel.k !== 'mage') { const it = itemOf(S.sel); if (it) { ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(it.x), X(it.y), X(it.r || 0.4) + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); } }

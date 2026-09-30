@@ -48,11 +48,14 @@ module.exports = {
       // 흙·석회·얼음 벽은 시간으로 사라지지 않는다 (가두는 기둥은 그대로 짧다)
       wall(W, w) { if (!w.cage && (EARTH[w.mat] || w.mat === 'ice')) w.t = 1e9; },
       wallHit(W, p, o, wd) {
-        const s = p.s; if (!EARTH[o.mat]) return wd;
-        if ((s.m || 0) >= P.heavyM) return P.heavy;                            // 큰 바위는 부순다
-        if (s.mundane) return o.thick >= P.stopThick ? P.bullet : wd;          // 0.5 m 흙벽이면 총알이 멈춘다
-        if (s.el === '물') return wd * P.water;                                 // 물은 흙벽을 진흙으로
-        return wd;
+        const s = p.s; let r = wd;
+        if (EARTH[o.mat]) {
+          if ((s.m || 0) >= P.heavyM) r = P.heavy;                               // 큰 바위는 부순다
+          else if (s.mundane) r = o.thick >= P.stopThick ? P.bullet : wd;        // 0.5 m 흙벽이면 총알이 멈춘다
+          else if (s.el === '물') r = wd * P.water;                              // 물은 흙벽을 진흙으로
+        }
+        if (o.hp > 0 && o.hp <= r) p.src.mlog.razed++;   // 없앤 지형 (v2.2 지표)
+        return r;
       },
       lobLand(W, l) { const d = l.s.wallDmg; if (d) for (const w of W.walls) if (hyp(w.x - l.x, w.y - l.y) < l.r + w.r) w.hp -= d; },   // 박격포는 벽을 부순다
       world(W) {
@@ -88,7 +91,7 @@ module.exports = {
       const blocks = best.grp >= 0 ? W.walls.filter(w => w.grp === best.grp) : [best];
       const dx = c.tx - m.x, dy = c.ty - m.y, l = hyp(dx, dy) || 1, ux = dx / l, uy = dy / l;
       const hitQ = crushed(W, blocks, ux, uy);
-      for (const w of blocks) w.hp = 0;
+      for (const w of blocks) w.hp = 0; m.mlog.razed += blocks.length;
       for (const q of hitQ) { X.hurt(W, q, s.dmg * a.g, q === m ? null : m, s.n, 'blunt'); X.eff(W, q, { root: s.root }, a.g); }
       if (hitQ.some(q => q.side !== m.side)) X.hit(m, s);
       if (W.rec) for (const w of blocks) W.fx.push(['b', w.x + ux, w.y + uy, 1.5]);
@@ -100,6 +103,18 @@ module.exports = {
   }),
   brain: B => ({
     circles(W, q, c) { let n = 0; for (const z of W.zones) if (z.up && z.src === q) n++; return n ? Math.max(1, c - n) : c; },   // 버티는 벽은 서클 하나씩
+    // 벽 밀기의 값 (누구나): 벽 무리마다 넘어뜨리면 깔릴 적 × 0.6(내 편이 깔리면 안 민다), 벽 없애기(대가, tac.wallBreak)면 × 2. 가장 큰 곳
+    value(W, m, K, o) {
+      const s = o.s; if (s.t !== 'topple' || !W.walls.length) return;
+      const R = B.C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {}, near = B.C.wallsIn(W, m.x - R, m.y - R, m.x + R, m.y + R).slice();
+      for (let i = 0; i < near.length; i++) {
+        const w = W.walls[near[i]]; if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
+        const blocks = w.grp >= 0 ? W.walls.filter(x => x.grp === w.grp) : [w], dx = w.x - m.x, dy = w.y - m.y, l = hyp(dx, dy) || 1;
+        let foes = 0, mine = 0; for (const q of crushed(W, blocks, dx / l, dy / l)) { if (q.side === m.side) mine++; else foes++; }
+        if (mine) continue; const v = foes * 0.6 * (m.tac.wallBreak ? 2 : 1); if (v > best) { best = v; bx = w.x; by = w.y; }
+      }
+      if (best > 0) { o.v = best; o.tx = bx; o.ty = by; }
+    },
     hideCast(W, q, c, m) { if (!m || q.z > 2 || m.z > 2 || !W.walls.length) return false; const ws = W.walls, a = B.C.wallsIn(W, Math.min(q.x, m.x) - 1.5, Math.min(q.y, m.y) - 1.5, Math.max(q.x, m.x) + 1.5, Math.max(q.y, m.y) + 1.5); for (let i = 0; i < a.length; i++) { const w = ws[a[i]]; if (!w.cage && segHit(q.x, q.y, m.x, m.y, w)) return true; } return false; },   // 벽 뒤의 예비동작은 안 보인다
     // 세우기의 시간: 블록이 모두 찰 때까지
     commit(W, m, K, best, cast) { if (best.s.t === 'build') cast.T = buildT(m, best.s); },

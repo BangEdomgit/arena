@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.1.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.2.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -377,6 +377,28 @@ ok('v2.0 두뇌: 무리는 장악권 바로 밖에 흩어지고, 대마법사는
   // 소금 땅: 그 위에서 만들어지는 마법은 흩어지고, 뜰 수 없다
   const W5 = A.createWorld({ seed: 1, salt: [{ x: 0, y: 0, w: 20, h: 30 }], obstacles: [], rules: { domain: false } }), m5 = A.addMage(W5, A.mage({ tier: '대마법사' }), 0, 10, 15), e5 = A.addMage(W5, A.mage({ tier: '평범' }), 1, 30, 15);
   assert.strictEqual(A.gAt(W5, m5, W5.spells['돌 창'], 30, 15), 0); assert.strictEqual(A.gAt(W5, e5, W5.spells['돌 창'], 10, 15), 1); m5.flyWant = true; m5.fz = 6; for (let i = 0; i < 30; i++) A.stepWorld(W5); assert.strictEqual(m5.z, 0);
+});
+ok('v2.2 고수 싸움 (SPEC 26장): 리듬(틈이 있으면 들어가고 넘치기 직전엔 빠진다, 상급은 늦다), 장악권 밀기 거리, 헛손질 버리기, 강화는 필요할 때만, 모습 지표', () => {
+  const R = require('../src/brain/techniques/rhythm'), E = require('../src/brain/techniques/efficacy');
+  const mk = (sa, sb) => { const W = A.createWorld({ seed: 1, width: 200, height: 150, obstacles: [], brain: A.brain }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: sa, deck: '대마법사 운영' }), 0, 90, 75), e = A.addMage(W, A.mage({ tier: '대마법사', skill: sb, deck: '대마법사 운영' }), 1, 102, 75); A.stepWorld(W); return [W, m, e]; };
+  const think = (W, m) => { m.thinkT = 0; A.brain.think(W, m); return m.phase; };
+  // 장악권 밀기: 같은 신호(둘 다 시전 중)면 들어갈 거리 = 틈 3 m × 2 = 6 m
+  const [W0, m0, e0] = mk('대가', '대가'); m0._act = e0._act = true; assert.ok(Math.abs(R.inDist(W0, m0, e0) - 6) < 1e-9);
+  // 대가: 상대가 굳으면 들어가고(붙는 시간보다 틈이 길 때만), 넘치기 직전(92)이면 빠진다
+  const [W1, m1, e1] = mk('대가', '대가'); e1.st.stun = 2; assert.strictEqual(think(W1, m1), 'in'); assert.ok(m1._k.prefR <= 12 && m1._k.pressB);
+  const [W2, m2, e2] = mk('대가', '대가'); e2.st.stun = 0.1; e2.x = 190; assert.strictEqual(think(W2, m2), 'probe', '틈이 너무 짧다');
+  const [W3, m3] = mk('대가', '대가'); m3.fat = 95; assert.strictEqual(think(W3, m3), 'out'); assert.ok(m3._k.prefR >= 22);
+  const [W4, m4] = mk('상급', '대가'); m4.fat = 95; assert.strictEqual(think(W4, m4), 'probe', '상급은 97까지 버틴다');
+  const [W5, m5] = mk('중급', '대가'); think(W5, m5); assert.strictEqual(m5.phase, 'probe'); assert.ok(!m5.mlog.phase.in, '중급은 리듬이 없다');
+  // 효과 학습: 다섯 번 쓰고 못 맞힌 수는 버리고, 많이 맞힌 수는 더 쓴다
+  const [W6, m6] = mk('대가', '대가'); m6.log.casts = { '낙뢰': 6, '짧은 실': 6 }; m6.log.hits = { '짧은 실': 3 }; const K = m6._k || (think(W6, m6), m6._k); K.S = W6.spells; E.prep(W6, m6, K);
+  const o = n => { const x = { s: W6.spells[n], n, isOff: true, v: 1, tx: 0, ty: 0 }; E.value(W6, m6, K, x); return x.v; }; assert.ok(o('낙뢰') === 0 && o('짧은 실') > 1);
+  // 강화의 때: 날고 있으면 걸음 강화는 뜻이 없다
+  m6.fly = 1; const b = { s: W6.spells['근육 폭주'], n: '근육 폭주', isOff: false, v: 1 }; E.value(W6, m6, K, b); assert.strictEqual(b.v, 0);
+  // 모습 지표
+  const r = A.duel(A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 운영' }), A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 운영' }), { seed: 2 }), L = A.look(r.ms[0], r.t);
+  for (const k of ['거리 흔들림', '칸 A 공격', '헛손질 비율', '장악 경계 틈 (m)', '장악 경계 이동 (m/s)', '세운 지형', '없앤 지형']) assert.ok(k in L, k);
+  assert.ok(Object.keys(r.ms[0].mlog.phase).length >= 2, '단계가 바뀐다');
 });
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;

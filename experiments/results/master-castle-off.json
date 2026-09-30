@@ -1,0 +1,401 @@
+{
+ "v": "2.2.0",
+ "date": "2026-09-30",
+ "deck": "대마법사 성",
+ "tac": {
+  "rhythm": false,
+  "rhythmTime": false,
+  "domainPush": false,
+  "efficacy": false,
+  "buffNeed": false,
+  "shape": false,
+  "roles": false
+ },
+ "N": 200,
+ "result": {
+  "전설-대가": {
+   "games": 200,
+   "score": 0.475,
+   "len": 30.2,
+   "dist": 12.1,
+   "distSD": 7.2,
+   "distJitter": 0.602,
+   "castsPerS": 1.238,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {},
+   "roles": {
+    "A": {
+     "n": 34.8,
+     "강화": 0.084,
+     "공격": 0.879,
+     "방어": 0.036
+    },
+    "B": {
+     "n": 0,
+     "방어": 1
+    },
+    "auto": {
+     "n": 6.8,
+     "방어": 1
+    }
+   },
+   "gap": 6,
+   "boundaryMove": 6.827,
+   "built": 0,
+   "razed": 0,
+   "offMiss": 0.784,
+   "spells": [
+    {
+     "spell": "석회 방패",
+     "share": 0.191,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.161,
+     "hit": 0.159,
+     "miss": 0.841
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.131,
+     "hit": 0.049,
+     "miss": 0.951
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.121,
+     "hit": 0.182,
+     "miss": 0.818
+    },
+    {
+     "spell": "근육 폭주",
+     "share": 0.078,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "체인",
+     "share": 0.078,
+     "hit": 0.057,
+     "miss": 0.943
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.072,
+     "hit": 0.661,
+     "miss": 0.339
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.055,
+     "hit": 0.065,
+     "miss": 0.935
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.049,
+     "hit": 0.229,
+     "miss": 0.771
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.043,
+     "hit": 0.764,
+     "miss": 0.236
+    }
+   ]
+  },
+  "전설-전설": {
+   "games": 200,
+   "score": 0.515,
+   "len": 35.7,
+   "dist": 11.7,
+   "distSD": 7.1,
+   "distJitter": 0.609,
+   "castsPerS": 1.23,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {},
+   "roles": {
+    "A": {
+     "n": 39.7,
+     "강화": 0.089,
+     "공격": 0.86,
+     "방어": 0.051
+    },
+    "B": {
+     "n": 0,
+     "방어": 1
+    },
+    "auto": {
+     "n": 9.9,
+     "방어": 1
+    }
+   },
+   "gap": 5.8,
+   "boundaryMove": 6.835,
+   "built": 0,
+   "razed": 0,
+   "offMiss": 0.791,
+   "spells": [
+    {
+     "spell": "석회 방패",
+     "share": 0.244,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.18,
+     "hit": 0.158,
+     "miss": 0.842
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.109,
+     "hit": 0.077,
+     "miss": 0.923
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.107,
+     "hit": 0.168,
+     "miss": 0.832
+    },
+    {
+     "spell": "체인",
+     "share": 0.084,
+     "hit": 0.045,
+     "miss": 0.955
+    },
+    {
+     "spell": "근육 폭주",
+     "share": 0.08,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.061,
+     "hit": 0.672,
+     "miss": 0.328
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.038,
+     "hit": 0.754,
+     "miss": 0.246
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.038,
+     "hit": 0.054,
+     "miss": 0.946
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.035,
+     "hit": 0.173,
+     "miss": 0.827
+    }
+   ]
+  },
+  "대가-상급": {
+   "games": 200,
+   "score": 0.415,
+   "len": 26.4,
+   "dist": 13,
+   "distSD": 7.3,
+   "distJitter": 0.569,
+   "castsPerS": 1.185,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {},
+   "roles": {
+    "A": {
+     "n": 30,
+     "강화": 0.094,
+     "공격": 0.88,
+     "방어": 0.026
+    },
+    "B": {
+     "n": 0,
+     "방어": 1
+    },
+    "auto": {
+     "n": 3.3,
+     "방어": 1
+    }
+   },
+   "gap": 6.5,
+   "boundaryMove": 6.736,
+   "built": 0,
+   "razed": 0,
+   "offMiss": 0.792,
+   "spells": [
+    {
+     "spell": "낙뢰",
+     "share": 0.144,
+     "hit": 0.037,
+     "miss": 0.963
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.143,
+     "hit": 0.133,
+     "miss": 0.867
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.122,
+     "hit": 0.119,
+     "miss": 0.881
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.11,
+     "hit": 0.066,
+     "miss": 0.934
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.105,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.099,
+     "hit": 0.652,
+     "miss": 0.348
+    },
+    {
+     "spell": "체인",
+     "share": 0.094,
+     "hit": 0.079,
+     "miss": 0.921
+    },
+    {
+     "spell": "근육 폭주",
+     "share": 0.09,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.048,
+     "hit": 0.788,
+     "miss": 0.212
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.022,
+     "hit": 0.324,
+     "miss": 0.676
+    }
+   ]
+  },
+  "상급-중급": {
+   "games": 200,
+   "score": 0.575,
+   "len": 24.6,
+   "dist": 17.8,
+   "distSD": 9.8,
+   "distJitter": 0.567,
+   "castsPerS": 1.097,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {},
+   "roles": {
+    "A": {
+     "n": 26.1,
+     "강화": 0.12,
+     "공격": 0.859,
+     "방어": 0.021
+    },
+    "auto": {
+     "n": 2.4,
+     "방어": 1
+    }
+   },
+   "gap": 8.9,
+   "boundaryMove": 9.325,
+   "built": 0,
+   "razed": 0,
+   "offMiss": 0.791,
+   "spells": [
+    {
+     "spell": "낙뢰",
+     "share": 0.172,
+     "hit": 0.033,
+     "miss": 0.967
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.132,
+     "hit": 0.118,
+     "miss": 0.882
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.125,
+     "hit": 0.225,
+     "miss": 0.775
+    },
+    {
+     "spell": "체인",
+     "share": 0.122,
+     "hit": 0.059,
+     "miss": 0.941
+    },
+    {
+     "spell": "근육 폭주",
+     "share": 0.116,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.093,
+     "hit": 0.113,
+     "miss": 0.887
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.088,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.072,
+     "hit": 0.613,
+     "miss": 0.387
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.056,
+     "hit": 0.84,
+     "miss": 0.16
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.014,
+     "hit": 0.396,
+     "miss": 0.604
+    }
+   ]
+  }
+ }
+}

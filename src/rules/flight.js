@@ -130,6 +130,7 @@ module.exports = {
         if (sustain && (m.fat > Bn.restFat || (m.wave && Bn.waveLand && !gunsFar))) want = false;   // 머리가 뜨겁거나 파도를 타면 내려앉아 식힌다 (떠 있으면 비행 피로로 파도에서 못 내려온다, v2.0 둘째)   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
         if (ground) { want = true; if (near >= 3) { fz = Bn.zCrowd; fv = Math.min(fv, Bn.vCrowd); } }   // 발밑·함정·무리가 많으면 뜬다 (무리 위에선 낮게 천천히)
         if (L >= 2 && guns >= Bn.guns) want = false;
+        if (m.phase === 'out' && fv < Bn.approach) fv = Bn.approach;   // 리듬의 빠지기: 빠르게 (v2.2)
         if (m.retreat) { want = true; fz = F.zMax; fv = F.vMax; }   // 물러나기: 높이 떠 사거리 밖으로 (brain/techniques/siege)   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
         else if (L >= 3 && T.readCast && (elecT || elec >= Bn.elecMany)) want = false;   // 번개 위협엔 내려앉는다
         if (!sustain) { want = want && (ground >= Bn.hopN || K.stance === 'breakout') && m.fat < Bn.tiredFat && (m.fly !== 1 || W.t - m._flT0 < Bn.hopT); fv = Math.max(fv, F.corner); fz = Bn.zLow; }   // 상위: 떠오르기·도약·활공만 (hopT 초까지)
