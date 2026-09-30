@@ -5,19 +5,19 @@ D["data/books.json"] = [function (module, exports, require) {
 module.exports = {"불":["불덩이","화염 방사","소이 캡슐","폭굉 추진","불벽","숨 덫"],"번개":["라이트닝","체인","낙뢰","맨손 방전","다리 자극","흘리기 막","번개 지뢰","근육 경직"],"흙":["돌 창","돌 압축탄","곡사 돌","솟는 발판","석회 기둥","석회 방패","흙 꺼짐","석회 굳히기","가두는 기둥"],"물":["물 망치","물 대포","물길 미끄럼","물 장막","흡수 안개","진흙 웅덩이"],"얼음":["얼음 창","저격 창","서리 깔기","얼음 미끄럼","얼음 기둥","얼음 덫","얼음 족쇄"],"독":["황화수소 캡슐","암모니아 캡슐","초산 분사","유도 포자","독 장막","독 웅덩이","균사 그물"]};
 }, {}];
 D["data/decks.json"] = [function (module, exports, require) {
-module.exports = {"합법 최강":["불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"광역":["낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","석회 기둥","솟는 발판","근육 폭주","불고리","비 뿌리기","땅 번개"],"기본기":["돌 압축탄","라이트닝","불덩이","물 망치","얼음 창","석회 방패","다리 자극"],"머스킷":["머스킷"],"박격포":["박격포"],"기술":["짧은 실","체인","번개 그물","흙 손","불기둥","불벽","번개 지뢰","석회 방패","산 안개","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"큰 수":["번개 그물","물 대포","빙판","불벽","짧은 실","땅 번개","석회 방패","대낙뢰","화산 기둥","번개 창"],"도발 합법 최강":["도발","불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물"]};
+module.exports = {"합법 최강":["불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"광역":["낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","석회 기둥","솟는 발판","근육 폭주","불고리","비 뿌리기","땅 번개"],"기본기":["돌 압축탄","라이트닝","불덩이","물 망치","얼음 창","석회 방패","다리 자극"],"머스킷":["머스킷"],"박격포":["박격포"],"기술":["짧은 실","체인","번개 그물","흙 손","불기둥","불벽","번개 지뢰","석회 방패","산 안개","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"큰 수":["번개 그물","물 대포","빙판","불벽","짧은 실","땅 번개","석회 방패","대낙뢰","화산 기둥","번개 창"],"도발 합법 최강":["도발","불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물"],"조약돌":["조약돌","근육 폭주"],"무거운 돌":["무거운 돌","조약돌","근육 폭주"],"번쩍 돌":["번쩍임","무거운 돌","조약돌","근육 폭주"],"열선":["열선","번쩍임","짧은 실","석회 방패","근육 폭주"],"대마법사 성":["흙벽","보루","벽 밀기","낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","번쩍임","흙먼지","근육 폭주"]};
 }, {}];
 D["data/gear.json"] = [function (module, exports, require) {
 module.exports = {"default":{"soles":true},"items":{"soles":{"이름":"소금 밑창","설명":"안 보이는 발밑 공격(지연 폭발)의 피해·묶임·굳힘을 × 0.3 (WORLD 148)"},"cloak":{"이름":"소금 망토","설명":"두른 사람 1.6 m 안에서 남의 장악 몫 × 0.3 (WORLD 148)"},"silver":{"이름":"은실 옷","설명":"은이 몸에 닿는 응답을 끊는다(WORLD 3-4): 굳음·묶임·몸 묶기의 길이 × 0.5. 은은 전기를 잘 통해 전기 피해 × 1.1. 수는 data/rules/silver.json. rules.silver가 켜졌을 때만 (SPEC 10장)"},"mirror":{"이름":"유리 비단 거울","설명":"빛을 모아 곧게 보내는 거울. 있어야 열선을 쓴다 (rules.light, SPEC 25장)"},"goggles":{"이름":"연기 안경","설명":"번쩍임의 눈멂 × 0.5 (rules.light, SPEC 25장)"}}};
 }, {}];
 D["data/rules/army.json"] = [function (module, exports, require) {
-module.exports = {"musket":{"R":100,"cast":0.1,"fuse":[0.1,0.5],"reload":[15,20],"aimN":0.004,"aimD":0.0004},"mortar":{"spread":0.03},"volleyT":17.5,"farFly":{"z":2,"d":50},"morale":{"every":0.5,"cas":0.2,"casK":2,"shock":0.35,"shockR":10,"shockDmg":50,"decay":0.5,"minSide":3,"skill":{"초보":1,"중급":1.3,"상급":1.6,"대가":2,"전설":2.5},"edge":1}};
+module.exports = {"musket":{"R":100,"cast":0.1,"fuse":[0.1,0.5],"reload":[15,20],"aimN":0.004,"aimD":0.0004},"mortar":{"spread":0.05,"min":5},"volleyT":17.5,"farFly":{"z":2,"d":50},"morale":{"every":0.5,"cas":0.2,"casK":2,"shock":0.35,"shockR":10,"shockDmg":50,"decay":0.5,"minSide":3,"skill":{"초보":1,"중급":1.3,"상급":1.6,"대가":2,"전설":2.5},"edge":1}};
 }, {}];
 D["data/rules/bulwark.json"] = [function (module, exports, require) {
 module.exports = {"rate":0.6,"rateP":632000,"block":{"gap":0.8,"r":0.45,"h":1.6,"hpM3":400},"stopThick":0.5,"bullet":2,"heavyM":5,"heavy":500,"water":10,"ice":{"melt":0.5,"fire":20},"pit":{"r":0.7,"out":1.1,"speed":0.5},"upkeep":{"glu":0.8,"max":15},"topple":{"depth":2.5,"reach":6},"maxBuild":20};
 }, {}];
 D["data/rules/flight.json"] = [function (module, exports, require) {
-module.exports = {"P0":2000,"Pk":2.5,"minP":75000,"lift":150000,"liftV":20,"glideVz":4,"mass":80,"g":9.8,"drag":0.135,"zMin":2,"zMax":15,"vzMax":8,"vzAcc":12,"vMax":100,"fwdG":3,"latG":5,"latK":0.08,"latP":300000,"corner":25,"film":60,"filmBlind":0.3,"pow":0.8,"powL":[1.15,0.6,0.5],"fat":[1,6,40],"fall":4,"fallStun":1,"elec":1.3,"cloud":1.3,"arena":[200,150],"arenaC":10,"graze":{"v":15,"within":2},"brain":{"hover":3,"approach":50,"full":100,"slow":15,"z":6,"zLow":3,"zHigh":15,"near":10,"danger":6,"crowd":8,"elecMany":2,"bind":2,"lead":1.5,"leadV":60,"tiredFat":60,"hopN":2,"hopT":3,"restFat":999,"restWave":100,"guns":3,"zCrowd":10,"vCrowd":5,"gunR":30,"feintV":40,"strike":1.5}};
+module.exports = {"P0":2000,"Pk":2.5,"minP":75000,"lift":150000,"liftV":20,"glideVz":4,"mass":80,"g":9.8,"drag":0.135,"zMin":2,"zMax":15,"vzMax":8,"vzAcc":12,"vMax":100,"fwdG":3,"latG":5,"latK":0.08,"latP":300000,"corner":25,"film":60,"filmBlind":0.3,"pow":0.8,"powL":[1.15,0.6,0.5],"fat":[1,6,40],"fall":4,"fallStun":1,"elec":1.3,"cloud":1.3,"arena":[200,150],"arenaC":10,"graze":{"v":15,"within":2},"brain":{"hover":3,"approach":50,"full":100,"slow":15,"z":6,"zLow":3,"zHigh":15,"near":10,"danger":6,"crowd":8,"elecMany":2,"bind":2,"lead":1.5,"leadV":60,"tiredFat":60,"hopN":2,"hopT":3,"restFat":999,"restWave":100,"guns":3,"zCrowd":10,"vCrowd":5,"waveLand":true,"gunFar":110,"ownGap":2,"gunR":30,"feintV":40,"strike":1.5}};
 }, {}];
 D["data/rules/response.json"] = [function (module, exports, require) {
 module.exports = {"reflex":{"window":0.2,"again":0.25},"brace":{"k":0.6,"dur":0.6,"fat":5,"speed":0.3,"within":0.35,"minDmg":12},"unbind":{"fat":12,"glu":4,"cd":5,"min":0.5},"levels":{"초보":{"reflex":0,"brace":false,"unbind":false},"중급":{"reflex":0.3,"brace":true,"unbind":false},"상급":{"reflex":0.5,"brace":true,"unbind":true},"대가":{"reflex":0.7,"brace":true,"unbind":true},"전설":{"reflex":0.85,"brace":true,"unbind":true}},"noSkill":{"autoDodge":{"reflex":0.4,"brace":true,"unbind":false},"plain":{"reflex":0,"brace":false,"unbind":false}}};
@@ -26,7 +26,7 @@ D["data/rules/silver.json"] = [function (module, exports, require) {
 module.exports = {"hold":0.5,"elec":1.1,"speed":1};
 }, {}];
 D["data/skills.json"] = [function (module, exports, require) {
-module.exports = {"roll":{"rollCap":0.85,"rollBias":[0.6,0.9]},"basic":{"readCast":true,"lead":1,"combo":true,"crowd":true,"stance":false,"lever":false,"pathTrap":false,"slotB":false,"terrain":false,"readWave":false,"cdRead":false,"outrange":false,"focusLow":false},"levels":{"초보":{"dec":0.3,"noise":0.14,"autoDodge":false,"circles":"half","from":"basic","tac":{"flySkill":1,"dodge":0.15,"rest":60,"readCast":false,"lead":0.2,"combo":false,"crowd":false,"castMove":0,"pause":[0.3,0.6],"shieldAny":true}},"중급":{"dec":0.2,"noise":0.08,"autoDodge":false,"circles":"minus1","from":"basic","tac":{"flySkill":2,"dodge":0.45,"rest":75}},"상급":{"dec":0.13,"noise":0.04,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":3,"dodge":0.75,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"dodgeAim":true}},"대가":{"dec":0.08,"noise":0.02,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":4,"dodge":1,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"coverW":2,"herd":true,"strip":true,"lure":true,"simul":false,"cancel2":true,"bigPlan":true,"dodgeAim":true,"grab":true,"feint":false,"focusLow":true,"terrain":true,"slotB":true,"slotBOff":false,"readWave":true,"cdRead":true,"outrange":true}},"전설":{"dec":0.05,"noise":0.01,"autoDodge":true,"circles":"plus1","from":"대가","tac":{"flySkill":5,"feint":0.12,"simul":true,"shieldSave":false,"learn":true,"learnAim":"wide","waveChoose":true,"counter":true,"coverW":2.5,"bait":true,"fakeRetreat":true,"triple":true}}}};
+module.exports = {"roll":{"rollCap":0.85,"rollBias":[0.6,0.9]},"basic":{"readCast":true,"lead":1,"combo":true,"crowd":true,"stance":false,"lever":false,"pathTrap":false,"slotB":false,"terrain":false,"readWave":false,"cdRead":false,"outrange":false,"focusLow":false},"levels":{"초보":{"dec":0.3,"noise":0.14,"autoDodge":false,"circles":"half","from":"basic","tac":{"flySkill":1,"dodge":0.15,"rest":60,"readCast":false,"lead":0.2,"combo":false,"crowd":false,"castMove":0,"pause":[0.3,0.6],"shieldAny":true}},"중급":{"dec":0.2,"noise":0.08,"autoDodge":false,"circles":"minus1","from":"basic","tac":{"flySkill":2,"dodge":0.45,"rest":75}},"상급":{"dec":0.13,"noise":0.04,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":3,"wallSite":true,"retreat":true,"dodge":0.75,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"dodgeAim":true}},"대가":{"dec":0.08,"noise":0.02,"autoDodge":true,"circles":"same","from":"basic","tac":{"flySkill":4,"wallSite":true,"retreat":true,"wallBreak":true,"dodge":1,"rest":80,"stance":true,"lever":true,"pathTrap":true,"plan":true,"combo2":true,"shieldSave":true,"cancel":true,"cover":true,"tempo":true,"coverW":2,"herd":true,"strip":true,"lure":true,"simul":false,"cancel2":true,"bigPlan":true,"dodgeAim":true,"grab":true,"feint":false,"focusLow":true,"terrain":true,"slotB":true,"slotBOff":false,"readWave":true,"cdRead":true,"outrange":true}},"전설":{"dec":0.05,"noise":0.01,"autoDodge":true,"circles":"plus1","from":"대가","tac":{"flySkill":5,"feint":0.12,"simul":true,"shieldSave":false,"learn":true,"learnAim":"wide","waveChoose":true,"counter":true,"coverW":2.5,"bait":true,"fakeRetreat":true,"triple":true}}}};
 }, {}];
 D["data/spells/order.json"] = [function (module, exports, require) {
 module.exports = ["불덩이","화염 방사","소이 캡슐","폭굉 추진","불벽","숨 덫","라이트닝","체인","낙뢰","맨손 방전","다리 자극","흘리기 막","번개 지뢰","돌 창","돌 압축탄","곡사 돌","솟는 발판","석회 기둥","석회 방패","흙 꺼짐","물 망치","물 대포","물길 미끄럼","물 장막","흡수 안개","진흙 웅덩이","얼음 창","저격 창","서리 깔기","얼음 미끄럼","얼음 기둥","얼음 덫","황화수소 캡슐","암모니아 캡슐","초산 분사","유도 포자","독 장막","독 웅덩이","불고리","그을음 연막","갈래 불덩이","불 씨앗","짧은 실","번개 그물","근육 폭주","걸어둔 구름","갈래 돌","흙먼지","흙 손","큰 바위","비 뿌리기","끓는 물","안개 걸음","물 올가미","빙판","얼음 껍질","얼음 산탄","얼음 담","산 안개","마비 포자","포자 벽","독 이끼","불기둥","땅 번개","가시 솟기","발 얼리기","돌 비","공중 격추","흙 이불","얼음 절연","해독 균","바위 박차기","머스킷","도발","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"];
@@ -44,7 +44,7 @@ D["data/spells/불.json"] = [function (module, exports, require) {
 module.exports = {"불덩이":{"n":"불덩이","el":"불","t":"proj","m":0.3,"v":26,"R":16,"cost":4,"cast":0.35,"cd":1.4,"hit":{"dmg":10,"kind":"fire","burn":2.5,"zone":{"k":"fire","r":1,"d":2}},"role":"공격"},"화염 방사":{"n":"화염 방사","el":"불","t":"cone","L":3.6,"dur":1,"dps":22,"kind":"fire","burn":2,"cost":5,"cast":0.2,"cd":2.2,"role":"공격"},"소이 캡슐":{"n":"소이 캡슐","el":"불","t":"proj","m":0.5,"v":20,"R":14,"cost":5,"cast":0.4,"cd":1.8,"burst":{"r":1.4,"dmg":16,"kind":"fire","burn":2},"role":"공격"},"폭굉 추진":{"n":"폭굉 추진","el":"불","t":"move","mv":"dash","dist":5,"self":3,"cost":3,"cast":0.1,"cd":2,"role":"이동"},"불벽":{"n":"불벽","el":"불","t":"zone","z":{"k":"fire","shape":"line","len":4,"d":4,"dps":12},"R":7,"cost":5,"cast":0.35,"cd":3,"role":"방어"},"숨 덫":{"n":"숨 덫","el":"불","t":"trap","tr":{"dmg":18,"kind":"fire","burn":2,"r":1.3},"vis":0,"cost":4,"cast":0.3,"cd":2,"role":"함정"},"불고리":{"n":"불고리","el":"불","tags":["spore","tox","close"],"desc":"몸 둘레 3m를 한순간 태워 날아오는 포자와 독을 없앤다","t":"ring","r":3,"dmg":6,"kill":1,"cost":4,"cast":0.15,"cd":3,"role":"방어"},"그을음 연막":{"n":"그을음 연막","el":"불","tags":["ranged","blunt","elec"],"desc":"덜 탄 연기로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":3,"cast":0.2,"cd":5,"role":"방어"},"갈래 불덩이":{"n":"갈래 불덩이","el":"불","tags":["miss"],"desc":"불덩이를 세 갈래로","t":"proj","m":0.3,"v":18,"R":16,"multi":3,"cost":5,"cast":0.4,"cd":1.6,"hit":{"dmg":5,"kind":"fire","burn":1.5},"role":"공격"},"불 씨앗":{"n":"불 씨앗","el":"불","tags":["miss","close"],"desc":"값싼 불 함정을 여러 개","t":"trap","tr":{"dmg":14,"kind":"fire","burn":2,"r":1.2},"vis":0,"cost":2,"cast":0.2,"cd":1,"role":"함정"},"불기둥":{"n":"불기둥","el":"불","t":"area","r":1.2,"delay":0.45,"dmg":16,"kind":"fire","burn":2,"vis":0,"R":9,"cost":5,"cast":0.25,"cd":2.2,"role":"공격","desc":"상대 발밑에 메탄을 모아 솟구치게 한다. 보이지 않는다"},"화산 기둥":{"n":"화산 기둥","el":"불","t":"area","r":1.5,"delay":0.4,"dmg":55,"kind":"fire","burn":3,"vis":0,"R":9,"cost":10,"cast":0.6,"cd":5,"role":"공격","big":1,"rule":"risk","desc":"발밑 깊이 메탄과 열을 모아 터뜨린다. 보이지 않는다"}};
 }, {}];
 D["data/spells/빛.json"] = [function (module, exports, require) {
-module.exports = {"번쩍임":{"n":"번쩍임","el":"빛","t":"flash","desc":"손끝에서 만든 빛이 곧바로 닿는다. 시야가 이어진 적을 눈멀게 한다(1.5 s). 연기·안개·비·흙먼지가 가리고 연기 안경이 절반","R":40,"blind":1.5,"dmg":1,"kind":"heat","cost":4,"cast":0.4,"cd":6,"role":"공격","rule":"light"},"열선":{"n":"열선","el":"빛","t":"beam","desc":"예비동작 동안 핵이 빛나 보인다. 쏘면 곧바로 닿는 열. 거리에 따라 약해지고(반감 15 m) 연기·안개·비를 지나면 × 0.4. 유리 비단 거울이 있어야 쓴다","R":30,"dmg":28,"L":15,"kind":"heat","cost":6,"cast":0.8,"cd":3,"role":"공격","rule":"light","needGear":"mirror"}};
+module.exports = {"번쩍임":{"n":"번쩍임","el":"빛","t":"flash","desc":"손끝에서 만든 빛이 곧바로 닿는다. 시야가 이어진 적을 눈멀게 한다(1.5 s). 연기·안개·비·흙먼지가 가리고 연기 안경이 절반","R":70,"blind":1.5,"dmg":1,"kind":"heat","cost":4,"cast":0.4,"cd":6,"role":"공격","rule":"light"},"열선":{"n":"열선","el":"빛","t":"beam","desc":"예비동작 동안 핵이 빛나 보인다. 쏘면 곧바로 닿는 열. 거리에 따라 약해지고(반감 15 m) 연기·안개·비를 지나면 × 0.4. 유리 비단 거울이 있어야 쓴다","R":30,"dmg":28,"L":15,"kind":"heat","cost":6,"cast":0.8,"cd":3,"role":"공격","rule":"light","needGear":"mirror"}};
 }, {}];
 D["data/spells/신호.json"] = [function (module, exports, require) {
 module.exports = {"도발":{"n":"도발","el":"신호","t":"taunt","R":10,"cost":2,"cast":0.1,"cd":4,"role":"방어","rule":"taunt","desc":"상대의 부름에 헛신호를 섞어 끊는다. 이단은 걸리지 않는다"}};
@@ -56,7 +56,7 @@ D["data/spells/없음.json"] = [function (module, exports, require) {
 module.exports = {"머스킷":{"n":"머스킷","el":"없음","t":"proj","m":0.03,"v":300,"R":60,"cost":0,"cast":0.6,"cd":18,"mundane":1,"hit":{"kind":"blunt","flat":60,"stun":0.4},"role":"공격","desc":"마법이 아닌 총. 장악권이 못 막는다"},"박격포":{"n":"박격포","el":"없음","t":"lob","flight":3,"r":2.5,"dmg":90,"kind":"blunt","R":150,"cost":0,"cast":0.5,"cd":30,"mundane":1,"wallDmg":600,"role":"공격","rule":"army","desc":"높이 쏘아 벽 너머에 떨어뜨리는 포탄. 날아가는 시간이 길어(3 s) 움직이는 과녁은 못 맞힌다. 장전 30 s. 떨어진 자리의 벽을 부순다"}};
 }, {}];
 D["data/spells/흙.json"] = [function (module, exports, require) {
-module.exports = {"돌 창":{"n":"돌 창","el":"흙","t":"proj","m":0.15,"v":28,"R":20,"cost":3,"cast":0.3,"cd":1.2,"hit":{"kind":"blunt"},"role":"공격"},"돌 압축탄":{"n":"돌 압축탄","el":"흙","t":"proj","m":0.06,"v":30,"R":24,"cost":1,"cast":0.25,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"곡사 돌":{"n":"곡사 돌","el":"흙","t":"lob","flight":1.2,"r":1,"dmg":20,"kind":"blunt","R":26,"cost":3,"cast":0.35,"cd":1.2,"role":"공격"},"솟는 발판":{"n":"솟는 발판","el":"흙","t":"move","mv":"vault","dist":4,"cost":3,"cast":0.12,"cd":2.5,"role":"이동"},"석회 기둥":{"n":"석회 기둥","el":"흙","t":"wall","hp":60,"dur":20,"r":0.7,"at":1.4,"cost":5,"cast":0.4,"cd":3,"role":"방어"},"석회 방패":{"n":"석회 방패","el":"흙","t":"buff","b":{"front":1,"block":1,"d":1.6},"cost":2,"cast":0.1,"cd":0.8,"role":"방어","react":1},"흙 꺼짐":{"n":"흙 꺼짐","el":"흙","t":"trap","tr":{"dmg":8,"kind":"blunt","root":1.8,"r":1},"vis":1,"cost":3,"cast":0.35,"cd":2.5,"role":"함정"},"갈래 돌":{"n":"갈래 돌","el":"흙","tags":["miss"],"desc":"다섯 갈래 돌","t":"proj","m":0.06,"v":40,"R":9,"multi":5,"cost":3,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"흙먼지":{"n":"흙먼지","el":"흙","tags":["ranged","elec"],"desc":"먼지로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":2,"cast":0.2,"cd":5,"role":"방어"},"흙 손":{"n":"흙 손","el":"흙","tags":["miss","kite"],"desc":"상대 발밑 흙이 발목을 움켜쥔다","t":"area","r":1.2,"delay":0.6,"dmg":6,"kind":"blunt","root":1.6,"vis":0,"R":10,"cost":4,"cast":0.25,"cd":2.5,"role":"공격"},"큰 바위":{"n":"큰 바위","el":"흙","tags":["wall","ranged"],"desc":"20kg 바위","t":"proj","m":20,"v":22,"R":26,"cost":12,"cast":2.2,"cd":3,"hit":{"kind":"blunt","flat":70,"stun":1},"rad":0.7,"role":"공격"},"가시 솟기":{"n":"가시 솟기","el":"흙","t":"area","r":1,"delay":0.45,"dmg":12,"kind":"blunt","root":1.2,"vis":0,"R":9,"cost":4,"cast":0.25,"cd":2,"role":"공격","desc":"상대 발밑 흙을 가시로 솟게 한다"},"돌 비":{"n":"돌 비","el":"흙","t":"lob","flight":0.9,"r":1.6,"dmg":14,"kind":"blunt","R":20,"cost":4,"cast":0.3,"cd":1.4,"role":"공격","desc":"작은 돌을 높이 흩뿌려 떨어뜨린다"},"흙 이불":{"n":"흙 이불","el":"흙","t":"smother","r":3,"cost":3,"cast":0.15,"cd":3,"role":"방어","desc":"둘레에 흙을 덮어 불과 독과 포자를 끈다"},"바위 박차기":{"n":"바위 박차기","el":"흙","t":"move","mv":"dash","dist":4,"cost":2,"cast":0.05,"cd":2,"role":"이동","desc":"바위를 차고 반동으로 튄다"},"석회 굳히기":{"n":"석회 굳히기","el":"흙","t":"proj","m":0.2,"v":26,"R":12,"cost":3,"cast":0.3,"cd":3,"hit":{"dmg":5,"kind":"blunt","lime":3},"role":"공격","rule":"bodyBind","desc":"석회 반죽을 다리에 붙인다. 3초 동안 구르는 거리가 절반. 산에 녹는다","rad":0.25},"가두는 기둥":{"n":"가두는 기둥","el":"흙","t":"cage","r":3,"pr":1.4,"hp":120,"dur":2.5,"R":10,"cost":6,"cast":0.35,"cd":6,"role":"공격","rule":"bodyBind","desc":"상대 둘레 3m에 석회 기둥 넷을 한꺼번에 세운다. 솟는 발판으로 넘을 수 있다"},"흙벽":{"n":"흙벽","el":"흙","t":"build","shape":"line","nb":3,"th":0.5,"at":1.3,"mat":"earth","cost":6,"cast":0.2,"cd":4,"lock":1,"role":"방어","rule":"bulwark","desc":"발밑 흙을 끌어와 앞에 벽을 쌓는다(블록 셋, 2.4 × 1.6 × 0.5 m). 세우는 동안 선다. 속도는 출력에 비례(대마법사 초당 0.6 m³, 약 3 s). 체력이 다할 때까지 서고 총알을 막는다. 흙을 끌어온 바깥쪽에 구덩이"},"보루":{"n":"보루","el":"흙","t":"build","shape":"ring","rad":2.2,"th":0.5,"mat":"earth","cost":14,"cast":0.3,"cd":30,"lock":1,"role":"방어","rule":"bulwark","desc":"제 둘레에 사방 벽을 쌓는다(반지름 2.2 m, 블록 열일곱). 대마법사 약 18 s"},"벽 밀기":{"n":"벽 밀기","el":"흙","t":"topple","R":14,"dmg":60,"root":2,"cost":6,"cast":0.5,"cd":5,"role":"공격","rule":"bulwark","desc":"서 있는 벽 아무것이나 한 방향으로 밀어 넘어뜨려 그 너머 한 줄(2.5 m)을 덮는다: 부딪힘 60 + 묶임 2 s. 벽은 무너진다"}};
+module.exports = {"돌 창":{"n":"돌 창","el":"흙","t":"proj","m":0.15,"v":28,"R":20,"cost":3,"cast":0.3,"cd":1.2,"hit":{"kind":"blunt"},"role":"공격"},"돌 압축탄":{"n":"돌 압축탄","el":"흙","t":"proj","m":0.06,"v":30,"R":24,"cost":1,"cast":0.25,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"곡사 돌":{"n":"곡사 돌","el":"흙","t":"lob","flight":1.2,"r":1,"dmg":20,"kind":"blunt","R":26,"cost":3,"cast":0.35,"cd":1.2,"role":"공격"},"솟는 발판":{"n":"솟는 발판","el":"흙","t":"move","mv":"vault","dist":4,"cost":3,"cast":0.12,"cd":2.5,"role":"이동"},"석회 기둥":{"n":"석회 기둥","el":"흙","t":"wall","hp":60,"dur":20,"r":0.7,"at":1.4,"cost":5,"cast":0.4,"cd":3,"role":"방어"},"석회 방패":{"n":"석회 방패","el":"흙","t":"buff","b":{"front":1,"block":1,"d":1.6},"cost":2,"cast":0.1,"cd":0.8,"role":"방어","react":1},"흙 꺼짐":{"n":"흙 꺼짐","el":"흙","t":"trap","tr":{"dmg":8,"kind":"blunt","root":1.8,"r":1},"vis":1,"cost":3,"cast":0.35,"cd":2.5,"role":"함정"},"갈래 돌":{"n":"갈래 돌","el":"흙","tags":["miss"],"desc":"다섯 갈래 돌","t":"proj","m":0.06,"v":40,"R":9,"multi":5,"cost":3,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격"},"흙먼지":{"n":"흙먼지","el":"흙","tags":["ranged","elec"],"desc":"먼지로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":2,"cast":0.2,"cd":5,"role":"방어"},"흙 손":{"n":"흙 손","el":"흙","tags":["miss","kite"],"desc":"상대 발밑 흙이 발목을 움켜쥔다","t":"area","r":1.2,"delay":0.6,"dmg":6,"kind":"blunt","root":1.6,"vis":0,"R":10,"cost":4,"cast":0.25,"cd":2.5,"role":"공격"},"큰 바위":{"n":"큰 바위","el":"흙","tags":["wall","ranged"],"desc":"20kg 바위","t":"proj","m":20,"v":22,"R":26,"cost":12,"cast":2.2,"cd":3,"hit":{"kind":"blunt","flat":70,"stun":1},"rad":0.7,"role":"공격"},"가시 솟기":{"n":"가시 솟기","el":"흙","t":"area","r":1,"delay":0.45,"dmg":12,"kind":"blunt","root":1.2,"vis":0,"R":9,"cost":4,"cast":0.25,"cd":2,"role":"공격","desc":"상대 발밑 흙을 가시로 솟게 한다"},"돌 비":{"n":"돌 비","el":"흙","t":"lob","flight":0.9,"r":1.6,"dmg":14,"kind":"blunt","R":20,"cost":4,"cast":0.3,"cd":1.4,"role":"공격","desc":"작은 돌을 높이 흩뿌려 떨어뜨린다"},"흙 이불":{"n":"흙 이불","el":"흙","t":"smother","r":3,"cost":3,"cast":0.15,"cd":3,"role":"방어","desc":"둘레에 흙을 덮어 불과 독과 포자를 끈다"},"바위 박차기":{"n":"바위 박차기","el":"흙","t":"move","mv":"dash","dist":4,"cost":2,"cast":0.05,"cd":2,"role":"이동","desc":"바위를 차고 반동으로 튄다"},"석회 굳히기":{"n":"석회 굳히기","el":"흙","t":"proj","m":0.2,"v":26,"R":12,"cost":3,"cast":0.3,"cd":3,"hit":{"dmg":5,"kind":"blunt","lime":3},"role":"공격","rule":"bodyBind","desc":"석회 반죽을 다리에 붙인다. 3초 동안 구르는 거리가 절반. 산에 녹는다","rad":0.25},"가두는 기둥":{"n":"가두는 기둥","el":"흙","t":"cage","r":3,"pr":1.4,"hp":120,"dur":2.5,"R":10,"cost":6,"cast":0.35,"cd":6,"role":"공격","rule":"bodyBind","desc":"상대 둘레 3m에 석회 기둥 넷을 한꺼번에 세운다. 솟는 발판으로 넘을 수 있다"},"흙벽":{"n":"흙벽","el":"흙","t":"build","shape":"line","nb":3,"th":0.5,"at":1.3,"mat":"earth","cost":6,"cast":0.2,"cd":4,"lock":1,"role":"방어","rule":"bulwark","desc":"발밑 흙을 끌어와 앞에 벽을 쌓는다(블록 셋, 2.4 × 1.6 × 0.5 m). 세우는 동안 선다. 속도는 출력에 비례(대마법사 초당 0.6 m³, 약 3 s). 체력이 다할 때까지 서고 총알을 막는다. 흙을 끌어온 바깥쪽에 구덩이"},"보루":{"n":"보루","el":"흙","t":"build","shape":"ring","rad":2.2,"th":0.5,"mat":"earth","cost":14,"cast":0.3,"cd":30,"lock":1,"role":"방어","rule":"bulwark","desc":"제 둘레에 사방 벽을 쌓는다(반지름 2.2 m, 블록 열일곱). 대마법사 약 18 s"},"벽 밀기":{"n":"벽 밀기","el":"흙","t":"topple","R":14,"dmg":60,"root":2,"cost":6,"cast":0.5,"cd":5,"role":"공격","rule":"bulwark","desc":"서 있는 벽 아무것이나 한 방향으로 밀어 넘어뜨려 그 너머 한 줄(2.5 m)을 덮는다: 부딪힘 60 + 묶임 2 s. 벽은 무너진다"},"조약돌":{"n":"조약돌","el":"흙","t":"proj","m":0.05,"v":40,"R":70,"cost":1,"cast":0.3,"cd":1,"hit":{"kind":"blunt"},"role":"공격","desc":"손끝에서 튕겨 멀리 던지는 조약돌(약 9). 굳은 살이 두꺼우면 튕긴다","rule":"army"},"무거운 돌":{"n":"무거운 돌","el":"흙","t":"proj","m":3,"v":32,"R":70,"cost":5,"cast":1,"cd":4,"hit":{"kind":"blunt","flat":45},"rad":0.25,"role":"공격","desc":"주먹 둘만 한 돌을 멀리 던진다(45). 굳은 살을 뚫는다","rule":"army"}};
 }, {}];
 D["data/tiers.json"] = [function (module, exports, require) {
 module.exports = {"병사":{"C":0.3,"circles":1,"noise":0.12,"dec":0.3,"autoDodge":false,"mast":0,"tac":{"dodge":0.2}},"평범":{"C":1,"circles":1,"noise":0.08,"dec":0.2,"autoDodge":false,"mast":0.3,"tac":{"dodge":0.4}},"중간":{"C":2.5,"circles":3,"noise":0.05,"dec":0.15,"autoDodge":false,"mast":0.6,"tac":{"dodge":0.6}},"상위":{"C":5,"circles":5,"noise":0.03,"dec":0.12,"autoDodge":true,"mast":0.8,"tac":{"dodge":0.8}},"대마법사":{"C":10,"circles":10,"noise":0.02,"dec":0.1,"autoDodge":true,"mast":1,"tac":{"dodge":1,"focusLow":true}}};
@@ -99,6 +99,7 @@ const { types } = require('./hooks');
 const combo = require('./techniques/combo'), cancel = require('./techniques/cancel'), feint = require('./techniques/feint'), simul = require('./techniques/simul');
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -212,6 +213,8 @@ function pipeOf(W, m) {
   P.push(breakout);                       // 돌파 중이면 길을 막은 자를 친다
   P.push(...bh.valueMid);                 // 지렛대: 적이 화약통 옆에 섰다 (rules/barrels)
   if (T.crowd) P.push(crowd.value);       // 여럿이 뭉친 곳
+  if (T.swarm) P.push(swarm.value);       // 무리: 눈먼 틈의 무거운 수, 벽 뒤엔 곡사 (v2.0 둘째)
+  if (T.siege) P.push(siege.value);       // 성: 벽 세우기·벽 밀기·벽 없애기 (v2.0 둘째)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
@@ -275,7 +278,7 @@ function commit(W, m, K) {
   m.last = s.n; m.lastT = W.t;
 }
 module.exports = { decide, valueSpell, commit };
-}, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/combo":"src/brain/techniques/combo.js","./techniques/cancel":"src/brain/techniques/cancel.js","./techniques/feint":"src/brain/techniques/feint.js","./techniques/simul":"src/brain/techniques/simul.js","./techniques/tempo":"src/brain/techniques/tempo.js","./techniques/bait":"src/brain/techniques/bait.js","./techniques/learn":"src/brain/techniques/learn.js","./techniques/counter":"src/brain/techniques/counter.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/herd":"src/brain/techniques/herd.js","./techniques/crowd":"src/brain/techniques/crowd.js"}];
+}, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/combo":"src/brain/techniques/combo.js","./techniques/cancel":"src/brain/techniques/cancel.js","./techniques/feint":"src/brain/techniques/feint.js","./techniques/simul":"src/brain/techniques/simul.js","./techniques/tempo":"src/brain/techniques/tempo.js","./techniques/bait":"src/brain/techniques/bait.js","./techniques/learn":"src/brain/techniques/learn.js","./techniques/counter":"src/brain/techniques/counter.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/herd":"src/brain/techniques/herd.js","./techniques/crowd":"src/brain/techniques/crowd.js","./techniques/swarm":"src/brain/techniques/swarm.js","./techniques/siege":"src/brain/techniques/siege.js"}];
 D["src/brain/hooks.js"] = [function (module, exports, require) {
 'use strict';
 /* 숨 결투장 — 두뇌 훅 모으기 (brain/hooks, SPEC 22장)
@@ -339,6 +342,7 @@ D["src/brain/move.js"] = [function (module, exports, require) {
  * 피하기가 이기고, 알아챈 함정과 내 지연 폭발은 늘 비킨다. 걸음 방향은 K.vx·K.vy를 거쳐 기술·훅이 함께 고친다 */
 const { hyp } = require('./util');
 const cover = require('./techniques/cover'), position = require('./techniques/position'), lure = require('./techniques/lure');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 function steer(W, m, K) {
   const { foes, prefR, d, ux, uy, dodge, stance, escape } = K;
   let vx = 0, vy = 0;
@@ -358,6 +362,8 @@ function steer(W, m, K) {
   }
   K.vx = vx; K.vy = vy;
   lure.steer(W, m, K);   // 유도 (대가), 약한 척 물러서기 (전설)
+  swarm.steer(W, m, K);  // 무리: 장악권 바로 밖에 흩어져 선다 (v2.0 둘째)
+  siege.steer(W, m, K);  // 성: 총 앞에서 벽 뒤·장전 틈, 멀리 떠서 깎기, 물러나기 (v2.0 둘째)
   vx = K.vx; vy = K.vy;
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   // 소금 원: 선 가까이 오면 가운데로 (rules/saltRing). 피하기 걸음보다 뒤: 지대를 피하다 선 밖으로 나가 마르지 않게 (v2.0, 1.x에선 피하기가 이겼다)
@@ -371,7 +377,7 @@ function steer(W, m, K) {
   m.mv.x = vx; m.mv.y = vy;
 }
 module.exports = { steer };
-}, {"./util":"src/brain/util.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/position":"src/brain/techniques/position.js","./techniques/lure":"src/brain/techniques/lure.js"}];
+}, {"./util":"src/brain/util.js","./techniques/cover":"src/brain/techniques/cover.js","./techniques/position":"src/brain/techniques/position.js","./techniques/lure":"src/brain/techniques/lure.js","./techniques/swarm":"src/brain/techniques/swarm.js","./techniques/siege":"src/brain/techniques/siege.js"}];
 D["src/brain/read.js"] = [function (module, exports, require) {
 'use strict';
 /* 숨 결투장 — 두뇌 1: 읽기 (과녁과 성향, 위협)
@@ -446,7 +452,7 @@ const D = require('../../data/skills.json');
 // 실제로 쓰는 서클 = 그릇(등급) × 솜씨 (1.7.0)
 const CIRC = { half: c => Math.max(1, Math.floor(c / 2)), minus1: c => Math.max(1, c - 1), same: c => c, plus1: c => c + 1 };
 // 기술 스위치(tac) → 기술 파일 (techniques/). 무슨 단계가 무슨 기술을 켜는지 보일 때 쓴다
-const TECH = { combo: 'combo', combo2: 'combo', plan: 'combo', cancel: 'cancel', cancel2: 'cancel', feint: 'feint', simul: 'simul', triple: 'simul', pause: 'tempo', tempo: 'tempo', bait: 'bait', learn: 'learn', counter: 'counter', cover: 'cover', strip: 'cover', outrange: 'position', terrain: 'position', lure: 'lure', fakeRetreat: 'lure', herd: 'herd', crowd: 'crowd', dodgeAim: 'dodgeAim', grab: 'grab' };
+const TECH = { combo: 'combo', combo2: 'combo', plan: 'combo', cancel: 'cancel', cancel2: 'cancel', feint: 'feint', simul: 'simul', triple: 'simul', pause: 'tempo', tempo: 'tempo', bait: 'bait', learn: 'learn', counter: 'counter', cover: 'cover', strip: 'cover', outrange: 'position', terrain: 'position', lure: 'lure', fakeRetreat: 'lure', herd: 'herd', crowd: 'crowd', dodgeAim: 'dodgeAim', grab: 'grab', swarm: 'swarm', siege: 'siege', wallSite: 'siege', wallBreak: 'siege', retreat: 'siege' };
 const SKILLS = {}, CIRCLES = {};
 for (const name in D.levels) {
   const L = D.levels[name], base = L.from === 'basic' ? D.basic : SKILLS[L.from].tac;
@@ -733,6 +739,67 @@ function terrain(W, m, K, covering) {
 }
 module.exports = { outrange, terrain };
 }, {"../util":"src/brain/util.js"}];
+D["src/brain/techniques/siege.js"] = [function (module, exports, require) {
+'use strict';
+/* 기술: 성 (tac.siege, 모두, v2.0 둘째 묶음 SPEC 25장) — 선명도 5 이상이 다섯 넘는 적이나 총 둘 이상을 상대할 때만
+ * 총(머스킷 등 총이 든 적, 110 m 안)이 있으면:
+ *   날고 있으면 가장 가까운 총에서 62 m 쯤(총은 50 m 넘게 멀리 뜬 과녁을 쏘지 않는다, rules/army)에서 구름·곡사로 깎는다
+ *   땅이면 먼저 벽(흙벽 3 s, 총 쪽으로)을 세우고, 총 대부분이 장전 중일 때 벽 옆으로 나와 치고, 장전이 끝나 가면 벽 뒤로
+ * 벽 밀기: 벽 너머에 적이 있으면(깔리는 적 × 0.6)
+ * 벽 자리(상급부터, tac.wallSite): 세울 자리 5 m 안에 적이 있으면 세우지 않는다(적의 엄폐가 된다)
+ * 벽 없애기(대가부터, tac.wallBreak): 적이 벽 뒤에 숨었으면 그 벽을 미는 값 × 2, 물·산·큰 바위 × 2
+ * 머리: 적이 다섯 넘으면 피로 88 넘어서는 공격하지 않는다(무리 앞에서 파도를 타면 제 몸을 태운다)
+ * 물러나기(상급부터, tac.retreat): 체력 35% 아래에서 적이 다섯 넘거나 총이 셋 넘으면 싸우지 않는다: 높이 떠(15 m) 사거리 밖으로(m.retreat, rules/flight가 본다) */
+const { C, hyp } = require('../util');
+function guns(W, m) { let n = 0; for (const q of W.foes[m.side]) if (!q.flee && q._gun && hyp(q.x - m.x, q.y - m.y) < 110) n++; return n; }
+function on(W, m, K) { if (!(m.tac.siege && m.C >= 5 && W.rules.army)) return 0; for (const q of K.foes) if (q._gun === undefined) q._gun = q.book.some(n => { const s = K.S[n]; return s && s.mundane && s.t === 'proj'; }); const g = guns(W, m); return g >= 2 || K.foes.length > 5 ? 1 + g : 0; }
+// 나와 총들 사이에 벽이 있는가 (내 곁 2 m 안의 벽)
+function covered(W, m, gx, gy) { for (const w of W.walls) { if (w.cage || hyp(w.x - m.x, w.y - m.y) > 2) continue; const dx = gx - m.x, dy = gy - m.y, l = hyp(dx, dy) || 1; if (((w.x - m.x) * dx + (w.y - m.y) * dy) / l > 0) return true; } return false; }
+function centroid(W, m) { let x = 0, y = 0, n = 0; for (const q of W.foes[m.side]) if (q._gun && !q.flee && hyp(q.x - m.x, q.y - m.y) < 110) { x += q.x; y += q.y; n++; } return n ? [x / n, y / n] : null; }
+function steer(W, m, K) {
+  const k = on(W, m, K); m.retreat = 0; if (!k) return;
+  const T = m.tac;
+  if (T.retreat && m.hp < 0.35 * m.hpMax && (K.foes.length > 5 || k - 1 > 3)) { m.retreat = 1; let rx = 0, ry = 0; for (const q of K.foes) { const dx = m.x - q.x, dy = m.y - q.y, l = hyp(dx, dy) || 1; rx += dx / l; ry += dy / l; } K.vx = rx; K.vy = ry; return; }
+  if (k - 1 < 2) return;   // 총이 둘 넘지 않으면 예전 그대로
+  const c = centroid(W, m); if (!c) return;
+  let near = null, nd = 1e9; for (const q of W.foes[m.side]) if (q._gun && !q.flee) { const d = hyp(q.x - m.x, q.y - m.y); if (d < nd) { nd = d; near = q; } }
+  if (m.z >= 1 && near) { const d = nd || 1, ux = (near.x - m.x) / d, uy = (near.y - m.y) / d, want = d - 62; K.vx = ux * (want > 3 ? 1 : want < -3 ? -1.5 : 0) - uy * m.sf * 0.6; K.vy = uy * (want > 3 ? 1 : want < -3 ? -1.5 : 0) + ux * m.sf * 0.6; return; }
+  // 땅: 벽 뒤에 있다가 장전 틈에 나온다
+  if (!covered(W, m, c[0], c[1])) return;
+  let ready = 0, all = 0; for (const q of W.foes[m.side]) if (q._gun && !q.flee && hyp(q.x - m.x, q.y - m.y) < 110) { all++; if (!((q.cd['머스킷'] || 0) > 2.5)) ready++; }
+  const dx = c[0] - m.x, dy = c[1] - m.y, l = hyp(dx, dy) || 1;
+  if (ready / all > 0.3) { K.vx = -dx / l * 0.5; K.vy = -dy / l * 0.5; }   // 벽 뒤에 붙는다
+  else { K.vx = -dy / l * m.sf * 2; K.vy = dx / l * m.sf * 2; }            // 옆으로 나와 친다
+}
+function value(W, m, K, o) {
+  const s = o.s, k = on(W, m, K); if (!k) return;
+  const T = m.tac, g = k - 1;
+  if (m.retreat && o.isOff) { o.v *= 0.3; return; }
+  if (o.isOff && m.fat > 88 && !m.wave && K.foes.length > 5) { o.v = 0; return; }   // 무리 앞에서 머리가 넘치면(파도) 제 몸을 태운다: 문턱 앞에서 공격을 쉰다
+  if (s.t === 'build') {
+    if (m.z >= 1 || g < 2) return;
+    const c = centroid(W, m); if (!c || covered(W, m, c[0], c[1])) return;
+    const B = W.mods.find(r => r.name === 'bulwark'); if (!B || B.api.buildT(m, s) > 20) return;
+    if (s.shape === 'ring' && !(K.foes.length > 12 && g > 8)) return;
+    o.tx = c[0]; o.ty = c[1];
+    if (T.wallSite) { const d = hyp(c[0] - m.x, c[1] - m.y) || 1, wx = m.x + (c[0] - m.x) / d * 1.3, wy = m.y + (c[1] - m.y) / d * 1.3; for (const q of K.foes) if (hyp(q.x - wx, q.y - wy) < 5) return; }
+    o.v = s.shape === 'ring' ? 15 : 20;   // 총 앞 땅에선 먼저 벽 (어떤 공격보다 먼저)
+  }
+  if (s.t === 'topple') {
+    const B = W.mods.find(r => r.name === 'bulwark'); if (!B) return;
+    const R = C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {};
+    for (const w of W.walls) {
+      if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
+      const blocks = w.grp >= 0 ? W.walls.filter(x => x.grp === w.grp) : [w], dx = w.x - m.x, dy = w.y - m.y, l = hyp(dx, dy) || 1;
+      let foes = 0, mine = 0; for (const q of B.api.crushed(W, blocks, dx / l, dy / l)) { if (q.side === m.side) mine++; else foes++; }
+      if (mine) continue; const v = foes * 0.6 * (T.wallBreak ? 2 : 1); if (v > best) { best = v; bx = w.x; by = w.y; }
+    }
+    if (best > 0) { o.v = best; o.tx = bx; o.ty = by; }
+  }
+  if (T.wallBreak && !K.los && W.walls.some(w => hyp(w.x - K.e.x, w.y - K.e.y) < 3) && (s.el === '물' || (s.hit && s.hit.flat >= 60) || (s.t === 'zone' && s.z.k === 'acid'))) o.v *= 2;
+}
+module.exports = { on, steer, value };
+}, {"../util":"src/brain/util.js"}];
 D["src/brain/techniques/simul.js"] = [function (module, exports, require) {
 'use strict';
 /* 기술: 동시 착탄 (대가 tac.simul, 전설 tac.triple)
@@ -770,6 +837,38 @@ function start(W, m, K) {
 // 시전을 건 뒤: 묶기를 쐈다
 function fired(W, m, K, s, Tc) { if (m.simul && s.n === m.simul.bind) { m.simul.fired = 1; m.log.comboTry++; m.log.cTry.simul = (m.log.cTry.simul || 0) + 1; m.comboPend = { tgt: K.e, kind: 'simul', until: W.t + Tc + 0.8 }; } }
 module.exports = { wait, value, start, fired };
+}, {"../util":"src/brain/util.js"}];
+D["src/brain/techniques/swarm.js"] = [function (module, exports, require) {
+'use strict';
+/* 기술: 무리 (tac.swarm, 모두, v2.0 둘째 묶음 SPEC 25장) — 셋 넘는 편이 훨씬 선명한 적(선명도 3배 이상) 하나를 상대할 때만
+ * 자리: 적의 장악권 반경(domainR × C) 바로 밖(+ 5 m)에 흩어져 선다: 내 사거리가 그보다 길면. 동료와 4 m 안이면 서로 밀어낸다(뭉치면 구름 하나에 무너진다)
+ *   총: 적이 멀리(50 m 넘게) 떠 있으면 쏘지 않으니(rules/army) 흩어지거나 가까운 바위·벽 뒤로
+ * 값: 적이 눈멀었으면 무거운 수(한 방 45 이상) × 3, 동료가 번쩍임을 모으는 중이면 × 2 (읽지 못하는 틈에 동시에)
+ *   적이 벽 뒤(시야 없음, 곁에 벽)면 곡사·박격포·산·물 × 2 */
+const { C, hyp, maxRange } = require('../util');
+// 이 사람이 무리 싸움 중인가: 과녁이 선명도 3배 이상, 내 편이 셋 넘게 살아 있다. 장악권 반경이 있을 때만(rules.domainR)
+function on(W, m, e) { if (!(m.tac.swarm && W.rules.domainR > 0 && e.C >= 3 * m.C)) return false; let n = 0; for (const q of W.ms) if (q.side === m.side && q.hp > 0 && ++n > 3) return true; return false; }
+const heavyOf = s => s.hit && s.hit.flat >= 45;
+function steer(W, m, K) {
+  const e = K.e; if (!on(W, m, e) || K.stance === 'breakout' || m.flee) return;
+  const D = W.rules.domainR * e.C + 5, R = maxRange(m, K.S), d = hyp(e.x - m.x, e.y - m.y) || 1, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
+  let vx = K.vx, vy = K.vy;
+  const gun = m.book.some(n => { const s = K.S[n]; return s && s.mundane && s.t === 'proj'; });
+  if (gun && e.z >= 2 && d > 50) {   // 탄을 아낀다: 가까운 가림 뒤로 (없으면 흩어진다)
+    let best = null, bd = 15; for (const o of W.obs) { const q = hyp(o.x - m.x, o.y - m.y); if (q < bd) { bd = q; best = o; } } for (const o of W.walls) { const q = hyp(o.x - m.x, o.y - m.y); if (q < bd) { bd = q; best = o; } }
+    if (best) { const ox = best.x - e.x, oy = best.y - e.y, ol = hyp(ox, oy) || 1, tx = best.x + ox / ol * (best.r + 0.6), ty = best.y + oy / ol * (best.r + 0.6); vx = tx - m.x; vy = ty - m.y; }
+    else { vx = 0; vy = 0; }
+  } else if (R > D) { const want = d - D; vx = ux * (want > 2 ? 1 : want < -1 ? -2 : 0) - uy * m.sf * 0.4; vy = uy * (want > 2 ? 1 : want < -1 ? -2 : 0) + ux * m.sf * 0.4; }   // 반경 바로 밖, 옆으로 돈다
+  else return;
+  for (const q of W.ms) { if (q === m || q.side !== m.side || q.hp <= 0) continue; const dx = m.x - q.x, dy = m.y - q.y; if (dx > 4 || dx < -4 || dy > 4 || dy < -4) continue; const l = hyp(dx, dy) || 0.1; if (l < 4) { vx += dx / l * (4 - l) * 0.5; vy += dy / l * (4 - l) * 0.5; } }   // 흩어진다
+  K.vx = vx; K.vy = vy;
+}
+function value(W, m, K, o) {
+  const e = K.e, s = o.s; if (!(o.v > 0) || !on(W, m, e)) return;
+  if (heavyOf(s)) { if (e.st.blind > 0.2) o.v *= 3; else for (const q of W.ms) if (q.side === m.side && q !== m && q.hp > 0 && q.cast && q.cast.s.t === 'flash') { o.v *= 2; break; } }
+  if (!K.los && W.walls.some(w => hyp(w.x - e.x, w.y - e.y) < 3) && (s.t === 'lob' || (s.t === 'zone' && s.z.k === 'acid') || s.el === '물')) o.v *= 2;   // 벽 뒤의 적
+}
+module.exports = { on, steer, value };
 }, {"../util":"src/brain/util.js"}];
 D["src/brain/techniques/tempo.js"] = [function (module, exports, require) {
 'use strict';
@@ -1034,7 +1133,7 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
-    H: null, mods: null, _bh: null, _fly: false, _grp: 0, _sideN: null,   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
+    H: null, mods: null, _bh: null, _fly: false, _grp: 0, _sideN: null, salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
       // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
   };
   hooksFor(W, opt);
@@ -1073,7 +1172,8 @@ function addMage(W, spec, side, x, y) {
       shieldAny: false, shieldSave: false, cancel: false, cover: false, tempo: false, coverW: 1.5,
       // (1.7.0 대가·전설) 몰이, 엄폐 걷어내기, 유도, 동시 착탄, 기회 캔슬 / 방어 미끼, 약한 척 물러서기, 세 마법 겹치기
       herd: false, strip: false, lure: false, simul: false, cancel2: false, bait: false, fakeRetreat: false, triple: false,
-      bigPlan: false, dodgeAim: false, grab: false }, spec.tac),   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+      bigPlan: false, dodgeAim: false, grab: false,
+      swarm: true, siege: true, wallSite: false, wallBreak: false, retreat: false }, spec.tac),   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
     st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
@@ -1081,7 +1181,8 @@ function addMage(W, spec, side, x, y) {
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
     _bkC: NaN, _bk: 1, _clC: NaN, _cl: 0, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
-    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9, flee: 0, shock: 0,   // 사기 (rules/morale): 도망 중, 충격
+    z: spec.z > 0 ? spec.z : 0, vz: 0, fly: spec.z >= 1 ? 1 : 0, flyWant: spec.z >= 1,   // 장면은 떠서 시작할 수 있다 (z)
+    fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9, flee: 0, shock: 0, retreat: 0,   // 사기 (rules/morale): 도망 중, 충격
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
     flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0 },
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
@@ -1163,6 +1264,8 @@ function addWall(W, w) {
   const o = { x: w.x, y: w.y, r: w.r, hp: w.hp, hp0: w.hp, t: w.t, own: w.own, by: w.by || null, used: 0, cage: w.cage || 0, mat: w.mat || 'lime', thick: w.thick || w.r * 2, grp: w.grp ?? -1 };
   const h = W.H.wall; for (let i = 0; i < h.length; i++) h[i](W, o); W.walls.push(o); return o;
 }
+// 소금 땅 위인가 (장면의 사각형, rules/saltLand)
+function onSalt(W, x, y) { const a = W.salt; for (let i = 0; i < a.length; i++) { const r = a[i]; if (x >= r.x && y >= r.y && x <= r.x + r.w && y <= r.y + r.h) return true; } return false; }
 function frontBlock(e, sx, sy) { if (!e.buf.front) return false; const a = atan2(sy - e.y, sx - e.x), b = Math.abs(((a - e.aim + Math.PI * 3) % (Math.PI * 2)) - Math.PI) < 1.1; if (b && !e.buf.front.used) { e.buf.front.used = 1; e.log.defHit++; } return b; }   // 막은 방패는 방어 적중으로 한 번 센다
 
 /* ---------------- 피해와 상태 ---------------- */
@@ -1524,10 +1627,10 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, hyp3, clamp, addWall, keepIf, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
+X = { DT, hyp, hyp3, clamp, addWall, keepIf, onSalt, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
-module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, onSalt, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
 }, {"./math":"src/math.js","./data":"src/data.js","./rules":"src/rules/index.js","./rules/saltRing":"src/rules/saltRing.js"}];
 D["src/data.js"] = [function (module, exports, require) {
 'use strict';
@@ -1616,7 +1719,7 @@ const duel = (a, b, opt) => battle([a], [b], opt);
 
 /* ---------------- 장면 (SPEC 19장) ---------------- */
 // 장면의 한 사람 → 사람 규격. 비워 둔 칸은 등급의 값을 따른다
-const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp'];
+const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp', 'z'];
 function sceneMage(mm, side, lib) {
   const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type, skill: mm.skill }, lib);
   for (const k of OVERRIDE) if (mm[k] != null && mm[k] !== '') sp[k] = k === 'autoDodge' ? !!mm[k] : +mm[k];
@@ -1627,7 +1730,7 @@ function sceneLib(sc) { return { spells: Object.assign({}, core.SPELLS, sc.spell
 function sceneWorld(sc, opt = {}) {
   const lib = sceneLib(sc), sides = sc.sides || [], specs = sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; }));
   const A = arena(sc, sc.rules, [].concat(...specs));
-  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, spells: lib.spells, brain });
+  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, salt: sc.salt, spells: lib.spells, brain });
   place(W, specs, sc.layout, sides.map(s => s.mages));
   return W;
 }
@@ -1762,7 +1865,7 @@ D["src/rules/army.js"] = [function (module, exports, require) {
 /* 규칙: 군대 (rules.army, v2.0 둘째 묶음, SPEC 25장, 수는 data/rules/army.json)
  * 머스킷(이 규칙이 켜진 세계에선 2판의 수): 장전 15~20 s(쏠 때마다 뽑는다), 화승 점화 지연 0.1~0.5 s(예비동작에 더한다),
  *   사거리 100 m, 흔들림 = 0.004 + 0.0004 × 거리(rad: 50 m에서 ±1.2 m, 100 m에서 ±4.4 m). 두뇌가 겨눈 자리를 흐리지 않는다(총이 흔든다)
- * 박격포(마법 '박격포', 규칙에 딸림): 높이 쏘아 벽 너머에 떨어뜨린다(곡사 3 s, 반지름 2.5 m, 90, 벽 600). 겨눈 자리 ± 3%×거리
+ * 박격포(마법 '박격포', 규칙에 딸림): 높이 쏘아 벽 너머에 떨어뜨린다(곡사 3 s, 반지름 2.5 m, 90, 벽 600). 겨눈 자리 ± max(5 m, 5% × 거리)
  * 돌아가며 쏘기(tac.volley = 줄 수 n): 사람마다 줄 번호(id mod n), 17.5/n s마다 한 줄씩 쏜다
  * 탄 낭비 금지: 과녁이 2 m 넘게 떠 있고 50 m 넘게 멀면 쏘지 않는다 */
 const A = require('../../data/rules/army.json');
@@ -1777,7 +1880,7 @@ module.exports = {
       const s = best.s; if (!s.mundane) return;
       cast.tx = best.tx; cast.ty = best.ty;   // 총은 두뇌가 흐리지 않는다 (흔들림은 총이, core)
       if (s.fuse) cast.T += W.rnd(0, s.fuse[1] - s.fuse[0]);   // 화승 점화 지연
-      if (s.t === 'lob') { const d = Math.sqrt((best.tx - m.x) * (best.tx - m.x) + (best.ty - m.y) * (best.ty - m.y)) * A.mortar.spread; cast.tx += W.rnd(-d, d); cast.ty += W.rnd(-d, d); }
+      if (s.t === 'lob') { const d = Math.max(A.mortar.min, Math.sqrt((best.tx - m.x) * (best.tx - m.x) + (best.ty - m.y) * (best.ty - m.y)) * A.mortar.spread); cast.tx += W.rnd(-d, d); cast.ty += W.rnd(-d, d); }   // 박격포는 ± max(5 m, 5% × 거리)
     },
     value(W, m, K, o) {
       const s = o.s; if (!s.mundane || !(o.v > 0)) return;
@@ -2101,7 +2204,7 @@ module.exports = {
       // 걸음: 나는 사람·떨어지는 사람은 여기서 움직인다 (땅의 걸음을 건너뛴다)
       move(W, m) {
         if (m.fly === 0) {
-          if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m))) return false;
+          if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m) && !(W.salt.length && X.onSalt(W, m.x, m.y)))) return false;
           m.fly = 1; m.vz = 0; m._flT0 = W.t;   // 이륙
         }
         if (m.roll > 0) m.roll -= DT;
@@ -2110,7 +2213,7 @@ module.exports = {
           if (m.z <= 0) { m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.flog.falls++; hurt(W, m, m.fallZ * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun); m.cast = m.castB = m.chan = null; }
           return true;
         }
-        const P = outP(m), want = m.flyWant && P >= F.minP, fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
+        const P = outP(m), want = m.flyWant && P >= F.minP && !(W.salt.length && X.onSalt(W, m.x, m.y)), fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
         let v = hyp(m.vx, m.vy);
         // 오르내림 (목표 높이로)
         const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax); m.vz += clamp(vzT - m.vz, -F.vzAcc * DT, F.vzAcc * DT);
@@ -2168,7 +2271,7 @@ module.exports = {
         for (const a of W.areas) if (a.src.side !== m.side && hyp(a.x - m.x, a.y - m.y) < a.r + Bn.danger) { if (!a.vis) ground++; else if (a.s.kind === 'elec') elec++; }
         for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < Bn.danger) ground++;
         for (const z of W.zones) if (z.src.side !== m.side && z.dps && hyp(z.x - m.x, z.y - m.y) < (z.r || 2) + Bn.danger) ground++;
-        let near = 0, guns = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; } if (near >= 3) ground++;
+        let near = 0, guns = 0, gunsFar = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; if (q._gun && dq < Bn.gunFar) gunsFar++; } if (near >= 3) ground++;
         if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
         const ec = T.readCast ? e.cast : null, eBig = !!(ec && ec.s.big), myBig = !!(m.cast && m.cast.s.big), far = K.stance === 'kite' || K.stance === 'breakout';
         let want = true, fv = F.corner, fz = Bn.z;
@@ -2183,13 +2286,16 @@ module.exports = {
           if (ec.T - ec.t < 0.3) { fv = Bn.hover; fz = Math.min(F.zMax, m.z + 6); if (m._feC !== ec) { m._feC = ec; m.flog.feint++; } } else fv = Bn.feintV;
         }
         if (K.dodge && L >= 2) fv = Math.max(fv, F.corner);   // 피할 땐 구르지 않고 옆으로 내달린다 (걸음 방향은 피하기가 정했다)
-        if (sustain && m.fat > Bn.restFat) want = false;   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
+        if (sustain && (m.fat > Bn.restFat || (m.wave && Bn.waveLand && !gunsFar))) want = false;   // 머리가 뜨겁거나 파도를 타면 내려앉아 식힌다 (떠 있으면 비행 피로로 파도에서 못 내려온다, v2.0 둘째)   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
         if (ground) { want = true; if (near >= 3) { fz = Bn.zCrowd; fv = Math.min(fv, Bn.vCrowd); } }   // 발밑·함정·무리가 많으면 뜬다 (무리 위에선 낮게 천천히)
-        if (L >= 2 && guns >= Bn.guns) want = false;   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
+        if (L >= 2 && guns >= Bn.guns) want = false;
+        if (m.retreat) { want = true; fz = F.zMax; fv = F.vMax; }   // 물러나기: 높이 떠 사거리 밖으로 (brain/techniques/siege)   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
         else if (L >= 3 && T.readCast && (elecT || elec >= Bn.elecMany)) want = false;   // 번개 위협엔 내려앉는다
         if (!sustain) { want = want && (ground >= Bn.hopN || K.stance === 'breakout') && m.fat < Bn.tiredFat && (m.fly !== 1 || W.t - m._flT0 < Bn.hopT); fv = Math.max(fv, F.corner); fz = Bn.zLow; }   // 상위: 떠오르기·도약·활공만 (hopT 초까지)
         // 브레이크를 잡을 거리가 모자라면 늦춘다 (끝·소금 선)
         const v = hyp(m.vx, m.vy); if (v > 1) { const d = room(W, m, m.vx / v, m.vy / v) - 2, cap = Math.sqrt(2 * F.fwdG * G * (d > 0 ? d : 0)); if (fv > cap) fv = cap < Bn.slow ? Bn.slow : cap; }
+        // 제 구름이 터질 때 있을 자리를 미리 비킨다 (날면 관성이 커서 지금 자리만 보면 늦다, v2.0 둘째)
+        if (m.fly === 1) for (const a of W.areas) { if (a.src !== m) continue; const px = m.x + m.vx * a.t, py = m.y + m.vy * a.t, dx = px - a.x, dy = py - a.y, l = hyp(dx, dy); if (l < a.r + Bn.ownGap) { K.vx = (dx || 0.1) / (l || 1) * 3; K.vy = (dy || 0.1) / (l || 1) * 3; if (fv < F.corner) fv = F.corner; } }
         m.flyWant = want; m.fv = fv; m.fz = fz;
       },
       // 하늘에서 쉬기: 떠 있고 파도가 깊으면(restWave) 쏘기를 멈추고 머리를 식힌다 (땅의 무리는 쉽게 닿지 못한다)
@@ -2238,7 +2344,7 @@ D["src/rules/index.js"] = [function (module, exports, require) {
  *   types·brainTypes: 새 마법 틀의 방출과 두뇌의 값. 틀은 스위치와 상관없이 늘 붙는다(마법이 규칙에 딸리면 rule 필드가 책에서 뺀다)
  *   brain: 두뇌 훅. 기본 두뇌가 세계마다 켜진 규칙의 것만 모은다 (brain/hooks.js)
  * 차례가 곧 같은 훅 안의 부르는 차례다. 예전 한 덩어리의 계산 차례를 그대로 따른다(결과가 비트 하나 안 바뀌게). 새 규칙은 뒤에 붙는다 */
-const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light'), require('./bulwark'), require('./army'), require('./morale')];
+const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light'), require('./bulwark'), require('./army'), require('./morale'), require('./saltLand')];
 // 엔진 훅의 이름과 부르는 자리 (SPEC 22장 표). 값을 돌려주는 훅은 받은 값을 고쳐 돌려준다
 const ENGINE_HOOKS = ['place', 'init', 'world', 'wall', 'wallHit', 'lobLand', 'ceff', 'power', 'gate', 'share', 'release', 'overload', 'roll', 'hurtMod', 'hurt', 'effHold', 'eff', 'rain', 'smother', 'ring', 'fatRecover', 'mageStep', 'mageZones', 'move', 'speed', 'speedLate', 'accel', 'chan', 'projSub', 'ignite', 'areaHit', 'zoneTick', 'notice'];
 const BRAIN_HOOKS = ['aim', 'read', 'hideCast', 'steer', 'avoid', 'empty', 'circles', 'react', 'cancel', 'rest', 'prep', 'value', 'valueRisk', 'valueMid', 'valueLate', 'commit', 'castTime'];
@@ -2252,7 +2358,7 @@ function add(r) {
 }
 function remove(name) { const i = RULES.findIndex(x => x.name === name); if (i >= 0) { RULES.splice(i, 1); ver++; } }
 module.exports = { RULES, ENGINE_HOOKS, BRAIN_HOOKS, onOf, add, remove, ver: () => ver };
-}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js","./bulwark":"src/rules/bulwark.js","./army":"src/rules/army.js","./morale":"src/rules/morale.js"}];
+}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js","./bulwark":"src/rules/bulwark.js","./army":"src/rules/army.js","./morale":"src/rules/morale.js","./saltLand":"src/rules/saltLand.js"}];
 D["src/rules/light.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 빛 — 번쩍임·열선 (rules.light, v2.0 둘째 묶음, SPEC 25장, 마법은 data/spells/빛.json)
@@ -2331,7 +2437,7 @@ D["src/rules/morale.js"] = [function (module, exports, require) {
  * 셋 이상인 편만. 0.5 s마다 도망칠 확률 = (편 사상자 몫 − 0.2) × 2 (넘을 때만) + 충격 × 0.35, 을 단단함으로 나눈다.
  *   충격: 10 m 안의 동료가 큰 수(한 방 50 이상)에 쓰러질 때마다 + 1, 초당 반으로 준다
  *   단단함 = √C × 판단 단계(초보 1, 중급 1.3, 상급 1.6, 대가 2, 전설 2.5, 없으면 1): 병사 0.55, 평범 1, 대마법사 3.2
- * 도망치는 사람은 가장 가까운 싸움터 끝으로 달리고 공격하지 않는다. 끝에 닿으면 싸움에서 빠진다(체력 0으로 센다, alog.fled) */
+ * 도망치는 사람은 가장 가까운 싸움터 끝으로 달리고 공격하지 않는다(alog.fledT = 도망을 시작한 때). 끝에 닿으면 싸움에서 빠진다(체력 0으로 센다, alog.fled) */
 const { hyp, pow } = require('../math');
 const M = require('../../data/rules/army.json').morale;
 const hard = m => Math.sqrt(Math.max(m.C, 0.01)) * (m.skill ? M.skill[m.skill] || 1 : 1);
@@ -2347,7 +2453,7 @@ module.exports = {
         if (m.hp <= 0 || m.flee || W._sideN[m.side] < M.minSide) continue;
         const cas = (down[m.side] || 0) / W._sideN[m.side], p = (cas > M.cas ? (cas - M.cas) * M.casK : 0) + m.shock * M.shock;
         m.shock *= k;
-        if (p > 0 && W.rng() < p / hard(m) * M.every) { m.flee = 1; m.cast = m.castB = m.chan = null; }
+        if (p > 0 && W.rng() < p / hard(m) * M.every) { m.flee = 1; m.alog.fledT = W.t; m.cast = m.castB = m.chan = null; }   // fledT: 도망을 시작한 때
       }
     },
     // 동료가 큰 수에 쓰러졌다
@@ -2358,7 +2464,7 @@ module.exports = {
     // 끝에 닿으면 빠진다
     mageStep(W, m) {
       if (!m.flee) return; const e = M.edge;
-      if (m.x < e || m.y < e || m.x > W.width - e || m.y > W.height - e) { m.alog.fled = 1; m.alog.fledT = W.t; m.hp = 0; m.deathT = W.t; }
+      if (m.x < e || m.y < e || m.x > W.width - e || m.y > W.height - e) { m.alog.fled = 1; m.hp = 0; m.deathT = W.t; }
     },
   }),
   brain: () => ({
@@ -2524,6 +2630,22 @@ module.exports = {
   },
 };
 }, {"../brain/techniques/dodgeAim":"src/brain/techniques/dodgeAim.js","../brain/techniques/grab":"src/brain/techniques/grab.js","../brain/techniques/cancel":"src/brain/techniques/cancel.js"}];
+D["src/rules/saltLand.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 소금 땅 (장면의 salt 사각형이 있을 때만, v2.0 둘째 묶음, SPEC 25장)
+ * 소금은 마력을 끊는다(WORLD 148): 소금 땅 위에서 만들어지는 마법은 흩어진다(g = 0, 총은 그대로), 소금 땅 위에선 뜰 수 없다(rules/flight가 본다).
+ * 소금 도시 장면: 싸움터 대부분이 소금 땅이고 광장만 맨땅이다 */
+module.exports = {
+  name: 'saltLand', on: W => W.salt.length > 0,
+  engine: X => ({
+    gate(W, m, s, tx, ty) { if (s.mundane) return false; const p = X.formPoint(m, s, tx, ty) || [m.x, m.y]; return X.onSalt(W, p[0], p[1]); },
+  }),
+  brain: B => ({
+    // 소금 땅 위에 설 자리의 마법은 버린다 (흩어질 것을 쏘지 않는다)
+    value(W, m, K, o) { const s = o.s; if (!(o.v > 0) || s.mundane) return; const k = s.t; const at = k === 'area' || k === 'zone' || k === 'trap' || k === 'thread' ? [o.tx, o.ty] : [m.x, m.y]; if (B.C.onSalt(W, at[0], at[1])) o.v = 0; },
+  }),
+};
+}, {}];
 D["src/rules/saltRing.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 줄어드는 소금 원 (rules.saltRing, 1.9.0, SPEC 2장)

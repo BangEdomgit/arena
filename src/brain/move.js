@@ -4,6 +4,7 @@
  * 피하기가 이기고, 알아챈 함정과 내 지연 폭발은 늘 비킨다. 걸음 방향은 K.vx·K.vy를 거쳐 기술·훅이 함께 고친다 */
 const { hyp } = require('./util');
 const cover = require('./techniques/cover'), position = require('./techniques/position'), lure = require('./techniques/lure');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 function steer(W, m, K) {
   const { foes, prefR, d, ux, uy, dodge, stance, escape } = K;
   let vx = 0, vy = 0;
@@ -23,6 +24,8 @@ function steer(W, m, K) {
   }
   K.vx = vx; K.vy = vy;
   lure.steer(W, m, K);   // 유도 (대가), 약한 척 물러서기 (전설)
+  swarm.steer(W, m, K);  // 무리: 장악권 바로 밖에 흩어져 선다 (v2.0 둘째)
+  siege.steer(W, m, K);  // 성: 총 앞에서 벽 뒤·장전 틈, 멀리 떠서 깎기, 물러나기 (v2.0 둘째)
   vx = K.vx; vy = K.vy;
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
   // 소금 원: 선 가까이 오면 가운데로 (rules/saltRing). 피하기 걸음보다 뒤: 지대를 피하다 선 밖으로 나가 마르지 않게 (v2.0, 1.x에선 피하기가 이겼다)

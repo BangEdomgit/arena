@@ -364,6 +364,20 @@ ok('v2.0 군대·사기 (SPEC 25장): 머스킷 장전 15~20 s·화승 0.1~0.5 s
   const [W5, e5, q5] = mk({}, 2); q5[0].hp = 0; for (let i = 0; i < 30 * 10; i++) A.stepWorld(W5); assert.ok(!q5[1].flee);
   const [W6, e6, q6] = mk({ morale: false }, 10); for (let i = 0; i < 6; i++) q6[i].hp = 0; for (let i = 0; i < 30 * 10; i++) A.stepWorld(W6); assert.ok(q6.every(x => !x.flee));
 });
+ok('v2.0 두뇌: 무리는 장악권 바로 밖에 흩어지고, 대마법사는 총 앞에서 벽을 세우고 날면 62 m 밖에서 깎는다, 소금 땅에선 마법이 흩어진다', () => {
+  const mk = (crowd, n, d, rules, arch) => { const W = A.createWorld({ seed: 2, width: 300, height: 200, obstacles: [], brain: A.brain, rules: Object.assign({ saltRing: false }, rules) }); const c = A.addMage(W, Object.assign(A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 성' }), arch), 0, 100, 100); const q = []; for (let i = 0; i < n; i++) q.push(A.addMage(W, A.mage(crowd), 1, 100 + d, 90 + i * 5)); A.stepWorld(W); return [W, c, q]; };
+  // 무리: 70 m에서 반경(50) + 5 쪽으로 다가서고, 사거리가 짧으면(기본기) 예전 그대로
+  const [W, c, q] = mk({ tier: '평범', deck: '조약돌' }, 5, 70); for (const x of q) { x.thinkT = 0; A.brain.think(W, x); } assert.ok(q.every(x => x.mv.x < 0), '다가선다');
+  const [W1, c1, q1] = mk({ tier: '평범', deck: '조약돌' }, 5, 40); for (const x of q1) { x.thinkT = 0; A.brain.think(W1, x); } assert.ok(q1.every(x => x.mv.x > 0), '반경 안이면 물러난다');
+  const [W2, c2, q2] = mk({ tier: '평범', deck: '조약돌' }, 5, 70, { domainR: 0 }); for (const x of q2) { x.thinkT = 0; A.brain.think(W2, x); } assert.ok(q2.every(x => x.mv.x < 0 && !x._k.stance.startsWith('k')), '반경이 없으면 기술이 꺼진다');
+  // 대마법사: 땅에서 총 다섯이 40 m 앞이면 흙벽을 총 쪽으로 세운다
+  const [W3, c3, q3] = mk({ tier: '병사', deck: '머스킷' }, 5, 40); for (const x of q3) x.thinkT = 1e9; let first = null; for (let i = 0; i < 60 && !first; i++) { c3.flyWant = false; A.stepWorld(W3); if (c3.cast) first = c3.cast; } assert.ok(first && first.s.n === '흙벽' && first.tx > c3.x && first.T > 3, '흙벽 ' + (first && first.s.n));
+  // 날고 있으면 가장 가까운 총에서 62 m 쪽으로 물러난다
+  const [W4, c4, q4] = mk({ tier: '병사', deck: '머스킷' }, 5, 40, {}, { z: 10 }); c4.thinkT = 0; A.brain.think(W4, c4); assert.ok(c4.mv.x < 0, '물러난다');
+  // 소금 땅: 그 위에서 만들어지는 마법은 흩어지고, 뜰 수 없다
+  const W5 = A.createWorld({ seed: 1, salt: [{ x: 0, y: 0, w: 20, h: 30 }], obstacles: [], rules: { domain: false } }), m5 = A.addMage(W5, A.mage({ tier: '대마법사' }), 0, 10, 15), e5 = A.addMage(W5, A.mage({ tier: '평범' }), 1, 30, 15);
+  assert.strictEqual(A.gAt(W5, m5, W5.spells['돌 창'], 30, 15), 0); assert.strictEqual(A.gAt(W5, e5, W5.spells['돌 창'], 10, 15), 1); m5.flyWant = true; m5.fz = 6; for (let i = 0; i < 30; i++) A.stepWorld(W5); assert.strictEqual(m5.z, 0);
+});
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
   assert.ok(FL.canFly({ C: 10, fat: 0 }) && FL.canFly({ C: 5, fat: 0 }) && !FL.canFly({ C: 2.5, fat: 0 }) && !FL.canFly({ C: 5, fat: 100 }), '출력 75 kW');

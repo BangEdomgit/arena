@@ -67,7 +67,7 @@ const duel = (a, b, opt) => battle([a], [b], opt);
 
 /* ---------------- 장면 (SPEC 19장) ---------------- */
 // 장면의 한 사람 → 사람 규격. 비워 둔 칸은 등급의 값을 따른다
-const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp'];
+const OVERRIDE = ['C', 'circles', 'noise', 'dec', 'autoDodge', 'hp', 'z'];
 function sceneMage(mm, side, lib) {
   const sp = mage({ tier: mm.tier, deck: mm.deck, book: mm.book, name: mm.name, gear: mm.gear, tac: mm.tac, brain: mm.brain || side.brain, type: mm.type, skill: mm.skill }, lib);
   for (const k of OVERRIDE) if (mm[k] != null && mm[k] !== '') sp[k] = k === 'autoDodge' ? !!mm[k] : +mm[k];
@@ -78,7 +78,7 @@ function sceneLib(sc) { return { spells: Object.assign({}, core.SPELLS, sc.spell
 function sceneWorld(sc, opt = {}) {
   const lib = sceneLib(sc), sides = sc.sides || [], specs = sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; }));
   const A = arena(sc, sc.rules, [].concat(...specs));
-  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, spells: lib.spells, brain });
+  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, salt: sc.salt, spells: lib.spells, brain });
   place(W, specs, sc.layout, sides.map(s => s.mages));
   return W;
 }

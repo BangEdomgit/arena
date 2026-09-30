@@ -9,6 +9,7 @@ const { types } = require('./hooks');
 const combo = require('./techniques/combo'), cancel = require('./techniques/cancel'), feint = require('./techniques/feint'), simul = require('./techniques/simul');
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -122,6 +123,8 @@ function pipeOf(W, m) {
   P.push(breakout);                       // 돌파 중이면 길을 막은 자를 친다
   P.push(...bh.valueMid);                 // 지렛대: 적이 화약통 옆에 섰다 (rules/barrels)
   if (T.crowd) P.push(crowd.value);       // 여럿이 뭉친 곳
+  if (T.swarm) P.push(swarm.value);       // 무리: 눈먼 틈의 무거운 수, 벽 뒤엔 곡사 (v2.0 둘째)
+  if (T.siege) P.push(siege.value);       // 성: 벽 세우기·벽 밀기·벽 없애기 (v2.0 둘째)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
