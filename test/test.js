@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.2.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.3.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -261,7 +261,7 @@ ok('모듈과 훅 (1.12.0): 켜진 규칙의 훅만 모이고, 규칙 모듈을 
   A.register.unrule('시험 방패'); assert.strictEqual(duel({ '시험 방패': true }), base);
   A.register.rule({ name: '틀린 훅', engine: () => ({ nope() {} }) }); assert.throws(() => A.createWorld({})); A.register.unrule('틀린 훅');
   // 데이터: 원소 파일을 모은 마법의 차례·덱·판단 수준
-  assert.deepStrictEqual(Object.keys(A.SPELLS).slice(0, 82), require('../data/spells/order.json')); assert.strictEqual(A.DECKS['자유'][0], Object.keys(A.SPELLS)[0]);
+  const ORD = require('../data/spells/order.json'); assert.deepStrictEqual(Object.keys(A.SPELLS).slice(0, ORD.length), ORD); assert.strictEqual(A.DECKS['자유'][0], Object.keys(A.SPELLS)[0]);
   assert.ok(A.SKILLS['전설'].tac.learn && A.SKILLS['초보'].tac.pause && A.CIRCLES['초보'](5) === 2 && A.CIRCLES['전설'](5) === 6);
   assert.deepStrictEqual(require('../src/brain/skills').techniquesOf('초보'), ['tempo']);
 });
@@ -441,6 +441,42 @@ ok('v2.0 이단: 위력 × 0.9, 머리 회복 × 1.3', () => {
   const W = A.createWorld({ seed: 1, obstacles: 0 }), s = W.spells['돌 창'], h = A.addMage(W, { book: ['돌 창'], type: '이단' }, 0, 5, 15), b = A.addMage(W, { book: ['돌 창'], type: '서퍼' }, 1, 35, 15);
   assert.ok(Math.abs(A.power(W, h, s) / A.power(W, b, s) - 0.9) < 1e-12);
   h.fat = b.fat = 50; A.stepWorld(W); assert.ok(Math.abs((50 - h.fat) / (50 - b.fat) - 1.3) < 1e-9);
+});
+ok('v2.3 날기 끊기 (SPEC 27장): 급정지 5 g, 떨어지면 닿는 속도의 높이 × 4, 공기 쿠션이면 0, 끊은 동안 서클·출력이 풀린다, 옆 튀기, 끄면 없다', () => {
+  const mk = (rules = {}) => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 200, height: 150, rules: Object.assign({ domain: false, saltRing: false, flightCut: true }, rules) }); const q = A.addMage(W, Object.assign(A.mage({ tier: '대마법사', skill: '대가' }), { z: 8 }), 0, 50, 75), e = A.addMage(W, A.mage({}), 1, 190, 140); q.thinkT = e.thinkT = 1e9; q.fz = 8; q.fv = 40; q.mv.x = 1; return [W, q]; };
+  const st = (W, n) => { for (let i = 0; i < n; i++) A.stepWorld(W); };
+  let [W, q] = mk(); st(W, 90); const v0 = Math.hypot(q.vx, q.vy); q.cut.w = 1; st(W, 3); assert.ok(Math.abs(v0 - 5 * 9.8 * 0.1 - Math.hypot(q.vx, q.vy)) < 0.2 && q.flog.brake === 1, '급정지');
+  [W, q] = mk(); st(W, 60); const s = W.spells['낙뢰'], p1 = A.power(W, q, s), z0 = q.z, h0 = q.hp; q.cut.w = 4; st(W, 1);
+  const U = require('../src/brain/util'); require('../src/brain/hooks').hooks(W);
+  assert.ok(q.fly === 3 && A.power(W, q, s) > p1 * 1.2 && U.circOf(W, q) === q.circles, '끊으면 출력·서클이 풀린다'); q.fly = 1; assert.ok(U.circOf(W, q) < q.circles); q.fly = 3;
+  q.cut.z = -1; q.thinkT = 1e9; st(W, 60); assert.ok(q.fly === 0 && q.flog.crash === 1 && Math.abs(h0 - q.hp - z0 * 4) < z0 * 0.2 && q.st.stun > 0, '쿠션 없이 추락 ' + (h0 - q.hp) + ' / ' + z0 * 4);
+  [W, q] = mk(); st(W, 60); const h1 = q.hp; q.cut.w = 5; q.cut.z = (2 * 5 * 9.8 * q.z) / (2 * 9 * 9.8) + 0.5; st(W, 60); assert.ok(q.hp === h1 && q.flog.cush === 1 && q.flog.crash === 0, '공기 쿠션');
+  [W, q] = mk(); st(W, 60); q.fv = 0; q.mv.x = 0; st(W, 60); const x0 = q.x, y0 = q.y; q.cut.x = 0; q.cut.y = 1; q.cut.w = 2; st(W, 12); assert.ok(Math.hypot(q.x - x0, q.y - y0) > 2.5, '옆 튀기');
+  [W, q] = mk({ flightCut: false }); st(W, 60); q.cut.w = 4; st(W, 5); assert.ok(q.fly === 1 && q.flog.cut === 0, '끄면 끊지 않는다');
+  // 판단: 끊는 수가 있고, 같은 씨앗이면 같다
+  const d = () => A.sceneWorld({ seed: 3, rules: { flightCut: true }, sides: [{ mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 운영' }] }, { mages: [{ tier: '대마법사', skill: '대가', deck: '대마법사 운영' }] }] });
+  const run = () => { const w = d(); while (!A.over(w)) A.stepWorld(w); return w; }, a = run(), b = run();
+  assert.ok(a.t === b.t && a.ms[0].hp === b.ms[0].hp && a.ms[0].flog.cut > 0 && a.ms[0].flog.cut === b.ms[0].flog.cut, '끊기 판단');
+});
+ok('v2.3 진지 (SPEC 27장): 함정 한도는 서클만큼, 옆 함정 연쇄, 하늘 덮개는 떠 있는 적만 굳힌다, 불·비가 적의 함정을 치운다, 짓기 단계', () => {
+  const mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: Object.assign({ domain: false, saltRing: false, fort: true, trapChain: true }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 진지' }), 0, 10, 20), e = A.addMage(W, A.mage({ tier: '중간' }), 1, 40, 20), e2 = A.addMage(W, A.mage({ tier: '중간' }), 1, 42, 26); m.thinkT = e.thinkT = e2.thinkT = 1e9; return [W, m, e, e2]; };
+  const trap = (W, m, x, y) => { const t = { x, y, s: W.spells['번개 지뢰'], src: m, arm: 0, seen: new Set([m.id]), pow: 1, r: 0.9, chain: 0 }; W.traps.push(t); return t; };
+  let [W, m, e, e2] = mk(); assert.strictEqual(A.trapCap(W, m), m.circles); assert.strictEqual(A.trapCap(mk({ fort: false })[0], m), 3);
+  // 연쇄: e가 밟은 함정 곁(2 m)의 함정이 0.2 s 뒤 터져 그 곁(밟지는 않은 1.1 m)의 e2를 친다
+  e.x = 30; e.y = 20; e2.x = 30; e2.y = 23.1; trap(W, m, 30, 20); const t2 = trap(W, m, 30, 22); const h2 = e2.hp; for (let i = 0; i < 10; i++) A.stepWorld(W);
+  assert.ok(t2.done && e2.hp < h2 && e2.st.stun > 0 && m.fort.chain === 1, '연쇄');
+  [W, m, e, e2] = mk({ trapChain: false }); e.x = 30; e.y = 20; e2.x = 30; e2.y = 23.1; trap(W, m, 30, 20); const t3 = trap(W, m, 30, 22); for (let i = 0; i < 10; i++) A.stepWorld(W); assert.ok(!t3.done, '연쇄를 끄면 그대로');
+  // 하늘 덮개: 떠 있는 적만 0.5 s마다 굳힌다
+  [W, m, e, e2] = mk(); A.release(W, m, { s: W.spells['하늘 덮개'], tx: 40, ty: 20, tgt: e }); const z = W.zones.find(q => q.k === 'sky'); assert.ok(z && z.r > 10);
+  e.x = z.x; e.y = z.y; e.z = 5; e.fly = 1; e2.x = z.x + 2; e2.y = z.y; for (let i = 0; i < 16; i++) A.stepWorld(W); assert.ok(e.fly === 2 && e2.st.stun <= 0 && m.fort.skyZap >= 1, '덮개');
+  // 비·불이 적의 함정을 치운다
+  [W, m, e, e2] = mk(); const t4 = trap(W, e, 20, 20), t5 = trap(W, e, 20, 30); A.release(W, m, { s: W.spells['비 뿌리기'], tx: 20, ty: 20, tgt: e }); for (const h of W.H.ignite) h(W, 20, 30, 1.5, m);
+  assert.ok(t4.done && t5.done && m.fort.clear === 2, '치우기');
+  // 짓기: 대마법사 대가가 진지를 세우고 벽·함정·덮개를 짓는다 (끄면 짓기 단계가 없다)
+  const g = rules => { const w = A.sceneWorld({ seed: 2, rules, sides: [{ mages: [{ tier: '대마법사', skill: '대가', deck: '대마법사 진지' }] }, { mages: [{ tier: '대마법사', skill: '상급', deck: '대마법사 진지' }] }] }); while (!A.over(w)) A.stepWorld(w); return w.ms[0]; };
+  const on = g({ fort: true, trapChain: true }), off = g({});
+  assert.ok(on.fort.founded >= 1 && on.fort.walls + on.fort.traps + on.fort.sky >= 3 && on.mlog.phase.build > 0, '짓기 ' + JSON.stringify(on.fort));
+  assert.ok(!off.mlog.phase.build && !off.fort.founded && !off.book.includes('하늘 덮개'), '끄면 짓지 않는다');
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

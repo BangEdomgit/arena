@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.2.0
+ * 숨 결투장 — 엔진 핵심 v2.3.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -42,6 +42,8 @@ const DEFAULT_RULES = {
   bulwark: true,       // (v2.0 둘째) 벽: 세우는 데만 힘, 흙·석회는 무너질 때까지, 총알을 막음, 벽 밀기, 벽 뒤는 안 보임 (SPEC 25장, rules/bulwark)
   light: true,         // (v2.0 둘째) 빛: 번쩍임(눈멂)·열선(거울) (SPEC 25장, rules/light)
   flight: true,        // (v2.0) 비행: 출력 75 kW 이상(상위부터)이 난다. 높이 z, 속도 판단 (SPEC 24장, rules/flight)
+  flightCut: false,    // (v2.3) 날기 끊기: 급정지·떨어지기·내리꽂기·튀어오르기·옆 튀기·공기 쿠션. 끊는 동안 비행에 묶인 서클·출력이 풀린다 (SPEC 27장, rules/flight)
+  trapChain: false,    // (v2.3) 옆 함정 연쇄: 함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다 (SPEC 27장, rules/fort)
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
@@ -59,7 +61,7 @@ const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
+function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -140,7 +142,8 @@ function addMage(W, spec, side, x, y) {
       herd: false, strip: false, lure: false, simul: false, cancel2: false, bait: false, fakeRetreat: false, triple: false,
       bigPlan: false, dodgeAim: false, grab: false,
       swarm: true, siege: true, wallSite: false, wallBreak: false, retreat: false,
-      rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false }, spec.tac),   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+      rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false,
+      flyCut: 0, fortify: 0, breach: false }, spec.tac),   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
     st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
@@ -150,10 +153,17 @@ function addMage(W, spec, side, x, y) {
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
     z: spec.z > 0 ? spec.z : 0, vz: 0, fly: spec.z >= 1 ? 1 : 0, flyWant: spec.z >= 1,   // 장면은 떠서 시작할 수 있다 (z)
     fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9, flee: 0, shock: 0, retreat: 0,
-    phase: 'probe', _phT: 0, _phUntil: -9, _phHp: 0, _phHpT: -9, _shT: -9,   // 리듬 (v2.2, brain/techniques/rhythm): 떠보기·들어가기·빠지기
+    // 리듬 (v2.2, brain/techniques/rhythm): 단계(떠보기·들어가기·빠지기, v2.3: 짓기·진지)와 속 값(단계 시각·물러남 끝·2 s 전 체력과 그 시각, 몰이 자리를 고른 시각)
+    phase: 'probe', ph: { t: 0, until: -9, hp: 0, hpT: -9, shT: -9 },
+    // 날기 끊기 (v2.3, rules/flight): 두뇌가 청한 끊기(w), 하는 중인 끊기(k: 1 급정지·2 옆 튀기·3 튀어오르기·4 떨어지기·5 내리꽂기)와 남은 시간·간격, 옆 방향, 공기 쿠션을 뿜을 높이(−1 없음)·뿜는 중, 떨어지기 시작 높이, 내려앉으며 친 수와 시각
+    cut: { w: 0, k: 0, t: 0, cd: 0, x: 0, y: 0, z: -1, on: false, z0: 0, n: null, nT: -9 },
+    // 사람의 맨 위 칸은 127개까지다: 넘으면 V8이 리터럴을 느린 길로 만들어 판이 두 배 느려진다 (v2.3에서 쟀다). 새 칸은 하위 객체에 (SPEC 17장)
       // 사기 (rules/morale): 도망 중, 충격
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
-    flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0 },
+    flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0,
+      cut: 0, brake: 0, side: 0, hop: 0, drop: 0, dive: 0, cush: 0, crash: 0, dropTry: 0, dropHit: 0, hfeint: 0 },   // 날기 끊기 (v2.3): 끊은 수와 갈래별, 공기 쿠션, 쿠션 실패(추락), 내려앉으며 친 시도·명중, 높이 속이기
+    // 진지 (v2.3, 27장, rules/fort): 자리·바라보는 쪽, 짓는 계획(칸 목록), 세운 시각, 몰이길에 든 것을 센 시각 / 기록: 지은 벽(세우기·기둥 시전)·함정·하늘 덮개, 덮개가 굳힌 수, 연쇄로 터진 함정, 치운 함정·덮개, 몰이길로 든 적, 진지 안·밖에서 적에게 받은 피해, 세운 진지
+    fort: { x: NaN, y: NaN, ux: 0, uy: 0, plan: null, t: -9, gT: -9, walls: 0, traps: 0, sky: 0, skyZap: 0, chain: 0, clear: 0, funnel: 0, inDmg: 0, outDmg: 0, founded: 0 },
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
     // 고수 싸움의 기록 (v2.2, 26장 지표): 칸마다 역할별 시전(A·B·자동), 리듬 단계별 시간, 세운·없앤 지형
     mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
@@ -234,7 +244,7 @@ function blocked(W, x1, y1, x2, y2, z) {
 function inZone(z, x, y) { if (z.shape === 'circle') return hyp(x - z.x, y - z.y) < z.r; const dx = cos(z.a), dy = sin(z.a), rx = x - z.x, ry = y - z.y; return Math.abs(rx * dx + ry * dy) < z.len / 2 && Math.abs(-rx * dy + ry * dx) < 0.6; }
 // 벽 세우기: 모든 벽이 이것으로 선다. 모양이 늘 같은 리터럴로 옮기고(속도) 규칙이 고친다(재료의 수명, rules/bulwark)
 function addWall(W, w) {
-  const o = { x: w.x, y: w.y, r: w.r, hp: w.hp, hp0: w.hp, t: w.t, own: w.own, by: w.by || null, used: 0, cage: w.cage || 0, mat: w.mat || 'lime', thick: w.thick || w.r * 2, grp: w.grp ?? -1 };
+  const o = { x: w.x, y: w.y, r: w.r, hp: w.hp, hp0: w.hp, t: w.t, own: w.own, by: w.by || null, used: 0, cage: w.cage || 0, mat: w.mat || 'lime', thick: w.thick || w.r * 2, grp: w.grp ?? -1, mk: w.mk ?? -1 };   // mk: 세운 사람의 번호(흙벽·보루, 진지의 두뇌가 본다)
   const h = W.H.wall; for (let i = 0; i < h.length; i++) h[i](W, o); W.walls.push(o); W._wv++; return o;
 }
 // 벽 격자 (속도, v2.0 둘째): 벽이 WMIN개 넘게 서면 8 m 칸마다 벽의 번호를 적어 두고, 가까운 칸의 벽만 원래 차례(번호 순)로 본다.
@@ -293,6 +303,8 @@ function eff(W, m, o, g = 1) {
   const h = W.H.eff; for (let i = 0; i < h.length; i++) h[i](W, m, o, gh);   // 몸 묶기 (rules/control). 붙잡는 효과라 gh
   if (m.st.stun > 0) { m.cast = null; m.castB = null; m.chan = null; }
 }
+// 한 사람이 깔아 둘 수 있는 함정 수: 셋. 규칙이 고친다(진지: 서클만큼, rules/fort)
+function trapCap(W, m) { let n = 3; const h = W.H.trapCap; for (let i = 0; i < h.length; i++) n = h[i](W, m, n); return n; }
 const hit = (m, s) => { m.log.hits[s.n] = (m.log.hits[s.n] || 0) + 1; if (s.big) m.log.bigHit++; };
 function addZone(W, src, z, x, y, a, g) { const gz = g ?? 1; const zz = Object.assign({}, z, { x, y, a: a || 0, src, dps: (z.dps || 0) * gz, t: z.d * (gz < 1 ? Math.max(0.3, gz) : 1) }); W.zones.push(zz); if (zz.k === 'fire') ignite(W, x, y, zz.r || (zz.len || 2) / 2, src); }
 // 불·전기가 (x, y) 둘레 r m에 닿았다 (화약통, rules/barrels)
@@ -360,7 +372,7 @@ function release(W, m, c) {
     case 'wall': {
       const n = s.n === '얼음 담' ? 3 : 1, a = atan2(uy, ux), px = -sin(a), py = cos(a), hpS = 1 + (m.C - 1) * 0.5;
       const grp = W._grp++, mat = s.el === '얼음' ? 'ice' : 'lime';
-      for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.1; addWall(W, { x: m.x + ux * s.at + px * off, y: m.y + uy * s.at + py * off, r: s.r, hp: s.hp * hpS, t: s.dur, by: m, own: m.side, mat, thick: s.r * 2, grp }); }
+      for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.1; addWall(W, { x: m.x + ux * s.at + px * off, y: m.y + uy * s.at + py * off, r: s.r, hp: s.hp * hpS, t: s.dur, by: m, own: m.side, mat, thick: s.r * 2, grp, mk: m.id }); }
       break;
     }
     case 'buff': {
@@ -377,8 +389,8 @@ function release(W, m, c) {
     }
     case 'trap': {
       const R0 = Math.min(d0, 6 * Math.sqrt(m.C)), mine = W.traps.filter(t => t.src === m);
-      if (mine.length >= 3) W.traps.splice(W.traps.indexOf(mine[0]), 1);
-      W.traps.push({ x: m.x + ux * R0, y: m.y + uy * R0, s, src: m, arm: 0.8, seen: new Set(s.vis ? W.ms.map(q => q.id) : [m.id]), pow: P, r: s.tr.r * Math.min(rs, 2) });
+      if (mine.length >= trapCap(W, m)) W.traps.splice(W.traps.indexOf(mine[0]), 1);   // 한도(보통 셋, 진지는 서클만큼, rules/fort)를 넘으면 가장 오래된 것을 거둔다
+      W.traps.push({ x: m.x + ux * R0, y: m.y + uy * R0, s, src: m, arm: 0.8, seen: new Set(s.vis ? W.ms.map(q => q.id) : [m.id]), pow: P, r: s.tr.r * Math.min(rs, 2), chain: 0 });
       break;
     }
     case 'ring': {
@@ -566,6 +578,7 @@ function stepWorld(W) {
   keepIf(W.zones, timeLeft);
   const nw = W.walls.length; keepIf(W.walls, wallLive); if (W.walls.length !== nw) W._wv++;
   for (const t of W.traps) {
+    if (t.done) continue;   // 이 걸음에 이미 터졌다 (옆 함정 연쇄, rules/fort)
     t.arm -= DT; if (t.arm > 0) continue;
     let e = null, bd = 1e9; for (const q of W.foes[t.src.side]) { const d = hyp(q.x - t.x, q.y - t.y); if (d < bd) { bd = d; e = q; } }
     if (!e) continue;
@@ -575,6 +588,7 @@ function stepWorld(W) {
       const tr = t.s.tr; if (tr.dmg) hurt(W, e, tr.dmg * t.pow, t.src, t.s.n, tr.kind || 'blunt'); eff(W, e, tr);
       if (tr.zone) addZone(W, t.src, Object.assign({}, tr.zone, { n: t.s.n }), t.x, t.y, 0, 1);
       hit(t.src, t.s); t.done = true;
+      const hf = H.trapFire; for (let i = 0; i < hf.length; i++) hf[i](W, t, e);   // 옆 함정 연쇄 (rules/fort)
     }
   }
   keepIf(W.traps, trapLive);
@@ -620,7 +634,7 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, hyp3, clamp, addWall, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
+X = { DT, hyp, hyp3, clamp, addWall, trapCap, canHit, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
-module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, onSalt, wallsIn, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, trapCap, onSalt, wallsIn, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };

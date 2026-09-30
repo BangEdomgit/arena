@@ -14,7 +14,7 @@ function value(W, m, K, o) {
   if (T.shape) {
     const terr = TERR[s.t] || (s.t === 'zone' && s.z && (s.z.k === 'ice' || s.z.k === 'fire' || s.z.k === 'acid' || s.z.k === 'spore' || s.z.k === 'nh3'));
     if (s.t === 'wall' && (m.phase === 'out' || (K.aimed && K.threat && (K.threat.s.t === 'thread' || K.threat.s.t === 'proj')))) { o.v = Math.max(o.v, 1); o.tx = e.x; o.ty = e.y; }
-    else if (terr && m.phase === 'in' && K.vt < -1 && K.d < 14) { const l = K.d || 1, tx = e.x + (e.x - m.x) / l * 3 + e.vx * 0.5, ty = e.y + (e.y - m.y) / l * 3 + e.vy * 0.5; o.v = Math.max(o.v, 0.9); o.tx = tx; o.ty = ty; m._shT = W.t; }
+    else if (terr && m.phase === 'in' && K.vt < -1 && K.d < 14) { const l = K.d || 1, tx = e.x + (e.x - m.x) / l * 3 + e.vx * 0.5, ty = e.y + (e.y - m.y) / l * 3 + e.vy * 0.5; o.v = Math.max(o.v, 0.9); o.tx = tx; o.ty = ty; m.ph.shT = W.t; }
     if (!K.los && (s.el === '물' || s.t === 'lob' || (s.t === 'zone' && s.z && s.z.k === 'acid'))) o.v *= 1.5;
   }
   if (T.roles && K.slot === 'B' && K.circ >= 3) { if (TERR[s.t] || s.t === 'zone' || s.t === 'build') o.v *= 1.5; else if (!o.isOff && K.aimed) o.v *= 1.3; }

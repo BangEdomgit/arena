@@ -34,7 +34,7 @@ function place(W, m, c, upto, addWall) {
   while (bw.k < upto && bw.k < n) {
     const [x, y, ox, oy] = spot(s, bw.x, bw.y, bw.a, bw.k, n); bw.k++;
     if (x < 0.5 || y < 0.5 || x > W.width - 0.5 || y > W.height - 0.5) continue;
-    addWall(W, { x, y, r: B0.r, hp: B0.hpM3 * volOf(s), t: 1e9, own: -1, mat: s.mat, thick: s.th, grp: bw.grp });
+    addWall(W, { x, y, r: B0.r, hp: B0.hpM3 * volOf(s), t: 1e9, own: -1, mat: s.mat, thick: s.th, grp: bw.grp, mk: m.id });
     W.zones.push({ k: 'pit', shape: 'circle', r: P.pit.r, x: x + ox * P.pit.out, y: y + oy * P.pit.out, a: 0, src: m, dps: 0, t: 1e9, n: '구덩이' });   // 흙을 끌어온 바깥쪽
   }
   if (bw.k >= n && !bw.done) { bw.done = 1; m.alog.walls++; }

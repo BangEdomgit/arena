@@ -24,22 +24,23 @@ function window(W, m, K, full) {
 }
 function phase(W, m, K) {
   const T = m.tac; if (!T.rhythm || m.C < STRONG) return;
-  const ml = m.mlog.phase, dt = W.t - m._phT; if (dt > 0 && dt < 1) ml[m.phase] = (ml[m.phase] || 0) + dt; m._phT = W.t;
+  const ml = m.mlog.phase, dt = W.t - m.ph.t; if (dt > 0 && dt < 1) ml[m.phase] = (ml[m.phase] || 0) + dt; m.ph.t = W.t;
   const full = T.rhythm === true, e = K.e, d = K.d;
-  if (W.t - m._phHpT > 2) { m._phHp = m.hp; m._phHpT = W.t; }
+  if (W.t - m.ph.hpT > 2) { m.ph.hp = m.hp; m.ph.hpT = W.t; }
   const read = T.readCast && !K.blindR, big = read && ((e.cast && e.cast.s.big && e.cast.tgt === m) || (e.castB && e.castB.s.big && e.castB.tgt === m));
-  const danger = m.fat > (full ? 92 : 97) || big || m._phHp - m.hp > 0.15 * m.hpMax;
+  const danger = m.fat > (full ? 92 : 97) || big || m.ph.hp - m.hp > 0.15 * m.hpMax;
   const dIn = T.domainPush ? inDist(W, m, e) : 6;
-  if (danger) { m.phase = 'out'; m._phUntil = W.t + 1.5; }
-  else if (m.phase === 'out' && W.t < m._phUntil) { /* 물러나는 중 */ }
+  if (danger) { m.phase = 'out'; m.ph.until = W.t + 1.5; }
+  else if (m.phase === 'out' && W.t < m.ph.until) { /* 물러나는 중 */ }
   else {
     const w = window(W, m, K, full), close = (d > dIn ? d - dIn : 0) / (m.fly === 1 ? 25 : 7) + 0.25;
-    if (w > 0 && (!T.rhythmTime || w >= close)) { m.phase = 'in'; const u = W.t + w + (full ? 0.5 : 1.5); if (!(m._phUntil > u && m.phase === 'in')) m._phUntil = u; }
-    else if (!(m.phase === 'in' && W.t < m._phUntil)) m.phase = 'probe';
+    if (w > 0 && (!T.rhythmTime || w >= close)) { m.phase = 'in'; const u = W.t + w + (full ? 0.5 : 1.5); if (!(m.ph.until > u && m.phase === 'in')) m.ph.until = u; }
+    else if (!(m.phase === 'in' && W.t < m.ph.until)) m.phase = 'probe';
   }
   const pr = K.prefR; K.prefR = m.phase === 'in' ? dIn : m.phase === 'out' ? (pr > OUT_R ? pr : OUT_R) : (pr > PROBE_R ? pr : PROBE_R);
   K.aggr *= m.phase === 'in' ? 1.4 : m.phase === 'out' ? 0.6 : 0.9;
   K.pressB = m.phase === 'in' && full;
+  const hp = W._bh.phase; for (let i = 0; i < hp.length; i++) hp[i](W, m, K);   // 규칙이 더하는 단계 (진지의 짓기·진지, rules/fort, v2.3)
 }
 function value(W, m, K, o) {
   const s = o.s; if (m.C < STRONG) return;

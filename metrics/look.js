@@ -28,6 +28,11 @@ function look(m, t) {
     let c = 0, h = 0; for (const n in L.casts) { const sp = SPELLS[n]; if (!sp || sp.role !== '공격') continue; c += L.casts[n]; h += Math.min(L.casts[n], L.hits[n] || 0); }
     o['헛손질 비율'] = c ? 1 - h / c : 0; o['장악 경계 틈 (m)'] = ml.gS / ml.dN; o['장악 경계 이동 (m/s)'] = ml.bMove / Math.max(t, 1); o['세운 지형'] = ml.built; o['없앤 지형'] = ml.razed;
   }
+  // 날기 끊기 (v2.3, SPEC 27장): 끊은 수, 공기 쿠션과 그 실패(추락), 내려앉으며 친 명중(끊은 동안 풀린 수가 맞았다), 높이 속이기
+  if (f && f.cut) { o['날기 끊은 수'] = f.cut; o['공기 쿠션'] = f.cush; o['쿠션 실패 (추락)'] = f.crash; o['내려앉으며 친 명중'] = f.dropHit; o['내려앉으며 친 명중률'] = f.dropTry ? f.dropHit / f.dropTry : 0; o['높이 속이기'] = f.hfeint; }
+  // 진지 (v2.3, SPEC 27장): 지은 벽·함정·덮개, 몰이길로 든 적, 연쇄, 치운 적의 것, 진지 안·밖에서 적에게 받은 피해
+  const P = m.fort;
+  if (P && (P.walls || P.traps || P.sky || P.founded)) { o['지은 벽'] = P.walls; o['깐 함정'] = P.traps; o['하늘 덮개'] = P.sky; o['몰이길로 든 적'] = P.funnel; o['연쇄로 터진 함정'] = P.chain; o['치운 적의 함정·덮개'] = P.clear; o['진지 안 받은 피해'] = P.inDmg; o['진지 밖 받은 피해'] = P.outDmg; }
   return o;
 }
 module.exports = { look };
