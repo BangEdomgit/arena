@@ -1,11 +1,13 @@
 {
- "v": "1.13.0",
+ "v": "2.0.0",
  "name": "대마법사 대 평범 100명 둘러싸기 [risk+saltRing+wave]",
- "seed": 7,
+ "seed": 10,
  "maxT": 90,
  "layout": "ring",
  "rules": {
   "risk": true,
+  "bodyBind": false,
+  "response": false,
   "saltRing": true,
   "wave": true
  },
@@ -425,5 +427,5 @@
    ]
   }
  ],
- "note": "대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 14/15)이 이기고 길이(34.37 s)가 가운데값(34.37 s)에 가장 가까운 판"
+ "note": "대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 15/15)이 이기고 길이(49.37 s)가 가운데값(49.37 s)에 가장 가까운 판"
 }

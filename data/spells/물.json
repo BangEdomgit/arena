@@ -22,7 +22,7 @@
   "t": "cone",
   "L": 6,
   "dur": 0.5,
-  "dps": 6,
+  "dps": 5,
   "kind": "blunt",
   "wet": 1,
   "push": 6,

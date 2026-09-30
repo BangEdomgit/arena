@@ -1,7 +1,12 @@
 'use strict';
-/* 숨 결투장 v1.13.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v2.0.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+ * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
+const V1 = A.V1_RULES, V2 = Object.assign({}, A.DEFAULT_RULES);
+// 1.x의 시험은 1.x의 기본(규칙 꺼짐) 위에서 돈다: 그동안 DEFAULT_RULES를 1.x로 둔다. v2.0 시험 앞에서 되돌린다
+const legacy = on => Object.assign(A.DEFAULT_RULES, on ? V1 : V2);
+legacy(true);
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
 
 ok('같은 씨앗이면 같은 결과', () => {
@@ -93,7 +98,7 @@ ok('sandbox/arena.js는 원본(src·metrics·data·장면)과 맞다 (어긋나�
 ok('브라우저 모양(묶음 한 장, 전역)으로 읽어도 같은 결과', () => {
   const ctx = vm.createContext({});
   vm.runInContext(SRC('sandbox/arena.js'), ctx, { filename: 'sandbox/arena.js' });
-  const B = ctx.Arena; assert.strictEqual(B.VERSION, A.VERSION); assert.ok(ctx.ArenaCore && ctx.ArenaBrain && ctx.ArenaRegistry && ctx.ArenaData.scenes.duel);
+  const B = ctx.Arena; assert.strictEqual(B.VERSION, A.VERSION); Object.assign(B.DEFAULT_RULES, A.DEFAULT_RULES);   // 이 시험 동안의 기본(1.x)을 묶음에도 assert.ok(ctx.ArenaCore && ctx.ArenaBrain && ctx.ArenaRegistry && ctx.ArenaData.scenes.duel);
   for (const [n, sc] of Object.entries(SCENES)) { const W = B.sceneWorld(sc); while (!B.over(W)) B.stepWorld(W); assert.strictEqual(dig(B.result(W)), dig(A.runScene(sc)), n); }
 });
 ok('편이 셋 이상이어도 돈다', () => {
@@ -115,7 +120,7 @@ ok('등록: 새 마법·덱·등급·두뇌·규칙이 붙고, 새 규칙은 끄
 });
 ok('파도 (1.2.0): 꺼 두면 부류와 상관없이 예전과 같고, 켜면 서퍼는 100을 넘어 타다 170에서 휩쓸리고, 이단은 넘치지 않는다', () => {
   const mm = (type, deck) => A.mage({ tier: '중간', deck, type });
-  assert.strictEqual(dig(A.duel(mm('서퍼'), mm('이단', '기본기'), { seed: 3 })), dig(A.duel(mm(), mm(undefined, '기본기'), { seed: 3 })));
+  assert.strictEqual(dig(A.duel(mm('서퍼'), mm('이단', '기본기'), { seed: 3, rules: V1 })), dig(A.duel(mm(), mm(undefined, '기본기'), { seed: 3, rules: V1 })));
   const pour = type => {   // 머리를 넘치게 붓는다
     const W = A.createWorld({ seed: 1, obstacles: 0, rules: { wave: true } }); const m = A.addMage(W, { book: ['돌 창'], type }, 0, 5, 15); A.addMage(W, {}, 1, 25, 15); A.stepWorld(W);
     const seen = []; for (let k = 0; k < 40; k++) { A.release(W, m, { s: W.spells['돌 창'], tx: 25, ty: 15 }); seen.push({ fat: m.fat, wave: m.wave, stun: m.st.stun || 0 }); }
@@ -281,6 +286,31 @@ ok('대응·은실 옷 (1.13.0): 꺼 두면 예전과 같고, 순간 반응은 �
   const sv = gear => { const [W3, q, f] = mk({ silver: true }, { gear }); f.x = q.x + 3; f.y = q.y; A.release(W3, f, { s: W3.spells['짧은 실'], tx: q.x, ty: q.y }); return q; };
   const a = sv({}), b = sv({ silver: true });
   const SP = require('../data/rules/silver.json'); assert.ok(Math.abs(b.st.stun / a.st.stun - SP.hold) < 1e-9 && Math.abs(b.log.taken.elec / a.log.taken.elec - SP.elec) < 1e-9, a.st.stun + ' ' + b.st.stun);
+});
+legacy(false);   // 여기부터 v2.0의 기본 (일꾼도 v2.0 기본으로 돈다)
+ok('v2.0 기본 (SPEC 24장): risk·saltRing·wave·hpScale 켬, 체력 150 × max(C, 1)^1.2, V1_RULES면 1.x', () => {
+  const W = A.createWorld({ seed: 1 }); assert.ok(W.rules.risk && W.rules.saltRing && W.rules.wave && W.rules.hpScale);
+  assert.strictEqual(W.mods.map(r => r.name).join(','), 'gear,terrain,saltRing,wave,risk,multiSlot');
+  const hp = C => A.addMage(W, { C }, 0, 5, 5).hpMax; assert.strictEqual(hp(1), 150); assert.strictEqual(hp(0.3), 150); assert.ok(Math.abs(hp(2.5) - 150 * Math.pow(2.5, 1.2)) < 1e-9 && Math.abs(hp(10) - 150 * Math.pow(10, 1.2)) < 1e-9);
+  const W1 = A.createWorld({ seed: 1, rules: V1 }); assert.strictEqual(W1.mods.map(r => r.name).join(','), 'gear,terrain,multiSlot'); assert.strictEqual(A.addMage(W1, { C: 2.5 }, 0, 5, 5).hpMax, 150);
+  const W2 = A.createWorld({ seed: 1, rules: Object.assign({}, V1, { hpScale: true }) }); assert.ok(Math.abs(A.addMage(W2, { C: 0.3 }, 0, 5, 5).hpMax - 150 * Math.pow(0.3, 2.5)) < 1e-9, '1.x의 hpScale');
+});
+ok('v2.0 판단: 떨어지는 돌을 읽고, 소금 선 가까이선 피하기보다 가운데로, 선 밖에 떨어질 이동은 안 한다, 단계 데이터', () => {
+  const mk = (tac, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, A.mage({ tier: '평범', skill: '상급', tac }), 0, 15, 15), e = A.addMage(W, A.mage({ tier: '평범', deck: '흙' }), 1, 25, 15); A.stepWorld(W); return [W, m, e]; };
+  // 곡사: 떨어질 자리 안이면 비킨다 (readLob을 끄면 그대로 걷는다)
+  const lob = tac => { const [W, m, e] = mk(tac); m.rollCd = 9; W.lobs.push({ x: m.x + 0.3, y: m.y, t: 0.8, s: W.spells['곡사 돌'], src: e, pow: 1, r: 1 }); m.thinkT = 0; A.brain.think(W, m); return m.mv.x; };
+  assert.ok(lob({}) < 0, '곡사를 안 피했다'); assert.ok(!(lob({ readLob: false }) < -1), 'readLob을 꺼도 피했다');
+  // 소금 선 가까이: 적 지대를 피하는 걸음이 바깥을 가리켜도 가운데로
+  const [W, m, e] = mk({}); W.t = 60; const R = A.saltR(W), cx = W.width / 2, cy = W.height / 2; m.x = cx + R - 0.8; m.y = cy; m.rollCd = 9;
+  W.zones.push({ k: 'nh3', shape: 'circle', r: 1.5, x: m.x - 0.5, y: m.y, a: 0, src: e, dps: 1, t: 5, n: '시험' }); m.thinkT = 0; A.brain.think(W, m); assert.ok(m.mv.x < 0, '소금 선 밖으로 피했다 ' + m.mv.x);
+  // 단계 데이터 (SPEC 13·24장)
+  const T = n => A.SKILLS[n].tac; assert.ok(T('대가').slotBOff === false && T('대가').feint === false && T('대가').simul === false);
+  assert.ok(T('전설').shieldSave === false && T('전설').learnAim === 'wide' && T('전설').simul === true && T('전설').feint === 0.12 && T('상급').slotBOff === undefined);
+});
+ok('v2.0 이단: 위력 × 0.9, 머리 회복 × 1.3', () => {
+  const W = A.createWorld({ seed: 1, obstacles: 0 }), s = W.spells['돌 창'], h = A.addMage(W, { book: ['돌 창'], type: '이단' }, 0, 5, 15), b = A.addMage(W, { book: ['돌 창'], type: '서퍼' }, 1, 35, 15);
+  assert.ok(Math.abs(A.power(W, h, s) / A.power(W, b, s) - 0.9) < 1e-12);
+  h.fat = b.fat = 50; A.stepWorld(W); assert.ok(Math.abs((50 - h.fat) / (50 - b.fat) - 1.3) < 1e-9);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

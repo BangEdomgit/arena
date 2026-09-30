@@ -21,7 +21,7 @@ function prep(W, m, K) {
 }
 function value(W, m, K, o) {
   const s = o.s;
-  if (K.roll && (s.t === 'proj' || s.t === 'thread')) { o.tx += -K.uy * K.roll; o.ty += K.ux * K.roll; }
+  if (K.roll && (m.tac.learnAim === 'wide' ? s.t === 'area' || s.t === 'lob' : s.t === 'proj' || s.t === 'thread')) { const k = m.tac.learnAim === 'wide' ? 0.5 : 1; o.tx += -K.uy * K.roll * k; o.ty += K.ux * K.roll * k; }   // 'wide'(v2.0): 넓은 마법만 반쯤 옮긴다(안 구르면 여전히 맞는다)
   if (K.shieldNear) { if (s.t === 'proj' || s.t === 'thread') o.v *= 0.7; else if (s.t === 'area' || s.t === 'lob') o.v *= 1.25; }
 }
 module.exports = { mem, prep, value };

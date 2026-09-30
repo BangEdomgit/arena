@@ -1,10 +1,11 @@
 'use strict';
-/* 숨 결투장 v1.13.0 — 대실험: v2.0의 기본 규칙 조합 고르기 (Node, 코어를 다 쓴다)
+/* 숨 결투장 v2.0.0 — 대실험: v2.0의 기본 규칙 조합 고르기 (Node, 코어를 다 쓴다)
  *   node experiments/v2rules.js 1                 16조합 × 평범·중간 × 판단 다섯 총당(쌍마다 200판) → results/v2-phase1.json
  *   node experiments/v2rules.js 2 이름 이름 …      고른 조합을 깊게 → results/v2-phase2.json
  *   node experiments/v2rules.js 3 이름 …           행동 지표(허수아비·중급 상대) → results/v2-phase3.json
  *   --jobs N                                      일꾼 수 (기본 코어 수)
  * 조합 이름은 켠 스위치를 +로 이은 것(예: 'risk+control+saltRing', 모두 끄면 'base'). control = bodyBind + response(묶기 + 풀기).
+ * v1.13.0에서 한 대실험(reports/v2.0-rules.md)은 1.x의 체력·두뇌였다. v2.0에선 체력(hpScale)과 두뇌·마법 수치가 바뀌어 같은 수가 나오지 않는다.
  * 모든 판은 결정론이라 같은 명령이면 같은 JSON이 나온다(시각·걸린 시간 칸만 다르다). 합격 기준은 CRIT, 보고는 reports/v2.0-rules.md */
 const fs = require('fs'), path = require('path');
 const { runJobs, defaultWorkers } = require('./par');
@@ -12,11 +13,13 @@ const JOBS = require.resolve('./jobs');
 const OUT = path.join(__dirname, 'results');
 const SK = ['초보', '중급', '상급', '대가', '전설'], TIERS = ['평범', '중간'];
 const FLAGS = { risk: { risk: true }, control: { bodyBind: true, response: true }, saltRing: { saltRing: true }, wave: { wave: true } };
+// 끈 스위치도 적는다: v2.0부터 risk·saltRing·wave가 기본으로 켜져 있다(SPEC 24장). 체력(hpScale)은 엔진의 기본을 따른다
+const OFF = { risk: { risk: false }, control: { bodyBind: false, response: false }, saltRing: { saltRing: false }, wave: { wave: false } };
 const CHUNK = 25;
 // 합격 기준 (사용자가 정한 것)
 const CRIT = { gap: 150, gapTol: 50, timeMax: 0.2, len: { 평범: [30, 70], 중간: [10, 30] }, elemMax: 0.65, crowdEdge: 3 };
 
-function combos() { const ks = Object.keys(FLAGS), out = []; for (let b = 0; b < 16; b++) { const on = ks.filter((k, i) => b >> i & 1), rules = Object.assign({}, ...on.map(k => FLAGS[k])); out.push({ name: on.join('+') || 'base', on, rules }); } return out; }
+function combos() { const ks = Object.keys(FLAGS), out = []; for (let b = 0; b < 16; b++) { const on = ks.filter((k, i) => b >> i & 1), rules = Object.assign({}, ...ks.map(k => on.includes(k) ? FLAGS[k] : OFF[k])); out.push({ name: on.join('+') || 'base', on, rules }); } return out; }
 const comboOf = name => { const c = combos().find(x => x.name === name); if (!c) throw new Error('없는 조합: ' + name + ' (' + combos().map(x => x.name).join(', ') + ')'); return c; };
 const args = process.argv.slice(2), ji = args.indexOf('--jobs'), workers = ji >= 0 ? +args[ji + 1] : defaultWorkers();
 const pos = args.filter((a, i) => !(ji >= 0 && (i === ji || i === ji + 1)));
