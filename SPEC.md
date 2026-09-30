@@ -743,6 +743,8 @@ module.exports = {
 | `flight` 비행 (24장, v2.0) | `flight` | init, mageStep, move, power, hurtMod, areaHit, roll, release, hurt | circles, steer, value | |
 | `light` 빛 (25장) | `light` | | read, steer, value | `flash`, `beam` |
 | `bulwark` 벽 (25장) | `bulwark` | wall, wallHit, lobLand, world, mageStep, speedLate | circles, hideCast, commit | `build`, `topple` |
+| `army` 군대 (25장) | `army` | init, release | commit, value | |
+| `morale` 사기 (25장) | `morale` | world, hurt, mageStep | steer, rest | |
 
 `response`와 `silver`는 이 틀로 처음 넣은 규칙이다(1.13.0). 핵심에 더한 것은 훅 자리 하나(`effHold`)와 사람의 칸 다섯(`reflexT`·`braceT`·`unbindCd`·`unbindReq`·`braceReq`)뿐이고, 둘 다 끄면 지문 넷이 1.12.0과 같다.
 
@@ -891,6 +893,8 @@ module.exports = {
 | 몸 받침의 굳은 살 (24장 몸 받침) | `callus` 12 | `callus: 0` |
 | 빛 (`rules/light.js`) | `light` 켬 | `light: false` |
 | 벽 (`rules/bulwark.js`) | `bulwark` 켬 | `bulwark: false` |
+| 군대 (`rules/army.js`) | `army` 켬 | `army: false` |
+| 사기 (`rules/morale.js`) | `morale` 켬 | `morale: false` |
 
 ### 빛 (`rules.light`, 기본 켬, 마법 `data/spells/빛.json`)
 
@@ -934,4 +938,27 @@ module.exports = {
 **시야**: 벽 뒤(예비동작을 하는 사람과 읽는 사람 사이에 벽)의 예비동작은 읽지 못한다(두뇌 `hideCast`, 이제 읽는 사람도 받는다). 바위·벽이 실·빛을 막는 것은 예전 그대로. 2 m 넘게 떠 있으면 벽이 없다(24장).
 
 **속도**: 벽은 블록마다 원 하나라 충돌·시야는 예전의 테두리 상자 거르기(`segBox`)로 걸러진다. 보루 하나(17)와 흙벽 몇 개가 서도 1 대 100에서 걸음이 크게 느려지지 않는다(재기는 25장 끝).
+
+### 군대 (`rules.army`, 기본 켬, 수 `data/rules/army.json`)
+
+머스킷의 데이터(`data/spells/없음.json`)는 1.x 그대로 두고, 이 규칙이 켜진 세계의 `W.spells['머스킷']`만 2판의 수로 바꾼다(`init` 훅).
+
+| | 1.x·꺼짐 | 켜짐 |
+|---|---|---|
+| 사거리 | 60 m | 100 m |
+| 예비동작 | 0.6 s | 0.1 s + 화승 점화 지연(두뇌 `commit`이 0~0.4 s를 더한다: 0.1~0.5 s) |
+| 장전 | 18 s | 쏠 때마다 15~20 s (`release` 훅이 뽑는다) |
+| 흔들림 | 사람의 `noise` (병사 ±0.12 rad) + 두뇌가 겨눈 자리를 ±noise × 거리 흐림 | 총이 정한다: ±(0.004 + 0.0004 × 거리) rad (마법의 `aimN`·`aimD`, core). 두뇌는 겨눈 자리를 흐리지 않는다. 50 m에서 ±1.2 m, 100 m에서 ±4.4 m |
+
+- **박격포**(`data/spells/없음.json`, 덱 '박격포', 규칙에 딸림): 곡사 3 s, 반지름 2.5 m, 90(부딪힘), 사거리 150 m, 장전 30 s, 떨어진 자리의 벽에 600(`wallDmg`). 겨눈 자리 ± 3% × 거리. 날아가는 시간이 길어 움직이는 과녁은 못 맞힌다. 2 m 넘게 뜬 사람은 곡사를 받지 않는다(24장)
+- **돌아가며 쏘기** (`tac.volley` = 줄 수 n): 사람마다 줄 번호 = id mod n, 17.5 / n s마다 한 줄이 쏜다(두뇌 `value`가 제 차례가 아닌 총을 0으로). 쉬는 틈이 없다
+- **탄 낭비 금지**: 과녁이 2 m 넘게 떠 있고 50 m 넘게 멀면 쏘지 않는다
+
+### 사기 (`rules.morale`, 기본 켬)
+
+사람이 **셋 이상인 편**만 (1 대 1, 2 대 2는 그대로). 0.5 s마다:
+- 도망칠 확률 = [(편 사상자 몫 − 0.2) × 2 (0.2를 넘을 때만) + 충격 × 0.35] / 단단함 × 0.5 s
+- **충격**: 10 m 안의 동료가 **큰 수**(한 방 50 이상)에 쓰러질 때마다 + 1 (엔진 `hurt` 훅), 초당 반으로 준다
+- **단단함** = √C × 판단 단계(초보 1, 중급 1.3, 상급 1.6, 대가 2, 전설 2.5, 없으면 1): 병사 0.55, 평범 1, 중간 1.6, 대마법사 3.2
+- 도망치는 사람(`m.flee`)은 모으던 수를 놓고, 가장 가까운 싸움터 끝으로 달리며 공격하지 않는다(두뇌 `steer`·`rest`). 끝(1 m)에 닿으면 싸움에서 빠진다: 체력 0으로 세고 `alog.fled`·`fledT`에 적는다
 

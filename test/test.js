@@ -347,6 +347,23 @@ ok('v2.0 벽 (SPEC 25장): 출력에 비례해 한 블록씩 솟고, 흙벽은 �
   // 벽 뒤의 예비동작은 못 읽는다
   const [W5, m5, q5] = mk(); A.addWall(W5, { x: 30, y: 30, r: 0.8, hp: 400, t: 1e9, own: -1, mat: 'earth' }); q5.cast = { s: W5.spells['머스킷'], tgt: m5, tx: m5.x, ty: m5.y, t: 0, T: 0.6 }; m5.thinkT = 0; A.brain.think(W5, m5); assert.ok(!m5._k.threat, '벽 뒤');
 });
+ok('v2.0 군대·사기 (SPEC 25장): 머스킷 장전 15~20 s·화승 0.1~0.5 s·사거리 100 m, 박격포는 벽을 부순다, 돌아가며 쏘기, 사상자·충격에 도망친다', () => {
+  const mk = (rules, n = 1, deck = '머스킷', tac) => { const W = A.createWorld({ seed: 3, width: 200, height: 150, obstacles: [], brain: A.brain, rules: Object.assign({ flight: false, saltRing: false }, rules) }); const e = A.addMage(W, A.mage({ tier: '평범', book: [] }), 0, 20, 75), q = []; for (let i = 0; i < n; i++) q.push(A.addMage(W, A.mage({ tier: '병사', deck, tac }), 1, 80, 60 + i * 2)); A.stepWorld(W); return [W, e, q]; };
+  const [W, e, [q]] = mk(); const s = W.spells['머스킷']; assert.ok(s.R === 100 && s.reload && A.SPELLS['머스킷'].R === 60, '이 세계의 머스킷만 2판');
+  assert.ok(A.createWorld({ seed: 1, rules: { army: false } }).spells['머스킷'].R === 60);
+  q.thinkT = 0; A.brain.think(W, q); assert.ok(q.cast && q.cast.T >= 0.1 && q.cast.T <= 0.5 + 1e-9 && q.cast.tx === e.x, '화승 지연, 겨눈 자리는 흐리지 않는다 ' + (q.cast && q.cast.T));
+  for (let i = 0; i < 20 && q.cast; i++) A.stepWorld(W); assert.ok(q.cd['머스킷'] > 14 && q.cd['머스킷'] <= 20, '장전 ' + q.cd['머스킷']);
+  // 박격포: 곡사 3 s, 떨어진 자리의 벽을 부순다
+  const [W2, e2, [m2]] = mk({}, 1, '박격포'); A.addWall(W2, { x: 40, y: 75, r: 0.45, hp: 256, t: 1e9, own: -1, mat: 'earth', thick: 0.5 }); A.release(W2, m2, { s: W2.spells['박격포'], tx: 40, ty: 75 });
+  for (let i = 0; i < 95; i++) A.stepWorld(W2); assert.ok(W2.walls.length === 0, '박격포가 벽을 부쉈다');
+  // 돌아가며 쏘기: 세 줄이면 한 때에 한 줄만
+  const [W3, e3, q3] = mk({}, 6, '머스킷', { volley: 3 }); for (const x of q3) { x.thinkT = 0; A.brain.think(W3, x); } assert.strictEqual(q3.filter(x => x.cast).length, 2, '여섯 중 한 줄(둘)만');
+  // 사기: 열 중 여섯이 쓰러지면 남은 병사가 도망치고, 끝에 닿으면 빠진다. 둘뿐인 편은 도망치지 않는다
+  const [W4, e4, q4] = mk({}, 10); for (let i = 0; i < 6; i++) q4[i].hp = 0; for (let i = 0; i < 30 * 30; i++) A.stepWorld(W4);
+  assert.ok(q4.slice(6).every(x => x.flee) && q4.slice(6).some(x => x.alog.fled === 1 && x.hp === 0), '도망쳤다');
+  const [W5, e5, q5] = mk({}, 2); q5[0].hp = 0; for (let i = 0; i < 30 * 10; i++) A.stepWorld(W5); assert.ok(!q5[1].flee);
+  const [W6, e6, q6] = mk({ morale: false }, 10); for (let i = 0; i < 6; i++) q6[i].hp = 0; for (let i = 0; i < 30 * 10; i++) A.stepWorld(W6); assert.ok(q6.every(x => !x.flee));
+});
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
   assert.ok(FL.canFly({ C: 10, fat: 0 }) && FL.canFly({ C: 5, fat: 0 }) && !FL.canFly({ C: 2.5, fat: 0 }) && !FL.canFly({ C: 5, fat: 100 }), '출력 75 kW');
