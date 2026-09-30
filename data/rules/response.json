@@ -1,0 +1,13 @@
+{
+ "reflex": { "window": 0.2, "again": 0.25 },
+ "brace": { "k": 0.6, "dur": 0.6, "fat": 5, "speed": 0.3, "within": 0.35, "minDmg": 12 },
+ "unbind": { "fat": 12, "glu": 4, "cd": 5, "min": 0.5 },
+ "levels": {
+  "초보": { "reflex": 0, "brace": false, "unbind": false },
+  "중급": { "reflex": 0.3, "brace": true, "unbind": false },
+  "상급": { "reflex": 0.5, "brace": true, "unbind": true },
+  "대가": { "reflex": 0.7, "brace": true, "unbind": true },
+  "전설": { "reflex": 0.85, "brace": true, "unbind": true }
+ },
+ "noSkill": { "autoDodge": { "reflex": 0.4, "brace": true, "unbind": false }, "plain": { "reflex": 0, "brace": false, "unbind": false } }
+}

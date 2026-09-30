@@ -1,67 +1,16 @@
+'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v1.11.1
+ * 숨 결투장 — 엔진 핵심 v1.13.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
- * Node(require)와 브라우저(<script>, 전역 ArenaCore) 양쪽에서 돈다. 브라우저에선 ArenaData.spells를 먼저 읽어 둔다.
+ * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
+ * 브라우저는 sandbox/pack.js가 묶은 sandbox/arena.js로 읽는다(전역 ArenaCore).
  * ========================================================================= */
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./spells.json'));
-  else root.ArenaCore = factory(root.ArenaData.spells);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (SPELLS) {
-'use strict';
-const VERSION = '1.11.1';
+const { sin, cos, atan2, exp, log, pow, hyp, clamp, mulberry32 } = require('./math');
+const { SPELLS } = require('./data');
+const R = require('./rules');
+const VERSION = '1.13.0';
 const DT = 1 / 30;
-
-/* ---------------- 결정론 수학 ----------------
- * Math.pow·sin·cos·atan2·hypot은 JS 엔진마다(같은 V8이라도 판마다) 마지막 자리가 다르다. 그 차이가 수천 걸음 뒤 판을 가른다.
- * 그래서 IEEE 754가 결과를 하나로 정한 연산(사칙연산, sqrt, round)만으로 계산한다. 정밀도는 1e-15 안팎.
- * 엔진 안에서는 Math의 위 함수들을 쓰지 않는다 (시험이 본다). */
-const PIO2 = 1.5707963267948966, PIO2_HI = 1.5707963267341256, PIO2_LO = 6.077100506506192e-11;
-const LN2_HI = 6.93147180369123816490e-01, LN2_LO = 1.90821492927058770002e-10, SQRT2 = Math.sqrt(2);
-const series = (n, f) => { const c = []; for (let k = 0; k < n; k++) c.push(f(k)); return c; };
-const horner = (c, z) => { let v = c[c.length - 1]; for (let k = c.length - 2; k >= 0; k--) v = v * z + c[k]; return v; };
-let fac = 1; const FACT = series(24, k => (fac = k ? fac * k : 1));
-const SINC = series(9, k => (k % 2 ? 1 : -1) / FACT[2 * k + 3]), COSC = series(9, k => (k % 2 ? -1 : 1) / FACT[2 * k + 4]);   // r³부터, r⁴부터
-const ATNC = series(13, k => (k % 2 ? 1 : -1) / (2 * k + 3)), EXPC = series(18, k => 1 / FACT[k + 2]), LOGC = series(11, k => 1 / (2 * k + 3));
-const P2 = new Map(); for (let k = 0, v = 1, u = 1; k <= 1023; k++, v *= 2, u /= 2) { P2.set(k, v); P2.set(-k, u); }
-function sincos(x, wantCos) {
-  if (!isFinite(x)) return NaN;
-  const k = Math.round(x / PIO2), r = (x - k * PIO2_HI) - k * PIO2_LO, z = r * r, q = ((k % 4) + 4) % 4;
-  const s = r + r * z * horner(SINC, z), c = 1 - z / 2 + z * z * horner(COSC, z), i = wantCos ? (q + 1) % 4 : q;
-  return i === 0 ? s : i === 1 ? c : i === 2 ? -s : -c;
-}
-const sin = x => sincos(x, false), cos = x => sincos(x, true);
-function atan(x) {
-  if (x !== x) return NaN; if (x < 0) return -atan(-x); if (x > 1) return PIO2_HI - (atan(1 / x) - PIO2_LO);
-  const t = x / (1 + Math.sqrt(1 + x * x)), u = t / (1 + Math.sqrt(1 + t * t)), z = u * u;   // atan x = 4 atan u, |u| ≤ tan(π/16)
-  return 4 * (u + u * z * horner(ATNC, z));
-}
-function atan2(y, x) {
-  if (x !== x || y !== y) return NaN;
-  if (x > 0) return atan(y / x); if (x < 0) return y >= 0 ? atan(y / x) + Math.PI : atan(y / x) - Math.PI;
-  return y > 0 ? PIO2 : y < 0 ? -PIO2 : 0;
-}
-function exp(x) {
-  if (x !== x) return NaN; if (x > 709.78) return Infinity; if (x < -745.2) return 0;
-  const k = Math.round(x / LN2_HI), r = (x - k * LN2_HI) - k * LN2_LO, v = 1 + r + r * r * horner(EXPC, r);
-  return k > 1023 ? v * P2.get(1023) * P2.get(k - 1023) : k < -1022 ? v * P2.get(-1022) * P2.get(k + 1022) : v * P2.get(k);
-}
-function log(x) {
-  if (x !== x || x < 0) return NaN; if (x === 0) return -Infinity; if (x === Infinity) return x;
-  let e = 0, m = x; while (m >= 2 ** 64) { m /= 2 ** 64; e += 64; } while (m < 2 ** -64) { m *= 2 ** 64; e -= 64; }
-  while (m >= SQRT2) { m /= 2; e++; } while (m < SQRT2 / 2) { m *= 2; e--; }
-  const s = (m - 1) / (m + 1), z = s * s;
-  return e * LN2_HI + (e * LN2_LO + 2 * (s + s * z * horner(LOGC, z)));
-}
-function pow(x, y) {
-  if (y === 0) return 1; if (x === 1) return 1; if (x !== x || y !== y) return NaN;
-  if (x === 0) return y > 0 ? 0 : Infinity;
-  if (x < 0) { if (Math.round(y) !== y) return NaN; const v = exp(y * log(-x)); return Math.abs(y % 2) === 1 ? -v : v; }
-  return exp(y * log(x));
-}
-const hyp = (x, y) => Math.sqrt(x * x + y * y);
-const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
@@ -79,17 +28,46 @@ const DEFAULT_RULES = {
   risk: false,         // 하이 리스크 하이 리턴: 큰 마법(big)과 역류·빈손 (1.9.0, SPEC 7장). 끄면 큰 마법이 책에서 빠진다
   saltRing: false,     // 줄어드는 소금 원: 선 밖에선 마법이 흩어지고 몸이 마른다 (1.9.0, SPEC 2장)
   bodyBind: false,     // 몸 묶기: 발밑이 아니라 몸을 묶는 마법 다섯과 눈멂의 읽기 막기 (1.11.0, SPEC 9장). 끄면 그 마법이 책에서 빠진다
+  response: false,     // 대응: 순간 반응(판단 사이의 구르기)·대비(피할 수 없는 것에 몸을 굳힘)·풀기(몸 묶기를 머리로 푼다) (1.13.0, SPEC 9장, rules/response)
+  silver: false,       // 은실 옷: gear.silver를 입은 사람에게 붙잡는 효과 × 0.5, 전기 × 1.1 (1.13.0, SPEC 10장, rules/silver)
   hpScale: false,      // 켜면 체력도 선명도^K로 커져 등급과 상관없이 결투 속도가 비슷해진다 (게임 균형용)
 };
+// 규칙 모듈이 스위치의 기본값을 따로 적었으면 (등록한 규칙). 기본 규칙의 스위치는 위 표에 있다
+for (const r of R.RULES) if (r.switch && !(r.switch in DEFAULT_RULES)) DEFAULT_RULES[r.switch] = r.default ?? false;
 // 파도의 부류 (WORLD 3-3). 사람 규격의 type. 파도가 꺼져 있으면 셋 다 같다
 const TYPES = ['서퍼', '메타', '이단'];
-// 등록한 규칙(registry.rule)의 걸음마다 할 일. 스위치가 꺼져 있으면 부르지 않는다
-const RULE_HOOKS = [];
 const BUFK = new Set(['speed', 'elecRes', 'bluntRes', 'toxRes', 'front', 'block', 'smoke']);   // 알려진 몸 효과 (stepMage가 이름으로 줄인다)
 const BODY = { hp: 150, glu: 110, gluRegen: 1.2, stam: 6, stamRegen: 0.8, speed: 5, radius: 0.3 };
 // 마법이 만들어지는 자리
-const FORM = { taunt: 'target', proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', cage: 'target', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
+// 규칙 모듈이 더하는 틀(cage·taunt…)은 그 모듈의 form에 있다 (formsOf가 붙인다)
+const FORM = { proj: 'self', lob: 'self', wall: 'self', ring: 'self', shoot: 'self', smother: 'self', area: 'target', zone: 'target', trap: 'target', thread: 'target', cone: 'front', buff: 'body', move: 'body', touch: 'body' };
 const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
+
+/* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
+// 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
+function emptyH() { return { place: [], init: [], world: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
+// 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
+let X = null;
+const ENG = new Map(), TFX = {}; let tfxVer = -1;
+// 규칙의 엔진 훅은 모듈마다 한 번 만든다
+function engineOf(r) { if (!r.engine) return null; let e = ENG.get(r); if (!e) { e = r.engine(X); for (const k in e) if (!(k in emptyH())) throw new Error(r.name + ': 없는 엔진 훅 ' + k + ' (' + R.ENGINE_HOOKS.join(', ') + ')'); ENG.set(r, e); } return e; }
+// 틀 표(방출)와 자리 표: 규칙 목록이 바뀌었을 때만 다시 만든다
+function formsOf() {
+  if (tfxVer === R.ver()) return; tfxVer = R.ver();
+  for (const k in TFX) TFX[k] = null;
+  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.types) Object.assign(TFX, r.types(X)); }
+}
+// 세계를 만들 때: 켜진 규칙만 골라 그 훅을 차례대로 모은다. 꺼진 규칙은 걸음마다 비용 0
+function hooksFor(W, opt) {
+  formsOf();
+  const H = emptyH(), mods = [];
+  for (const r of R.RULES) {
+    if (!R.onOf(r)(W, opt)) continue; mods.push(r);
+    const e = engineOf(r); if (e) for (const k in e) H[k].push(e[k]);
+  }
+  W.H = H; W.mods = mods;
+}
+const TA = { aim: 0, foes: null, g: 0 };   // 틀 방출에 넘기는 값 (새로 만들지 않는다)
 
 /* ---------------- 세계 ---------------- */
 // 마법 모양 맞추기 (속도, 1.11.1): 사람의 책에 든 마법을 세계마다 같은 필드·같은 차례의 새 객체로 옮긴다(없는 필드는 undefined, 읽는 값은 그대로).
@@ -106,7 +84,9 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
+    H: null, mods: null, _bh: null,   // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다)
   };
+  hooksFor(W, opt);
   W.rnd = (a, b) => a + W.rng() * (b - a);
   // 바위·화약통·벽은 목록으로 직접 줄 수 있다(장면). 안 주면 씨앗을 따라 놓는다
   if (Array.isArray(opt.obstacles)) W.obs = opt.obstacles.map(o => ({ x: o.x, y: o.y, r: o.r || 1.2 }));
@@ -117,11 +97,9 @@ function createWorld(opt = {}) {
     if (W.obs.some(q => hyp(q.x - o.x, q.y - o.y) < q.r + o.r + 1.2)) continue;
     W.obs.push(o);
   }
-  if (Array.isArray(opt.barrels)) W.barrels = opt.barrels.map(b => ({ x: b.x, y: b.y, ex: false }));
-  else if (W.rules.barrels) for (const [bx, by] of [[0.3, 0.27], [0.7, 0.73], [0.5, 0.5], [0.35, 0.8], [0.65, 0.23]])
-    W.barrels.push({ x: bx * W.width + W.rnd(-2, 2), y: by * W.height + W.rnd(-2, 2), ex: false });
+  for (const h of W.H.place) h(W, opt);   // 규칙이 놓는 것 (화약통)
   if (Array.isArray(opt.walls)) for (const w of opt.walls) W.walls.push({ x: w.x, y: w.y, r: w.r || 0.6, hp: w.hp || 200, t: 1e9, own: -1 });
-  for (const h of RULE_HOOKS) if (h.init && W.rules[h.name]) h.init(W);
+  for (const h of W.H.init) h(W);
   return W;
 }
 
@@ -147,6 +125,7 @@ function addMage(W, spec, side, x, y) {
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
+    reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
       starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
@@ -162,13 +141,13 @@ function addMage(W, spec, side, x, y) {
 
 /* ---------------- 신호: 선명도, 위력, 장악권 ---------------- */
 // 파도를 타는 동안 피로는 100을 넘을 수 있지만, 선명도·위력·시전 시간은 100에서 더 나빠지지 않는다 (파도가 없으면 피로는 100을 넘지 않는다)
-function ceff(W, m) { return m.C * (W.rules.fatigue ? Math.max(0.45, 1 - Math.min(m.fat, 100) / 150) : 1) * (m.wave ? 1.1 : 1); }
+function ceff(W, m) { let x = m.C * (W.rules.fatigue ? Math.max(0.45, 1 - Math.min(m.fat, 100) / 150) : 1); const h = W.H.ceff; for (let i = 0; i < h.length; i++) x = h[i](W, m, x); return x; }
 function power(W, m, s) {
   if (s.mundane) return 1;
-  // 파도 위 서퍼 × 2.0(1.3.1, 1.45에서)·메타 × 1.3. 파도가 켜져 있으면 이단은 늘 × 0.8, 메타는 파도 문턱 아래(피로 80~100)에서 × 1.08 (자가 피해 없음)
-  const wv = m.wave ? (m.type === '서퍼' ? 2.0 : 1.3) : !W.rules.wave ? 1 : m.type === '이단' ? 0.8 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1;
   if (m._pwC !== m.C || m._pwK !== W.rules.powerK) { m._pwC = m.C; m._pwK = W.rules.powerK; m._pw = pow(m.C, W.rules.powerK); }
-  return m._pw * (1 + 0.3 * (m.mast[s.n] || 0)) * (W.rules.fatigue ? Math.max(0.6, 1 - Math.min(m.fat, 100) / 200) : 1) * wv;
+  let x = m._pw * (1 + 0.3 * (m.mast[s.n] || 0)) * (W.rules.fatigue ? Math.max(0.6, 1 - Math.min(m.fat, 100) / 200) : 1);
+  const h = W.H.power; for (let i = 0; i < h.length; i++) x = h[i](W, m, s, x);   // 파도의 부류 (rules/wave)
+  return x;
 }
 const rangeOf = (m, s) => (s.R || 0) * (s.mundane ? 1 : Math.sqrt(m.C));
 // C^0.4는 사람마다 한 번 (결정론 pow가 비싸다, 속도 1.11.1). C가 바뀌면 다시 잰다
@@ -183,7 +162,7 @@ function share(W, m, x, y) {
   let other = 0;
   for (let i = 0; i < foes.length; i++) { const q = foes[i]; other += sigOf(W, q) * (q._act ? 1 : W.rules.passive) / (1 + hyp(x - q.x, y - q.y) / L); }
   let f = mine / (mine + other);
-  if (W._cloak) for (let i = 0; i < foes.length; i++) { const q = foes[i]; if (q.gear.cloak && hyp(x - q.x, y - q.y) < 1.6) f *= 0.3; }   // 망토 두른 사람이 있을 때만 (refreshSides)
+  const h = W.H.share; for (let i = 0; i < h.length; i++) f = h[i](W, m, x, y, f);   // 소금 망토 (rules/gear)
   return f;
 }
 const gOf = (W, f) => clamp((f - W.rules.fizzle) / (W.rules.full - W.rules.fizzle), 0, 1);
@@ -194,12 +173,9 @@ function formPoint(m, s, tx, ty) {
   if (k === 'self') { const d = hyp(tx - m.x, ty - m.y) || 1; return [m.x + (tx - m.x) / d * 0.5, m.y + (ty - m.y) / d * 0.5]; }
   return null;
 }
-// 소금 원 (rules.saltRing): 싸움터 가운데 중심, 15 s부터 60 s 동안 반지름 4 m까지 줄어든다
-const SALT = { t0: 15, dur: 60, rMin: 4, dps: 6 };
-function saltR(W) { const R0 = hyp(W.width, W.height) / 2; return Math.max(SALT.rMin, R0 - Math.max(0, W.t - SALT.t0) * (R0 - SALT.rMin) / SALT.dur); }
-const outSalt = (W, x, y) => W.rules.saltRing && hyp(x - W.width / 2, y - W.height / 2) > saltR(W);
+// 이 자리에 마법이 서는 정도 g. 규칙의 문(gate)이 막으면 0 (소금 원, rules/saltRing)
 function gAt(W, m, s, tx, ty) {
-  if (!s.mundane && W.rules.saltRing) { const p = formPoint(m, s, tx, ty) || [m.x, m.y]; if (outSalt(W, p[0], p[1])) return 0; }   // 소금 선 밖에선 마법이 서지 않는다
+  const h = W.H.gate; for (let i = 0; i < h.length; i++) if (h[i](W, m, s, tx, ty)) return 0;
   if (s.mundane || !W.rules.domain) return 1; const p = formPoint(m, s, tx, ty); return p ? gOf(W, share(W, m, p[0], p[1])) : 1;
 }
 
@@ -223,51 +199,37 @@ function hurt(W, m, v, src, name, kind) {
   if (kind === 'elec' && b.elecRes) v *= b.elecRes.v;
   if (kind === 'blunt' && b.bluntRes) v *= b.bluntRes.v;
   if (kind === 'tox' && b.toxRes) v *= b.toxRes.v;
-  for (const z of W.zones) { if (!inZone(z, m.x, m.y)) continue; if (z.k === 'absorb') { if (kind === 'elec') v *= 0.5; if (kind === 'fire') v *= 0.4; } if (z.k === 'mist' && kind === 'fire') v *= 0.5; }
+  const H = W.H, hm = H.hurtMod; for (let i = 0; i < hm.length; i++) v = hm[i](W, m, v, kind);   // 흡수 안개·물 장막 (rules/terrain)
   if (kind === 'elec' && m.st.wet > 0) v *= 1.5;
   if (kind === 'fire' && m.st.wet > 0) v *= 0.6;
   m.hp -= v; m.log.taken[kind] = (m.log.taken[kind] || 0) + v;
-  // 몸 묶기: 불에 타면 균사가 타고 족쇄가 녹는다 (족쇄로 걸린 묶임만 풀린다)
-  if (kind === 'fire' && (m.st.mycel > 0 || m.st.fetter > 0)) { if (m.st.fetter > 0 && m.st.root <= m.st.fetter + 1e-9) m.st.root = 0; m.st.mycel = 0; m.st.fetter = 0; }
-  // 콤보 성공: 콤보로 쏜 마법이 묶이거나 굳은(전기면 젖은) 상대에게 들어갔다
-  // 역류 (risk): 큰 마법을 모으는 중에 3 이상 맞으면 끊기고 22 피해, 0.6 s 굳음
-  if (W.rules.risk && v >= 3 && ((m.cast && m.cast.s.big) || (m.castB && m.castB.s.big)) && m.hp > 0) { if (m.cast && m.cast.s.big) m.cast = null; if (m.castB && m.castB.s.big) m.castB = null; m.log.backfire++; m.st.stun = Math.max(m.st.stun || 0, 0.6); hurt(W, m, 22, null, '역류', 'backfire'); }
+  const hh = H.hurt; for (let i = 0; i < hh.length; i++) hh[i](W, m, v, src, name, kind);   // 몸 묶기가 불에 풀림 (rules/control), 역류 (rules/risk)
   // 동시 착탄: 같은 사람의 다른 마법이 0.2 s 안에 같은 과녁에 닿았다 (셋이면 둘로 센다)
   if (src && v >= 2) { const h = m.lastHit; if (h && h.src === src && W.t - h.t < 0.2 && !h.names.includes(name)) { src.log.simul++; h.names.push(name); } else m.lastHit = { src, t: W.t, names: [name] }; }
   // 방어 미끼 (전설): 미끼로 방패를 든 뒤 1.5 s 안에, 그걸 보고 시전하던 상대를 맞혔다
   if (src && src.baitT != null && W.t - src.baitT < 1.5 && (m.cast || m.castB) && !src.baitDone) { src.baitDone = 1; src.log.defTry++; src.log.defHit++; }
+  // 콤보 성공: 콤보로 쏜 마법이 묶이거나 굳은(전기면 젖은) 상대에게 들어갔다
   const cp = src && src.comboPend; if (cp && cp.tgt === m && W.t <= cp.until && (m.st.stun > 0 || m.st.root > 0 || (kind === 'elec' && m.st.wet > 0))) { src.log.comboHit++; src.log.cHit[cp.kind] = (src.log.cHit[cp.kind] || 0) + 1; src.comboPend = null; }
   if (src && src !== m) src.log.dealt[name] = (src.log.dealt[name] || 0) + v;
   if (m.hp <= 0 && m.deathT === null) m.deathT = W.t;
 }
-function eff(m, o, g = 1) {
+function eff(W, m, o, g = 1) {
   if (!o) return;
+  let gh = g; const hh = W.H.effHold; for (let i = 0; i < hh.length; i++) gh = hh[i](W, m, o, gh);   // 붙잡는 효과(굳음·묶임·몸 묶기)의 몫: 은실 옷 (rules/silver)
   if (o.burn) m.st.burn = Math.max(m.st.burn || 0, o.burn * g);
   if (o.wet) m.st.wet = 20;
   if (o.chill) m.st.chill = Math.max(m.st.chill || 0, o.chill * g);
-  if (o.stun) m.st.stun = Math.max(m.st.stun || 0, o.stun * g * (m.buf.elecRes && o.kind === 'elec' ? 0.3 : 1));
-  if (o.root) m.st.root = Math.max(m.st.root || 0, o.root * g);
+  if (o.stun) m.st.stun = Math.max(m.st.stun || 0, o.stun * gh * (m.buf.elecRes && o.kind === 'elec' ? 0.3 : 1));
+  if (o.root) m.st.root = Math.max(m.st.root || 0, o.root * gh);
   if (o.blind) m.st.blind = Math.max(m.st.blind || 0, o.blind * g);
   if (o.cough) m.st.cough = Math.max(m.st.cough || 0, o.cough * g);
-  // 몸 묶기 (bodyBind): 균사(구르기 불가, 걸음 × 0.6), 경직(구르기 불가, × 0.5, 절연이 막는다), 석회(구르는 거리 절반), 족쇄(젖었을 때만 묶임)
-  if (o.mycel) m.st.mycel = Math.max(m.st.mycel || 0, o.mycel * g);
-  if (o.cramp && !m.buf.elecRes) m.st.cramp = Math.max(m.st.cramp || 0, o.cramp * g);
-  if (o.lime) m.st.lime = Math.max(m.st.lime || 0, o.lime * g);
-  if (o.fetter && m.st.wet > 0) { m.st.fetter = Math.max(m.st.fetter || 0, o.fetter * g); m.st.root = Math.max(m.st.root || 0, o.fetter * g); }
+  const h = W.H.eff; for (let i = 0; i < h.length; i++) h[i](W, m, o, gh);   // 몸 묶기 (rules/control). 붙잡는 효과라 gh
   if (m.st.stun > 0) { m.cast = null; m.castB = null; m.chan = null; }
 }
 const hit = (m, s) => { m.log.hits[s.n] = (m.log.hits[s.n] || 0) + 1; if (s.big) m.log.bigHit++; };
 function addZone(W, src, z, x, y, a, g) { const gz = g ?? 1; const zz = Object.assign({}, z, { x, y, a: a || 0, src, dps: (z.dps || 0) * gz, t: z.d * (gz < 1 ? Math.max(0.3, gz) : 1) }); W.zones.push(zz); if (zz.k === 'fire') ignite(W, x, y, zz.r || (zz.len || 2) / 2, src); }
-function ignite(W, x, y, r, src) {
-  if (!W.barrels.length) return;
-  for (const b of W.barrels) {
-    if (b.ex || hyp(b.x - x, b.y - y) > r + 0.6) continue;
-    b.ex = true;
-    for (const q of W.ms) { if (q.hp <= 0) continue; const d = hyp(q.x - b.x, q.y - b.y); if (d < 2.8) { hurt(W, q, 35 * (1 - d / 2.8 * 0.5), q === src ? null : src, '화약통', 'fire'); q.st.burn = Math.max(q.st.burn || 0, 2); } }
-    if (W.rec) W.fx.push(['b', b.x, b.y, 2.8]); if (src) src.log.barrel++;
-    if (src && W.t - (src.lureT ?? -9) < 3 && W.ms.some(q => q.side !== src.side && hyp(q.x - b.x, q.y - b.y) < 2.8)) src.log.lure++;
-  }
-}
+// 불·전기가 (x, y) 둘레 r m에 닿았다 (화약통, rules/barrels)
+function ignite(W, x, y, r, src) { const h = W.H.ignite; for (let i = 0; i < h.length; i++) h[i](W, x, y, r, src); }
 function canHit(W, p, q) { return q !== p.src && q.hp > 0 && (W.rules.friendlyFire || q.side !== p.src.side); }
 
 /* ---------------- 마법 방출 ---------------- */
@@ -276,20 +238,13 @@ function release(W, m, c) {
   m.aim = atan2(uy, ux);
   m.log.casts[s.n] = (m.log.casts[s.n] || 0) + 1;
   if ((s.t === 'wall' || s.t === 'shoot' || (s.t === 'buff' && s.b.front)) && !c.bait) m.log.defTry++;   // 미끼 방패는 성공했을 때만 방어로 센다
-  if (s.big && W.rules.risk) { m.emptyT = W.t + 0.9; m.log.bigCast++; }   // 빈손: 큰 마법 뒤 0.9 s 동안 시전 불가, 속도 × 0.6
+  const hr = W.H.release; for (let i = 0; i < hr.length; i++) hr[i](W, m, c);   // 빈손 (rules/risk)
   if (!c.auto && !c.B) { m.relT = W.t; m.lastRel = W.t; if (m.tac.plan) m.thinkT = 0; }   // 빈틈·멈춤은 첫 칸으로 센다   // 쏘는 중에 다음 수를 정해 둔 사람은 바로 다음 걸음에 시작한다
   if (W.rules.fatigue && !s.mundane) {
     m.fat += s.cost * (c.B ? 1.3 : 1) * (c.auto ? 0.8 : 1) * 1.6;
-    if (W.rules.wave && m.type !== '이단') {
-      // 파도: 넘쳐도 굳지 않고 탄다. 너무 깊이(170) 가면 휩쓸린다
-      const enter = m.type === '서퍼' ? 90 : 100, may = !m.tac.waveChoose || m.waveWant;   // 파도 고르기(전설): 끝낼 수 있을 때만 스스로 탄다
-      if (!m.wave && m.fat > enter && may) { m.wave = 1; m.log.waves++; }
-      else if (!m.wave && m.fat > 100 && !may) { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
-      if (m.fat > 170) { m.log.over++; m.log.lost++; hurt(W, m, 30, null, '폭주', 'wave'); m.st.stun = Math.max(m.st.stun || 0, 2.5); m.fat = 60; m.wave = 0; m.crash = 3; m.cast = m.castB = m.chan = null; }
-    } else if (m.fat > 100) {
-      if (W.rules.wave) m.fat = 100;   // 이단: 파도를 못 느낀다. 폭주도 없고 머리는 100에서 멈춘다
-      else { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
-    }
+    // 머리가 넘치면 굳는다(폭주). 규칙이 넘침을 맡으면(파도, rules/wave) 그 규칙이 한다
+    let took = false; const ho = W.H.overload; for (let i = 0; i < ho.length; i++) if (ho[i](W, m)) { took = true; break; }
+    if (!took && m.fat > 100) { m.st.stun = Math.max(m.st.stun || 0, 1); m.fat = 55; m.log.over++; m.cast = m.castB = m.chan = null; }
   }
   const g = gAt(W, m, s, tx, ty);
   if (g <= 0.02) { m.log.fizz++; return; }
@@ -308,14 +263,14 @@ function release(W, m, c) {
       const R = rangeOf(m, s), ex = d0 > R ? m.x + ux * R : tx, ey = d0 > R ? m.y + uy * R : ty;
       if (!blocked(W, m.x, m.y, ex, ey)) {
         let tgt = null; for (const q of foes) if (hyp(q.x - ex, q.y - ey) < 0.6 * Math.min(rs, 2) + 0.2) { tgt = q; break; }
-        if (tgt && !frontBlock(tgt, m.x, m.y)) { hurt(W, tgt, 0.8 * pow(s.E, 0.55) * P, m, s.n, 'elec'); eff(tgt, s.cramp ? { cramp: s.cramp } : { stun: Math.min(1.2, s.E / 800), kind: 'elec' }, g); hit(m, s); }   // 경직 실은 굳힘 대신 경직
+        if (tgt && !frontBlock(tgt, m.x, m.y)) { hurt(W, tgt, 0.8 * pow(s.E, 0.55) * P, m, s.n, 'elec'); eff(W, tgt, s.cramp ? { cramp: s.cramp } : { stun: Math.min(1.2, s.E / 800), kind: 'elec' }, g); hit(m, s); }   // 경직 실은 굳힘 대신 경직
       }
       if (W.rec) W.fx.push(['z', m.x, m.y, ex, ey]); ignite(W, ex, ey, 0.7, m); break;
     }
     case 'area': W.areas.push({ x: tx, y: ty, r: s.r * rs, t: s.delay, s, src: m, pow: P, vis: !!s.vis, g }); break;
     case 'touch': {
       let e = null, bd = 1.35; for (const q of foes) { const d = hyp(q.x - m.x, q.y - m.y); if (d < bd) { bd = d; e = q; } }
-      if (e) { hurt(W, e, s.dmg * P, m, s.n, 'elec'); eff(e, { stun: s.stun, kind: 'elec' }, g); hit(m, s); }
+      if (e) { hurt(W, e, s.dmg * P, m, s.n, 'elec'); eff(W, e, { stun: s.stun, kind: 'elec' }, g); hit(m, s); }
       if (W.rec) W.fx.push(['z', m.x, m.y, e ? e.x : tx, e ? e.y : ty]); break;
     }
     case 'cone': m.chan = { s, t: s.dur, pow: P, L: s.L * rs, hitAny: false }; break;
@@ -325,7 +280,7 @@ function release(W, m, c) {
         const rr = s.z.r * rs;
         for (const z of W.zones) if (hyp(z.x - x, z.y - y) < rr + (z.r || 2) && z.k !== 'mist' && z.k !== 'absorb') z.t = 0;
         for (const p of W.proj) if (p.src.side !== m.side && (p.home || p.s.n === '불덩이' || p.s.n === '소이 캡슐') && hyp(p.x - x, p.y - y) < rr) p.dead = true;
-        for (const q of W.ms) if (hyp(q.x - x, q.y - y) < rr) { q.st.wet = 15; q.st.burn = 0; if (W.rules.bodyBind) q.st.blind = 0; }   // 몸 묶기: 비가 눈을 씻는다
+        const hr2 = W.H.rain; for (const q of W.ms) if (hyp(q.x - x, q.y - y) < rr) { q.st.wet = 15; q.st.burn = 0; for (let i = 0; i < hr2.length; i++) hr2[i](W, q); }   // 비가 눈을 씻는다 (rules/control)
       } else {
         const z = Object.assign({}, s.z, { n: s.n, r: s.z.r ? s.z.r * rs : undefined, len: s.z.len ? s.z.len * rs : undefined });
         if (s.z.needWet) { const e = c.tgt || foes[0]; if (!(e && e.st.wet > 0)) z.k = 'chill'; }
@@ -360,34 +315,21 @@ function release(W, m, c) {
       const rr = s.r * rs;
       for (const p of W.proj) if (p.src.side !== m.side && p.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
       for (const z of W.zones) if (['h2s', 'nh3', 'spore'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < rr + 1) z.t = 0;
-      if (m.st.mycel > 0) m.st.mycel = 0;   // 제 몸의 균사를 태운다
-      let h = false; for (const q of foes) if (hyp(q.x - m.x, q.y - m.y) < rr) { hurt(W, q, s.dmg * P, m, s.n, 'fire'); eff(q, { burn: 1 }); h = true; }
+      const hg = W.H.ring; for (let i = 0; i < hg.length; i++) hg[i](W, m);   // 제 몸의 균사를 태운다 (rules/control)
+      let h = false; for (const q of foes) if (hyp(q.x - m.x, q.y - m.y) < rr) { hurt(W, q, s.dmg * P, m, s.n, 'fire'); eff(W, q, { burn: 1 }); h = true; }
       if (h) hit(m, s); break;
     }
     case 'shoot': {
       let n = 0; for (const p of W.proj) if (p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < s.r * rs) { p.dead = true; n++; if (W.rec) W.fx.push(['z', m.x, m.y, p.x, p.y]); }
       if (n) { hit(m, s); m.log.defHit++; } break;
     }
-    case 'cage': {
-      // 가두는 기둥 (bodyBind): 과녁 자리 둘레 s.r m에 기둥 넷을 ±60°·±120°에. 옆으로 피하는 길은 닫고, 나와 과녁 사이(앞)와 그 뒤는 열어 둔다
-      const a = atan2(uy, ux), hpS = 1 + (m.C - 1) * 0.5, rr = s.r; let h = false;
-      for (let k = 0; k < 4; k++) { const b = a + (k < 2 ? 1 : -1) * (k % 2 ? 2 : 1) * Math.PI / 3; W.walls.push({ x: clamp(tx + cos(b) * rr, 0.4, W.width - 0.4), y: clamp(ty + sin(b) * rr, 0.4, W.height - 0.4), r: s.pr, hp: s.hp * hpS, t: s.dur, own: m.side, cage: 1 }); }
-      for (const q of foes) if (hyp(q.x - tx, q.y - ty) < rr - 0.5) h = true;
-      if (h) hit(m, s); break;
-    }
-    case 'taunt': {
-      // 도발: 과녁의 부름을 끊는다. 확률 = 장악 g × (파도 위면 1, 아니면 0.6). 이단은 걸리지 않는다
-      let e = c.tgt && c.tgt.hp > 0 ? c.tgt : null; if (!e) for (const q of foes) if (hyp(q.x - tx, q.y - ty) < 1) { e = q; break; }
-      if (!e || e.type === '이단' || !(e.cast || e.castB)) break;
-      if (W.rng() < g * (e.wave ? 1 : 0.6)) { e.cast = e.castB = null; e.fat += 8; if (e.wave) e.st.stun = Math.max(e.st.stun || 0, 0.3); e.log.taunted++; hit(m, s); if (W.rec) W.fx.push(['z', m.x, m.y, e.x, e.y]); }
-      break;
-    }
     case 'smother': {
       const rr = s.r * rs;
       for (const z of W.zones) if (['fire', 'h2s', 'nh3', 'spore', 'acid'].includes(z.k) && hyp(z.x - m.x, z.y - m.y) < rr + (z.r || 2)) z.t = 0;
-      m.st.burn = 0; if (W.rules.bodyBind) m.st.blind = 0; for (const p of W.proj) if (p.src.side !== m.side && p.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
+      m.st.burn = 0; const hs = W.H.smother; for (let i = 0; i < hs.length; i++) hs[i](W, m); for (const p of W.proj) if (p.src.side !== m.side && p.home && hyp(p.x - m.x, p.y - m.y) < rr) p.dead = true;
       break;
     }
+    default: { const f = TFX[s.t]; if (f) { TA.aim = atan2(uy, ux); TA.foes = foes; TA.g = g; f(W, m, c, TA); } }   // 규칙 모듈의 틀 (가두는 기둥·도발)
   }
 }
 
@@ -395,7 +337,7 @@ function projHit(W, p, e) {
   const s = p.s, h = s.hit || {};
   let dmg = h.flat ? h.flat : 0.55 * pow(0.5 * s.m * s.v * s.v, 0.75);
   if (h.cap) dmg = Math.min(dmg, h.cap); if (h.dmg) dmg = h.dmg;
-  hurt(W, e, dmg * p.pow, p.src, s.n, h.kind || 'blunt'); eff(e, Object.assign({}, h, { kind: h.kind }));
+  hurt(W, e, dmg * p.pow, p.src, s.n, h.kind || 'blunt'); eff(W, e, Object.assign({}, h, { kind: h.kind }));
   if (h.zone) addZone(W, p.src, Object.assign({}, h.zone, { n: s.n }), p.x, p.y, 0, 1);
   hit(p.src, s);
 }
@@ -404,7 +346,7 @@ function burst(W, p) {
   if (b.zone) { addZone(W, p.src, Object.assign({}, b.zone, { n: p.s.n }), p.x, p.y, 0, 1); return; }
   const r = b.r * sizeOf(p.src, p.s);
   for (const q of W.ms) if (q.hp > 0 && hyp(q.x - p.x, q.y - p.y) < r && (W.rules.friendlyFire || q.side !== p.src.side || q === p.src)) {
-    hurt(W, q, b.dmg * p.pow * (1 - hyp(q.x - p.x, q.y - p.y) / r * 0.5), q === p.src ? null : p.src, p.s.n, b.kind); eff(q, b); if (q !== p.src) hit(p.src, p.s);
+    hurt(W, q, b.dmg * p.pow * (1 - hyp(q.x - p.x, q.y - p.y) / r * 0.5), q === p.src ? null : p.src, p.s.n, b.kind); eff(W, q, b); if (q !== p.src) hit(p.src, p.s);
   }
   if (W.rec) W.fx.push(['b', p.x, p.y, r]); if (b.kind === 'fire') ignite(W, p.x, p.y, r, p.src);
 }
@@ -440,27 +382,11 @@ function stepMage(W, m) {
   const cd = m.cd; for (const n in cd) { const v = cd[n]; if (v > 0) cd[n] = v - DT; }
   m.rollCd -= DT; m.autoCd -= DT; if (m.vault > 0) m.vault -= DT;
   m.glu = Math.min(m.gluMax, m.glu + BODY.gluRegen * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;
-  if (m.fat > 0) m.fat = Math.max(0, m.fat - 4 * (W.rules.wave && m.type === '메타' ? 1.05 : 1) * DT);   // 메타: 머리 회복 × 1.05
-  if (m.crash > 0) m.crash -= DT;
-  if (outSalt(W, m.x, m.y)) hurt(W, m, SALT.dps * DT, null, '소금', 'salt');   // 소금 선 밖에선 몸이 마른다
-  if (m.wave) {
-    // 파도는 몸을 태운다. 깊을수록 세게. 서퍼는 익숙하고 메타는 조절한다. 피로가 75 아래로 내려오면 꺼짐(crash)
-    m.waveT += DT; const wd = (1.5 + (m.fat - 90) * 0.06) * (m.type === '서퍼' ? 0.8 : 0.6) * DT;
-    m.log.waveDmg += Math.max(0, wd); hurt(W, m, wd, null, '파도', 'wave'); if (m.hp <= 0) m.log.waveDeath = 1;
-    if (m.fat < 75) { m.wave = 0; m.crash = m.type === '메타' ? 0 : 2; }   // 메타는 조절해 내려와 꺼짐이 없다
-  }
+  const H = W.H;
+  if (m.fat > 0) { let k = 4; const hf = H.fatRecover; for (let i = 0; i < hf.length; i++) k = hf[i](W, m, k); m.fat = Math.max(0, m.fat - k * DT); }   // 머리 회복 (메타 × 1.05, rules/wave)
+  const hs = H.mageStep; for (let i = 0; i < hs.length; i++) hs[i](W, m);   // 소금 선 밖 (rules/saltRing), 파도가 몸을 태움·꺼짐 (rules/wave)
   if (m.st.burn > 0) hurt(W, m, 3 * DT, null, '옷에 붙은 불', 'fire');
-  for (const z of W.zones) {
-    if (!inZone(z, m.x, m.y)) continue;
-    if (z.dps && z.src !== m && z.src.side !== m.side && !z.lured && W.t - (z.src.lureT ?? -9) < 3) { z.lured = 1; z.src.log.lure++; }   // 끌어들인 적이 내 지대에 들었다
-    if (z.dps && (z.src !== m || z.k === 'h2s')) hurt(W, m, z.dps * DT, z.src === m ? null : z.src, z.n, z.k === 'fire' ? 'fire' : 'tox');
-    if (z.k === 'fire' && !(m.st.wet > 0)) m.st.burn = Math.max(m.st.burn || 0, 1);
-    if (z.k === 'nh3') { m.st.blind = Math.max(m.st.blind || 0, 0.3); m.st.cough = Math.max(m.st.cough || 0, 0.5); }
-    if (z.k === 'spore') m.st.cough = Math.max(m.st.cough || 0, 0.5);
-    if (z.k === 'acid') { m.st.blind = Math.max(m.st.blind || 0, 0.3); if (m.st.lime > 0) m.st.lime = 0; }   // 산이 석회를 녹인다
-    if ((z.k === 'ice' || z.k === 'chill') && z.src !== m) m.st.chill = Math.max(m.st.chill || 0, 0.4);
-    if (z.k === 'h2s') { m.h2sT = (m.h2sT || 0) + DT; if (m.h2sT > 1.5) m.st.stun = Math.max(m.st.stun || 0, 0.5); }
-  }
+  const hz = H.mageZones; for (let i = 0; i < hz.length; i++) hz[i](W, m);   // 선 지대 (rules/terrain)
   if (m.hp <= 0) return;
   m.thinkT -= DT; if (m.thinkT <= 0) { m.thinkT = m.dec; const B = m.brain || W.brain; if (B) B.think(W, m); }
   if (m.hp <= 0) return;
@@ -480,16 +406,18 @@ function stepMage(W, m) {
         ch.hitAny = true;
       }
     }
-    if (s.kind === 'fire') for (const b of W.barrels) if (!b.ex) { const d = hyp(b.x - m.x, b.y - m.y), ang = Math.abs(((atan2(b.y - m.y, b.x - m.x) - m.aim + Math.PI * 3) % (Math.PI * 2)) - Math.PI); if (d < ch.L && ang < 0.45) ignite(W, b.x, b.y, 0.1, m); }
+    const hc = H.chan; for (let i = 0; i < hc.length; i++) hc[i](W, m, ch);   // 앞의 화약통 (rules/barrels)
     if (ch.t <= 0) { if (ch.hitAny) hit(m, s); m.chan = null; }
   }
   // 움직임
   if (m.roll > 0) m.roll -= DT;
   else {
-    let sp = BODY.speed * (m.wave ? 1.15 : 1) * (m.crash > 0 ? 0.85 : 1) * (m.emptyT > W.t ? 0.6 : 1); if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7; if (m.st.cramp > 0) sp *= 0.5; else if (m.st.mycel > 0) sp *= 0.6;
+    let sp = BODY.speed; const hv = H.speed; for (let i = 0; i < hv.length; i++) sp = hv[i](W, m, sp);   // 파도·꺼짐 (rules/wave), 빈손 (rules/risk)
+    if (m.buf.speed) sp *= 1 + m.buf.speed.v; if (m.st.chill > 0) sp *= 0.7;
+    const hl = H.speedLate; for (let i = 0; i < hl.length; i++) sp = hl[i](W, m, sp);   // 경직·균사 (rules/control)
     if (m.cast || m.chan) sp *= (m.cast && m.cast.s.lock) ? 0 : m.tac.castMove; if (m.st.stun > 0 || m.st.root > 0) sp = 0;
-    let onIce = false; for (const z of W.zones) if (z.k === 'ice' && z.src !== m && inZone(z, m.x, m.y)) { onIce = true; break; }
-    const acc = onIce ? 1.5 : 9, l = hyp(m.mv.x, m.mv.y), tx = l ? m.mv.x / l * sp : 0, ty = l ? m.mv.y / l * sp : 0, k = Math.min(1, DT * acc);
+    let acc = 9; const ha = H.accel; for (let i = 0; i < ha.length; i++) acc = ha[i](W, m, acc);   // 빙판 (rules/terrain)
+    const l = hyp(m.mv.x, m.mv.y), tx = l ? m.mv.x / l * sp : 0, ty = l ? m.mv.y / l * sp : 0, k = Math.min(1, DT * acc);
     m.vx += (tx - m.vx) * k; m.vy += (ty - m.vy) * k;
   }
   m.x = clamp(m.x + m.vx * DT, 0.4, W.width - 0.4); m.y = clamp(m.y + m.vy * DT, 0.4, W.height - 0.4);
@@ -498,10 +426,12 @@ function stepMage(W, m) {
     for (const o of W.walls) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
   }
 }
+// 안 보이는 함정을 알아챌 걸음당 확률 (이단의 함정은 어렵다, rules/wave)
+function notice(W, t) { let k = DT * 0.25; const h = W.H.notice; for (let i = 0; i < h.length; i++) k = h[i](W, t, k); return k; }
 function stepWorld(W) {
   W.t += DT; W.step++;
   refreshSides(W);
-  for (let i = 0; i < RULE_HOOKS.length; i++) if (W.rules[RULE_HOOKS[i].name]) RULE_HOOKS[i].apply(W);
+  const H = W.H, hw = H.world; for (let i = 0; i < hw.length; i++) hw[i](W);   // 등록한 규칙의 걸음마다 할 일
   for (const m of W.ms) if (m.hp > 0) stepMage(W, m);
   // 투사체: 속도에 맞춰 잘게 나눠 움직인다 (빠른 탄이 사람을 뚫고 지나가지 않게)
   for (const p of W.proj) {
@@ -518,7 +448,7 @@ function stepWorld(W) {
       if (p.dead) break;
       for (const o of W.walls) if (hyp(p.x - o.x, p.y - o.y) < o.r + p.rad) { p.dead = true; if (o.by && !o.used && o.by !== p.src) { o.used = 1; o.by.log.defHit++; } o.hp -= (p.s.hit && p.s.hit.flat > 50) ? 80 : 5 * Math.min(p.pow, 20); burst(W, p); break; }
       if (p.dead) break;
-      if (p.s.burst && p.s.burst.kind === 'fire') for (const b of W.barrels) if (!b.ex && hyp(b.x - p.x, b.y - p.y) < 0.5) { p.dead = true; burst(W, p); break; }
+      const hp = H.projSub; for (let i = 0; i < hp.length && !p.dead; i++) hp[i](W, p);   // 화약통 (rules/barrels)
       if (p.dead) break;
       for (const q of W.ms) {
         if (!canHit(W, p, q) || (p.home && q.side === p.src.side)) continue;
@@ -540,26 +470,26 @@ function stepWorld(W) {
     for (const q of W.ms) {
       if (q.hp <= 0 || hyp(q.x - a.x, q.y - a.y) >= a.r + 0.3) continue;
       if (!W.rules.friendlyFire && q.side === a.src.side && q !== a.src) continue;
-      const sole = !a.vis && q.gear.soles ? 0.3 : 1;
+      let sole = 1; const hh = H.areaHit; for (let i = 0; i < hh.length; i++) sole = hh[i](W, q, a, sole);   // 소금 밑창 (rules/gear)
       hurt(W, q, a.s.dmg * a.pow * sole, q === a.src ? null : a.src, a.s.n, a.s.kind);
-      const as = a.s; eff(q, { burn: as.burn, wet: as.wet, chill: as.chill, stun: (as.stun || 0) * sole * a.g, kind: as.kind, root: (as.root || 0) * sole * a.g, blind: as.blind, cough: as.cough, mycel: as.mycel, cramp: as.cramp, lime: as.lime, fetter: as.fetter });   // eff가 읽는 칸만 (마법 전체를 베끼지 않는다, 속도)
+      const as = a.s; eff(W, q, { burn: as.burn, wet: as.wet, chill: as.chill, stun: (as.stun || 0) * sole * a.g, kind: as.kind, root: (as.root || 0) * sole * a.g, blind: as.blind, cough: as.cough, mycel: as.mycel, cramp: as.cramp, lime: as.lime, fetter: as.fetter });   // eff가 읽는 칸만 (마법 전체를 베끼지 않는다, 속도)
       if (q !== a.src) h = true;
     }
     if (h) hit(a.src, a.s); if (W.rec) W.fx.push(['a', a.x, a.y, a.r]);
     if (a.s.kind === 'fire' || a.s.kind === 'elec') ignite(W, a.x, a.y, a.r, a.src);
   }
   keepIf(W.areas, timeLeft);
-  for (const z of W.zones) { z.t -= DT; if (z.k === 'acid') for (const w of W.walls) if (hyp(w.x - z.x, w.y - z.y) < (z.r || 2) + w.r) w.hp -= 25 * DT; }
+  const hz = H.zoneTick; for (let i = 0; i < hz.length; i++) hz[i](W);   // 지대의 시간, 산이 벽을 녹인다 (rules/terrain)
   keepIf(W.zones, timeLeft);
   keepIf(W.walls, wallLive);
   for (const t of W.traps) {
     t.arm -= DT; if (t.arm > 0) continue;
     let e = null, bd = 1e9; for (const q of W.foes[t.src.side]) { const d = hyp(q.x - t.x, q.y - t.y); if (d < bd) { bd = d; e = q; } }
     if (!e) continue;
-    if (!t.seen.has(e.id) && bd < 2.5 && W.rng() < DT * 0.25 * (W.rules.wave && t.src.type === '이단' ? 0.32 : 1)) t.seen.add(e.id);   // 이단의 안 보이는 함정은 알아채기 어렵다
+    if (!t.seen.has(e.id) && bd < 2.5 && W.rng() < notice(W, t)) t.seen.add(e.id);
     if (!(e.roll > 0) && bd < t.r) {
       if (W.t - (t.src.lureT ?? -9) < 3) t.src.log.lure++;   // 유도·몰이 성공: 끌어들인 적이 내 함정을 밟았다
-      const tr = t.s.tr; if (tr.dmg) hurt(W, e, tr.dmg * t.pow, t.src, t.s.n, tr.kind || 'blunt'); eff(e, tr);
+      const tr = t.s.tr; if (tr.dmg) hurt(W, e, tr.dmg * t.pow, t.src, t.s.n, tr.kind || 'blunt'); eff(W, e, tr);
       if (tr.zone) addZone(W, t.src, Object.assign({}, tr.zone, { n: t.s.n }), t.x, t.y, 0, 1);
       hit(t.src, t.s); t.done = true;
     }
@@ -606,5 +536,8 @@ function result(W) {
   return { v: VERSION, winner, byTime, t: r2(W.t), ms: W.ms, obs: W.obs, rec: W.rec };
 }
 
-return { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, RULE_HOOKS, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };
-});
+// 규칙 모듈이 쓰는 엔진의 것 (X)
+X = { DT, hyp, clamp, sin, cos, atan2, pow, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf };
+formsOf();
+const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };

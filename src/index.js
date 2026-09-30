@@ -1,44 +1,16 @@
-/* 숨 결투장 v1.11.1 — 바깥으로 내보내는 API
- * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));
-  else root.Arena = factory(root.ArenaCore, root.ArenaBrain, root.ArenaData.books, root.ArenaRegistry);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (core, brain, BOOKS, makeRegistry) {
 'use strict';
+/* 숨 결투장 v1.13.0 — 바깥으로 내보내는 API
+ * Node: const A = require('./src')   브라우저: 전역 Arena (sandbox/arena.js 묶음, node cli.js pack)
+ * 데이터(마법·마법책·덱·등급·판단 수준·장비)는 data/에 JSON으로 있다. 판단 수준은 brain/skills.js, 행동 지표는 metrics/look.js */
+const core = require('./core'), brain = require('./brain'), makeRegistry = require('./registry');
+const D = require('./data'), { SKILLS, CIRCLES } = require('./brain/skills'), { look } = require('../metrics/look');
 
-// 3판 등급표를 그대로 옮긴 사람 규격
-const TIERS = {
-  '병사':     { C: 0.3, circles: 1,  noise: 0.12, dec: 0.3,  autoDodge: false, mast: 0,   tac: { dodge: 0.2 } },
-  '평범':     { C: 1,   circles: 1,  noise: 0.08, dec: 0.2,  autoDodge: false, mast: 0.3, tac: { dodge: 0.4 } },
-  '중간':     { C: 2.5, circles: 3,  noise: 0.05, dec: 0.15, autoDodge: false, mast: 0.6, tac: { dodge: 0.6 } },
-  '상위':     { C: 5,   circles: 5,  noise: 0.03, dec: 0.12, autoDodge: true,  mast: 0.8, tac: { dodge: 0.8 } },
-  '대마법사': { C: 10,  circles: 10, noise: 0.02, dec: 0.1,  autoDodge: true,  mast: 1,   tac: { dodge: 1, focusLow: true } },
-};
-const DECKS = Object.assign({
-  '합법 최강': ['불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물', '대낙뢰', '화산 기둥', '번개 창', '균사 그물', '얼음 족쇄', '근육 경직', '석회 굳히기', '가두는 기둥'],   // 큰 마법 셋은 rules.risk일 때만, 몸 묶기 다섯은 rules.bodyBind일 때만 남는다
-  '광역': ['낙뢰', '번개 그물', '체인', '불기둥', '화염 방사', '돌 비', '짧은 실', '석회 방패', '석회 기둥', '솟는 발판', '근육 폭주', '불고리', '비 뿌리기', '땅 번개'],
-  '기본기': ['돌 압축탄', '라이트닝', '불덩이', '물 망치', '얼음 창', '석회 방패', '다리 자극'],
-  '머스킷': ['머스킷'],
-  '기술': ['짧은 실', '체인', '번개 그물', '흙 손', '불기둥', '불벽', '번개 지뢰', '석회 방패', '산 안개', '대낙뢰', '화산 기둥', '번개 창', '균사 그물', '얼음 족쇄', '근육 경직', '석회 굳히기', '가두는 기둥'],
-  '큰 수': ['번개 그물', '물 대포', '빙판', '불벽', '짧은 실', '땅 번개', '석회 방패', '대낙뢰', '화산 기둥', '번개 창'],   // 큰 수와 그 짝 묶기 (1.9.0)   // 기술 사다리를 보일 재료가 다 든 덱 (1.7.0, suite 모습)
-  '도발 합법 최강': ['도발', '불기둥', '비 뿌리기', '땅 번개', '짧은 실', '근육 폭주', '불고리', '석회 방패', '번개 그물'],   // 도발은 rules.taunt가 켜졌을 때만 남는다
-  '자유': Object.keys(core.SPELLS).filter(n => !core.SPELLS[n].banned && !core.SPELLS[n].mundane),
-}, BOOKS);
+// 3판 등급표를 그대로 옮긴 사람 규격 (data/tiers.json)
+const TIERS = D.TIERS;
+// 덱 (data/decks.json) + 자유(금지·평범 마법을 뺀 모든 마법) + 원소별 기본 마법책 (data/books.json)
+// 큰 마법 셋은 rules.risk일 때만, 몸 묶기 다섯은 rules.bodyBind일 때만, 도발은 rules.taunt일 때만 책에 남는다
+const DECKS = Object.assign({}, D.DECKS, { '자유': Object.keys(core.SPELLS).filter(n => !core.SPELLS[n].banned && !core.SPELLS[n].mundane) }, D.BOOKS);
 const BRAINS = { '기본': brain };
-// 판단 수준 (1.5.0, SPEC 13장). 등급(힘)과 따로 고른다. 없으면 등급의 값과 1.4.0 두뇌 그대로
-const SK = (dec, noise, autoDodge, tac) => ({ dec, noise, autoDodge, tac: Object.assign({}, ROLL, tac) });
-// 구르기 상한과 구르는 쪽 버릇 (1.6.0): 다섯 단계 모두. 상한 0.85~0.95 × 버릇 범위를 표준 묶음으로 재서 가장 고른 것 (REPORT 16절)
-const ROLL = { rollCap: 0.85, rollBias: [0.6, 0.9] };
-const BASIC = { readCast: true, lead: 1, combo: true, crowd: true, stance: false, lever: false, pathTrap: false, slotB: false, terrain: false, readWave: false, cdRead: false, outrange: false, focusLow: false };
-const SKILLS = {
-  '초보': SK(0.3, 0.14, false, Object.assign({}, BASIC, { dodge: 0.15, rest: 60, readCast: false, lead: 0.2, combo: false, crowd: false, castMove: 0, pause: [0.3, 0.6], shieldAny: true })),
-  '중급': SK(0.2, 0.08, false, Object.assign({}, BASIC, { dodge: 0.45, rest: 75 })),
-  '상급': SK(0.13, 0.04, true, Object.assign({}, BASIC, { dodge: 0.75, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, dodgeAim: true })),
-  '대가': SK(0.08, 0.02, true, Object.assign({}, BASIC, { dodge: 1, rest: 80, stance: true, lever: true, pathTrap: true, plan: true, combo2: true, shieldSave: true, cancel: true, cover: true, tempo: true, coverW: 2, herd: true, strip: true, lure: true, simul: true, cancel2: true, bigPlan: true, dodgeAim: true, grab: true, feint: 0.08, focusLow: true, terrain: true, slotB: true, readWave: true, cdRead: true, outrange: true })),
-};
-// 실제로 쓰는 서클 = 그릇(등급) × 솜씨(판단 수준) (1.7.0)
-const CIRCLES = { '초보': c => Math.max(1, Math.floor(c / 2)), '중급': c => Math.max(1, c - 1), '상급': c => c, '대가': c => c, '전설': c => c + 1 };
-SKILLS['전설'] = SK(0.05, 0.01, true, Object.assign({}, SKILLS['대가'].tac, { feint: 0.12, learn: true, waveChoose: true, counter: true, coverW: 2.5, bait: true, fakeRetreat: true, triple: true }));
 const register = makeRegistry(core, { TIERS, DECKS, BRAINS });
 
 // lib: 장면이 마법·덱을 덮을 때 넘긴다. 없으면 기본값
@@ -55,7 +27,7 @@ function mage(opt = {}, lib = {}) {
   const prefR = Rs.length ? core.clamp(Rs[Math.floor(Rs.length / 2)] * 0.5, 2.5, 10) : 7;
   return Object.assign({
     name: opt.name, book: book.slice(), C: t.C, circles: sk ? CIRCLES[opt.skill](t.circles) : t.circles, noise: sk ? sk.noise : t.noise, dec: sk ? sk.dec : t.dec, autoDodge: sk ? sk.autoDodge : t.autoDodge, skill: opt.skill,
-    gear: Object.assign({ soles: true }, opt.gear), mast: Object.fromEntries(book.map(n => [n, t.mast])),
+    gear: Object.assign({}, D.GEAR.default, opt.gear), mast: Object.fromEntries(book.map(n => [n, t.mast])),
     hitEst: opt.hitEst || {}, tac: Object.assign({ prefR }, t.tac, sk && sk.tac, opt.tac), brain: br || undefined, type: opt.type || '메타',
   }, opt.spec);
 }
@@ -110,24 +82,10 @@ function recording(W) {
   return { v: core.VERSION, names: W.ms.map(m => m.name), sides: W.ms.map(m => m.side), hpMax: W.ms.map(m => m.hpMax), winner: done ? r.winner : -1, t: r.t, obs: W.obs, frames: W.rec || [] };
 }
 
-// 싸우는 모습 (1.7.0): 판이 끝난 사람의 행동 지표. t = 그 사람이 싸운 시간 (s)
-function look(m, t) {
-  const st = m.log.starts, iv = []; for (let i = 1; i < st.length; i++) iv.push(st[i] - st[i - 1]);
-  const mean = iv.length ? iv.reduce((a, b) => a + b, 0) / iv.length : 0, sd = iv.length > 1 ? Math.sqrt(iv.reduce((a, b) => a + (b - mean) ** 2, 0) / (iv.length - 1)) : 0;
-  const L = m.log, per = x => x / Math.max(t, 1) * 60;
-  return {
-    '분당 시전': per(st.length), '빈틈 (s)': L.gaps.length ? L.gaps.slice().sort((a, b) => a - b)[L.gaps.length >> 1] : 0, '박자 흔들림': mean ? sd / mean : 0,
-    '분당 콤보': per(L.comboTry), '콤보 성공률': L.comboTry ? L.comboHit / L.comboTry : 0, '분당 동시 시전': per(L.dec.slotB),
-    '분당 캔슬': per(L.cancel || 0), '분당 속임수': per(L.dec.feint || 0), '엄폐 시간 비율': t ? (L.coverT || 0) / t : 0,
-    '분당 유도 성공': per(L.lure || 0), '분당 동시 착탄': per(L.simul || 0), '방어 적중률': L.defTry ? (L.defHit || 0) / L.defTry : 0,
-  };
-}
-
 // 판이 끝난 뒤 맞힘 기록을 사람 규격에 되먹인다 (결투자가 배우는 몫)
 function learn(spec, m, rate = 0.3) {
   for (const n of Object.keys(m.log.casts)) { const c = m.log.casts[n], h = m.log.hits[n] || 0; spec.hitEst[n] = (spec.hitEst[n] ?? 0.35) * (1 - rate) + rate * Math.min(1, h / c); }
   return spec;
 }
 
-return Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, register, mage, place, battle, duel, look, sceneWorld, runScene, recording, learn });
-});
+module.exports = Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, CIRCLES, register, mage, place, battle, duel, look, sceneWorld, runScene, recording, learn });

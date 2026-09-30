@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.11.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.13.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -53,7 +53,9 @@ const dig = r => [r.winner, r.t, r.ms.map(m => m.hp).join('/')].join(';');
 const SCENES = Object.fromEntries(fs.readdirSync(path.join(__dirname, '../sandbox/scenes')).filter(f => f.endsWith('.json')).map(f => [f.slice(0, -5), JSON.parse(SRC('sandbox/scenes/' + f))]));
 
 ok('엔진은 JS 엔진마다 다른 Math 함수를 쓰지 않는다', () => {
-  for (const f of ['src/core.js', 'src/brain.js', 'src/index.js', 'src/registry.js']) {
+  const walk = d => fs.readdirSync(path.join(__dirname, '..', d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(d + '/' + e.name) : e.name.endsWith('.js') ? [d + '/' + e.name] : []);
+  const files = [...walk('src'), ...walk('metrics')]; assert.ok(files.length > 30, files.join());
+  for (const f of files) {
     const code = SRC(f).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const bad = code.match(/Math\.(pow|sin|cos|tan|asin|acos|atan2?|sinh|cosh|tanh|hypot|exp|expm1|log1?p?|log2|log10|cbrt|random)\b/g);
     assert.ok(!bad, f + ': ' + bad);
@@ -85,13 +87,13 @@ ok('장면: 걸음씩 돌려도(샌드박스) 한 번에 돌린 것과 같다', 
 ok('장면을 내보내고 다시 불러오면 같은 판', () => {
   for (const sc of Object.values(SCENES)) assert.strictEqual(dig(A.runScene(JSON.parse(JSON.stringify(sc)))), dig(A.runScene(sc)));
 });
-ok('sandbox/data.js는 JSON과 맞다 (어긋나면 node cli.js pack)', () => {
-  assert.strictEqual(SRC('sandbox/data.js'), require('../sandbox/pack').text());
+ok('sandbox/arena.js는 원본(src·metrics·data·장면)과 맞다 (어긋나면 node cli.js pack)', () => {
+  assert.strictEqual(SRC('sandbox/arena.js'), require('../sandbox/pack').text());
 });
-ok('브라우저 모양(UMD, 전역)으로 읽어도 같은 결과', () => {
+ok('브라우저 모양(묶음 한 장, 전역)으로 읽어도 같은 결과', () => {
   const ctx = vm.createContext({});
-  for (const f of ['sandbox/data.js', 'src/core.js', 'src/brain.js', 'src/registry.js', 'src/index.js']) vm.runInContext(SRC(f), ctx, { filename: f });
-  const B = ctx.Arena; assert.strictEqual(B.VERSION, A.VERSION);
+  vm.runInContext(SRC('sandbox/arena.js'), ctx, { filename: 'sandbox/arena.js' });
+  const B = ctx.Arena; assert.strictEqual(B.VERSION, A.VERSION); assert.ok(ctx.ArenaCore && ctx.ArenaBrain && ctx.ArenaRegistry && ctx.ArenaData.scenes.duel);
   for (const [n, sc] of Object.entries(SCENES)) { const W = B.sceneWorld(sc); while (!B.over(W)) B.stepWorld(W); assert.strictEqual(dig(B.result(W)), dig(A.runScene(sc)), n); }
 });
 ok('편이 셋 이상이어도 돈다', () => {
@@ -109,7 +111,7 @@ ok('등록: 새 마법·덱·등급·두뇌·규칙이 붙고, 새 규칙은 끄
   const r = A.runScene({ seed: 1, maxT: 20, sides: [{ mages: [{ tier: '영웅', deck: '시험 덱' }] }, { brain: '가만히', mages: [{ tier: '평범' }] }] });
   assert.ok(r.ms[0].log.casts['시험 돌'] > 0, '새 마법을 안 씀'); assert.strictEqual(Object.keys(r.ms[1].log.casts).length, 0, '가만히 두뇌가 시전함');
   assert.throws(() => A.register.spell({ n: '틀 없음', t: 'nope', cost: 1, cast: 1, cd: 1 }));
-  delete A.DEFAULT_RULES['시험 규칙']; A.RULE_HOOKS.length = 0;
+  A.register.unrule('시험 규칙'); assert.ok(!('시험 규칙' in A.DEFAULT_RULES));
 });
 ok('파도 (1.2.0): 꺼 두면 부류와 상관없이 예전과 같고, 켜면 서퍼는 100을 넘어 타다 170에서 휩쓸리고, 이단은 넘치지 않는다', () => {
   const mm = (type, deck) => A.mage({ tier: '중간', deck, type });
@@ -238,9 +240,51 @@ ok('몸 묶기 (1.11.0): 꺼 두면 빠지고, 균사·경직은 구르기를 �
   const W0 = A.createWorld({ seed: 1, obstacles: 0 }), p = A.addMage(W0, A.mage({}), 0, 10, 15), o = A.addMage(W0, A.mage({}), 1, 14, 15); A.stepWorld(W0); p.st.blind = 2;
   A.release(W0, o, { s: W0.spells['비 뿌리기'], tgt: p, tx: p.x, ty: p.y }); assert.ok(p.st.blind > 1, '꺼 두었는데 비가 눈을 씻었다');
 });
+ok('모듈과 훅 (1.12.0): 켜진 규칙의 훅만 모이고, 규칙 모듈을 등록하면 켰을 때만 끼어든다, 데이터·판단 수준은 data/에서', () => {
+  const names = W => W.mods.map(r => r.name).join(',');
+  const W0 = A.createWorld({ seed: 1 }); assert.strictEqual(names(W0), 'gear,terrain,multiSlot');
+  assert.ok(W0.H.hurt.length === 0 && W0.H.speed.length === 0 && W0.H.gate.length === 0 && W0.H.share.length === 1, '꺼진 규칙의 훅이 모였다');
+  const W1 = A.createWorld({ seed: 1, rules: { wave: true, risk: true, bodyBind: true, saltRing: true, circles: false } });
+  assert.strictEqual(names(W1), 'gear,terrain,saltRing,wave,control,risk'); assert.ok(W1.H.hurt.length === 2 && W1.H.speed.length === 2 && W1.H.mageStep.length === 2);
+  assert.strictEqual(names(A.createWorld({ seed: 1, barrels: [{ x: 5, y: 5 }] })), 'gear,terrain,multiSlot,barrels');   // 장면이 화약통을 놓으면 켜진다
+  // 규칙 모듈 등록: 끄면 판이 같고, 켜면 훅이 끼어든다. 없는 훅 이름은 거절
+  const duel = rules => dig(A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: 6, rules }));
+  const base = duel(); let n = 0;
+  A.register.rule({ name: '시험 방패', switch: '시험 방패', engine: () => ({ hurtMod(W, m, v) { n++; return v * 0.5; } }), brain: () => ({ castTime(W, m, t) { return t; } }) });
+  assert.strictEqual(duel(), base); assert.strictEqual(n, 0);
+  assert.notStrictEqual(duel({ '시험 방패': true }), base); assert.ok(n > 0);
+  A.register.unrule('시험 방패'); assert.strictEqual(duel({ '시험 방패': true }), base);
+  A.register.rule({ name: '틀린 훅', engine: () => ({ nope() {} }) }); assert.throws(() => A.createWorld({})); A.register.unrule('틀린 훅');
+  // 데이터: 원소 파일을 모은 마법의 차례·덱·판단 수준
+  assert.deepStrictEqual(Object.keys(A.SPELLS).slice(0, 82), require('../data/spells/order.json')); assert.strictEqual(A.DECKS['자유'][0], Object.keys(A.SPELLS)[0]);
+  assert.ok(A.SKILLS['전설'].tac.learn && A.SKILLS['초보'].tac.pause && A.CIRCLES['초보'](5) === 2 && A.CIRCLES['전설'](5) === 6);
+  assert.deepStrictEqual(require('../src/brain/skills').techniquesOf('초보'), ['tempo']);
+});
+ok('대응·은실 옷 (1.13.0): 꺼 두면 예전과 같고, 순간 반응은 판단 사이에 구르고, 대비는 피해를 줄이고, 풀기는 몸 묶기만 푼다, 은실은 붙잡기를 반으로', () => {
+  const duel = (rules, gear) => dig(A.duel(A.mage({ tier: '중간', skill: '대가', gear }), A.mage({ tier: '중간', skill: '상급', deck: '기술' }), { seed: 3, rules: Object.assign({ risk: true, bodyBind: true }, rules) }));
+  assert.strictEqual(duel({}, { silver: true }), duel({}), '스위치가 꺼졌는데 은실 옷이 일했다');
+  assert.ok(!A.createWorld({}).mods.some(r => r.name === 'response' || r.name === 'silver'));
+  const mk = (rules, spec) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, Object.assign({ book: [] }, spec), 0, 10, 15), e = A.addMage(W, { book: [] }, 1, 30, 15); A.stepWorld(W); m.thinkT = e.thinkT = 99; return [W, m, e]; };
+  // 순간 반응: 판단이 멈춰 있어도(thinkT 99) 0.2 s 안에 닿을 탄을 몸이 피한다. 초보·꺼짐은 못 한다
+  const shoot = (rules, skill) => { let n = 0; for (let k = 0; k < 20; k++) { const W = A.createWorld({ seed: k + 1, obstacles: 0, rules }); const m = A.addMage(W, { book: [], skill }, 0, 10, 15), e = A.addMage(W, { book: [] }, 1, 30, 15); A.stepWorld(W); m.thinkT = e.thinkT = 99;
+    W.proj.push({ x: 13, y: 15, vx: -20, vy: 0, home: false, life: 1, s: W.spells['돌 압축탄'], src: e, pow: 1, rad: 0.1 }); for (let i = 0; i < 6; i++) A.stepWorld(W); if (m.log.reflex) n++; } return n; };
+  assert.ok(shoot({ response: true }, '전설') >= 12, '전설의 순간 반응 ' + shoot({ response: true }, '전설')); assert.strictEqual(shoot({ response: true }, '초보'), 0); assert.strictEqual(shoot({}, '전설'), 0);
+  // 대비: 받는 피해 × 0.6, 걸음 × 0.3
+  let [W, m] = mk({ response: true }, { skill: '대가' }); m.braceReq = 1; A.stepWorld(W); assert.ok(m.braceT > W.t && m.log.brace === 1);
+  const taken = brace => { const [W2, q, f] = mk({ response: true }, { skill: '대가' }); if (brace) { q.braceReq = 1; A.stepWorld(W2); } f.x = q.x + 3; f.y = q.y; const b0 = q.hp; A.release(W2, f, { s: W2.spells['짧은 실'], tx: q.x, ty: q.y }); return b0 - q.hp; };
+  const t0 = taken(false), t1 = taken(true); assert.ok(t0 > 0 && Math.abs(t1 / t0 - 0.6) < 1e-9, '대비 ' + t0 + ' → ' + t1);
+  // 풀기: 몸 묶기만 풀고 머리 + 12, 당 − 4, 간격 5 s. 굳음은 그대로
+  [W, m] = mk({ response: true, bodyBind: true }, { skill: '상급' }); m.st.mycel = 2; m.st.lime = 3; m.st.stun = 0.5; const f0 = m.fat, g0 = m.glu; m.unbindReq = 1; A.stepWorld(W);
+  assert.ok(m.st.mycel === 0 && m.st.lime === 0 && m.st.stun > 0.3 && m.fat - f0 > 11 && m.log.unbind === 1 && m.unbindCd > W.t + 4.9, JSON.stringify(m.st));
+  m.st.mycel = 2; m.unbindReq = 1; A.stepWorld(W); assert.ok(m.st.mycel > 1, '간격 안에 또 풀었다');
+  // 은실 옷: 붙잡는 효과 × hold(화상은 그대로), 전기 × elec (data/rules/silver.json)
+  const sv = gear => { const [W3, q, f] = mk({ silver: true }, { gear }); f.x = q.x + 3; f.y = q.y; A.release(W3, f, { s: W3.spells['짧은 실'], tx: q.x, ty: q.y }); return q; };
+  const a = sv({}), b = sv({ silver: true });
+  const SP = require('../data/rules/silver.json'); assert.ok(Math.abs(b.st.stun / a.st.stun - SP.hold) < 1e-9 && Math.abs(b.log.taken.elec / a.log.taken.elec - SP.elec) < 1e-9, a.st.stun + ' ' + b.st.stun);
+});
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {
-  const P = require('../par'), S = require.resolve('./suite');
+  const P = require('../experiments/par'), S = require.resolve('./suite');
   const J = [[{ tier: '평범', skill: '전설' }, { tier: '평범', skill: '대가' }, 6], [{ tier: '중간', skill: '대가' }, { tier: '중간', skill: '상급' }, 6, { risk: true, bodyBind: true }], ['중간', '평범', 4]].map(args => ({ mod: S, fn: 'duels', args }));
   J.push({ mod: S, fn: 'rings', args: [{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 30, 2] });
   const one = JSON.stringify(P.runSerial(J)), par = JSON.stringify(await P.runJobs(J.slice().reverse(), { workers: 3 }).then(r => r.reverse()));
