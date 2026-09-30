@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* 숨 결투장 v1.11.0 명령줄
+/* 숨 결투장 v1.11.1 명령줄
  *   node cli.js bench               속도 측정
  *   node cli.js duel 평범 평범 20    같은 등급 결투 20판
  *   node cli.js ring 대마법사 평범 50 [기본기]   한 명을 가운데 두고 둘러쌈
@@ -8,7 +8,7 @@
  *   node cli.js replay 상위 상위 out.json   한 판 녹화
  *   node cli.js scene sandbox/scenes/duel.json   장면 한 판 (샌드박스와 같은 결과)
  *   node cli.js pack                샌드박스가 읽을 sandbox/data.js 다시 싸기
- *   node cli.js suite [묶음] [--save]   표준 시험 묶음: 기준(suite-baseline.json)과 비교, --save면 기준 저장
+ *   node cli.js suite [묶음] [--save] [--jobs N]   표준 시험 묶음: 기준(suite-baseline.json)과 비교, --save면 기준 저장. 기본은 코어 수만큼 병렬(par.js)
  */
 const A = require('./src');
 const [cmd, ...args] = process.argv.slice(2);

@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.11.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
+/* 숨 결투장 v1.11.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js */
 const assert = require('assert');
 const A = require('../src');
 let pass = 0; const ok = (name, fn) => { fn(); pass++; console.log('  ✓', name); };
@@ -238,4 +238,12 @@ ok('몸 묶기 (1.11.0): 꺼 두면 빠지고, 균사·경직은 구르기를 �
   const W0 = A.createWorld({ seed: 1, obstacles: 0 }), p = A.addMage(W0, A.mage({}), 0, 10, 15), o = A.addMage(W0, A.mage({}), 1, 14, 15); A.stepWorld(W0); p.st.blind = 2;
   A.release(W0, o, { s: W0.spells['비 뿌리기'], tgt: p, tx: p.x, ty: p.y }); assert.ok(p.st.blind > 1, '꺼 두었는데 비가 눈을 씻었다');
 });
-console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);
+// 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
+(async () => {
+  const P = require('../par'), S = require.resolve('./suite');
+  const J = [[{ tier: '평범', skill: '전설' }, { tier: '평범', skill: '대가' }, 6], [{ tier: '중간', skill: '대가' }, { tier: '중간', skill: '상급' }, 6, { risk: true, bodyBind: true }], ['중간', '평범', 4]].map(args => ({ mod: S, fn: 'duels', args }));
+  J.push({ mod: S, fn: 'rings', args: [{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 30, 2] });
+  const one = JSON.stringify(P.runSerial(J)), par = JSON.stringify(await P.runJobs(J.slice().reverse(), { workers: 3 }).then(r => r.reverse()));
+  assert.strictEqual(par, one, '병렬 결과가 한 줄 결과와 다르다'); pass++; console.log('  ✓ 병렬 실행기 (1.11.1): 일꾼 셋이 거꾸로 돌려도 한 줄로 돌린 것과 같다');
+  console.log(`시험 ${pass}개 통과 · 결투장 v${A.VERSION}`);
+})().catch(e => { console.error(e); process.exitCode = 1; });

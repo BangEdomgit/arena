@@ -1,10 +1,11 @@
 'use strict';
-/* 숨 결투장 v1.11.0 — 표준 시험 묶음
+/* 숨 결투장 v1.11.1 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
  *   node cli.js suite 부류        한 묶음만
  *   node cli.js suite --save     지금 결과를 기준으로 저장
+ *   node cli.js suite --jobs 1   한 줄로 (기본은 코어 수만큼 일꾼, par.js. 결과는 같다)
  * 모든 판은 결정론이라 아무것도 안 바꿨으면 차이가 없다. */
 const fs = require('fs'), path = require('path');
 const A = require('../src');
@@ -16,9 +17,11 @@ function mk(p) { const o = typeof p === 'string' ? { tier: p } : p, sp = A.mage(
 const who = p => typeof p === 'string' ? p : [p.tier, p.C ? 'C' + p.C : '', p.skill, p.type, p.deck].filter(Boolean).join(' ');
 
 // 1대1 N판, 씨앗 1..N, 판마다 자리를 번갈아 (node cli.js duel과 같은 방식)
-function duels(a, b, N, rules) {
+function duels(a, b, N, rules) { return duelsFrom(a, b, 0, N, rules); }
+// 그 가운데 k = from..from+N−1 판만 (병렬로 나눠 돌릴 때. 이어 붙이면 duels와 같다)
+function duelsFrom(a, b, from, N, rules) {
   const out = [];
-  for (let k = 0; k < N; k++) { const sw = k % 2, x = mk(a), y = mk(b); const r = sw ? A.duel(y, x, { seed: k + 1, rules }) : A.duel(x, y, { seed: k + 1, rules }); out.push({ w: r.winner === -1 ? -1 : (r.winner === 0) !== !!sw ? 0 : 1, t: r.t, bt: r.byTime }); }
+  for (let k = from; k < from + N; k++) { const sw = k % 2, x = mk(a), y = mk(b); const r = sw ? A.duel(y, x, { seed: k + 1, rules }) : A.duel(x, y, { seed: k + 1, rules }); out.push({ w: r.winner === -1 ? -1 : (r.winner === 0) !== !!sw ? 0 : 1, t: r.t, bt: r.byTime }); }
   return out;
 }
 // 한 명(가운데) 대 무리 N판
@@ -39,7 +42,7 @@ function looks(tier, skill, N) {
 
 // 대진표. 줄의 id는 기준과 맞춰 보는 열쇠라 바꾸지 않는다 (바꾸면 새 줄·사라진 줄로 나온다)
 function table() {
-  const T = [], duel = (group, a, b, N, rules) => T.push({ id: group + ': ' + who(a) + ' 대 ' + who(b) + (rules ? ' ' + JSON.stringify(rules) : ''), group, N, run: () => duels(a, b, N, rules) });
+  const T = [], duel = (group, a, b, N, rules) => T.push({ id: group + ': ' + who(a) + ' 대 ' + who(b) + (rules ? ' ' + JSON.stringify(rules) : ''), group, N, job: { fn: 'duels', args: [a, b, N, rules] } });
   // 등급
   for (const t of ['평범', '중간', '상위']) duel('등급', t, t, 100);
   duel('등급', '중간', '평범', 100); duel('등급', '상위', '중간', 100); duel('등급', '대마법사', '상위', 100);
@@ -55,7 +58,7 @@ function table() {
   for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) duel('원소', { tier: '평범', deck: els[i] }, { tier: '평범', deck: els[j] }, 20);
   // 둘러싸기
   for (const [c, q, n] of [[{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 50], [{ tier: '대마법사', deck: '광역' }, { tier: '병사', deck: '머스킷' }, 40], [{ tier: '상위', deck: '광역' }, { tier: '평범', deck: '기본기' }, 12]])
-    T.push({ id: '둘러싸기: ' + who(c) + ' 대 ' + who(q) + ' ' + n + '명', group: '둘러싸기', N: 10, run: () => rings(c, q, n, 10) });
+    T.push({ id: '둘러싸기: ' + who(c) + ' 대 ' + who(q) + ' ' + n + '명', group: '둘러싸기', N: 10, job: { fn: 'rings', args: [c, q, n, 10] } });
   // 도발 (1.4.0)
   for (const t of ['평범', '중간']) duel('도발', { tier: t, deck: '도발 합법 최강' }, { tier: t }, 100, { taunt: true });
   duel('도발', { tier: '중간', deck: '도발 합법 최강', type: '메타' }, { tier: '중간', deck: '도발 합법 최강', type: '서퍼' }, 100, { taunt: true, wave: true });
@@ -65,7 +68,7 @@ function table() {
   // 몸 묶기 (1.11.0): 판단 줄을 risk + bodyBind로
   for (const t of ['평범', '중간']) for (let i = 0; i < 4; i++) duel('몸 묶기', { tier: t, skill: SK[i + 1] }, { tier: t, skill: SK[i] }, 100, { risk: true, bodyBind: true });
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
-  for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, run: () => looks(t, sk, 40) });
+  for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, job: { fn: 'looks', args: [t, sk, 40] } });
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
@@ -83,12 +86,21 @@ function summarize(res) {
   const mean = res.reduce((s, r) => s + r.t, 0) / n, sd = Math.sqrt(res.reduce((s, r) => s + (r.t - mean) ** 2, 0) / Math.max(1, n - 1));
   return { N: n, A: a, B: b, D: d, score: +((a + d / 2) / n).toFixed(4), t: +mean.toFixed(2), sd: +sd.toFixed(2), bt: res.filter(r => r.bt).length };
 }
-function run(only, log = () => {}) {
+// 줄마다 일감 하나(대진은 데이터, 판마다 씨앗이 정해져 있다). jobs개 일꾼으로 나눠 돌린다(par.js, 1.11.1). 결과는 일꾼 수와 상관없이 같다
+async function run(only, log = () => {}, jobs = 1) {
   const rows = {}, T = table().filter(r => !only || r.group === only);
   if (only && !T.length) throw new Error('없는 묶음: ' + only + ' (' + GROUPS.join(', ') + ')');
-  const t0 = Date.now();
-  T.forEach((r, i) => { const x = r.run(); rows[r.id] = Object.assign({ group: r.group }, x.look ? x : summarize(x)); log(`\r${i + 1}/${T.length} ${r.group}   `); });
-  log(`\r${T.length}줄, ${((Date.now() - t0) / 1000).toFixed(1)} s\n`);
+  const t0 = Date.now(), J = T.map(r => Object.assign({ mod: __filename }, r.job));
+  let res;
+  if (jobs > 1) {
+    // 1대1 줄은 25판씩 쪼개 나눠 준다(가장 긴 줄이 전체를 붙잡지 않게). 차례대로 이어 붙이면 한 줄로 돌린 것과 같다
+    const parts = [], own = [];
+    J.forEach((j, i) => { if (j.fn === 'duels' && j.args[2] > 25) for (let f = 0; f < j.args[2]; f += 25) { parts.push({ mod: j.mod, fn: 'duelsFrom', args: [j.args[0], j.args[1], f, Math.min(25, j.args[2] - f), j.args[3]] }); own.push(i); } else { parts.push(j); own.push(i); } });
+    const got = await require('../par').runJobs(parts, { workers: jobs, onDone: (d, n) => log(`\r${d}/${n} (일꾼 ${jobs})   `) });
+    res = J.map(() => null); got.forEach((x, k) => { const i = own[k]; res[i] = res[i] ? (Array.isArray(x) ? res[i].concat(x) : x) : x; });
+  } else res = J.map((j, i) => { const x = module.exports[j.fn](...j.args); log(`\r${i + 1}/${T.length} ${T[i].group}   `); return x; });
+  T.forEach((r, i) => { const x = res[i]; rows[r.id] = Object.assign({ group: r.group }, x.look ? x : summarize(x)); });
+  log(`\r${T.length}줄, ${((Date.now() - t0) / 1000).toFixed(1)} s (일꾼 ${Math.min(jobs, T.length)})\n`);
   return { v: A.VERSION, date: new Date().toISOString().slice(0, 10), z: Z, rows };
 }
 
@@ -123,10 +135,11 @@ function format(d) {
     `\n    시간  ${o.t} → ${n.t} s (${sgn(+(n.t - o.t).toFixed(2))})  z=${d.zt.toFixed(1)}  → ${n.t === o.t ? '같음' : verdict(d.zt)}`;
 }
 
-function main(args) {
-  const save = args.includes('--save'), only = args.find(a => !a.startsWith('--'));
+async function main(args) {
+  const save = args.includes('--save'), ji = args.indexOf('--jobs'), jobs = ji >= 0 ? Math.max(1, +args[ji + 1] || 1) : require('../par').defaultWorkers();
+  const only = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--jobs');
   const log = s => process.stderr.write(s);
-  let now; try { now = run(only, log); } catch (e) { console.log(e.message); process.exitCode = 1; return; }
+  let now; try { now = await run(only, log, jobs); } catch (e) { console.log(e.message); process.exitCode = 1; return; }
   if (save) {
     let base = { rows: {} }; if (only && fs.existsSync(BASE)) base = JSON.parse(fs.readFileSync(BASE, 'utf8'));   // 한 묶음만 저장하면 나머지 줄은 그대로 둔다
     const out = Object.assign({}, now, { rows: Object.assign({}, base.rows, now.rows) });
@@ -143,4 +156,4 @@ function main(args) {
   console.log(`\n바뀐 줄 ${ch.length} (진짜 차이 ${real}, 운일 수 있음 ${ch.length - real})${added ? ', 새 줄 ' + added : ''}${gone.length ? ', 사라진 줄 ' + gone.length : ''}`);
 }
 
-module.exports = { GROUPS, table, run, summarize, compare, zScore, zTime, verdict, format, main, Z };
+module.exports = { GROUPS, table, run, duels, duelsFrom, rings, looks, summarize, compare, zScore, zTime, verdict, format, main, Z };

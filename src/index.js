@@ -1,4 +1,4 @@
-/* 숨 결투장 v1.11.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v1.11.1 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (ArenaData, ArenaCore, ArenaBrain, ArenaRegistry 다음에 읽는다) */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(require('./core'), require('./brain'), require('./books.json'), require('./registry'));

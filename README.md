@@ -1,4 +1,4 @@
-# 숨 결투장 v1.11.0
+# 숨 결투장 v1.11.1
 
 설정집 3판(`WORLD.md`)의 규칙으로 도는 마법 결투 시뮬레이터. 규격은 `SPEC.md`.
 
@@ -14,7 +14,7 @@ node cli.js ring 대마법사 병사 40 머스킷 5
 node cli.js league 평범 6                  # 원소 기본책 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json  # 장면 한 판 (샌드박스와 같은 결과)
-node cli.js suite                          # 표준 시험 묶음: 기준과 비교해 바뀐 줄만 (--save로 기준 저장)
+node cli.js suite                          # 표준 시험 묶음: 기준과 비교해 바뀐 줄만 (--save로 기준 저장, 코어 수만큼 병렬)
 ```
 
 ## 샌드박스 v0.1
@@ -29,11 +29,12 @@ node cli.js suite                          # 표준 시험 묶음: 기준과 비
 |---|---|
 | `src/core.js` | 세계, 물리, 마법 방출, 장악권, 피로, 녹화 |
 | `src/brain.js` | 기본 두뇌 (바꿔 끼울 수 있음) |
-| `src/spells.json` | 마법 73개 (금지 3, 총 1 포함) |
+| `src/spells.json` | 마법 82개 (금지 3, 총 1, 규칙에 딸린 것 9 포함) |
 | `src/books.json` | 원소별 기본 마법책 |
 | `src/index.js` | 등급·덱·싸움 배치·장면·학습 API |
 | `src/registry.js` | 등록: 마법·덱·등급·두뇌·규칙 |
 | `cli.js` | 명령줄 |
+| `par.js` | 실험용 병렬 실행기 (worker_threads, 결과는 한 줄로 돌린 것과 같다) |
 | `test/test.js` | 규격 시험 |
 | `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 기준 |
 | `viewer.html` | 녹화 보기 |
