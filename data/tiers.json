@@ -1,0 +1,58 @@
+{
+ "병사": {
+  "C": 0.3,
+  "circles": 1,
+  "noise": 0.12,
+  "dec": 0.3,
+  "autoDodge": false,
+  "mast": 0,
+  "tac": {
+   "dodge": 0.2
+  }
+ },
+ "평범": {
+  "C": 1,
+  "circles": 1,
+  "noise": 0.08,
+  "dec": 0.2,
+  "autoDodge": false,
+  "mast": 0.3,
+  "tac": {
+   "dodge": 0.4
+  }
+ },
+ "중간": {
+  "C": 2.5,
+  "circles": 3,
+  "noise": 0.05,
+  "dec": 0.15,
+  "autoDodge": false,
+  "mast": 0.6,
+  "tac": {
+   "dodge": 0.6
+  }
+ },
+ "상위": {
+  "C": 5,
+  "circles": 5,
+  "noise": 0.03,
+  "dec": 0.12,
+  "autoDodge": true,
+  "mast": 0.8,
+  "tac": {
+   "dodge": 0.8
+  }
+ },
+ "대마법사": {
+  "C": 10,
+  "circles": 10,
+  "noise": 0.02,
+  "dec": 0.1,
+  "autoDodge": true,
+  "mast": 1,
+  "tac": {
+   "dodge": 1,
+   "focusLow": true
+  }
+ }
+}

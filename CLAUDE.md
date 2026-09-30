@@ -6,7 +6,7 @@
 
 - `SPEC.md`가 **유일한 기준**이다. 코드와 SPEC이 어긋나면 코드가 틀린 것이다. 규칙을 바꾸려면 SPEC부터 고친다.
 - `WORLD.md`는 세계관의 근거(설정집 3판). 규칙의 "왜"를 찾을 때 본다. 고치지 않는다.
-- `REPORT.md`는 시뮬레이션 측정 보고. 결과가 바뀌는 변경을 했으면 다시 재서 고친다.
+- `REPORT.md`는 측정 보고의 요약과 목차, 본문은 `reports/`에 버전마다 한 장(`reports/v1.12.0.md`). 결과가 바뀌는 변경을 했으면 다시 재서 그 버전의 장을 쓰고 `REPORT.md`의 요약·목차를 고친다.
 
 ## 명령
 
@@ -18,46 +18,51 @@ node cli.js ring 대마법사 평범 50 기본기 5
 node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
-node cli.js pack                  # JSON(spells·books·scenes)을 고쳤으면 sandbox/data.js 다시 싸기
+node cli.js pack                  # src/·metrics/·data/·장면을 고쳤으면 sandbox/arena.js 다시 싸기 (안 하면 시험이 알려 준다)
+node experiments/hash.js          # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v1.12.0.md)
 node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
-# 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (REPORT 13절)
+# 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (reports/v1.3.1.md, 13절)
 ```
 
 `replay.json` 같은 녹화 파일은 커밋하지 않는다.
 
-## 구조
+## 구조 (SPEC 22장)
 
-| 파일 | 하는 일 |
+| 자리 | 하는 일 |
 |---|---|
-| `src/core.js` | 규칙: 세계, 물리, 마법 방출(`release`), 장악권(`share`·`gOf`), 피로, 판 돌리기(`run`), 녹화 |
-| `src/brain.js` | 판단: `think(W, m)` 하나. 새 두뇌도 같은 모양으로 내보내면 바꿔 끼울 수 있다 |
-| `src/spells.json` | 마법 데이터. 이름이 키, `t`가 틀(SPEC 8장) |
-| `src/books.json` | 원소별 기본 마법책 |
-| `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn` |
-| `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule` |
+| `src/core.js` | 규칙의 바탕: 세계, 물리, 마법 방출(`release`), 장악권(`share`·`gOf`), 피로, 판 돌리기(`run`), 녹화. 정해진 자리에서 켜진 규칙의 훅(`W.H`)을 부른다 |
+| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js` |
+| `src/math.js`, `src/data.js` | 결정론 수학, `data/` 읽기 |
+| `src/brain/` | 판단: `index.js`의 `think(W, m)` → `read`·`stance`·`move`·`choose`. 기술은 `techniques/`에 하나씩, 판단 수준은 `skills.js`. 새 두뇌도 `think` 모양으로 내보내면 바꿔 끼울 수 있다 |
+| `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `SKILLS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn`, `look` |
+| `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule / unrule` |
+| `data/` | JSON: `spells/원소.json`(마법, 이름이 키, `t`가 틀, 차례는 `spells/order.json`), `books.json`(원소별 기본책), `decks.json`, `tiers.json`, `skills.json`, `gear.json` |
+| `metrics/look.js` | 행동 지표(싸우는 모습) |
+| `experiments/` | `par.js`(병렬 실행기, Node 전용, worker_threads. 일감 `{ mod, fn, args }`, 결과는 일꾼 수와 상관없이 같다), `hash.js`(결과 지문) |
+| `reports/` | 버전마다 한 장의 측정 보고. `REPORT.md`는 요약과 목차 |
 | `cli.js` | 명령줄 |
-| `par.js` | 실험용 병렬 실행기(Node 전용, worker_threads). 일감 `{ mod, fn, args }`, 결과는 일꾼 수와 상관없이 같다 |
 | `test/test.js` | 규격 시험. `ok('설명', () => { ... assert ... })` 모양으로 더한다 |
 | `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 그 기준(SPEC 21장). 대진 줄의 id는 기준의 열쇠라 함부로 바꾸지 않는다 |
 | `viewer.html` | 녹화 보기. 혼자 도는 HTML 한 장(보기용 녹화 하나가 박혀 있다) |
-| `sandbox/index.html`, `sandbox/sandbox.js` | 샌드박스 화면. `../src/*.js`를 그대로 읽는다(SPEC 19장) |
+| `sandbox/index.html`, `sandbox/sandbox.js` | 샌드박스 화면. 묶음 `arena.js`를 읽는다(SPEC 19장) |
 | `sandbox/scenes/*.json` | 예시 장면 |
-| `sandbox/data.js` | **만든 파일**(`node cli.js pack`). JSON을 브라우저 전역 `ArenaData`로 싼 것. 손으로 고치지 않는다 |
+| `sandbox/arena.js` | **만든 파일**(`node cli.js pack`, `sandbox/pack.js`). 엔진 모듈·데이터·장면을 브라우저 전역(`Arena`, `ArenaData`…)으로 싼 것. 손으로 고치지 않는다 |
 
-데이터(`spells.json`) · 규칙(`core.js`) · 판단(`brain.js`)을 섞지 않는다.
+데이터(`data/`) · 규칙(`core.js`와 `rules/`) · 판단(`brain/`)을 섞지 않는다.
 
 ## 지킬 것
 
 - **결정론**: 난수는 세계마다 하나. `W.rng()`·`W.rnd(a, b)`만 쓰고 `Math.random`이나 시계에 기대는 코드는 넣지 않는다. 같은 씨앗이면 같은 결과가 나와야 한다(시험 1번).
-- **결정론 수학**: 엔진(`src/*.js`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `core`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
-- **UMD**: 엔진 파일은 `(function (root, factory) { ... })(...)`로 감싸 Node와 브라우저 양쪽에서 돈다. 새 파일도 같은 모양으로 쓰고, 브라우저 전역 이름과 `sandbox/index.html`의 `<script>` 순서를 맞춘다. 엔진 안에서 `require`를 새로 쓰지 말고 factory 인자로 받는다.
-- **새 규칙은 스위치로**: `DEFAULT_RULES`에 스위치를 더하고, 끄면 이전 동작과 똑같아야 한다.
+- **결정론 수학**: 엔진(`src/` 아래 모두, `metrics/`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `src/math.js`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(core도 내보낸다. brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
+- **모듈과 묶음**: 엔진 파일은 평범한 CommonJS다(1.12.0, UMD는 없앴다). 브라우저는 `node cli.js pack`이 묶은 `sandbox/arena.js`로 읽는다. 그래서 엔진 안의 `require`는 **정적인 상대 경로**(`require('./util')`, `require('../../data/skills.json')`)만 쓴다. 표준 모듈(`fs` 등)이나 변수 경로는 묶이지 않는다. 새 파일을 더하면 `node cli.js pack`.
+- **새 규칙은 규칙 모듈로만 (SPEC 22장)**: `src/rules/새규칙.js` 한 파일에 `{ name, switch, on, engine: X => ({훅}), brain: B => ({훅}), types, brainTypes }`로 넣고 `rules/index.js` 목록 끝에 붙인다. 정해진 훅(쏠 때 `release`, 맞을 때 `hurt`·`hurtMod`, 걸음마다 `mageStep`·`world`, 위력·선명도·시전 시간·장악 `power`·`ceff`·`castTime`·`share`·`gate`, 두뇌의 후보 가치 `value`·`valueRisk`·`valueMid`·`valueLate` …)에만 끼어든다. `core.js`·`brain/`에 `if (W.rules.새규칙)`을 흩뿌리지 않는다. 꼭 필요한 새 자리는 훅 하나로 더하고(빈 배열이면 예전과 같게) SPEC 22장 표에 적는다. `DEFAULT_RULES`에 스위치(기본 꺼짐)를 더하고, 끄면 이전 동작과 똑같아야 한다(`suite` 바뀐 줄 없음, `hash.js` 그대로). 같은 훅 안의 차례는 목록 차례다.
+- **기술은 techniques/에**: 판단 수준이 켜는 기술(콤보·속임수·엄폐…)은 `src/brain/techniques/`에 하나씩, 켜는 스위치는 `data/skills.json`의 `tac`. 규칙에 딸린 판단은 그 규칙 파일의 `brain` 훅에.
 - **단위**: m, s, kg, J. 시간 간격 `DT = 1/30 s`.
-- **등급·덱·마법 이름**은 한국어 문자열이 곧 키다(`'대마법사'`, `'합법 최강'`, `'낙뢰'`). 이름을 바꾸면 `books.json`, `DECKS`, 시험, 문서를 함께 고친다.
+- **등급·덱·마법 이름**은 한국어 문자열이 곧 키다(`'대마법사'`, `'합법 최강'`, `'낙뢰'`). 이름을 바꾸면 `data/`(`books.json`, `decks.json`, `spells/order.json`), 시험, 문서를 함께 고친다.
 - **금지 마법**(`banned: 1`)은 `addMage`에서 기본으로 책에서 빠진다. `allowBanned`로만 쓴다.
 - 의존성을 들이지 않는다. 표준 라이브러리만.
-- **속도 (1.11.1, SPEC 17장)**: 뜨거운 곳의 객체 모양을 바꾸지 않는다. 사람의 새 칸은 `addMage`의 리터럴에, 새 상태는 `st`의 열한 칸 옆에(그리고 `stepMage`의 줄이기에), 마법의 새 필드는 `SPELL_KEYS`에 더한다. `delete`, 걸음마다 새 배열·클로저, 배열 `length` 대입, 판단 안의 `Object.assign`을 피한다. 덱이 정하는 값은 `deck()`에. 속도를 고치면 결과가 같은지 본다: `node cli.js suite`가 "바뀐 줄 없음"이어야 한다
+- **속도 (1.11.1, SPEC 17장)**: 뜨거운 곳의 객체 모양을 바꾸지 않는다. 사람의 새 칸은 `addMage`의 리터럴에, 두뇌의 새 값은 `brain/index.js`의 `newK` 리터럴에, 새 상태는 `st`의 열한 칸 옆에(그리고 `stepMage`의 줄이기에), 마법의 새 필드는 `SPELL_KEYS`에 더한다. `delete`, 걸음마다 새 배열·클로저, 배열 `length` 대입, 판단 안의 `Object.assign`을 피한다. 덱이 정하는 값은 `deck()`에. 속도를 고치면 결과가 같은지 본다: `node cli.js suite`가 "바뀐 줄 없음"이어야 한다
 
 ## 바꾸는 절차 (SPEC 1장)
 
@@ -66,13 +71,13 @@ node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새
 버전 자리: 큰 수는 규칙의 뜻이 바뀔 때, 가운데는 새 마법·스위치·두뇌 기능(끄면 예전과 같음), 끝 수는 버그 수정·수치 조정.
 
 버전 문자열은 여러 곳에 있다. 올릴 때 함께 고친다:
-`src/core.js`(`VERSION`, 머리 주석), `src/brain.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.1)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
+`src/core.js`(`VERSION`, 머리 주석), `src/brain/index.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`experiments/par.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `REPORT.md`, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.1)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
 
 시험이 실패하면 규격을 어긴 것이다. 규칙을 일부러 바꾼 거라면 시험도 고치고 CHANGELOG에 이유를 적는다.
 
 ## 새 마법 넣기
 
-`spells.json`에 틀(`t`)과 필드를 맞춰 한 항목 추가(규칙에 딸린 마법이면 `rule: '스위치 이름'` — 꺼지면 책에서 빠져 예전과 같다) → `node cli.js pack` → 덱에 넣고 `node cli.js duel`로 확인. 새 틀이 필요하면 `core.js`의 `release`에 갈래를 더하고, 두뇌가 쓰게 `brain.js`의 후보 평가에도 더하고, SPEC 8장에 적는다.
+`data/spells/원소.json`에 틀(`t`)과 필드를 맞춰 한 항목 추가(규칙에 딸린 마법이면 `rule: '스위치 이름'` — 꺼지면 책에서 빠져 예전과 같다. 차례는 `data/spells/order.json`, 없으면 파일 차례대로 뒤에) → `node cli.js pack` → 덱에 넣고 `node cli.js duel`로 확인. 새 틀이 필요하면 규칙 모듈의 `types`(방출)·`brainTypes`(두뇌의 값)·`form`(만들어지는 자리)으로 더하고 SPEC 8장에 적는다. 규칙과 상관없는 바탕 틀만 `core.js`의 `release`와 `brain/choose.js`의 `valueForm`에 갈래를 더한다.
 
 ## 샌드박스를 고칠 때
 

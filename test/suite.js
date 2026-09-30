@@ -96,7 +96,7 @@ async function run(only, log = () => {}, jobs = 1) {
     // 1대1 줄은 25판씩 쪼개 나눠 준다(가장 긴 줄이 전체를 붙잡지 않게). 차례대로 이어 붙이면 한 줄로 돌린 것과 같다
     const parts = [], own = [];
     J.forEach((j, i) => { if (j.fn === 'duels' && j.args[2] > 25) for (let f = 0; f < j.args[2]; f += 25) { parts.push({ mod: j.mod, fn: 'duelsFrom', args: [j.args[0], j.args[1], f, Math.min(25, j.args[2] - f), j.args[3]] }); own.push(i); } else { parts.push(j); own.push(i); } });
-    const got = await require('../par').runJobs(parts, { workers: jobs, onDone: (d, n) => log(`\r${d}/${n} (일꾼 ${jobs})   `) });
+    const got = await require('../experiments/par').runJobs(parts, { workers: jobs, onDone: (d, n) => log(`\r${d}/${n} (일꾼 ${jobs})   `) });
     res = J.map(() => null); got.forEach((x, k) => { const i = own[k]; res[i] = res[i] ? (Array.isArray(x) ? res[i].concat(x) : x) : x; });
   } else res = J.map((j, i) => { const x = module.exports[j.fn](...j.args); log(`\r${i + 1}/${T.length} ${T[i].group}   `); return x; });
   T.forEach((r, i) => { const x = res[i]; rows[r.id] = Object.assign({ group: r.group }, x.look ? x : summarize(x)); });
@@ -136,7 +136,7 @@ function format(d) {
 }
 
 async function main(args) {
-  const save = args.includes('--save'), ji = args.indexOf('--jobs'), jobs = ji >= 0 ? Math.max(1, +args[ji + 1] || 1) : require('../par').defaultWorkers();
+  const save = args.includes('--save'), ji = args.indexOf('--jobs'), jobs = ji >= 0 ? Math.max(1, +args[ji + 1] || 1) : require('../experiments/par').defaultWorkers();
   const only = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--jobs');
   const log = s => process.stderr.write(s);
   let now; try { now = await run(only, log, jobs); } catch (e) { console.log(e.message); process.exitCode = 1; return; }

@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v1.11.1
+# 숨 결투장 규격 v1.12.0
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -9,8 +9,8 @@
 1. **하나의 규격**: 모든 실험, 리그, 게임 시제품은 이 엔진 위에서 돈다. 따로 고친 사본을 만들지 않는다
 2. **결정론**: 같은 씨앗, 같은 입력이면 같은 결과. 명령줄(Node)과 브라우저(샌드박스)에서도 같다. 난수는 세계마다 하나(`mulberry32`), 수학 함수는 결정론 수학(20장)만 쓴다
 3. **SI 단위**: m, s, kg, J. 시간 간격 `DT = 1/30 s`
-4. **데이터와 규칙의 분리**: 마법은 `spells.json`(데이터), 규칙은 `core.js`, 판단은 `brain.js`
-5. **규칙은 스위치로**: 새 규칙은 `rules`의 스위치로 넣고, 끄면 이전 동작이 나와야 한다
+4. **데이터와 규칙의 분리**: 데이터는 `data/`(JSON: 마법은 원소마다 한 파일, 덱·등급·판단 수준·장비), 규칙은 `src/core.js`(바탕)와 `src/rules/`(스위치마다 한 파일), 판단은 `src/brain/` (22장)
+5. **규칙은 스위치로, 규칙 모듈로만**: 새 규칙은 `rules`의 스위치를 가진 규칙 모듈(22장) 하나로 넣고, 정해진 훅에만 끼어든다. 끄면 이전 동작이 나와야 한다(꺼진 규칙의 훅은 모이지 않는다)
 
 ## 1. 버전과 업데이트 절차
 
@@ -179,7 +179,9 @@ g       = clamp((f − 0.15) / 0.45, 0, 1)
 - **눈멂**(몸 묶기가 켜졌을 때): 눈먼 동안은 적의 예비동작과 보이는 구름을 위협으로 읽지 못해 피하지 않는다. 자동 진은 적의 시전이 0.2 s 안에 끝날 때에야 반응한다(보통 0.4 s). **비**와 **흙 이불**이 눈멂을 씻는다(두뇌도 눈멀면 둘을 쓴다). 눈멂은 산 지대·암모니아·초산 분사가 건다
 - 새 마법은 원소 책(독·얼음·번개·흙)과 덱 `기술`·`합법 최강`에 있다. 꺼지면 빠져 예전과 같다
 
-## 8. 마법 틀 (`spells.json`의 `t`)
+## 8. 마법 틀 (`data/spells/*.json`의 `t`)
+
+마법은 `data/spells/`에 원소(`el`)마다 한 파일이다(불·번개·흙·물·얼음·독·없음·신호). 판의 결과가 마법의 차례(자유 덱 등)에 기대므로 차례는 `data/spells/order.json`이 정한다. 거기 없는 새 마법은 파일 차례대로 뒤에 붙는다. 규칙 모듈이 더하는 틀(`cage`, `taunt`)은 그 모듈의 `types`(방출)·`brainTypes`(값)·`form`(만들어지는 자리)에 있다(22장).
 
 공통 필드: `n` 이름, `el` 원소(도발은 '신호'), `t` 틀, `cost` 당(g), `cast` 예비동작(s), `cd` 간격(s), `R` 사거리(m), `role` 공격·방어·이동·함정, `kind` 피해 종류(fire·elec·blunt·tox), `vis` 보이는가, `banned` 금지, `mundane` 마법이 아님.
 
@@ -235,7 +237,9 @@ g       = clamp((f − 0.15) / 0.45, 0, 1)
 
 `banned: 1` — 황화수소 캡슐, 독 웅덩이, 독 이끼. 기본으로 책에서 빠지고, `allowBanned`로만 쓸 수 있다.
 
-## 13. 두뇌 v1.0.1 (`brain.js`)
+## 13. 두뇌 v1.0.1 (`src/brain/`)
+
+1.12.0부터 두뇌는 여러 파일이다(22장): 읽기 `read.js`(과녁·성향·위협) → 입장 `stance.js` → 움직임 `move.js` → 고르기 `choose.js`(자동 진·캔슬·칸·휴식·값·시전). 기술은 `techniques/`에 하나씩, 판단 수준이 켜는 기술은 `skills.js`(`data/skills.json`), 규칙에 딸린 판단은 그 규칙 파일의 `brain` 훅. 아래 순서와 수는 그대로다.
 
 판단 순서:
 1. **과녁**: 가장 가까운 적. 대마법사는 `체력비율×40 + 거리`가 가장 작은 적(약자부터)
@@ -366,10 +370,10 @@ A.register.spell / deck / tier / brain / rule   // 19장
 // 낮은 층: createWorld, addMage, place, stepWorld, over, result, run, release, share, gOf, sin, cos, atan2, pow
 ```
 
-**병렬 실행기** (`par.js`, Node 전용, 1.11.1): 일감을 일꾼(worker_threads)에 나눠 돌린다. 일감은 `{ mod, fn, args }`(모듈 경로·내보낸 함수 이름·인자)로 데이터라 일꾼에 보낼 수 있다. 판마다 씨앗이 정해져 있으니 일꾼 수·차례와 상관없이 결과는 한 줄로 돌린 것(`runSerial`)과 같다(시험).
+**병렬 실행기** (`experiments/par.js`, Node 전용, 1.11.1): 일감을 일꾼(worker_threads)에 나눠 돌린다. 일감은 `{ mod, fn, args }`(모듈 경로·내보낸 함수 이름·인자)로 데이터라 일꾼에 보낼 수 있다. 판마다 씨앗이 정해져 있으니 일꾼 수·차례와 상관없이 결과는 한 줄로 돌린 것(`runSerial`)과 같다(시험).
 
 ```js
-const { runJobs } = require('./par');
+const { runJobs } = require('./experiments/par');
 const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFrom', args: [a, b, 0, 25, rules] }, ...], { workers: 4 });
 ```
 
@@ -403,7 +407,7 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 | `node cli.js bench` 1대1 한 판 | 약 8~10 ms | 약 4 ms |
 | 표준 묶음 88줄 | 약 79 s | 약 24 s (한 줄로), 약 17 s (일꾼 4) |
 
-새 프로세스의 첫 판은 JIT가 아직 데워지지 않아 느리다. 판단(`think`)이 최적화 컴파일되기 전에 판이 끝나는 일이 많다(평범 전설끼리 한 판 3600걸음의 끝에서도 데워진 속도의 약 1/6). 많은 판을 돌리는 실험은 데워진 속도에 가깝고, 병렬 실행기(`par.js`)는 일꾼마다 데워진 채로 판을 이어 받는다.
+새 프로세스의 첫 판은 JIT가 아직 데워지지 않아 느리다. 판단(`think`)이 최적화 컴파일되기 전에 판이 끝나는 일이 많다(평범 전설끼리 한 판 3600걸음의 끝에서도 데워진 속도의 약 1/6). 많은 판을 돌리는 실험은 데워진 속도에 가깝고, 병렬 실행기(`experiments/par.js`)는 일꾼마다 데워진 채로 판을 이어 받는다.
 
 **빠르게 한 것** (1.11.1):
 - 판단을 여러 조각(`aimAt`·`readThreats`·`chooseStance`·`steer`·`decide`·`valueSpell`·`commit`)으로 나눴다. 400줄 한 덩어리는 최적화 컴파일(한 번 175~400 ms)이 짧은 판보다 오래 걸렸다. 조각 사이의 값은 사람마다 하나 둔 `K`에 담는다
@@ -418,6 +422,8 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 - 간격(`m.cd`)은 0 아래로 더 줄지 않는다. 읽는 곳은 모두 `(cd || 0)`을 0 이상의 문턱과 견주거나 0 이상과 `min`·`max`하므로 0 아래 값은 얼마든 같다
 - 상태(`m.st`)는 열한 가지만 걸음마다 줄어든다. 등록한 규칙이 새 상태를 쓰면 그 규칙의 `apply`에서 줄인다. 마법이 거는 새 몸 효과(`b`의 칸)는 따로 기억해 줄인다
 - 판이 끝난 몸 효과는 칸이 남고 값이 `null`이다(없음과 같게 읽힌다)
+
+**1.12.0 모듈화** (결과는 같다, 22장): 규칙을 훅으로 부르고 두뇌를 여러 파일로 나눈 값으로, 같은 프로세스에서 1.11.1과 번갈아 잰 가장 빠른 값이 0~17% 느리다(짝 중앙 0~11%). 오래 데워진 판에선 차이가 없거나 빠르다. 수는 `reports/v1.12.0.md`.
 
 ## 18. 이전 실험 엔진과 달라진 것
 
@@ -438,11 +444,11 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 | `sandbox/index.html` | 화면 한 장. 브라우저로 열면(`file://`도) 바로 돈다. 빌드, 서버, 의존성 없음 |
 | `sandbox/sandbox.js` | 화면 논리: 편집, 그리기, 입력 |
 | `sandbox/scenes/*.json` | 예시 장면: `duel`(1대1), `archmage-50`(대마법사 대 50), `musket-arc`(머스킷 반원), `element-league`(원소 여섯 난전) |
-| `sandbox/data.js` | `spells.json`, `books.json`, 예시 장면을 싼 것(전역 `ArenaData`). 브라우저가 `file://`에서 JSON을 못 읽어서다. **만든 파일**: `node cli.js pack`. 기준은 늘 JSON이고, 어긋나면 시험이 실패한다 |
-| `sandbox/pack.js` | `data.js`를 만드는 것 |
+| `sandbox/arena.js` | 엔진 모듈(`src/`, `metrics/`)과 데이터(`data/`), 예시 장면을 한 장에 싼 것 (1.12.0). 브라우저가 `file://`에서 모듈도 JSON도 못 읽어서다. **만든 파일**: `node cli.js pack`. 기준은 늘 원본 파일이고, 어긋나면 시험이 실패한다 |
+| `sandbox/pack.js` | `arena.js`를 만드는 것. 빌드 도구 없이 `src/index.js`에서 정적 `require('./…')`를 따라가 파일마다 `function (module, exports, require)`로 감싼다. 코드는 한 글자도 고치지 않는다 |
 | `src/registry.js` | 등록 함수 |
 
-엔진 파일은 UMD 모양이다. Node에선 `require`, 브라우저에선 전역(`ArenaCore` → `ArenaBrain` → `ArenaRegistry` → `Arena`)이 된다. 브라우저 순서: `data.js`, `core.js`, `brain.js`, `registry.js`, `index.js`, `sandbox.js`.
+엔진 파일은 CommonJS 모듈이다(1.12.0, 그 전엔 UMD 파일 넷). 브라우저는 묶음 `arena.js`를 읽어 전역 `Arena`(바깥 API), `ArenaCore`, `ArenaBrain`, `ArenaRegistry`, `ArenaData`(`{ spells, books, scenes }`)를 얻는다. 브라우저 순서: `arena.js`, `sandbox.js`. 엔진 안의 `require`는 정적인 상대 경로여야 묶인다.
 
 ### 장면 JSON
 
@@ -481,11 +487,13 @@ Arena.register.spell({ n: '새 마법', t: 'proj', m: 0.5, v: 30, R: 20, cost: 3
 Arena.register.deck('내 덱', ['새 마법', '돌 압축탄'])
 Arena.register.tier('영웅', { C: 7, circles: 7, noise: 0.03, dec: 0.12, autoDodge: true, mast: 0.8 })
 Arena.register.brain('실험 두뇌', { think(W, m) { ... } })     // 편·사람마다 고른다
-Arena.register.rule('weather', { default: false, apply(W) { ... }, init(W) { ... } })  // 스위치가 켜졌을 때만 걸음마다 apply
+Arena.register.rule({ name: 'weather', switch: 'weather', default: false, engine: X => ({ world(W) { ... }, hurtMod(W, m, v, kind) { return v; } }) })  // 규칙 모듈 (22장)
+Arena.register.rule('weather', { default: false, apply(W) { ... }, init(W) { ... } })  // 예전 모양: world·init 훅만 가진 모듈이 된다
+Arena.register.unrule('weather')   // 떼기
 ```
 
 - 등록은 그 프로세스(브라우저 탭) 안의 모든 판에 붙는다. 장면 하나에만 붙이려면 장면의 `spells`·`decks`
-- 새 규칙은 **꺼 두면 예전과 같아야 한다**(0장 5). 등록 규칙의 `apply(W)`는 걸음마다 편을 고친 직후, 사람이 움직이기 전에 부른다
+- 새 규칙은 **꺼 두면 예전과 같아야 한다**(0장 5). 등록한 규칙은 기본 규칙 뒤에 붙고, 같은 훅 안에선 그 차례로 불린다. 예전 모양의 `apply(W)`(= `world` 훅)는 걸음마다 편을 고친 직후, 사람이 움직이기 전에 부른다
 
 ### 화면 (v0.1)
 
@@ -505,15 +513,15 @@ Arena.register.rule('weather', { default: false, apply(W) { ... }, init(W) { ...
 
 - 자리를 비운 장면 = `A.duel` / `A.battle`
 - 걸음씩 돌린 판(샌드박스) = 한 번에 돌린 판(`A.run`)
-- 브라우저 모양(UMD 전역, `data.js`)으로 읽은 엔진 = Node의 엔진
+- 브라우저 모양(묶음 `arena.js`의 전역)으로 읽은 엔진 = Node의 엔진
 - 장면을 JSON으로 내보냈다 다시 읽은 판 = 원래 판
-- `data.js` = JSON 원본
+- `arena.js` = 원본 파일들을 지금 싼 것
 
 ## 20. 결정론 수학
 
 `Math.pow`, `sin`, `cos`, `atan2`, `hypot`, `exp`, `log`는 ECMAScript가 정확한 값을 정하지 않아 JS 엔진마다(같은 V8이라도 판마다) 마지막 자리가 다르다. 1.0.1까지는 Node 22와 Chromium 141에서 `Math.pow`가 달라 원소 난전 한 판이 600걸음째부터 갈라졌다.
 
-1.1.0부터 엔진은 결과가 하나로 정해진 연산(사칙연산, `Math.sqrt`, `Math.round`)만으로 만든 `core`의 `sin`, `cos`, `atan2`, `pow`, `exp`, `log`, `hyp`를 쓴다. 정밀도는 1e-15 안팎이고, 시험이 Math와 1e-14 안에서 맞는지, 엔진에 위 Math 함수가 남아 있지 않은지 본다.
+1.1.0부터 엔진은 결과가 하나로 정해진 연산(사칙연산, `Math.sqrt`, `Math.round`)만으로 만든 `src/math.js`(1.12.0 전엔 `core` 안)의 `sin`, `cos`, `atan2`, `pow`, `exp`, `log`, `hyp`를 쓴다. 정밀도는 1e-15 안팎이고, 시험이 Math와 1e-14 안에서 맞는지, 엔진에 위 Math 함수가 남아 있지 않은지 본다.
 
 | 함수 | 방법 |
 |---|---|
@@ -534,7 +542,7 @@ Arena.register.rule('weather', { default: false, apply(W) { ... }, init(W) { ...
 node cli.js suite              모든 줄을 돌려 기준과 비교, 바뀐 줄만
 node cli.js suite 부류          한 묶음만 (등급, 판단, 큰 수, 모습, 부류, 덱, 원소, 둘러싸기, 도발, 힘 대 판단)
 node cli.js suite --save       지금 결과를 기준으로 저장 (묶음을 주면 그 줄만 바꾼다)
-node cli.js suite --jobs 1     한 줄로. 기본은 코어 수만큼 일꾼(par.js, 1.11.1). 1대1 줄은 25판씩 나눠 돌리고 차례대로 잇는다. 결과는 같다
+node cli.js suite --jobs 1     한 줄로. 기본은 코어 수만큼 일꾼(experiments/par.js, 1.11.1). 1대1 줄은 25판씩 나눠 돌리고 차례대로 잇는다. 결과는 같다
 ```
 
 | 묶음 | 대진 | 판 수 |
@@ -562,4 +570,134 @@ node cli.js suite --jobs 1     한 줄로. 기본은 코어 수만큼 일꾼(par
 - `|z| ≥ 2.58`(양쪽 99%)이면 **진짜 차이**, 아니면 **운일 수 있음**. 줄이 40개가 넘어 우연히 튀는 줄이 생기므로 1.96보다 높게 잡았다. 규칙을 바꾸면 결정론 판이 통째로 갈라져 거의 모든 줄이 조금씩 움직이는데, 그중 크기가 판 수로 설명되지 않는 것만 진짜로 본다
 
 대진 줄의 id(`묶음: A 대 B`)가 기준과 맞춰 보는 열쇠다. 대진을 바꾸면 새 줄·사라진 줄로 나오고, `--save`로 기준을 다시 저장한다. 의도한 변화면 기준도 같이 커밋한다.
+
+## 22. 모듈과 훅 (1.12.0)
+
+규칙 하나 = 파일 하나. 엔진의 바탕(`core.js`)은 정해진 자리에서 **켜진 규칙의 훅만** 부른다. 세계를 만들 때(`createWorld`) 켜진 규칙을 골라 그 훅을 훅 이름마다 배열(`W.H`)로 모으고, 두뇌는 첫 판단 때 같은 규칙들의 두뇌 훅을 `W._bh`로 모은다. 꺼진 규칙은 모이지 않으니 걸음마다 비용이 0이고, 예전 동작과 같다. **새 규칙은 이 틀로만 넣는다.**
+
+### 파일
+
+| 자리 | 하는 일 |
+|---|---|
+| `src/math.js` | 결정론 수학 (20장) |
+| `src/data.js` | `data/`를 읽는다. 마법의 차례는 `data/spells/order.json` |
+| `src/core.js` | 바탕: 세계, 사람, 선명도·위력·장악권, 피해, 방출, 걸음, 녹화. 훅을 부르는 자리를 가진다 |
+| `src/rules/index.js` | 규칙 목록과 차례, 훅 이름 (`ENGINE_HOOKS`, `BRAIN_HOOKS`) |
+| `src/rules/*.js` | 규칙 모듈 아홉: `gear`, `terrain`, `saltRing`, `wave`, `control`(몸 묶기), `risk`, `taunt`, `multiSlot`(서클), `barrels` |
+| `src/brain/index.js` | `think(W, m)`: 읽기 → 입장 → 움직임 → 고르기 |
+| `src/brain/read.js`, `stance.js`, `move.js`, `choose.js` | 판단의 네 단계 (13장) |
+| `src/brain/techniques/*.js` | 기술 하나에 한 파일: `combo`, `cancel`, `feint`(속임수), `simul`(동시 착탄), `tempo`(멈춤·박자), `bait`(미끼), `learn`(학습), `counter`(덱 읽기), `cover`(엄폐·걷어내기), `position`(사거리 밖·자리), `lure`(유도·물러서기), `herd`(몰이), `crowd`, `dodgeAim`(피할 자리 겨냥), `grab`(붙잡기) |
+| `src/brain/skills.js` | 판단 수준 다섯 단계가 무엇을 켜는가 (`data/skills.json`) |
+| `src/brain/util.js`, `hooks.js` | 두뇌의 공용 도구(규칙 모듈의 `brain(B)`가 받는 `B`), 두뇌 훅 모으기 |
+| `data/` | `spells/*.json`(원소마다), `books.json`, `decks.json`, `tiers.json`, `skills.json`, `gear.json` |
+| `metrics/look.js` | 행동 지표 (13장 싸우는 모습) |
+| `experiments/` | `par.js`(병렬 실행기), `hash.js`(결과 지문) |
+| `reports/` | 버전마다 한 장의 측정 보고. `REPORT.md`는 요약과 목차 |
+
+장악권·피로·아군 사격·`hpScale`·`powerK` 같은 바탕 스위치는 모든 계산에 섞여 있어 `core.js`에 남는다(스위치는 그대로).
+
+### 규칙 모듈의 모양
+
+```js
+module.exports = {
+  name: 'wave',                 // 규칙 이름 (목록의 열쇠)
+  switch: 'wave',               // 스위치 이름. on이 없으면 이것을 본다. 둘 다 없으면 늘 켜짐
+  on: (W, opt) => W.rules.wave, // 이 세계에서 켜졌는가 (세계를 만들 때 한 번)
+  form: { taunt: 'target' },    // 새 틀이 만들어지는 자리 (5장)
+  engine: X => ({ 훅: fn }),     // 엔진 훅. X = 엔진이 규칙에 주는 것(hurt·hit·eff·burst·addZone·formPoint·inZone·blocked·share·power·DT·hyp…)
+  types: X => ({ 틀: fn(W, m, c, a) }),   // 새 틀의 방출 (a = { aim, foes, g })
+  brain: B => ({ 훅: fn }),      // 두뇌 훅. B = brain/util
+  brainTypes: B => ({ 틀: fn(W, m, K, o) }),   // 새 틀의 값 (o = 후보 틀: s·n·Tw·R·he·cost·v·tx·ty…)
+  api: { ... },                 // 바깥에 줄 것 (소금 원의 saltR 등)
+};
+```
+
+- 훅은 **값을 받아 고쳐 돌려주거나**(`→`가 있는 것) 상태만 바꾼다. 같은 훅 안의 차례는 규칙 목록의 차례다: `gear`, `terrain`, `saltRing`, `wave`, `control`, `risk`, `taunt`, `multiSlot`, `barrels`, 그다음 등록한 규칙. 이 차례는 예전 한 덩어리의 계산 차례를 그대로 따른 것이다(곱하는 차례까지 같아야 비트가 같다)
+- 틀(`types`, `brainTypes`, `form`)은 스위치와 상관없이 늘 붙는다. 그 틀의 마법은 `rule` 필드로 규칙에 딸려, 스위치가 꺼지면 책에서 빠진다(8장)
+- 난수는 `W.rng()`만. 훅이 난수를 새로 뽑으면 켰을 때만 판이 갈라진다(켰을 때 갈라지는 건 괜찮다)
+- 사람의 새 칸은 `addMage`의 리터럴에, 두뇌의 새 값은 `newK`의 리터럴에 둔다(17장 속도)
+
+### 엔진 훅
+
+| 훅 | 부르는 자리 | 인자 → 돌려줌 | 쓰는 규칙 |
+|---|---|---|---|
+| `place` | 세계를 만들 때, 바위를 놓은 뒤·벽 앞 | `(W, opt)` | barrels |
+| `init` | 세계를 만든 끝 | `(W)` | (등록한 규칙) |
+| `world` | 걸음마다, 편을 고친 직후·사람 앞 | `(W)` | (등록한 규칙) |
+| `ceff` | 선명도 | `(W, m, x) → x` | wave |
+| `power` | 위력의 끝 | `(W, m, s, x) → x` | wave |
+| `gate` | 이 자리에 마법이 서는가(`gAt`) 첫머리 | `(W, m, s, tx, ty) → true면 g = 0` | saltRing |
+| `share` | 장악 몫 `f`의 끝 | `(W, m, x, y, f) → f` | gear(망토) |
+| `release` | 방출, 시전 기록 뒤·피로 앞 | `(W, m, c)` | risk |
+| `overload` | 피로를 더한 뒤 | `(W, m) → true면 넘침을 맡는다`(기본 폭주를 건너뜀) | wave |
+| `hurtMod` | 피해, 몸 효과 저항 뒤·젖음 앞 | `(W, m, v, kind) → v` | terrain |
+| `hurt` | 피해, 체력을 깎은 뒤 | `(W, m, v, src, name, kind)` | control, risk |
+| `eff` | 상태 걸기, 굳음이 시전을 끊기 앞 | `(W, m, o, g)` | control |
+| `rain`, `smother`, `ring` | 비가 적실 때, 흙 이불, 불고리 | `(W, m)` | control |
+| `fatRecover` | 머리 회복(기본 초당 4) | `(W, m, k) → k` | wave |
+| `mageStep` | 사람의 걸음, 회복 뒤·옷의 불 앞 | `(W, m)` | saltRing, wave |
+| `mageZones` | 옷의 불 뒤·판단 앞 | `(W, m)` | terrain |
+| `speed` | 걸음 속도의 첫머리(기본 5 m/s) | `(W, m, sp) → sp` | wave, risk |
+| `speedLate` | 몸 효과·냉기 뒤, 시전 중 걷기 앞 | `(W, m, sp) → sp` | control |
+| `accel` | 걸음 가속(기본 9) | `(W, m, acc) → acc` | terrain |
+| `chan` | 원뿔을 뿜는 걸음, 사람을 친 뒤 | `(W, m, ch)` | barrels |
+| `projSub` | 투사체의 잘게 나눈 걸음, 벽 뒤·사람 앞 | `(W, p)` | barrels |
+| `ignite` | 불·전기가 닿았다(불 지대, 실의 끝, 불 터짐, 지연 폭발) | `(W, x, y, r, src)` | barrels |
+| `areaHit` | 지연 폭발이 사람에게 닿는 몫(기본 1) | `(W, q, a, k) → k` | gear(밑창) |
+| `zoneTick` | 지대의 시간 | `(W)` | terrain |
+| `notice` | 안 보이는 함정을 알아챌 걸음당 확률(기본 DT × 0.25) | `(W, t, k) → k` | wave |
+
+### 두뇌 훅
+
+| 훅 | 부르는 자리 | 인자 → 돌려줌 | 쓰는 규칙 |
+|---|---|---|---|
+| `aim` | 과녁을 고른 뒤. 성향 `K.prefR`·`aggr`·`dodgeK`·`rest` | `(W, m, K)` | wave, risk |
+| `read` | 위협 읽기 첫머리. `K.blindR` | `(W, m, K)` | control |
+| `hideCast` | 예비동작 하나를 읽을 때 | `(W, q, c) → true면 못 읽음` | wave |
+| `steer` | 움직임, 유도 뒤·피하기 앞. `K.vx`·`K.vy` | `(W, m, K)` | saltRing |
+| `avoid` | 알아챈 함정 비키기 뒤 | `(W, m, K)` | barrels |
+| `empty` | 고르기 첫머리 | `(W, m, K) → true면 빈손` | risk |
+| `circles` | 쓰는 서클 수(기본 1) | `(W, q, c) → c` | multiSlot |
+| `react` | 자동 진 | `(W, m, K)` | multiSlot |
+| `cancel` | 캔슬 첫머리 | `(W, m, K)` | risk |
+| `rest` | 휴식 | `(W, m, K, restNow) → restNow` | wave |
+| `prep` | 마법 고르기 앞. `K.bigs`·`holds`·`pinBy`… | `(W, m, K)` | control |
+| `value` | 틀의 값 바로 뒤 | `(W, m, K, o)` | control |
+| `valueRisk` | 콤보 계획 뒤 | `(W, m, K, o)` | risk |
+| `valueMid` | 돌파 뒤·뭉친 곳 앞 | `(W, m, K, o)` | barrels |
+| `valueLate` | 피로 뒤·두 번째 칸 앞 | `(W, m, K, o)` | wave |
+| `commit` | 시전을 건 뒤 | `(W, m, K, best, cast, Tc)` | control, risk |
+| `castTime` | 시전 시간(예비동작 × 기침 × 피로 뒤) | `(W, m, t) → t` | wave |
+
+마법 하나의 값을 고치는 차례: 틀의 값 → `value` → 콤보 계획 → `valueRisk` → 동시 착탄 → 엄폐 걷어내기 → 몰이 → 미끼 → 학습 → 덱 읽기 → 돌파 → `valueMid` → 뭉친 곳 → (내 둘레의 지연 폭발은 버림) → 피로 → `valueLate` → 두 번째 칸 → 몰아치기. 기술은 판단 수준이 켰을 때만 이 차례에 든다(사람마다 한 번 만든다).
+
+### 규칙과 훅
+
+| 규칙 | 스위치 | 엔진 훅 | 두뇌 훅 | 틀 |
+|---|---|---|---|---|
+| `gear` 장비 (10장) | 늘 | share, areaHit | | |
+| `terrain` 지대 (8장 zone) | 늘 | hurtMod, mageZones, accel, zoneTick | | |
+| `saltRing` 소금 원 (2장) | `saltRing` | gate, mageStep | steer | |
+| `wave` 파도 (7장) | `wave` | ceff, power, overload, fatRecover, mageStep, speed, notice | aim, hideCast, rest, castTime, valueLate | |
+| `control` 몸 묶기 (7·9장) | `bodyBind` | hurt, eff, rain, smother, ring, speedLate | read, prep, value, commit | `cage` |
+| `risk` 하이 리스크 (7장) | `risk` | release, hurt, speed | aim, empty, cancel, valueRisk, commit | |
+| `taunt` 도발 (8장) | `taunt` | | | `taunt` |
+| `multiSlot` 서클 (6장) | `circles` | | circles, react | |
+| `barrels` 화약통 (11장) | `barrels`, 또는 장면이 화약통을 놓으면 | place, ignite, chan, projSub | avoid, valueMid | |
+
+### 새 규칙 넣기
+
+1. SPEC에 규칙을 적는다(스위치, 수, 어느 훅에 끼는가)
+2. `src/rules/새규칙.js`에 모듈 하나. 새 훅 자리가 꼭 필요하면 `core.js`나 두뇌에 자리를 하나 더하고(빈 배열이면 예전과 같게), `rules/index.js`의 훅 이름과 이 장의 표에 더한다
+3. `rules/index.js`의 목록 끝에 붙이고, `DEFAULT_RULES`에 스위치(기본 꺼짐)
+4. 규칙에 딸린 마법은 `data/spells/원소.json`에 `rule: '스위치'`로
+5. `node cli.js pack`, `node test/test.js`, `node cli.js suite`(끈 채로 "바뀐 줄 없음"), `node experiments/hash.js`(끈 채로 같은 지문)
+
+### 같은 결과 (1.12.0)
+
+모듈화는 결과를 비트 하나 바꾸지 않았다: `node experiments/hash.js`의 네 지문(457판, 녹화 넷, 섞은 260판, 망토 30판)이 1.11.1과 같고, `suite`가 "바뀐 줄 없음", 헤드리스 Chromium 202판(묶음 `arena.js`)이 Node와 같다.
+
+**성질이 바뀐 곳** (지금 판은 같다):
+- 몸 묶기의 효과(균사·경직·석회·족쇄가 걸리고, 불·불고리가 푸는 것)는 `control`이 켜졌을 때만 일어난다. 그 마법들은 모두 `rule: 'bodyBind'`라 꺼지면 책에서 빠지므로 예전 판과 같다. 장면이 `rule` 없는 마법에 `mycel` 같은 효과를 달면 `bodyBind`를 켜야 걸린다
+- 등록한 규칙은 세계를 만들 때 켜졌는지 한 번 본다. 판 중에 `W.rules`의 스위치를 바꿔도 훅은 그대로다
 
