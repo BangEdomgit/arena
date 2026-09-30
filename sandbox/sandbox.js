@@ -12,7 +12,7 @@ const RULE_TXT = {
   domain: ['장악권', '같은 공기는 가장 선명한 신호를 따른다'], circles: ['서클', '두 번째 칸, 3서클부터 자동 진'], fatigue: ['머리 피로', '피로와 폭주'],
   barrels: ['화약통', '씨앗 따라 5개 놓기 (장면에 화약통 목록이 있으면 그것)'], friendlyFire: ['아군 피해', '투사체와 폭발이 아군도 맞힌다'],
   powerK: ['위력 지수', '위력 = 선명도^K', 1, 4, 0.1], domainL: ['장악 거리', '신호가 반으로 흐려지는 거리 (m)', 1, 20, 0.5], passive: ['쉬는 신호', '시전 중이 아닐 때 장악권의 세기', 0, 1, 0.05],
-  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], taunt: ['도발', "'도발' 마법으로 상대의 부름을 끊는다. 이단은 걸리지 않는다. 끄면 책에서 빠진다"], hpScale: ['hpScale', '체력도 선명도^K로 키운다'],
+  fizzle: ['흩어짐 문턱', '장악 몫이 이보다 작으면 흩어진다', 0, 0.6, 0.01], full: ['온전한 문턱', '장악 몫이 이보다 크면 온전한 힘', 0.2, 1, 0.01], wave: ['파도', '머리가 넘치면 굳는 대신 파도를 탄다. 부류(서퍼·메타·이단)마다 다르다'], risk: ['하이 리스크', '큰 마법(대낙뢰·화산 기둥·번개 창), 모으다 맞으면 역류, 쏜 뒤 빈손'], saltRing: ['소금 원', '15 s부터 줄어드는 소금 선. 밖에선 마법이 흩어지고 몸이 마른다'], bodyBind: ['몸 묶기', '균사 그물·얼음 족쇄·근육 경직·석회 굳히기·가두는 기둥. 눈멀면 예비동작을 못 읽는다'], taunt: ['도발', "'도발' 마법으로 상대의 부름을 끊는다. 이단은 걸리지 않는다. 끄면 책에서 빠진다"], hpScale: ['hpScale', '체력도 선명도^K로 키운다'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
@@ -79,6 +79,7 @@ function draw() {
   ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 1; ctx.beginPath();
   for (let x = 5; x < W.width; x += 5) { ctx.moveTo(X(x), 0); ctx.lineTo(X(x), X(W.height)); } for (let y = 5; y < W.height; y += 5) { ctx.moveTo(0, X(y)); ctx.lineTo(X(W.width), X(y)); } ctx.stroke();
   for (const z of W.zones) { ctx.fillStyle = ZC[z.k] || 'rgba(255,255,255,.1)'; if (z.shape !== 'circle' && z.len) { ctx.save(); ctx.translate(X(z.x), X(z.y)); ctx.rotate(z.a || 0); ctx.fillRect(-X(z.len) / 2, -X(0.6), X(z.len), X(1.2)); ctx.restore(); } else { ctx.beginPath(); ctx.arc(X(z.x), X(z.y), X(z.r || 1), 0, 7); ctx.fill(); } }
+  if (W.rules.saltRing) { ctx.strokeStyle = 'rgba(245,245,235,.75)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.arc(X(W.width / 2), X(W.height / 2), X(A.saltR(W)), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const o of W.obs) { ctx.fillStyle = '#6e685f'; ctx.beginPath(); ctx.arc(X(o.x), X(o.y), X(o.r), 0, 7); ctx.fill(); }
   for (const b of W.barrels) { ctx.fillStyle = b.ex ? '#3a2a20' : '#a8744a'; ctx.beginPath(); ctx.arc(X(b.x), X(b.y), Math.max(5, X(0.35)), 0, 7); ctx.fill(); }
   for (const w of W.walls) { ctx.fillStyle = '#9a938a'; ctx.beginPath(); ctx.arc(X(w.x), X(w.y), X(w.r), 0, 7); ctx.fill(); }
@@ -206,6 +207,7 @@ function renderMageEd() {
     el('label', {}, '이름'), el('input', { type: 'text', value: m.name || '', placeholder: side.name + (sel.i + 1), on: { change: e => edit(() => { if (e.target.value) m.name = e.target.value; else delete m.name; }) } }),
     el('label', {}, '등급'), el('select', { on: { change: e => edit(() => { m.tier = e.target.value; }) } }, ...tierOpts(m.tier || '평범')),
     el('label', {}, '덱'), el('select', { on: { change: e => edit(() => { m.deck = e.target.value; delete m.book; }) } }, ...deckOpts(m.deck || '합법 최강')),
+    el('label', {}, '판단 수준'), el('select', { title: '비우면 등급의 값과 기본 두뇌 그대로', on: { change: e => edit(() => { if (e.target.value) m.skill = e.target.value; else delete m.skill; }) } }, el('option', { value: '', selected: !m.skill }, '없음 (등급대로)'), ...Object.keys(A.SKILLS).map(k => el('option', { value: k, selected: k === m.skill }, k))),
     el('label', {}, '부류'), el('select', { title: '파도 규칙이 켜져 있을 때만 다르다', on: { change: e => edit(() => { if (e.target.value === '메타') delete m.type; else m.type = e.target.value; }) } }, ...A.TYPES.map(k => el('option', { value: k, selected: k === (m.type || '메타') }, k + (k === '메타' ? ' (기본)' : '')))),
     ...numField('선명도 C', m, 'C', T.C), ...numField('서클', m, 'circles', T.circles), ...numField('겨냥 흔들림', m, 'noise', T.noise), ...numField('판단 간격 (s)', m, 'dec', T.dec),
     el('label', {}, '자동 구르기'), el('select', { on: { change: e => edit(() => { if (e.target.value === '') delete m.autoDodge; else m.autoDodge = e.target.value === '1'; }) } },

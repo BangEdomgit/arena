@@ -19,7 +19,7 @@ node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # JSON(spells·books·scenes)을 고쳤으면 sandbox/data.js 다시 싸기
-node cli.js suite [묶음]           # 표준 시험 묶음(약 17 s): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
+node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
 # 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (REPORT 13절)
 ```
@@ -37,6 +37,7 @@ node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새
 | `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn` |
 | `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule` |
 | `cli.js` | 명령줄 |
+| `par.js` | 실험용 병렬 실행기(Node 전용, worker_threads). 일감 `{ mod, fn, args }`, 결과는 일꾼 수와 상관없이 같다 |
 | `test/test.js` | 규격 시험. `ok('설명', () => { ... assert ... })` 모양으로 더한다 |
 | `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 그 기준(SPEC 21장). 대진 줄의 id는 기준의 열쇠라 함부로 바꾸지 않는다 |
 | `viewer.html` | 녹화 보기. 혼자 도는 HTML 한 장(보기용 녹화 하나가 박혀 있다) |
@@ -56,6 +57,7 @@ node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새
 - **등급·덱·마법 이름**은 한국어 문자열이 곧 키다(`'대마법사'`, `'합법 최강'`, `'낙뢰'`). 이름을 바꾸면 `books.json`, `DECKS`, 시험, 문서를 함께 고친다.
 - **금지 마법**(`banned: 1`)은 `addMage`에서 기본으로 책에서 빠진다. `allowBanned`로만 쓴다.
 - 의존성을 들이지 않는다. 표준 라이브러리만.
+- **속도 (1.11.1, SPEC 17장)**: 뜨거운 곳의 객체 모양을 바꾸지 않는다. 사람의 새 칸은 `addMage`의 리터럴에, 새 상태는 `st`의 열한 칸 옆에(그리고 `stepMage`의 줄이기에), 마법의 새 필드는 `SPELL_KEYS`에 더한다. `delete`, 걸음마다 새 배열·클로저, 배열 `length` 대입, 판단 안의 `Object.assign`을 피한다. 덱이 정하는 값은 `deck()`에. 속도를 고치면 결과가 같은지 본다: `node cli.js suite`가 "바뀐 줄 없음"이어야 한다
 
 ## 바꾸는 절차 (SPEC 1장)
 
