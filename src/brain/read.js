@@ -24,7 +24,7 @@ function aimAt(W, m, K) {
   return true;
 }
 // 규칙이 이 예비동작을 숨기는가 (이단, rules/wave)
-function hidden(h, W, q, c) { for (let i = 0; i < h.length; i++) if (h[i](W, q, c)) return true; return false; }
+function hidden(h, W, q, c, m) { for (let i = 0; i < h.length; i++) if (h[i](W, q, c, m)) return true; return false; }
 function readThreats(W, m, K) {
   const { foes, T, dodgeK, ux, uy } = K;
   let dodge = null, aimed = false, threat = null, late = null;
@@ -40,7 +40,7 @@ function readThreats(W, m, K) {
   if (T.readCast) for (let i = 0; i < foes.length; i++) for (let j = 0; j < 2; j++) {   // 초보는 날아오는 투사체만 본다: 예비동작·구름·지대를 못 읽는다
     const q = foes[i], c = j ? q.castB : q.cast;
     if (!c || !C.THREAT[c.s.t]) continue;
-    if (hc.length && hidden(hc, W, q, c)) continue;
+    if (hc.length && hidden(hc, W, q, c, m)) continue;
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (blindR) { if (hyp(c.tx - m.x, c.ty - m.y) < r && c.T - c.t < 0.2) { late = c; late.by = q; } continue; }
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; threat.by = q; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux, perp: 1 }; }

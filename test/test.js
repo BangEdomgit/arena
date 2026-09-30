@@ -329,6 +329,24 @@ ok('v2.0 빛 (SPEC 25장): 번쩍임은 시야가 이어진 적을 눈멀게(가
   // 눈멀면 예비동작을 못 읽는다
   const [W3, m3, q3] = mk({}); q3.cast = { s: W3.spells['열선'], tgt: m3, tx: m3.x, ty: m3.y, t: 0, T: 0.8 }; m3.st.blind = 1; m3.thinkT = 0; A.brain.think(W3, m3); assert.ok(m3._k.blindR && !m3._k.threat);
 });
+ok('v2.0 벽 (SPEC 25장): 출력에 비례해 한 블록씩 솟고, 흙벽은 총알을 막고 큰 바위·물에 무너지고, 얼음은 녹고, 벽 밀기는 너머 한 줄을 덮고, 벽 뒤는 안 보인다', () => {
+  const B = A.RULES.find(r => r.name === 'bulwark').api;
+  const mk = rules => { const W = A.createWorld({ seed: 1, width: 80, height: 60, obstacles: [], rules: Object.assign({ flight: false, saltRing: false, domain: false }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', book: ['흙벽', '보루', '벽 밀기', '큰 바위', '물 망치'] }), 0, 20, 30), q = A.addMage(W, A.mage({ tier: '병사', deck: '머스킷' }), 1, 40, 30); m.thinkT = q.thinkT = 1e9; A.stepWorld(W); return [W, m, q]; };
+  const [W, m, q] = mk(); const s = W.spells['흙벽'], T = B.buildT(m, s); assert.ok(T > 3 && T < 4 && B.buildT({ C: 1, fat: 0 }, s) > 900, '대마법사 약 3 s, 평범은 사실상 못 한다');
+  m.cast = { s, tx: 40, ty: 30, tgt: q, t: 0, T }; const seen = []; let n = 0; while (m.cast && n++ < 200) { A.stepWorld(W); seen.push(W.walls.length); }
+  assert.ok(W.walls.length === 3 && seen[30] < seen[seen.length - 1] && W.walls.every(w => w.own === -1 && w.mat === 'earth' && w.t > 1e8) && W.zones.filter(z => z.k === 'pit').length === 3 && m.alog.walls === 1, '블록 셋이 차례로, 누구의 것도 아닌 흙벽, 구덩이');
+  // 총알은 멈추고(2), 큰 바위는 부순다
+  const shoot = (name, who) => { const w = W.walls[1], h = w.hp; A.release(W, who, { s: W.spells[name], tx: w.x, ty: w.y, tgt: null }); for (let i = 0; i < 20; i++) A.stepWorld(W); return h - w.hp; };
+  q.noise = 0; assert.strictEqual(shoot('머스킷', q), 2); m.noise = 0; assert.ok(shoot('물 망치', m) >= 50, '물은 흙벽을 진흙으로'); 
+  // 벽 밀기: 너머의 병사를 덮는다 (부딪힘 60 − 굳은 살 0), 벽은 무너진다
+  const [W2, m2, q2] = mk(); A.release(W2, m2, { s: W2.spells['흙벽'], tx: 40, ty: 30, tgt: q2 }); q2.x = 23; q2.y = 30; const h2 = q2.hp;
+  A.release(W2, m2, { s: W2.spells['벽 밀기'], tx: 23, ty: 30, tgt: q2 }); assert.ok(h2 - q2.hp === 60 && q2.st.root > 1.9 && W2.walls.every(w => w.hp <= 0), '벽 밀기 ' + (h2 - q2.hp));
+  // 얼음 벽은 녹는다, 벽을 끄면 석회 기둥은 예전처럼 시간으로 사라진다
+  const [W3, m3, q3] = mk(); A.addWall(W3, { x: 30, y: 30, r: 0.6, hp: 40, t: 10, own: 0, mat: 'ice' }); for (let i = 0; i < 60; i++) A.stepWorld(W3); assert.ok(Math.abs(W3.walls[0].hp - 39) < 1e-6 && W3.walls[0].t > 1e8, '얼음 초당 0.5');
+  const [W4] = mk({ bulwark: false }); A.addWall(W4, { x: 30, y: 30, r: 0.6, hp: 40, t: 10, own: 0, mat: 'lime' }); assert.ok(W4.walls[0].t === 10);
+  // 벽 뒤의 예비동작은 못 읽는다
+  const [W5, m5, q5] = mk(); A.addWall(W5, { x: 30, y: 30, r: 0.8, hp: 400, t: 1e9, own: -1, mat: 'earth' }); q5.cast = { s: W5.spells['머스킷'], tgt: m5, tx: m5.x, ty: m5.y, t: 0, T: 0.6 }; m5.thinkT = 0; A.brain.think(W5, m5); assert.ok(!m5._k.threat, '벽 뒤');
+});
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
   assert.ok(FL.canFly({ C: 10, fat: 0 }) && FL.canFly({ C: 5, fat: 0 }) && !FL.canFly({ C: 2.5, fat: 0 }) && !FL.canFly({ C: 5, fat: 100 }), '출력 75 kW');

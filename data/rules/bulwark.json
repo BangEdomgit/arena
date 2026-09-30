@@ -1,0 +1,11 @@
+{
+ "rate": 0.6, "rateP": 632000,
+ "block": { "gap": 0.8, "r": 0.45, "h": 1.6, "hpM3": 400 },
+ "stopThick": 0.5,
+ "bullet": 2, "heavyM": 5, "heavy": 500, "water": 10,
+ "ice": { "melt": 0.5, "fire": 20 },
+ "pit": { "r": 0.7, "out": 1.1, "speed": 0.5 },
+ "upkeep": { "glu": 0.8, "max": 15 },
+ "topple": { "depth": 2.5, "reach": 6 },
+ "maxBuild": 20
+}
