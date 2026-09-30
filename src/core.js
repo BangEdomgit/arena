@@ -13,7 +13,7 @@ const VERSION = '2.0.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0 };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, light: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -37,6 +37,7 @@ const DEFAULT_RULES = {
   bodyK: 2.3,          // (v2.0) 몸 받침: 받는 에너지 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
   callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
+  light: true,         // (v2.0 둘째) 빛: 번쩍임(눈멂)·열선(거울) (SPEC 25장, rules/light)
   flight: true,        // (v2.0) 비행: 출력 75 kW 이상(상위부터)이 난다. 높이 z, 속도 판단 (SPEC 24장, rules/flight)
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
@@ -65,7 +66,7 @@ function engineOf(r) { if (!r.engine) return null; let e = ENG.get(r); if (!e) {
 function formsOf() {
   if (tfxVer === R.ver()) return; tfxVer = R.ver();
   for (const k in TFX) TFX[k] = null;
-  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.types) Object.assign(TFX, r.types(X)); }
+  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.threat) Object.assign(THREAT, r.threat); if (r.types) Object.assign(TFX, r.types(X)); }
 }
 // 세계를 만들 때: 켜진 규칙만 골라 그 훅을 차례대로 모은다. 꺼진 규칙은 걸음마다 비용 0
 function hooksFor(W, opt) {
@@ -83,8 +84,8 @@ const TA = { aim: 0, foes: null, g: 0 };   // 틀 방출에 넘기는 값 (새�
 // 마법 모양 맞추기 (속도, 1.11.1): 사람의 책에 든 마법을 세계마다 같은 필드·같은 차례의 새 객체로 옮긴다(없는 필드는 undefined, 읽는 값은 그대로).
 // 원본은 82개가 51가지 모양이라 's.t' 같은 읽기가 느린 길로 갔다. 객체 리터럴로 만들어야 빠른 모양이 된다(하나씩 넣으면 사전 모양이 된다).
 // 목록에 없는 필드(등록한 마법)는 뒤에 붙인다. 속 객체(hit·z·b…)는 원본을 가리킨다. 원본은 고치지 않는다
-const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr"]);
-function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
+const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr", "needGear"]);
+function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr, needGear: s.needGear }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
 const SHAPED = new WeakSet();   // 이 세계에서 모양을 맞춘 사본 (원본 마법은 여기 없다)
 function shapeBook(W, book) { for (const n of book) { const s = W.spells[n]; if (s && !SHAPED.has(s)) { const o = shapeOne(s); SHAPED.add(o); W.spells[n] = o; } } }
 function createWorld(opt = {}) {
@@ -116,7 +117,7 @@ function createWorld(opt = {}) {
 // 체력 배수 (SPEC 3장): hpScale이면 max(C, hpFloor)^hpK
 const hpMul = (W, spec) => W.rules.hpScale ? pow(Math.max(spec.C ?? 1, W.rules.hpFloor), W.rules.hpK) : 1;
 function addMage(W, spec, side, x, y) {
-  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만
+  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]) && (!W.spells[n].needGear || (spec.gear && spec.gear[W.spells[n].needGear])));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만, 장비가 드는 마법(열선: 거울)은 그 장비가 있을 때만
   shapeBook(W, book);
   const m = {
     id: W.ms.length, name: spec.name || 'm' + W.ms.length, side, x, y, vx: 0, vy: 0, r: BODY.radius,
@@ -140,9 +141,11 @@ function addMage(W, spec, side, x, y) {
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
     _bkC: NaN, _bk: 1, _clC: NaN, _cl: 0, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
-    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined,
+    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9,
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
     flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0 },
+    // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
+    alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
       starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,

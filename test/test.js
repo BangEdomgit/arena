@@ -316,6 +316,19 @@ ok('v2.0 장악권의 원칙 (SPEC 5장): 만드는 것을 빼앗지 가는 것�
   // 길: 사거리 끝이 반경 밖이면 선다 (평범 라이트닝 12 m, 70 m 떨어져 쏘면 길이 모두 반경 밖)
   assert.strictEqual(g({}, '라이트닝', 70), 1); assert.ok(g({ domainPath: false }, '짧은 실', 55) === g({}, '짧은 실', 55));
 });
+ok('v2.0 빛 (SPEC 25장): 번쩍임은 시야가 이어진 적을 눈멀게(가림 × 0.4, 연기 안경 × 0.5), 열선은 거울이 있어야, 거리로 약해지고, 눈멀면 예비동작을 못 읽는다', () => {
+  const mk = (gear, rules) => { const W = A.createWorld({ seed: 1, width: 80, height: 60, obstacles: [], rules: Object.assign({ flight: false, saltRing: false, domain: false }, rules) }); const m = A.addMage(W, A.mage({ tier: '평범', book: ['번쩍임', '열선'], gear: { mirror: true } }), 0, 10, 30), q = A.addMage(W, A.mage({ tier: '평범', gear }), 1, 30, 30); A.stepWorld(W); return [W, m, q]; };
+  const flash = (gear, f) => { const [W, m, q] = mk(gear); if (f) f(W, q); A.release(W, m, { s: W.spells['번쩍임'], tx: q.x, ty: q.y, tgt: q }); return q.st.blind; };
+  assert.ok(Math.abs(flash({}) - 1.5) < 1e-9 && Math.abs(flash({ goggles: true }) - 0.75) < 1e-9, '눈멂 1.5, 안경 절반');
+  assert.ok(flash({}, (W, q) => W.obs.push({ x: 20, y: 30, r: 1 })) === 0, '바위 뒤는 안 보인다');
+  assert.ok(Math.abs(flash({}, (W, q) => W.zones.push({ k: 'mist', shape: 'circle', r: 2, x: 20, y: 30, t: 5, src: q })) - 0.6) < 1e-9, '안개 × 0.4');
+  const [W, m] = mk({}); assert.ok(m.book.includes('열선')); const W2 = A.createWorld({ seed: 1 }); assert.ok(!A.addMage(W2, A.mage({ tier: '평범', book: ['열선'] }), 0, 5, 5).book.includes('열선'), '거울이 없으면 책에 없다');
+  assert.ok(!A.addMage(A.createWorld({ seed: 1, rules: { light: false } }), A.mage({ tier: '평범', book: ['번쩍임'] }), 0, 5, 5).book.length, '빛을 끄면 책에서 빠진다');
+  const beam = d => { const [W, m, q] = mk({}); q.x = m.x + d; const h = q.hp; A.release(W, m, { s: W.spells['열선'], tx: q.x, ty: q.y, tgt: q }); return h - q.hp; };
+  assert.ok(beam(15) > 10 && Math.abs(beam(5) / beam(15) - 2 / (1 + 1 / 3)) < 1e-9 && beam(35) === 0, '열선 ∝ 1 / (1 + d/15), 사거리 30');
+  // 눈멀면 예비동작을 못 읽는다
+  const [W3, m3, q3] = mk({}); q3.cast = { s: W3.spells['열선'], tgt: m3, tx: m3.x, ty: m3.y, t: 0, T: 0.8 }; m3.st.blind = 1; m3.thinkT = 0; A.brain.think(W3, m3); assert.ok(m3._k.blindR && !m3._k.threat);
+});
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
   assert.ok(FL.canFly({ C: 10, fat: 0 }) && FL.canFly({ C: 5, fat: 0 }) && !FL.canFly({ C: 2.5, fat: 0 }) && !FL.canFly({ C: 5, fat: 100 }), '출력 75 kW');

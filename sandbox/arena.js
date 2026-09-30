@@ -8,7 +8,7 @@ D["data/decks.json"] = [function (module, exports, require) {
 module.exports = {"합법 최강":["불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"광역":["낙뢰","번개 그물","체인","불기둥","화염 방사","돌 비","짧은 실","석회 방패","석회 기둥","솟는 발판","근육 폭주","불고리","비 뿌리기","땅 번개"],"기본기":["돌 압축탄","라이트닝","불덩이","물 망치","얼음 창","석회 방패","다리 자극"],"머스킷":["머스킷"],"기술":["짧은 실","체인","번개 그물","흙 손","불기둥","불벽","번개 지뢰","석회 방패","산 안개","대낙뢰","화산 기둥","번개 창","균사 그물","얼음 족쇄","근육 경직","석회 굳히기","가두는 기둥"],"큰 수":["번개 그물","물 대포","빙판","불벽","짧은 실","땅 번개","석회 방패","대낙뢰","화산 기둥","번개 창"],"도발 합법 최강":["도발","불기둥","비 뿌리기","땅 번개","짧은 실","근육 폭주","불고리","석회 방패","번개 그물"]};
 }, {}];
 D["data/gear.json"] = [function (module, exports, require) {
-module.exports = {"default":{"soles":true},"items":{"soles":{"이름":"소금 밑창","설명":"안 보이는 발밑 공격(지연 폭발)의 피해·묶임·굳힘을 × 0.3 (WORLD 148)"},"cloak":{"이름":"소금 망토","설명":"두른 사람 1.6 m 안에서 남의 장악 몫 × 0.3 (WORLD 148)"},"silver":{"이름":"은실 옷","설명":"은이 몸에 닿는 응답을 끊는다(WORLD 3-4): 굳음·묶임·몸 묶기의 길이 × 0.5. 은은 전기를 잘 통해 전기 피해 × 1.1. 수는 data/rules/silver.json. rules.silver가 켜졌을 때만 (SPEC 10장)"}}};
+module.exports = {"default":{"soles":true},"items":{"soles":{"이름":"소금 밑창","설명":"안 보이는 발밑 공격(지연 폭발)의 피해·묶임·굳힘을 × 0.3 (WORLD 148)"},"cloak":{"이름":"소금 망토","설명":"두른 사람 1.6 m 안에서 남의 장악 몫 × 0.3 (WORLD 148)"},"silver":{"이름":"은실 옷","설명":"은이 몸에 닿는 응답을 끊는다(WORLD 3-4): 굳음·묶임·몸 묶기의 길이 × 0.5. 은은 전기를 잘 통해 전기 피해 × 1.1. 수는 data/rules/silver.json. rules.silver가 켜졌을 때만 (SPEC 10장)"},"mirror":{"이름":"유리 비단 거울","설명":"빛을 모아 곧게 보내는 거울. 있어야 열선을 쓴다 (rules.light, SPEC 25장)"},"goggles":{"이름":"연기 안경","설명":"번쩍임의 눈멂 × 0.5 (rules.light, SPEC 25장)"}}};
 }, {}];
 D["data/rules/flight.json"] = [function (module, exports, require) {
 module.exports = {"P0":2000,"Pk":2.5,"minP":75000,"lift":150000,"liftV":20,"glideVz":4,"mass":80,"g":9.8,"drag":0.135,"zMin":2,"zMax":15,"vzMax":8,"vzAcc":12,"vMax":100,"fwdG":3,"latG":5,"latK":0.08,"latP":300000,"corner":25,"film":60,"filmBlind":0.3,"pow":0.8,"powL":[1.15,0.6,0.5],"fat":[1,6,40],"fall":4,"fallStun":1,"elec":1.3,"cloud":1.3,"arena":[200,150],"arenaC":10,"graze":{"v":15,"within":2},"brain":{"hover":3,"approach":50,"full":100,"slow":15,"z":6,"zLow":3,"zHigh":15,"near":10,"danger":6,"crowd":8,"elecMany":2,"bind":2,"lead":1.5,"leadV":60,"tiredFat":60,"hopN":2,"hopT":3,"restFat":999,"restWave":100,"guns":3,"zCrowd":10,"vCrowd":5,"gunR":30,"feintV":40,"strike":1.5}};
@@ -36,6 +36,9 @@ module.exports = {"라이트닝":{"n":"라이트닝","el":"번개","t":"thread",
 }, {}];
 D["data/spells/불.json"] = [function (module, exports, require) {
 module.exports = {"불덩이":{"n":"불덩이","el":"불","t":"proj","m":0.3,"v":26,"R":16,"cost":4,"cast":0.35,"cd":1.4,"hit":{"dmg":10,"kind":"fire","burn":2.5,"zone":{"k":"fire","r":1,"d":2}},"role":"공격"},"화염 방사":{"n":"화염 방사","el":"불","t":"cone","L":3.6,"dur":1,"dps":22,"kind":"fire","burn":2,"cost":5,"cast":0.2,"cd":2.2,"role":"공격"},"소이 캡슐":{"n":"소이 캡슐","el":"불","t":"proj","m":0.5,"v":20,"R":14,"cost":5,"cast":0.4,"cd":1.8,"burst":{"r":1.4,"dmg":16,"kind":"fire","burn":2},"role":"공격"},"폭굉 추진":{"n":"폭굉 추진","el":"불","t":"move","mv":"dash","dist":5,"self":3,"cost":3,"cast":0.1,"cd":2,"role":"이동"},"불벽":{"n":"불벽","el":"불","t":"zone","z":{"k":"fire","shape":"line","len":4,"d":4,"dps":12},"R":7,"cost":5,"cast":0.35,"cd":3,"role":"방어"},"숨 덫":{"n":"숨 덫","el":"불","t":"trap","tr":{"dmg":18,"kind":"fire","burn":2,"r":1.3},"vis":0,"cost":4,"cast":0.3,"cd":2,"role":"함정"},"불고리":{"n":"불고리","el":"불","tags":["spore","tox","close"],"desc":"몸 둘레 3m를 한순간 태워 날아오는 포자와 독을 없앤다","t":"ring","r":3,"dmg":6,"kill":1,"cost":4,"cast":0.15,"cd":3,"role":"방어"},"그을음 연막":{"n":"그을음 연막","el":"불","tags":["ranged","blunt","elec"],"desc":"덜 탄 연기로 겨냥을 흐린다","t":"zone","z":{"k":"smoke","shape":"circle","r":2.5,"d":5},"R":4,"cost":3,"cast":0.2,"cd":5,"role":"방어"},"갈래 불덩이":{"n":"갈래 불덩이","el":"불","tags":["miss"],"desc":"불덩이를 세 갈래로","t":"proj","m":0.3,"v":18,"R":16,"multi":3,"cost":5,"cast":0.4,"cd":1.6,"hit":{"dmg":5,"kind":"fire","burn":1.5},"role":"공격"},"불 씨앗":{"n":"불 씨앗","el":"불","tags":["miss","close"],"desc":"값싼 불 함정을 여러 개","t":"trap","tr":{"dmg":14,"kind":"fire","burn":2,"r":1.2},"vis":0,"cost":2,"cast":0.2,"cd":1,"role":"함정"},"불기둥":{"n":"불기둥","el":"불","t":"area","r":1.2,"delay":0.45,"dmg":16,"kind":"fire","burn":2,"vis":0,"R":9,"cost":5,"cast":0.25,"cd":2.2,"role":"공격","desc":"상대 발밑에 메탄을 모아 솟구치게 한다. 보이지 않는다"},"화산 기둥":{"n":"화산 기둥","el":"불","t":"area","r":1.5,"delay":0.4,"dmg":55,"kind":"fire","burn":3,"vis":0,"R":9,"cost":10,"cast":0.6,"cd":5,"role":"공격","big":1,"rule":"risk","desc":"발밑 깊이 메탄과 열을 모아 터뜨린다. 보이지 않는다"}};
+}, {}];
+D["data/spells/빛.json"] = [function (module, exports, require) {
+module.exports = {"번쩍임":{"n":"번쩍임","el":"빛","t":"flash","desc":"손끝에서 만든 빛이 곧바로 닿는다. 시야가 이어진 적을 눈멀게 한다(1.5 s). 연기·안개·비·흙먼지가 가리고 연기 안경이 절반","R":40,"blind":1.5,"dmg":1,"kind":"heat","cost":4,"cast":0.4,"cd":6,"role":"공격","rule":"light"},"열선":{"n":"열선","el":"빛","t":"beam","desc":"예비동작 동안 핵이 빛나 보인다. 쏘면 곧바로 닿는 열. 거리에 따라 약해지고(반감 15 m) 연기·안개·비를 지나면 × 0.4. 유리 비단 거울이 있어야 쓴다","R":30,"dmg":28,"L":15,"kind":"heat","cost":6,"cast":0.8,"cd":3,"role":"공격","rule":"light","needGear":"mirror"}};
 }, {}];
 D["data/spells/신호.json"] = [function (module, exports, require) {
 module.exports = {"도발":{"n":"도발","el":"신호","t":"taunt","R":10,"cost":2,"cast":0.1,"cd":4,"role":"방어","rule":"taunt","desc":"상대의 부름에 헛신호를 섞어 끊는다. 이단은 걸리지 않는다"}};
@@ -940,7 +943,7 @@ const VERSION = '2.0.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0 };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, light: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -964,6 +967,7 @@ const DEFAULT_RULES = {
   bodyK: 2.3,          // (v2.0) 몸 받침: 받는 에너지 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
   callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
+  light: true,         // (v2.0 둘째) 빛: 번쩍임(눈멂)·열선(거울) (SPEC 25장, rules/light)
   flight: true,        // (v2.0) 비행: 출력 75 kW 이상(상위부터)이 난다. 높이 z, 속도 판단 (SPEC 24장, rules/flight)
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
@@ -992,7 +996,7 @@ function engineOf(r) { if (!r.engine) return null; let e = ENG.get(r); if (!e) {
 function formsOf() {
   if (tfxVer === R.ver()) return; tfxVer = R.ver();
   for (const k in TFX) TFX[k] = null;
-  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.types) Object.assign(TFX, r.types(X)); }
+  for (const r of R.RULES) { if (r.form) Object.assign(FORM, r.form); if (r.threat) Object.assign(THREAT, r.threat); if (r.types) Object.assign(TFX, r.types(X)); }
 }
 // 세계를 만들 때: 켜진 규칙만 골라 그 훅을 차례대로 모은다. 꺼진 규칙은 걸음마다 비용 0
 function hooksFor(W, opt) {
@@ -1010,8 +1014,8 @@ const TA = { aim: 0, foes: null, g: 0 };   // 틀 방출에 넘기는 값 (새�
 // 마법 모양 맞추기 (속도, 1.11.1): 사람의 책에 든 마법을 세계마다 같은 필드·같은 차례의 새 객체로 옮긴다(없는 필드는 undefined, 읽는 값은 그대로).
 // 원본은 82개가 51가지 모양이라 's.t' 같은 읽기가 느린 길로 갔다. 객체 리터럴로 만들어야 빠른 모양이 된다(하나씩 넣으면 사전 모양이 된다).
 // 목록에 없는 필드(등록한 마법)는 뒤에 붙인다. 속 객체(hit·z·b…)는 원본을 가리킨다. 원본은 고치지 않는다
-const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr"]);
-function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
+const SPELL_KEYS = new Set(["n", "el", "t", "m", "v", "R", "cost", "cast", "cd", "hit", "role", "L", "dur", "dps", "kind", "burn", "burst", "mv", "dist", "self", "z", "tr", "vis", "E", "r", "delay", "dmg", "stun", "b", "react", "flight", "hp", "at", "wet", "push", "lock", "banned", "blind", "life", "home", "tags", "desc", "kill", "multi", "fast", "root", "rad", "chill", "mundane", "rule", "big", "cramp", "pr", "needGear"]);
+function shapeOne(s) { const o = { n: s.n, el: s.el, t: s.t, m: s.m, v: s.v, R: s.R, cost: s.cost, cast: s.cast, cd: s.cd, hit: s.hit, role: s.role, L: s.L, dur: s.dur, dps: s.dps, kind: s.kind, burn: s.burn, burst: s.burst, mv: s.mv, dist: s.dist, self: s.self, z: s.z, tr: s.tr, vis: s.vis, E: s.E, r: s.r, delay: s.delay, dmg: s.dmg, stun: s.stun, b: s.b, react: s.react, flight: s.flight, hp: s.hp, at: s.at, wet: s.wet, push: s.push, lock: s.lock, banned: s.banned, blind: s.blind, life: s.life, home: s.home, tags: s.tags, desc: s.desc, kill: s.kill, multi: s.multi, fast: s.fast, root: s.root, rad: s.rad, chill: s.chill, mundane: s.mundane, rule: s.rule, big: s.big, cramp: s.cramp, pr: s.pr, needGear: s.needGear }; for (const k in s) if (!SPELL_KEYS.has(k)) o[k] = s[k]; return o; }
 const SHAPED = new WeakSet();   // 이 세계에서 모양을 맞춘 사본 (원본 마법은 여기 없다)
 function shapeBook(W, book) { for (const n of book) { const s = W.spells[n]; if (s && !SHAPED.has(s)) { const o = shapeOne(s); SHAPED.add(o); W.spells[n] = o; } } }
 function createWorld(opt = {}) {
@@ -1043,7 +1047,7 @@ function createWorld(opt = {}) {
 // 체력 배수 (SPEC 3장): hpScale이면 max(C, hpFloor)^hpK
 const hpMul = (W, spec) => W.rules.hpScale ? pow(Math.max(spec.C ?? 1, W.rules.hpFloor), W.rules.hpK) : 1;
 function addMage(W, spec, side, x, y) {
-  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만
+  const book = (spec.book || []).filter(n => W.spells[n] && (!W.spells[n].banned || spec.allowBanned) && (!W.spells[n].rule || W.rules[W.spells[n].rule]) && (!W.spells[n].needGear || (spec.gear && spec.gear[W.spells[n].needGear])));   // 규칙에 딸린 마법은 그 규칙이 켜졌을 때만, 장비가 드는 마법(열선: 거울)은 그 장비가 있을 때만
   shapeBook(W, book);
   const m = {
     id: W.ms.length, name: spec.name || 'm' + W.ms.length, side, x, y, vx: 0, vy: 0, r: BODY.radius,
@@ -1067,9 +1071,11 @@ function addMage(W, spec, side, x, y) {
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
     _bkC: NaN, _bk: 1, _clC: NaN, _cl: 0, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     // 높이 (v2.0, SPEC 24장): 땅 0. 비행(rules/flight)만 바꾼다. fly: 0 걷기·1 날기·2 떨어지기. fv·fz·flyWant는 두뇌가 정하는 목표 속도·높이·뜨기
-    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined,
+    z: 0, vz: 0, fly: 0, flyWant: false, fv: 0, fz: 0, fallZ: 0, load: 0, airFilm: false, _nm: 1, _flC: NaN, _flP: 0, _grazeN: null, _grazeT: -9, _feC: null, _flT0: 0, _gun: undefined, _ltT: -9,
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
     flog: { t: 0, v: 0, v2: 0, corner: 0, feint: 0, dz: 0, falls: 0, grazeTry: 0, grazeHit: 0 },
+    // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
+    alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
       starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
@@ -1513,7 +1519,7 @@ D["src/data.js"] = [function (module, exports, require) {
  * 차례 목록에 없는 새 마법은 아래 파일 차례대로 뒤에 붙는다(그래서 새 마법을 넣을 때 order.json을 안 고쳐도 된다).
  * 파일 목록은 require를 그대로 적어 둔다: 샌드박스 묶음(pack)이 이것을 보고 함께 싼다 */
 const FILES = [require('../data/spells/불.json'), require('../data/spells/번개.json'), require('../data/spells/흙.json'), require('../data/spells/물.json'),
-  require('../data/spells/얼음.json'), require('../data/spells/독.json'), require('../data/spells/없음.json'), require('../data/spells/신호.json')];
+  require('../data/spells/얼음.json'), require('../data/spells/독.json'), require('../data/spells/없음.json'), require('../data/spells/신호.json'), require('../data/spells/빛.json')];
 const ORDER = require('../data/spells/order.json');
 function spells() {
   const all = {}; for (const f of FILES) Object.assign(all, f);
@@ -1522,7 +1528,7 @@ function spells() {
   return out;
 }
 module.exports = { SPELLS: spells(), BOOKS: require('../data/books.json'), DECKS: require('../data/decks.json'), TIERS: require('../data/tiers.json'), SKILLS: require('../data/skills.json'), GEAR: require('../data/gear.json') };
-}, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
+}, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/빛.json":"data/spells/빛.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
 D["src/index.js"] = [function (module, exports, require) {
 'use strict';
 /* 숨 결투장 v2.0.0 — 바깥으로 내보내는 API
@@ -2076,7 +2082,7 @@ D["src/rules/index.js"] = [function (module, exports, require) {
  *   types·brainTypes: 새 마법 틀의 방출과 두뇌의 값. 틀은 스위치와 상관없이 늘 붙는다(마법이 규칙에 딸리면 rule 필드가 책에서 뺀다)
  *   brain: 두뇌 훅. 기본 두뇌가 세계마다 켜진 규칙의 것만 모은다 (brain/hooks.js)
  * 차례가 곧 같은 훅 안의 부르는 차례다. 예전 한 덩어리의 계산 차례를 그대로 따른다(결과가 비트 하나 안 바뀌게). 새 규칙은 뒤에 붙는다 */
-const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight')];
+const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light')];
 // 엔진 훅의 이름과 부르는 자리 (SPEC 22장 표). 값을 돌려주는 훅은 받은 값을 고쳐 돌려준다
 const ENGINE_HOOKS = ['place', 'init', 'world', 'ceff', 'power', 'gate', 'share', 'release', 'overload', 'roll', 'hurtMod', 'hurt', 'effHold', 'eff', 'rain', 'smother', 'ring', 'fatRecover', 'mageStep', 'mageZones', 'move', 'speed', 'speedLate', 'accel', 'chan', 'projSub', 'ignite', 'areaHit', 'zoneTick', 'notice'];
 const BRAIN_HOOKS = ['aim', 'read', 'hideCast', 'steer', 'avoid', 'empty', 'circles', 'react', 'cancel', 'rest', 'prep', 'value', 'valueRisk', 'valueMid', 'valueLate', 'commit', 'castTime'];
@@ -2090,7 +2096,79 @@ function add(r) {
 }
 function remove(name) { const i = RULES.findIndex(x => x.name === name); if (i >= 0) { RULES.splice(i, 1); ver++; } }
 module.exports = { RULES, ENGINE_HOOKS, BRAIN_HOOKS, onOf, add, remove, ver: () => ver };
-}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js"}];
+}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js"}];
+D["src/rules/light.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 빛 — 번쩍임·열선 (rules.light, v2.0 둘째 묶음, SPEC 25장, 마법은 data/spells/빛.json)
+ * 손끝에서 만들어 곧바로 닿는다(장악권은 손끝만 본다, 피할 수 없다). 시야가 이어져야 하고(바위·벽·연기가 막는다), 연기·안개·비·흙먼지가 가린다.
+ *   번쩍임(틀 flash): 사거리 안, 시야가 이어진 적 모두를 눈멀게 한다(blind × g, 연기 안경 × 0.5, 가림 × 0.4). 피해는 거의 없다
+ *   열선(틀 beam): 예비동작 동안 핵이 빛나 보인다(읽힌다). 과녁 하나에 곧바로 닿는 열(에너지 피해 'heat', 몸 받침이 받는다).
+ *     피해 = dmg × 위력 × g / (1 + 거리/L), 가림을 지나면 × 0.4. 유리 비단 거울(gear.mirror)이 있어야 책에 든다(core의 needGear)
+ * 눈멀면 예비동작을 못 읽는다(두뇌 read 훅, 몸 묶기와 같은 뜻). 두뇌: 번쩍임·열선의 예비동작(빛이 오름)을 보면 가림(바위·벽) 뒤나 연기로 */
+const { hyp } = require('../math');
+const OBSC = { smoke: 1, mist: 1, rain: 1, absorb: 1 };   // 빛을 가리는 지대 (연기·흙먼지·안개·물 장막·비)
+// 선분이 가리는 지대를 지나는가 (원이면 반지름, 선이면 길이의 반으로 넉넉히)
+function veiled(W, x1, y1, x2, y2) {
+  for (const z of W.zones) {
+    if (!OBSC[z.k]) continue; const r = z.shape === 'circle' ? z.r : (z.len || 2) / 2;
+    const dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy || 1; let t = ((z.x - x1) * dx + (z.y - y1) * dy) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    if (hyp(x1 + dx * t - z.x, y1 + dy * t - z.y) < r) return true;
+  }
+  return false;
+}
+module.exports = {
+  name: 'light', switch: 'light', on: W => W.rules.light, form: { flash: 'self', beam: 'self' }, threat: { flash: 1, beam: 1 }, api: { veiled },
+  types: X => ({
+    flash(W, m, c, a) {
+      const s = c.s, R = X.rangeOf(m, s), g = a.g; let n = 0;
+      for (const q of a.foes) {
+        if (X.hyp3(q.x - m.x, q.y - m.y, q.z - m.z) > R || X.blocked(W, m.x, m.y, q.x, q.y, m.z > q.z ? m.z : q.z)) continue;
+        const k = (veiled(W, m.x, m.y, q.x, q.y) ? 0.4 : 1) * (q.gear.goggles ? 0.5 : 1) * g;
+        q.st.blind = Math.max(q.st.blind, s.blind * k); q.cast = q.castB = null;   // 눈이 멀면 모으던 수를 놓친다
+        X.hurt(W, q, s.dmg, m, s.n, s.kind); q.alog.blinded++; n++;
+      }
+      if (n) { X.hit(m, s); m.alog.flash++; m.alog.flashHit += n; }
+      if (W.rec) W.fx.push(['f', m.x, m.y, R]);
+    },
+    beam(W, m, c, a) {
+      const s = c.s, q = c.tgt; if (!q || q.hp <= 0) return;
+      const d = X.hyp3(q.x - m.x, q.y - m.y, q.z - m.z); if (d > X.rangeOf(m, s) || X.blocked(W, m.x, m.y, q.x, q.y, m.z > q.z ? m.z : q.z)) return;
+      const P = X.power(W, m, s) * a.g * (veiled(W, m.x, m.y, q.x, q.y) ? 0.4 : 1) / (1 + d / s.L);
+      X.hurt(W, q, s.dmg * P, m, s.n, s.kind); X.hit(m, s);
+      if (W.rec) W.fx.push(['z', m.x, m.y, q.x, q.y]);
+    },
+  }),
+  // 두뇌: 틀의 값과 읽기
+  brainTypes: B => ({
+    flash(W, m, K, o) {
+      const e = K.e, s = o.s; o.v = 0;
+      if (!(K.d < B.C.rangeOf(m, s) && K.los) || e.st.blind > 0.3) return;
+      // 눈먼 틈에 칠 무거운 수가 곧 있으면 먼저 번쩍인다 (무리 두뇌, 25장): 아니면 모으는 적의 수를 끊는 값
+      const heavy = m.book.some(n => { const x = K.S[n]; return x && x.hit && x.hit.flat >= 50 && !((m.cd[n] || 0) > 0); });
+      o.v = (heavy ? 1.3 : 0.35) + (e.cast || e.castB ? 0.4 : 0);
+    },
+    beam(W, m, K, o) {
+      const e = K.e, s = o.s; o.v = 0;
+      if (!(K.d < B.C.rangeOf(m, s) && K.los)) return;
+      o.v = o.he * s.dmg * B.C.power(W, m, s) / (1 + K.d / s.L) / 20 / (o.Tw + 0.3);   // 20 = 실 한 줄 쯤의 값에 맞춘다
+    },
+  }),
+  brain: B => ({
+    read(W, m, K) { if (m.st.blind > 0) K.blindR = true; },   // 눈멀면 예비동작을 못 읽는다 (몸 묶기와 같은 뜻)
+    // 빛이 오르는 것을 보면(번쩍임·열선의 예비동작, 나를 볼 수 있는 자리) 가림 뒤로 (바위·벽의 반대편)
+    steer(W, m, K) {
+      if (!m.tac.readCast || K.blindR || m.z >= 2) return;
+      let q = null; for (const f of K.foes) { const c = f.cast; if (c && (c.s.t === 'flash' || (c.s.t === 'beam' && c.tgt === m)) && !B.C.blocked(W, f.x, f.y, m.x, m.y, 0)) { q = f; break; } }
+      if (!q) return;
+      let best = null, bd = 9; for (const o of W.obs) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } } for (const o of W.walls) { const d = hyp(o.x - m.x, o.y - m.y); if (d < bd) { bd = d; best = o; } }
+      if (best) { const dx = best.x - q.x, dy = best.y - q.y, l = hyp(dx, dy) || 1, tx = best.x + dx / l * (best.r + 0.6), ty = best.y + dy / l * (best.r + 0.6); K.vx = (tx - m.x) * 2; K.vy = (ty - m.y) * 2; }
+      m._ltT = W.t;
+    },
+    // 가림이 없으면 연기·안개로 (빛이 오르는 것을 본 뒤 1 s 안)
+    value(W, m, K, o) { const s = o.s; if (W.t - m._ltT < 1 && s.t === 'zone' && s.z && (s.z.k === 'smoke' || s.z.k === 'mist' || s.z.k === 'absorb')) { o.v = Math.max(o.v, 1.2); o.tx = m.x; o.ty = m.y; } },
+  }),
+};
+}, {"../math":"src/math.js"}];
 D["src/rules/multiSlot.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 서클 (rules.circles, 기본 켬, SPEC 6장)
