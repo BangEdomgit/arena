@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.3.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.4.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -477,6 +477,34 @@ ok('v2.3 진지 (SPEC 27장): 함정 한도는 서클만큼, 옆 함정 연쇄, 
   const on = g({ fort: true, trapChain: true }), off = g({});
   assert.ok(on.fort.founded >= 1 && on.fort.walls + on.fort.traps + on.fort.sky >= 3 && on.mlog.phase.build > 0, '짓기 ' + JSON.stringify(on.fort));
   assert.ok(!off.mlog.phase.build && !off.fort.founded && !off.book.includes('하늘 덮개'), '끄면 짓지 않는다');
+});
+ok('v2.4 두 겹의 두뇌·끊는 움직임·청사진·매 걸음 녹화 (SPEC 28장)', () => {
+  const mk = (rules, tac) => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: Object.assign({ domain: false, saltRing: false, flight: false }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 청사진', tac }), 0, 20, 20), e = A.addMage(W, A.mage({ tier: '중간' }), 1, 45, 20); m.thinkT = e.thinkT = 1e9; return [W, m, e]; };
+  const st = (W, n) => { for (let i = 0; i < n; i++) A.stepWorld(W); };
+  // 끊는 움직임: 가속 한계(대마법사 2.5 g × 1.83, 거꾸로 밟으면 두 배) 안에서 곧장. 목표에서 딱 멎는다
+  let [W, m] = mk({ snap: true }); const a = A.RULES.find(r => r.name === 'snap').api.aOf(W, m); assert.ok(Math.abs(a - 9.8 * 2.5 * (1 + 0.25 * Math.log2(10))) < 1e-6);
+  m.mv.x = 1; st(W, 30); const v0 = m.vx; m.mv.x = -1; st(W, 1); assert.ok(Math.abs(v0 - m.vx - 2 * a * A.DT) < 1e-9, '거꾸로 밟으면 한 걸음에 2a·DT');   // 앞뒤로 줄이기는 2a, 옆은 a st(W, 20); assert.ok(Math.abs(m.vx + v0) < 1e-9, '목표에서 멎는다');
+  [W, m] = mk({}); m.mv.x = 1; st(W, 30); const w0 = m.vx; m.mv.x = -1; st(W, 20); assert.ok(Math.abs(m.vx + w0) > 1e-3, '끄면 예전처럼 스르르');
+  // 끊어 걷기: 모으는 동안 제 속도, 풀리기 0.12 s 전부터 멈춤
+  [W, m] = mk({ snap: true }); m.mv.x = 1; st(W, 30); const v1 = m.vx; m.cast = { s: W.spells['낙뢰'], tgt: null, tx: 40, ty: 20, t: 0, T: 1, B: false }; st(W, 10); assert.ok(Math.abs(m.vx - v1) < 1e-9, '모으는 동안 걷는다'); st(W, 20); assert.ok(m.vx < v1 * 0.5, '풀리기 전에 멈춘다');
+  // 반사 겹: 날아오는 투사체를 반응 지연(대가 0.1 s) 뒤 매 걸음 안에 피한다(판단 없이). 반사 겹이 없으면 그대로
+  const shot = (tac) => { const [W2, m2, e2] = mk({ reflex: true }, tac); W2.proj.push({ x: 30, y: 20, vx: -20, vy: 0, z: 0, vz: 0, home: false, life: 2, s: W2.spells['돌 창'] || { n: '시험', el: '흙', m: 1 }, src: e2, pow: 1, rad: 0.1, t0: W2.t }); let n = 0; while (!(m2.roll > 0) && n < 15) { A.stepWorld(W2); n++; } A.stepWorld(W2); return [n, m2]; };   // 반응 시간은 다음 걸음에 센다
+  const [n1, r1] = shot({}); assert.ok(n1 >= 3 && n1 <= 5 && r1.rx.dodge === 1 && r1.rx.rN === 1, '반사로 굴렀다 ' + n1); const [n2] = shot({ reflex: 0 }); assert.strictEqual(n2, 15, '반사 겹이 없으면 판단 없이는 안 구른다');
+  // 흔들기: 앞길(2 m 넘게 앞)을 겨누는 실이 0.3 s 안에 풀리고 빠르게 가면 멈칫 (걸음을 0으로 덮는다)
+  [W, m] = mk({ reflex: true, snap: true }); const e = W.ms[1]; m.mv.x = 0; m.mv.y = 1; st(W, 20); e.cast = { s: W.spells['짧은 실'], tgt: m, tx: m.x, ty: m.y + 3, t: 0.8, T: 1, B: false }; st(W, 10);   // 0.1 s 뒤 멈칫, 4.6 g로 0.2 s
+  assert.ok(m.rx.stop === 1 && m.rx.juke === 1 && Math.hypot(m.vx, m.vy) < 1, '멈칫 ' + Math.hypot(m.vx, m.vy));
+  // 청사진: 반원 보루 = 흙벽 다섯을 다섯 갈래로 한꺼번에. 대마법사 약 1.7 s (+ 준비 0.3 s)
+  [W, m] = mk({ blueprint: true, bulwark: true }); const BP = A.RULES.find(r => r.name === 'blueprint').api, b = BP.plan(W, m, '반원 보루', m.x, m.y, 1, 0);
+  assert.ok(b.lanes === 5 && b.items.length === 5 && b.T > 1.5 && b.T < 2, '차례표 ' + b.lanes + ' ' + b.T);
+  const f0 = m.fat; m.cast = { s: W.spells['청사진'], tgt: W.ms[1], tx: 40, ty: 20, t: 0, T: 0.3 + b.T, B: false, bp: b }; let k = 0; while (m.cast && k++ < 120) A.stepWorld(W);
+  assert.ok(W.walls.filter(w => w.mk === m.id).length === 10 && m.fort.bpN === 1 && m.fort.bpItems === 5 && m.fat > f0, '다섯 벽 ' + W.walls.length);
+  assert.ok(BP.can(W, m, BP.BPD.blueprints['함정 격자']) && !BP.can(W, m, BP.BPD.blueprints['하늘 막기']), '책에 맞는 청사진 (덮개는 진지 규칙이 켜져야)');
+  // 매 걸음 녹화
+  const rec = n => { const w = A.createWorld({ seed: 1, record: true, recEvery: n }); A.addMage(w, A.mage({}), 0, 5, 5); A.addMage(w, A.mage({}), 1, 30, 5); for (let i = 0; i < 60; i++) A.stepWorld(w); return w.rec.length; };
+  assert.ok(rec(1) === 60 && rec(undefined) === 30, '녹화 간격');
+  // 판단까지: 모두 켜면 반사·발놀림·청사진이 쓰이고, 같은 씨앗이면 같다
+  const g = () => { const w = A.sceneWorld({ seed: 2, rules: { flightCut: true, fort: true, reflex: true, snap: true, blueprint: true }, sides: [{ mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }, { mages: [{ tier: '대마법사', skill: '대가', deck: '대마법사 청사진' }] }] }); while (!A.over(w)) A.stepWorld(w); return w; };
+  const x = g(), y = g(); assert.ok(x.t === y.t && x.ms[0].hp === y.ms[0].hp && x.ms[0].rx.dodge === y.ms[0].rx.dodge && x.ms[0].rx.dodge + x.ms[0].rx.juke > 0 && x.ms[0].rx.flips > 0 && x.ms[0].fort.bpN + x.ms[1].fort.bpN > 0, '판단');
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

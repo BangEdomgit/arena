@@ -20,7 +20,7 @@ function catOf(s) {
 const FORMNAME = { taunt: '상대 자리', proj: '던지기', lob: '던지기', touch: '몸', cone: '앞으로 뿜기', thread: '실', area: '상대 자리', zone: '자리 깔기', trap: '함정', wall: '내 앞 벽', buff: '몸', move: '이동', ring: '몸', shoot: '몸', smother: '몸' };
 const isSetup = s => !!s && (s.t === 'trap' || s.t === 'zone' || (s.hit && (s.hit.wet || s.hit.root || s.hit.stun || s.hit.chill)) || (s.t === 'area' && (s.root || s.stun)) || (s.t === 'cone' && s.wet));
 // 역할 (v2.2, 26장): 공격·방어·지형(벽·지대·함정·가두기·세우기·벽 밀기)·이동·강화(걸음 버프)
-const TERRAIN = { wall: 1, build: 1, trap: 1, cage: 1, topple: 1 };
+const TERRAIN = { wall: 1, build: 1, trap: 1, cage: 1, topple: 1, blueprint: 1 };
 function roleOf(s) { if (TERRAIN[s.t] || (s.t === 'zone' && s.z && s.z.k !== 'rain' && s.z.k !== 'smoke' && s.z.k !== 'mist' && s.z.k !== 'absorb')) return '지형'; if (s.t === 'move') return '이동'; if (s.t === 'buff' && s.b && s.b.speed) return '강화'; if (s.role === '공격') return '공격'; return '방어'; }
 function logDec(m, s, slot, ctx) {
   const L = m.log.dec; L.n++;

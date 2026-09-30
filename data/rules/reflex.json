@@ -1,0 +1,6 @@
+{
+ "win": 0.5, "pad": 0.4, "read": 0.3, "aheadT": [0.05, 1.2], "aheadR": 1.5, "aheadMin": 2,
+ "stopV": 3, "stopT": 0.25, "flipT": 0.25, "dodgeT": 0.2, "airV": 25,
+ "lrtZ": 2.5, "lrtCush": 0.3,
+ "jukeWin": 0.4, "after": 0.3
+}

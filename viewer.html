@@ -17,7 +17,7 @@ load(R);
 $('pl').onclick=()=>{play=!play;$('pl').textContent=play?'멈춤':'재생';};$('sp').onchange=e=>spd=+e.target.value;$('sk').oninput=e=>{t=e.target.value/1000*R.t;};
 const rd=f=>{const r=new FileReader();r.onload=()=>{try{load(JSON.parse(r.result));}catch(e){alert('읽을 수 없는 파일');}};r.readAsText(f);};
 $('file').onchange=e=>e.target.files[0]&&rd(e.target.files[0]);document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();e.dataTransfer.files[0]&&rd(e.dataTransfer.files[0]);});
-function draw(){const F=R.frames;let i=0;while(i<F.length-1&&F[i+1].t<=t)i++;const f=F[i];ctx.fillStyle='#34322d';ctx.fillRect(0,0,800,600);
+function draw(){const F=R.frames;let i=0;while(i<F.length-1&&F[i+1].t<=t)i++;const f0=F[i],g=F[i+1],al=g&&g.t>f0.t?Math.min(1,(t-f0.t)/(g.t-f0.t)):0,f=al?Object.assign({},f0,{m:f0.m.map((q,k)=>{const r=g.m[k];if(!r)return q;const o=q.slice();o[0]=q[0]+(r[0]-q[0])*al;o[1]=q[1]+(r[1]-q[1])*al;if(q.length>10)o[10]=q[10]+(r[10]-q[10])*al;return o;})}):f0;/* 사이를 이어 그린다 (v2.4) */ctx.fillStyle='#34322d';ctx.fillRect(0,0,800,600);
  for(const z of f.z){ctx.fillStyle=ZC[z[0]]||'rgba(255,255,255,.1)';if(z[4]>0){ctx.save();ctx.translate(z[1]*SC,z[2]*SC);ctx.rotate(z[5]);ctx.fillRect(-z[4]/2*SC,-0.6*SC,z[4]*SC,1.2*SC);ctx.restore();}else{ctx.beginPath();ctx.arc(z[1]*SC,z[2]*SC,(z[3]||1)*SC,0,7);ctx.fill();}}
  for(const o of R.obs){ctx.fillStyle='#6e685f';ctx.beginPath();ctx.arc(o.x*SC,o.y*SC,o.r*SC,0,7);ctx.fill();}
  for(const b of f.b||[]){ctx.fillStyle=b[2]?'#3a2a20':'#a8744a';ctx.beginPath();ctx.arc(b[0]*SC,b[1]*SC,6,0,7);ctx.fill();}

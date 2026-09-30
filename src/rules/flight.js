@@ -14,6 +14,7 @@
 const { pow, hyp, clamp } = require('../math');
 const F = require('../../data/rules/flight.json');
 const { saltR } = require('./saltRing').api;
+const { aOf } = require('./snap').api;   // 끊는 움직임 (v2.4): 옆·오르내림 가속의 바닥
 const G = F.g, M = F.mass, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, CU = F.cut;
 // 출력 (W). C^2.5는 선명도마다 한 번
 function outP(m) { if (m._flC !== m.C) { m._flC = m.C; m._flP = F.P0 * pow(Math.max(m.C, 0.01), F.Pk); } return m._flP * Math.max(0.6, 1 - Math.min(m.fat, 100) / 200); }
@@ -143,7 +144,7 @@ module.exports = {
         let v = hyp(m.vx, m.vy);
         // 오르내림 (목표 높이로). 튀어오르기는 위로 3 g (v2.3)
         if (m.cut.k === 3) m.vz += CU.hop * G * DT;
-        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax); m.vz += clamp(vzT - m.vz, -F.vzAcc * DT, F.vzAcc * DT); }
+        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax), va = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.vzAcc, aOf(W, m)) : F.vzAcc; m.vz += clamp(vzT - m.vz, -va * DT, va * DT); }
         const r = v / F.liftV, lift = F.lift / (1 + r * r) * clamp(1 + m.vz / F.glideVz, 0, 1), drag = F.drag * v * v * v;
         let spare = P - lift - drag, climb = 0;
         if (m.vz > 0) {   // 오르기: 남는 힘으로, 모자라는 몫은 속도에서 (높이는 속도의 저금통)
@@ -159,10 +160,10 @@ module.exports = {
         const mx = m.mv.x, my = m.mv.y, ml = hyp(mx, my), fv = m.st.root > 0 || !ml ? 0 : clamp(m.fv, 0, F.vMax);
         const tx = ml ? mx / ml * fv : 0, ty = ml ? my / ml * fv : 0, dx = tx - m.vx, dy = ty - m.vy;
         let ux = 1, uy = 0; if (v >= 1) { ux = m.vx / v; uy = m.vy / v; } else if (ml) { ux = mx / ml; uy = my / ml; }
-        const vv = M * (v > 5 ? v : 5), gF = F.fwdG * G, fwd = spare >= 0 ? Math.min(gF, spare / vv) : Math.max(-gF, spare / vv);
+        const vv = M * (v > 5 ? v : 5), gF = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.fwdG * G, aOf(W, m)) : F.fwdG * G, fwd = spare >= 0 ? Math.min(gF, spare / vv) : Math.max(-gF, spare / vv);   // 끊는 움직임: 앞뒤 가속의 한계도 a (앞으로는 여전히 남는 힘에 묶인다, v2.4)
         const al = dx * ux + dy * uy, at = -dx * uy + dy * ux;
         const aL = Math.min(clamp(al / DT, -gF, gF), fwd);   // 힘이 모자라면(fwd < 0) 늦춰진다
-        const k = F.latK * clamp(spare / F.latP, 0.1, 1), latMax = Math.min(F.latG * G, Math.max(k * v * v, v < 5 && fwd > 0 ? fwd : 0));
+        const k = F.latK * clamp(spare / F.latP, 0.1, 1), latMax = Math.max(Math.min(F.latG * G, Math.max(k * v * v, v < 5 && fwd > 0 ? fwd : 0)), W.rules.snap && m.tac.footwork >= 2 ? aOf(W, m) : 0);   // 끊는 움직임: 느려도 a로 꺾는다 (v2.4)
         const aT = clamp(at / DT, -latMax, latMax);
         if (m.cut.k === 1) { const a = CU.brake * G * DT; if (v > a) { m.vx -= ux * a; m.vy -= uy * a; } else m.vx = m.vy = 0; }   // 급정지: 거꾸로 5 g (v2.3)
         else if (m.cut.k === 2) { const a = CU.side * G * DT; m.vx += m.cut.x * a; m.vy += m.cut.y * a; }                             // 옆 튀기: 옆으로 5 g

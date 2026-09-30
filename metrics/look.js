@@ -33,6 +33,10 @@ function look(m, t) {
   // 진지 (v2.3, SPEC 27장): 지은 벽·함정·덮개, 몰이길로 든 적, 연쇄, 치운 적의 것, 진지 안·밖에서 적에게 받은 피해
   const P = m.fort;
   if (P && (P.walls || P.traps || P.sky || P.founded)) { o['지은 벽'] = P.walls; o['깐 함정'] = P.traps; o['하늘 덮개'] = P.sky; o['몰이길로 든 적'] = P.funnel; o['연쇄로 터진 함정'] = P.chain; o['치운 적의 함정·덮개'] = P.clear; o['진지 안 받은 피해'] = P.inDmg; o['진지 밖 받은 피해'] = P.outDmg; }
+  // 두 겹의 두뇌·청사진 (v2.4, SPEC 28장): 반사 겹이 켜졌을 때(선명도 5 이상)
+  const R = m.rx;
+  if (R && (R.turns || R.rN || R.rMiss)) { o['초당 방향 전환'] = R.turns / Math.max(t, 1); o['반응 시간 (ms)'] = R.rN ? R.rS / R.rN * 1000 : 0; o['반응 못 한 몫'] = R.rN + R.rMiss ? R.rMiss / (R.rN + R.rMiss) : 0; o['흔들기'] = R.juke; o['흔든 뒤 빗나간 몫'] = R.shotJ ? R.missJ / R.shotJ : 0; o['안 흔든 뒤 빗나간 몫'] = R.shotN ? R.missN / R.shotN : 0; }
+  if (P && P.bpN) { o['청사진'] = P.bpN; o['청사진 한 번의 구조물'] = P.bpItems / P.bpN; o['청사진 한 번의 시간 (s)'] = P.bpT / P.bpN; }
   return o;
 }
 module.exports = { look };

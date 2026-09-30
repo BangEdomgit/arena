@@ -96,8 +96,9 @@ module.exports = {
       phase(W, m, K) {
         const lv = lvOf(m); if (!lv || m.phase !== 'probe') return;
         const e = K.e, d = K.d, has = m.fort.x === m.fort.x;
-        if (has) next(W, m);
-        if (has && m.fort.plan.built && hyp(m.x - m.fort.x, m.y - m.fort.y) < BR.R + 4 && hyp(e.x - m.fort.x, e.y - m.fort.y) < BR.R + BR.home) { m.phase = 'home'; K.prefR = d; K.aggr *= 1.3; return; }
+        if (has && m.fort.plan) next(W, m);
+        if (has && ((m.fort.plan && m.fort.plan.built) || m.fort.bpN) && hyp(m.x - m.fort.x, m.y - m.fort.y) < BR.R + 4 && hyp(e.x - m.fort.x, e.y - m.fort.y) < BR.R + BR.home) { m.phase = 'home'; K.prefR = d; K.aggr *= 1.3; return; }
+        if (W.rules.blueprint) return;   // 청사진이 켜지면 짓기는 청사진 규칙이 (v2.4, rules/blueprint)
         const away = d > BR.buildD || ((e.phase === 'out' || K.vt < -2) && d > BR.backD);
         if (!away || d > BR.near) return;
         if ((!has || (hyp(m.x - m.fort.x, m.y - m.fort.y) > BR.relocate && W.t - m.fort.t > BR.again)) && inRing(W, m.x, m.y, BR.ring)) { found(W, m, K); next(W, m); }
@@ -113,7 +114,7 @@ module.exports = {
         }
         const lv = lvOf(m); if (!lv || !(m.fort.x === m.fort.x) || K.dodge) return;
         const P = m.fort.plan, ph = m.phase; let tx = NaN, ty = NaN;
-        if (ph === 'build' && P.nx) { tx = m.fort.x; ty = m.fort.y; if (P.nx.k === 'wall') { tx = P.nx.x - m.fort.ux * BR.wallAt; ty = P.nx.y - m.fort.uy * BR.wallAt; } }
+        if (ph === 'build' && P && P.nx && !W.rules.blueprint) { tx = m.fort.x; ty = m.fort.y; if (P.nx.k === 'wall') { tx = P.nx.x - m.fort.ux * BR.wallAt; ty = P.nx.y - m.fort.uy * BR.wallAt; } }
         else if (ph === 'home') { tx = m.fort.x; ty = m.fort.y; }
         else if (ph === 'out' && hyp(m.x - m.fort.x, m.y - m.fort.y) < BR.near && inRing(W, m.fort.x, m.fort.y, 5)) { tx = m.fort.x; ty = m.fort.y; }   // 빠지기: 진지로 (진지가 소금 원 안이면)
         if (!(tx === tx)) return;
@@ -129,7 +130,7 @@ module.exports = {
         if (s.t === 'trap' && e.z < 1 && K.vt > 1 && K.d < 6 * Math.sqrt(m.C)) { const tx = e.x + e.vx * 1.2, ty = e.y + e.vy * 1.2; if (hyp(tx - m.x, ty - m.y) > 3 && o.v < 1) { o.v = 1; o.tx = tx; o.ty = ty; } }
         if (K.slot === 'B' && s.t === 'wall' && m.cast && (m.cast.T >= 0.5 || m.cast.s.big) && K.los && K.d < 25 && o.v < 1) { o.v = 1; o.tx = e.x; o.ty = e.y; }
         // 짓기: 계획의 다음 칸. 집에선 덮개만 다시 깐다
-        const n = P && P.nx;
+        const n = !W.rules.blueprint && P && P.nx;   // 청사진이 켜지면 칸 하나씩 짓지 않는다
         if (n && (m.phase === 'build' || (m.phase === 'home' && n.k === 'sky'))) {
           if (n.k === 'sky' && SKY(s) && hyp(n.x - m.x, n.y - m.y) < R) { o.v = 2.5; o.tx = n.x; o.ty = n.y; }
           else if (n.k === 'trap' && s.t === 'trap' && !(n.hid && s.vis) && hyp(n.x - m.x, n.y - m.y) < 6 * Math.sqrt(m.C) - 0.3) { o.v = 2; o.tx = n.x; o.ty = n.y; }
