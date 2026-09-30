@@ -4,11 +4,12 @@
  *   node experiments/hash.js                 지금 src
  *   node experiments/hash.js 경로/src          다른 판(예: git archive로 푼 예전 판)
  *   node experiments/hash.js --v1              모든 판에 A.V1_RULES를 덧씌운다(v2.0의 새 기본을 끈 1.x 동작, SPEC 24장)
+ *   node experiments/hash.js --rules '{…}'     모든 판의 기본 위에 덧씌운다(새 규칙을 끄고 앞 판과 견줄 때)
  * 세 묶음: 규칙 다섯 × 등급 셋 × 판단 다섯 × 덱 셋 (457판, 녹화 넷 포함), 모든 덱·판단·부류·규칙을 섞은 260판, 망토 30판 */
 const path = require('path'), crypto = require('crypto');
-const argv = process.argv.slice(2), V1 = argv.includes('--v1'), src = argv.find(a => a !== '--v1');
+const argv = process.argv.slice(2), V1 = argv.includes('--v1'), ri = argv.indexOf('--rules'), EXTRA = ri >= 0 ? JSON.parse(argv[ri + 1]) : null, src = argv.find((a, i) => a !== '--v1' && a !== '--rules' && !(ri >= 0 && i === ri + 1));
 const A = require(path.resolve(src || path.join(__dirname, '..', 'src')));
-const R = r => V1 ? Object.assign({}, A.V1_RULES, r) : r;   // --v1: 1.x의 기본 위에 그 판의 스위치
+const R = r => V1 || EXTRA ? Object.assign({}, V1 ? A.V1_RULES : {}, EXTRA, r) : r;   // --v1: 1.x의 기본 위에 그 판의 스위치. --rules '{…}': 기본 위에 덧씌움
 
 function grid() {
   const H = crypto.createHash('sha256'), rh = [];

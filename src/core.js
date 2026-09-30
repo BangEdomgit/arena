@@ -13,7 +13,7 @@ const VERSION = '2.0.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0 };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -32,7 +32,9 @@ const DEFAULT_RULES = {
   bodyBind: false,     // 몸 묶기: 발밑이 아니라 몸을 묶는 마법 다섯과 눈멂의 읽기 막기 (1.11.0, SPEC 9장). 끄면 그 마법이 책에서 빠진다
   response: false,     // 대응: 순간 반응(판단 사이의 구르기)·대비(피할 수 없는 것에 몸을 굳힘)·풀기(몸 묶기를 머리로 푼다) (1.13.0, SPEC 9장, rules/response)
   silver: false,       // 은실 옷: gear.silver를 입은 사람에게 붙잡는 효과 × 0.5, 전기 × 1.1 (1.13.0, SPEC 10장, rules/silver)
-  hpScale: true,       // (v2.0 기본 켬) 체력 = 150 × max(C, hpFloor)^hpK. 높은 등급일수록 몸 관리·잔기술이 강하다 (SPEC 3장)
+  bodyK: 2.3,          // (v2.0) 몸 받침: 받는 마법 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
+  evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
+  hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
 };
@@ -49,7 +51,7 @@ const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
+function emptyH() { return { place: [], init: [], world: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -132,6 +134,7 @@ function addMage(W, spec, side, x, y) {
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
     reflexT: -9, braceT: -9, unbindCd: -9, unbindReq: 0, braceReq: 0,   // 대응 (rules/response, 1.13.0)
+    _bkC: NaN, _bk: 1, _evC: NaN, _evS: 1, _evR: 1,   // 몸 받침·회피의 배수 (선명도마다 한 번, rules/body·evade)
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
       starts: [], gaps: [], gapSum: 0, gapN: 0, comboTry: 0, comboHit: 0, bigCast: 0, bigHit: 0, bigPair: 0, bigPin: 0, pinTry: 0, backfire: 0, grab: 0, cTry: {}, cHit: {}, cancel: 0, coverT: 0, defTry: 0, defHit: 0, lure: 0, simul: 0,
@@ -205,7 +208,7 @@ function hurt(W, m, v, src, name, kind) {
   if (kind === 'elec' && b.elecRes) v *= b.elecRes.v;
   if (kind === 'blunt' && b.bluntRes) v *= b.bluntRes.v;
   if (kind === 'tox' && b.toxRes) v *= b.toxRes.v;
-  const H = W.H, hm = H.hurtMod; for (let i = 0; i < hm.length; i++) v = hm[i](W, m, v, kind);   // 흡수 안개·물 장막 (rules/terrain)
+  const H = W.H, hm = H.hurtMod; for (let i = 0; i < hm.length; i++) v = hm[i](W, m, v, kind, name);   // 흡수 안개·물 장막 (rules/terrain), 몸 받침 (rules/body)
   if (kind === 'elec' && m.st.wet > 0) v *= 1.5;
   if (kind === 'fire' && m.st.wet > 0) v *= 0.6;
   m.hp -= v; m.log.taken[kind] = (m.log.taken[kind] || 0) + v;
@@ -432,6 +435,12 @@ function stepMage(W, m) {
     for (const o of W.walls) { const dx = m.x - o.x, dy = m.y - o.y, mn = o.r + m.r; if (dx > mn + 1e-9 || dx < -mn - 1e-9 || dy > mn + 1e-9 || dy < -mn - 1e-9) continue; const d = hyp(dx, dy); if (d < mn) { m.x = o.x + dx / (d || 1) * mn; m.y = o.y + dy / (d || 1) * mn; } }
   }
 }
+// 구르기 (SPEC 3장): 두뇌·대응이 모두 이것으로 구른다. 속도 v와 간격 cd는 규칙이 고친다(회피, rules/evade)
+const RO = { v: 0, cd: 0 };
+function roll(W, m, dx, dy, v, cd) {
+  RO.v = v; RO.cd = cd; const h = W.H.roll; for (let i = 0; i < h.length; i++) h[i](W, m, RO);
+  const l = hyp(dx, dy) || 1; m.vx = dx / l * RO.v; m.vy = dy / l * RO.v; m.roll = 0.25; m.rollCd = RO.cd; m.stam -= 1.5;
+}
 // 안 보이는 함정을 알아챌 걸음당 확률 (이단의 함정은 어렵다, rules/wave)
 function notice(W, t) { let k = DT * 0.25; const h = W.H.notice; for (let i = 0; i < h.length; i++) k = h[i](W, t, k); return k; }
 function stepWorld(W) {
@@ -543,7 +552,7 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, clamp, sin, cos, atan2, pow, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf };
+X = { DT, hyp, clamp, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
-module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };
+module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, clamp };

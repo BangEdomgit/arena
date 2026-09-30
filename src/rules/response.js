@@ -38,7 +38,7 @@ module.exports = {
         if (!seen) for (const a of W.areas) if (a.vis && a.src.side !== m.side && a.t < win && hyp(a.x - m.x, a.y - m.y) < a.r + 0.3) { dx = m.x - a.x || 0.1; dy = m.y - a.y || 0.1; seen = true; break; }
         if (!seen) return;
         m.reflexT = W.t;
-        if (W.rng() < L.reflex) { const l = hyp(dx, dy) || 1, rv = m.st.lime > 0 ? 4 : 8; m.vx = dx / l * rv; m.vy = dy / l * rv; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5; bump(m, 'reflex'); }
+        if (W.rng() < L.reflex) { X.roll(W, m, dx, dy, m.st.lime > 0 ? 4 : 8, m.autoDodge ? 0.6 : 0.8); bump(m, 'reflex'); }
       },
       hurtMod(W, m, v) { return m.braceT > W.t ? v * P.brace.k : v; },          // 굳은 살·통증 차단
       speedLate(W, m, sp) { return m.braceT > W.t ? sp * P.brace.speed : sp; },   // 굳힌 몸은 느리다

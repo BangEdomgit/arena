@@ -55,7 +55,7 @@ function readThreats(W, m, K) {
   if (dodge && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0 || m.st.mycel > 0 || m.st.cramp > 0) && W.rng() < Math.min(T.rollCap, 0.4 + dodgeK * 0.4 + (m.autoDodge ? 0.3 : 0))) {
     const l = hyp(dodge.x, dodge.y) || 1; let mine = false; for (const a of W.areas) if (a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5) { mine = true; break; }
     if (mine) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
-    const rv = m.st.lime > 0 ? 4 : 8; m.vx = dodge.x / l * rv; m.vy = dodge.y / l * rv; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;   // 석회가 붙으면 구르는 거리 절반
+    C.roll(W, m, dodge.x, dodge.y, m.st.lime > 0 ? 4 : 8, m.autoDodge ? 0.6 : 0.8);   // 석회가 붙으면 구르는 거리 절반
   }
   K.dodge = dodge; K.aimed = aimed; K.threat = threat; K.late = late;
 }

@@ -288,12 +288,22 @@ ok('대응·은실 옷 (1.13.0): 꺼 두면 예전과 같고, 순간 반응은 �
   const SP = require('../data/rules/silver.json'); assert.ok(Math.abs(b.st.stun / a.st.stun - SP.hold) < 1e-9 && Math.abs(b.log.taken.elec / a.log.taken.elec - SP.elec) < 1e-9, a.st.stun + ' ' + b.st.stun);
 });
 legacy(false);   // 여기부터 v2.0의 기본 (일꾼도 v2.0 기본으로 돈다)
-ok('v2.0 기본 (SPEC 24장): risk·saltRing·wave·hpScale 켬, 체력 150 × max(C, 1)^1.2, V1_RULES면 1.x', () => {
-  const W = A.createWorld({ seed: 1 }); assert.ok(W.rules.risk && W.rules.saltRing && W.rules.wave && W.rules.hpScale);
-  assert.strictEqual(W.mods.map(r => r.name).join(','), 'gear,terrain,saltRing,wave,risk,multiSlot');
-  const hp = C => A.addMage(W, { C }, 0, 5, 5).hpMax; assert.strictEqual(hp(1), 150); assert.strictEqual(hp(0.3), 150); assert.ok(Math.abs(hp(2.5) - 150 * Math.pow(2.5, 1.2)) < 1e-9 && Math.abs(hp(10) - 150 * Math.pow(10, 1.2)) < 1e-9);
+ok('v2.0 기본 (SPEC 24장): risk·saltRing·wave 켬, 몸 받침 2.3·회피 켬, 체력은 150, V1_RULES면 1.x', () => {
+  const W = A.createWorld({ seed: 1, rules: { flight: false } }); assert.ok(W.rules.risk && W.rules.saltRing && W.rules.wave && W.rules.bodyK === 2.3 && W.rules.evade && !W.rules.hpScale);
+  assert.ok(['gear', 'terrain', 'saltRing', 'wave', 'risk', 'multiSlot', 'body', 'evade'].every(n => W.mods.some(r => r.name === n)), W.mods.map(r => r.name).join());
+  const hp = C => A.addMage(W, { C }, 0, 5, 5).hpMax; assert.strictEqual(hp(1), 150); assert.strictEqual(hp(10), 150);
   const W1 = A.createWorld({ seed: 1, rules: V1 }); assert.strictEqual(W1.mods.map(r => r.name).join(','), 'gear,terrain,multiSlot'); assert.strictEqual(A.addMage(W1, { C: 2.5 }, 0, 5, 5).hpMax, 150);
   const W2 = A.createWorld({ seed: 1, rules: Object.assign({}, V1, { hpScale: true }) }); assert.ok(Math.abs(A.addMage(W2, { C: 0.3 }, 0, 5, 5).hpMax - 150 * Math.pow(0.3, 2.5)) < 1e-9, '1.x의 hpScale');
+  const W3 = A.createWorld({ seed: 1, rules: { hpScale: true } }); assert.ok(Math.abs(A.addMage(W3, { C: 2.5 }, 0, 5, 5).hpMax - 150 * Math.pow(2.5, 1.2)) < 1e-9 && A.addMage(W3, { C: 0.3 }, 0, 5, 5).hpMax === 150, 'hpScale C^1.2');
+});
+ok('v2.0 몸 받침·회피: 마법 피해 ÷ C^2.3(총·소금·추락·폭주는 그대로), 걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)', () => {
+  const mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false, domain: false }, rules) }); const q = A.addMage(W, { C: 10, book: [] }, 0, 10, 15), f = A.addMage(W, { book: ['짧은 실', '머스킷'], allowBanned: true }, 1, 13, 15); A.stepWorld(W); return [W, q, f]; };
+  const taken = (rules, spell, steps = 0) => { const [W, q, f] = mk(rules); const h0 = q.hp; A.release(W, f, { s: W.spells[spell], tx: q.x, ty: q.y, tgt: q }); for (let i = 0; i < steps; i++) A.stepWorld(W); return h0 - q.hp; };
+  const a = taken({ bodyK: 0 }, '짧은 실'), b = taken({}, '짧은 실'); assert.ok(a > 0 && Math.abs(b / a - 1 / Math.pow(10, 2.3)) < 1e-9, a + ' → ' + b);
+  const g0 = taken({ bodyK: 0 }, '머스킷', 10), g1 = taken({}, '머스킷', 10); assert.ok(g0 > 0 && g0 === g1, '총은 받치지 않는다 ' + g0 + ' ' + g1);
+  const [W, q] = mk({}); W.t = 200; for (let i = 0; i < 3; i++) A.stepWorld(W); assert.ok(q.log.taken.salt > 0 && Math.abs(q.log.taken.salt - 6 * 3 / 30) < 1e-6, '소금은 받치지 않는다 ' + q.log.taken.salt);
+  const k = Math.log2(10), [W2, r] = mk({}); A.roll(W2, r, 1, 0, 8, 0.8); assert.ok(Math.abs(r.vx - 8 * (1 + 0.25 * k)) < 1e-9 && Math.abs(r.rollCd - 0.8 / (1 + 0.2 * k)) < 1e-9);
+  const [W3, r3] = mk({ evade: false }); A.roll(W3, r3, 1, 0, 8, 0.8); assert.ok(r3.vx === 8 && r3.rollCd === 0.8);
 });
 ok('v2.0 판단: 떨어지는 돌을 읽고, 소금 선 가까이선 피하기보다 가운데로, 선 밖에 떨어질 이동은 안 한다, 단계 데이터', () => {
   const mk = (tac, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, A.mage({ tier: '평범', skill: '상급', tac }), 0, 15, 15), e = A.addMage(W, A.mage({ tier: '평범', deck: '흙' }), 1, 25, 15); A.stepWorld(W); return [W, m, e]; };
