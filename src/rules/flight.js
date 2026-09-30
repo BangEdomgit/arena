@@ -46,7 +46,7 @@ module.exports = {
       move(W, m) {
         if (m.fly === 0) {
           if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m))) return false;
-          m.fly = 1; m.vz = 0;   // 이륙
+          m.fly = 1; m.vz = 0; m._flT0 = W.t;   // 이륙
         }
         if (m.roll > 0) m.roll -= DT;
         if (m.fly === 2) {   // 떨어진다
@@ -112,7 +112,7 @@ module.exports = {
         for (const a of W.areas) if (a.src.side !== m.side && hyp(a.x - m.x, a.y - m.y) < a.r + Bn.danger) { if (!a.vis) ground++; else if (a.s.kind === 'elec') elec++; }
         for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < Bn.danger) ground++;
         for (const z of W.zones) if (z.src.side !== m.side && z.dps && hyp(z.x - m.x, z.y - m.y) < (z.r || 2) + Bn.danger) ground++;
-        let near = 0; for (const q of K.foes) if (hyp(q.x - m.x, q.y - m.y) < Bn.crowd) near++; if (near >= 3) ground++;
+        let near = 0, guns = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; } if (near >= 3) ground++;
         if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
         const ec = T.readCast ? e.cast : null, eBig = !!(ec && ec.s.big), myBig = !!(m.cast && m.cast.s.big), far = K.stance === 'kite' || K.stance === 'breakout';
         let want = true, fv = F.corner, fz = Bn.z;
@@ -126,13 +126,18 @@ module.exports = {
         if (L >= 5 && eBig && !myBig) {   // 전설: 일정 속도로 앞길을 읽게 한 뒤, 떨어지기 직전 급감속·급상승
           if (ec.T - ec.t < 0.3) { fv = Bn.hover; fz = Math.min(F.zMax, m.z + 6); if (m._feC !== ec) { m._feC = ec; m.flog.feint++; } } else fv = Bn.feintV;
         }
-        if (ground) want = true;   // 발밑·함정·무리가 많으면 뜬다
+        if (K.dodge && L >= 2) fv = Math.max(fv, F.corner);   // 피할 땐 구르지 않고 옆으로 내달린다 (걸음 방향은 피하기가 정했다)
+        if (sustain && m.fat > Bn.restFat) want = false;   // 머리가 뜨거우면 내려앉아 쉰다 (떠 있기도 머리를 쓴다)
+        if (ground) { want = true; if (near >= 3) { fz = Bn.zCrowd; fv = Math.min(fv, Bn.vCrowd); } }   // 발밑·함정·무리가 많으면 뜬다 (무리 위에선 낮게 천천히)
+        if (L >= 2 && guns >= Bn.guns) want = false;   // 총이 많으면 내려앉아 구르며 피한다 (하늘에선 구르지 못해 더 맞는다)
         else if (L >= 3 && T.readCast && (elecT || elec >= Bn.elecMany)) want = false;   // 번개 위협엔 내려앉는다
-        if (!sustain) { want = want && (ground > 0 || K.stance === 'breakout') && m.fat < Bn.tiredFat; fv = Math.max(fv, F.corner); fz = Bn.zLow; }   // 상위: 떠오르기·도약·활공만
+        if (!sustain) { want = want && (ground >= Bn.hopN || K.stance === 'breakout') && m.fat < Bn.tiredFat && (m.fly !== 1 || W.t - m._flT0 < Bn.hopT); fv = Math.max(fv, F.corner); fz = Bn.zLow; }   // 상위: 떠오르기·도약·활공만 (hopT 초까지)
         // 브레이크를 잡을 거리가 모자라면 늦춘다 (끝·소금 선)
         const v = hyp(m.vx, m.vy); if (v > 1) { const d = room(W, m, m.vx / v, m.vy / v) - 2, cap = Math.sqrt(2 * F.fwdG * G * (d > 0 ? d : 0)); if (fv > cap) fv = cap < Bn.slow ? Bn.slow : cap; }
         m.flyWant = want; m.fv = fv; m.fz = fz;
       },
+      // 하늘에서 쉬기: 떠 있고 파도가 깊으면(restWave) 쏘기를 멈추고 머리를 식힌다 (땅의 무리는 쉽게 닿지 못한다)
+      rest(W, m, K, restNow) { return restNow || (m.z >= F.zMin && m.fat > Bn.restWave); },
       // 떠 있는 적: 굳히기·묶기 × 2 (떨어뜨리기), 헛된 수는 버린다. 빠른 적엔 번개·구름을 앞길에. 전설은 꺾지 못하는 순간을 친다
       value(W, m, K, o) {
         const s = o.s, e = K.e; if (!(o.v > 0)) return;

@@ -46,4 +46,14 @@ function looks(tier, skill, opp, from, N, rules) {
   }
   return out;
 }
-module.exports = { duel: part, crowd, musket, musketScene, looks, DUMMY };
+// 대마법사끼리 (같은 판단 수준): 길이·시간 판정·추락·스쳐 치기·비행 지표의 합 (v2.0 비행)
+function sky(skill, width, from, N, rules) {
+  const o = { n: 0, t: 0, bt: 0, falls: 0, gT: 0, gH: 0, flyT: 0, look: {} };
+  for (let k = from; k < from + N; k++) {
+    const r = A.duel(spec({ tier: '대마법사', skill }), spec({ tier: '대마법사', skill }), { seed: k + 1, rules, width, height: width ? width * 0.75 : undefined });
+    o.n++; o.t += r.t; if (r.byTime || r.winner < 0) o.bt++;
+    for (const m of r.ms) { const f = m.flog; o.falls += f.falls; o.gT += f.grazeTry; o.gH += f.grazeHit; o.flyT += f.t; const L = A.look(m, m.deathT ?? r.t); for (const q in L) o.look[q] = (o.look[q] || 0) + L[q] / 2; }
+  }
+  return o;
+}
+module.exports = { duel: part, crowd, musket, musketScene, looks, sky, DUMMY };

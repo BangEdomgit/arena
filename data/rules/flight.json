@@ -10,5 +10,5 @@
  "elec": 1.3, "cloud": 1.3,
  "arena": [200, 150], "arenaC": 10,
  "graze": { "v": 15, "within": 2 },
- "brain": { "hover": 3, "approach": 50, "full": 100, "slow": 15, "z": 6, "zLow": 3, "zHigh": 15, "near": 10, "danger": 6, "crowd": 8, "elecMany": 2, "bind": 2, "lead": 1.5, "leadV": 60, "tiredFat": 60, "feintV": 40, "strike": 1.5 }
+ "brain": { "hover": 3, "approach": 50, "full": 100, "slow": 15, "z": 6, "zLow": 3, "zHigh": 15, "near": 10, "danger": 6, "crowd": 8, "elecMany": 2, "bind": 2, "lead": 1.5, "leadV": 60, "tiredFat": 60, "hopN": 2, "hopT": 3, "restFat": 999, "restWave": 100, "guns": 3, "zCrowd": 10, "vCrowd": 5, "gunR": 30, "feintV": 40, "strike": 1.5 }
 }

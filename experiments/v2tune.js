@@ -1,17 +1,18 @@
 'use strict';
 /* 숨 결투장 v2.0.0 — v2.0 조정 측정 (Node, 코어를 다 쓴다)
- *   node experiments/v2tune.js nb [N]                 평범·중간 이웃 판단 단계 N판(기본 400): 점수·Elo·시간 판정·길이
+ *   node experiments/v2tune.js nb [N]                 평범·중간·상위 이웃 판단 단계 N판(기본 400): 점수·Elo·시간 판정·길이
  *   node experiments/v2tune.js ablate [N]             기술 떼기: 전설의 기술 대 대가, 대가의 기술 대 상급, 상급의 기술 대 중급 (한 기술을 끈 위 단계의 점수)
  *   node experiments/v2tune.js elem [N]               원소 리그 (평범 상급끼리, 소금 원 안 = 기본, 밖 = saltRing 끔)
  *   node experiments/v2tune.js types [N]              부류 상성 (평범·중간 상급끼리)
  *   node experiments/v2tune.js crowd [N]              챌린저(전설) 대 브론즈(초보) 1~4명, 대마법사 대 평범 100, 머스킷 40 반원
+ *   node experiments/v2tune.js sky [N]                대마법사끼리 판단 단계별, 좁은 곳(40×30)·넓은 곳(200×150): 길이·추락·스쳐 치기·비행 지표
  *   node experiments/v2tune.js all                    위 모두 → results/v2.0-final.json
  * 공통: --rules '{"…":…}'(기본 위에 덧씌움), --jobs N. 결과는 results/v2tune-<명령>.json에도 남는다 */
 const fs = require('fs'), path = require('path');
 const { runJobs, defaultWorkers } = require('./par');
 const { elo } = require('./v2rules');
 const JOBS = require.resolve('./jobs'), OUT = path.join(__dirname, 'results'), CHUNK = 25;
-const SK = ['초보', '중급', '상급', '대가', '전설'], TIERS = ['평범', '중간'], ELEMS = ['불', '번개', '흙', '물', '얼음', '독'], TYPES = ['서퍼', '메타', '이단'];
+const SK = ['초보', '중급', '상급', '대가', '전설'], TIERS = ['평범', '중간'], NBT = ['평범', '중간', '상위'], ELEMS = ['불', '번개', '흙', '물', '얼음', '독'], TYPES = ['서퍼', '메타', '이단'];
 const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const workers = +(opt('--jobs') || defaultWorkers()), RULES = JSON.parse(opt('--rules') || '{}');
 const pos = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--')));
@@ -29,10 +30,10 @@ const duelRow = o => ({ score: r3((o.a + o.d / 2) / o.n), se: r3(Math.sqrt(((o.a
 function save(name, data) { fs.mkdirSync(OUT, { recursive: true }); fs.writeFileSync(path.join(OUT, name), JSON.stringify(Object.assign({ v: require('../src').VERSION, rules: RULES }, data), null, 1) + '\n'); }
 
 async function nb(N = 400) {
-  const t = []; for (const tier of TIERS) for (let i = 0; i < 4; i++) t.push({ key: tier + '|' + i, jobs: dj({ tier, skill: SK[i + 1] }, { tier, skill: SK[i] }, N) });
+  const t = []; for (const tier of NBT) for (let i = 0; i < 4; i++) t.push({ key: tier + '|' + i, jobs: dj({ tier, skill: SK[i + 1] }, { tier, skill: SK[i] }, N) });
   const X = await run(t, '이웃'), out = {};
-  for (const tier of TIERS) { const rows = [], all = merge([]); for (let i = 0; i < 4; i++) { const o = merge(X[tier + '|' + i]); rows.push(Object.assign({ hi: SK[i + 1], lo: SK[i] }, duelRow(o))); for (const k of ['n', 'bt', 't']) all[k] = (all[k] || 0) + o[k]; } out[tier] = { rows, time: r3(all.bt / all.n), len: r1(all.t / all.n) }; }
-  for (const tier of TIERS) console.log(tier, out[tier].rows.map(r => `${r.hi}/${r.lo} ${r.score}±${r.se} (${r.elo}) ${r.len}s 시간${(r.time * 100).toFixed(0)}%`).join(' | '), '· 평균', out[tier].len, 's, 시간 판정', (out[tier].time * 100).toFixed(1) + '%');
+  for (const tier of NBT) { const rows = [], all = merge([]); for (let i = 0; i < 4; i++) { const o = merge(X[tier + '|' + i]); rows.push(Object.assign({ hi: SK[i + 1], lo: SK[i] }, duelRow(o))); for (const k of ['n', 'bt', 't']) all[k] = (all[k] || 0) + o[k]; } out[tier] = { rows, time: r3(all.bt / all.n), len: r1(all.t / all.n) }; }
+  for (const tier of NBT) console.log(tier, out[tier].rows.map(r => `${r.hi}/${r.lo} ${r.score}±${r.se} (${r.elo}) ${r.len}s 시간${(r.time * 100).toFixed(0)}%`).join(' | '), '· 평균', out[tier].len, 's, 시간 판정', (out[tier].time * 100).toFixed(1) + '%');
   return out;
 }
 // 떼기: 한 기술을 끈 위 단계 대 아래 단계
@@ -69,7 +70,16 @@ async function crowd(N = 200) {
   console.log('둘러싸기', JSON.stringify(out.ring), '머스킷', JSON.stringify(out.musket));
   return out;
 }
-const CMD = { nb, ablate, elem, types, crowd };
+// 대마법사끼리: 좁은 곳(40×30)과 넓은 곳(200×150), 판단 단계별 (v2.0 비행)
+async function sky(N = 100) {
+  const t = []; for (const w of [40, 200]) for (const sk of SK) { const js = []; for (let f = 0; f < N; f += CHUNK) js.push({ mod: JOBS, fn: 'sky', args: [sk, w, f, Math.min(CHUNK, N - f), Object.assign({}, RULES)] }); t.push({ key: w + '|' + sk, jobs: js }); }
+  const X = await run(t, '하늘'), out = {};
+  for (const w of [40, 200]) { out[w] = SK.map(sk => { const o = merge(X[w + '|' + sk]), L = {}; for (const q in o.look) L[q] = r3(o.look[q] / o.n);
+    return { skill: sk, len: r1(o.t / o.n), time: r3(o.bt / o.n), falls: r3(o.falls / o.n), graze: o.gT ? r3(o.gH / o.gT) : null, grazePerGame: r1(o.gT / o.n), fly: r3(o.flyT / o.t / 2), look: L, n: o.n }; });
+    console.log(w + '×' + w * 0.75, out[w].map(x => `${x.skill} ${x.len}s 추락${x.falls} 스침${x.graze} 날기${x.fly} 흔들림${x.look['속도 흔들림']} 코너${x.look['코너 속도 근처 비율']}`).join(' | ')); }
+  return out;
+}
+const CMD = { nb, ablate, elem, types, crowd, sky };
 async function main() {
   const [cmd, n] = pos;
   if (cmd === 'all') { const t0 = Date.now(), r = { nb: await nb(), types: await types(), elem: await elem(), crowd: await crowd() }; save('v2.0-final.json', Object.assign({ date: new Date().toISOString().slice(0, 10), seconds: Math.round((Date.now() - t0) / 1000) }, r)); return; }
@@ -77,4 +87,4 @@ async function main() {
   const r = await CMD[cmd](n ? +n : undefined); save('v2tune-' + cmd + '.json', { date: new Date().toISOString().slice(0, 10), result: r });
 }
 if (require.main === module) main().catch(e => { console.error(e); process.exitCode = 1; });
-module.exports = { nb, ablate, elem, types, crowd, ABL };
+module.exports = { nb, ablate, elem, types, crowd, sky, ABL };

@@ -1,6 +1,6 @@
 'use strict';
 /* 숨 결투장 v2.0.0 — 대표 판을 샌드박스 장면으로 (대실험 3단계)
- *   node experiments/scenes.js 조합이름      → sandbox/scenes/v2-*.json 다섯 장 (그다음 node cli.js pack)
+ *   node experiments/scenes.js [조합이름, 기본 risk+saltRing+wave] → sandbox/scenes/v2-*.json 다섯 장 (그다음 node cli.js pack)
  * 대진마다 씨앗 1..15를 돌려, 많이 이긴 쪽이 이기고 길이가 가운데값에 가장 가까운 판을 고른다(대표 판).
  * 장면은 결정론이라 샌드박스에서 열면 같은 판이 그대로 다시 돈다 */
 const fs = require('fs'), path = require('path');
@@ -26,5 +26,5 @@ function main(name) {
   };
   for (const [f, sc] of Object.entries(out)) { fs.writeFileSync(path.join(DIR, f + '.json'), JSON.stringify(sc, null, 1) + '\n'); console.log(f, sc.seed, sc.note); }
 }
-if (require.main === module) main(process.argv[2] || 'base');
+if (require.main === module) main(process.argv[2] || 'risk+saltRing+wave');
 module.exports = { main };
