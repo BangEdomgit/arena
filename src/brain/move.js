@@ -23,9 +23,11 @@ function steer(W, m, K) {
   }
   K.vx = vx; K.vy = vy;
   lure.steer(W, m, K);   // 유도 (대가), 약한 척 물러서기 (전설)
-  const hs = W._bh.steer; for (let i = 0; i < hs.length; i++) hs[i](W, m, K);   // 소금 원: 선 가까이 오면 가운데로 (rules/saltRing)
   vx = K.vx; vy = K.vy;
   if (dodge && stance !== 'breakout') { const l = hyp(dodge.x, dodge.y) || 1; vx = dodge.x / l * 2; vy = dodge.y / l * 2; }
+  // 소금 원: 선 가까이 오면 가운데로 (rules/saltRing). 피하기 걸음보다 뒤: 지대를 피하다 선 밖으로 나가 마르지 않게 (v2.0, 1.x에선 피하기가 이겼다)
+  K.vx = vx; K.vy = vy; const hs = W._bh.steer; for (let i = 0; i < hs.length; i++) hs[i](W, m, K);
+  vx = K.vx; vy = K.vy;
   for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < t.r + 1.2) { const l = hyp(m.x - t.x, m.y - t.y) || 1; vx += (m.x - t.x) / l * 1.5; vy += (m.y - t.y) / l * 1.5; }
   K.vx = vx; K.vy = vy; const ha = W._bh.avoid; for (let i = 0; i < ha.length; i++) ha[i](W, m, K);   // 화약통 곁을 비킨다 (rules/barrels)
   vx = K.vx; vy = K.vy;

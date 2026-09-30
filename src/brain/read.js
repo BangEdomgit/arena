@@ -15,8 +15,8 @@ function aimAt(W, m, K) {
   K.mem = learn.mem(W, m, K);   // 판 중 학습 (전설): 과녁이 구르는 쪽과 방패를 드는 거리
   const Dm = deck(m, S), De = deck(e, S); K.Dm = Dm; K.De = De;
   position.outrange(W, m, K);   // 사거리 밖 (대가)
-  const d = hyp(e.x - m.x, e.y - m.y) || 0.01, ux = (e.x - m.x) / d, uy = (e.y - m.y) / d;
-  const los = !C.blocked(W, m.x, m.y, e.x, e.y);
+  const d2 = hyp(e.x - m.x, e.y - m.y) || 0.01, ux = (e.x - m.x) / d2, uy = (e.y - m.y) / d2, d = m.z || e.z ? C.hyp3(d2, 0, e.z - m.z) : d2;   // 거리는 높이를 넣어, 방향은 땅 위로 (v2.0)
+  const los = !C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z);
   if (m.thinkAt != null && !m.losWas) m.log.coverT += W.t - m.thinkAt; m.thinkAt = W.t; m.losWas = los;   // 엄폐 시간: 과녁과 사이가 막혀 있던 시간
   K.d = d; K.ux = ux; K.uy = uy; K.los = los;
   K.vt = (e.vx * -ux + e.vy * -uy);           // 적이 나에게 다가오는 속도 (m/s)
@@ -46,6 +46,8 @@ function readThreats(W, m, K) {
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; threat.by = q; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux, perp: 1 }; }
   }
   for (const a of W.areas) if ((a.src.side !== m.side && a.vis && T.readCast && !blindR || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
+  // 날아오는 돌(곡사)도 떨어질 자리를 보고 비킨다 (v2.0. 1.x에선 곡사를 읽지 않아 아무도 피하지 않았다)
+  if (T.readCast && !blindR && T.readLob) for (const l of W.lobs) if (l.src.side !== m.side && hyp(l.x - m.x, l.y - m.y) < l.r + 0.5) dodge = { x: m.x - l.x || 0.1, y: m.y - l.y || 0.1 };
   if (T.readCast) for (const z of W.zones) if (z.src.side !== m.side && (z.k === 'fire' || z.k === 'h2s' || z.k === 'nh3' || z.k === 'acid' || z.k === 'spore' || z.k === 'ice') && C.inZone(z, m.x, m.y)) dodge = { x: m.x - z.x || 0.1, y: m.y - z.y || 0.1 };
   // 옆으로 피할 땐 버릇대로 쪽을 고른다 (1.6.0). 버릇이 없으면 늘 왼쪽(1.5.0까지)
   if (dodge && dodge.perp && m.rollPref && (W.rng() < m.rollPref ? m.rollSide : -m.rollSide) < 0) { dodge.x = -dodge.x; dodge.y = -dodge.y; }
@@ -53,7 +55,7 @@ function readThreats(W, m, K) {
   if (dodge && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0 || m.st.mycel > 0 || m.st.cramp > 0) && W.rng() < Math.min(T.rollCap, 0.4 + dodgeK * 0.4 + (m.autoDodge ? 0.3 : 0))) {
     const l = hyp(dodge.x, dodge.y) || 1; let mine = false; for (const a of W.areas) if (a.src === m && hyp(m.x + dodge.x / l * 2 - a.x, m.y + dodge.y / l * 2 - a.y) < a.r + 0.5) { mine = true; break; }
     if (mine) { dodge.x = -dodge.x; dodge.y = -dodge.y; }   // 내 폭발 쪽으로는 구르지 않는다
-    const rv = m.st.lime > 0 ? 4 : 8; m.vx = dodge.x / l * rv; m.vy = dodge.y / l * rv; m.roll = 0.25; m.rollCd = m.autoDodge ? 0.6 : 0.8; m.stam -= 1.5;   // 석회가 붙으면 구르는 거리 절반
+    C.roll(W, m, dodge.x, dodge.y, m.st.lime > 0 ? 4 : 8, m.autoDodge ? 0.6 : 0.8);   // 석회가 붙으면 구르는 거리 절반
   }
   K.dodge = dodge; K.aimed = aimed; K.threat = threat; K.late = late;
 }

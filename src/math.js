@@ -47,7 +47,8 @@ function pow(x, y) {
   return exp(y * log(x));
 }
 const hyp = (x, y) => Math.sqrt(x * x + y * y);
+const hyp3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);   // 높이를 넣은 거리 (z = 0이면 hyp와 비트까지 같다)
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
-module.exports = { sin, cos, atan, atan2, exp, log, pow, hyp, clamp, mulberry32, horner };
+module.exports = { sin, cos, atan, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32, horner };

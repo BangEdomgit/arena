@@ -10,7 +10,7 @@ module.exports = {
     const { hurt, DT } = X;
     return {
       ceff(W, m, x) { return m.wave ? x * 1.1 : x; },
-      power(W, m, s, x) { return x * (m.wave ? (m.type === '서퍼' ? 2.0 : 1.3) : m.type === '이단' ? 0.8 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1); },
+      power(W, m, s, x) { return x * (m.wave ? (m.type === '서퍼' ? 2.0 : 1.3) : m.type === '이단' ? 0.9 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1); },
       // 머리가 넘칠 때: 굳지 않고 탄다. 너무 깊이(170) 가면 휩쓸린다. 이단은 100에서 멈춘다
       overload(W, m) {
         if (m.type !== '이단') {
@@ -21,7 +21,7 @@ module.exports = {
         } else if (m.fat > 100) m.fat = 100;
         return true;
       },
-      fatRecover(W, m, k) { return k * (m.type === '메타' ? 1.05 : 1); },   // 메타: 머리 회복 × 1.05
+      fatRecover(W, m, k) { return k * (m.type === '메타' ? 1.05 : m.type === '이단' ? 1.3 : 1); },   // 메타: 머리 회복 × 1.05. 이단 × 1.3 (v2.0: 파도의 도파민도 꺼짐도 없어 머리가 빨리 식는다)
       mageStep(W, m) {
         if (m.crash > 0) m.crash -= DT;
         if (m.wave) {

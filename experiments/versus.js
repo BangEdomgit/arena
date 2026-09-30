@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v1.13.0 — 대결 재기 (실험 도구, Node)
+/* 숨 결투장 v2.0.0 — 대결 재기 (실험 도구, Node)
  * 두 사람 규격(A.mage의 옵션 그대로: tier·skill·deck·type·gear·tac…)을 N판 싸우고, 이긴 수·시간·시간 판정과 기록(m.log) 칸의 합을 편마다 모은다.
  * 씨앗 1..N, 판마다 자리를 번갈아(node cli.js duel과 같다). 병렬 실행기로 나눠 돌려도 결과는 같다(from으로 이어 붙인다).
  *   node experiments/versus.js '{"tier":"중간","skill":"대가"}' '{"tier":"중간","skill":"상급"}' 400 '{"risk":true}' [기록 칸,…]

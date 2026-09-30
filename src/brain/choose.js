@@ -128,7 +128,7 @@ function pipeOf(W, m) {
 function valueSpell(W, m, K, bi) {
   const { T, e, Dm, d, slot } = K, bh = W._bh;   // 드물게 쓰는 값은 쓸 때 K에서 읽는다
   const n = Dm.nm[bi], s = Dm.sp[bi], mastN = Dm.mast[bi], isOff = Dm.off[bi];
-  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n))) return;
+  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n) || (isOff && !T.slotBOff))) return;   // slotBOff가 꺼지면 두 번째 칸엔 공격을 겹치지 않는다(묶기·준비 수는 된다, v2.0)
   if ((m.cd[n] || 0) > 0) return;
   const cost = s.cost * (1 - 0.25 * mastN) * (slot === 'B' ? 1.3 : 1); if (m.glu < cost) return;
   const Tw = s.cast * (1 - 0.35 * mastN);
@@ -161,7 +161,7 @@ function commit(W, m, K) {
     if (!best || v > best.v2) { best = c; best.v2 = v; }
   }
   if (!best || best.v2 <= 0.15) { m.relT = null; return; }
-  if (slot === 'B' && T.plan && best.v2 < 1) return;   // 기술이 있는 사람은 두 번째 칸을 값진 수에만 쓴다
+  if (slot === 'B' && T.plan && best.v2 < T.slotBMin) return;   // 기술이 있는 사람은 두 번째 칸을 값진 수에만 쓴다 (문턱은 판단 수준마다, v2.0)
   K.best = best;
   bait.start(W, m, K);                    // 방어 미끼 시작 (전설)
   simul.start(W, m, K);                   // 동시 착탄 시작 (대가)

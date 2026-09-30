@@ -1,0 +1,35 @@
+{
+ "v": "2.0.0",
+ "name": "평범 전설 대 대가 [risk+saltRing+wave]",
+ "seed": 12,
+ "rules": {
+  "risk": true,
+  "bodyBind": false,
+  "response": false,
+  "saltRing": true,
+  "wave": true
+ },
+ "sides": [
+  {
+   "name": "전설",
+   "mages": [
+    {
+     "tier": "평범",
+     "skill": "전설"
+    }
+   ]
+  },
+  {
+   "name": "대가",
+   "mages": [
+    {
+     "tier": "평범",
+     "skill": "대가"
+    }
+   ]
+  }
+ ],
+ "note": "대표 판: 씨앗 1~15 중 많이 이긴 쪽(편 0, 12/15)이 이기고 길이(109.2 s)가 가운데값(109.2 s)에 가장 가까운 판",
+ "width": 40,
+ "height": 30
+}
