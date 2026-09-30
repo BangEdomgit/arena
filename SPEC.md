@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v1.12.0
+# 숨 결투장 규격 v1.13.0
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -224,10 +224,34 @@ g       = clamp((f − 0.15) / 0.45, 0, 1)
 
 상태는 이 열한 가지가 칸으로 늘 있고(0이면 없음) 걸음마다 줄어든다. 등록한 규칙이 새 상태를 쓰면 그 규칙이 줄인다(17장).
 
+### 대응: 풀기·대비·순간 반응 (`rules.response`, 1.13.0, `src/rules/response.js`)
+
+기본 꺼짐. WORLD 5장의 잔기술(신경 가속, 통증 차단, 굳은 살)로 붙잡는 마법과 피할 수 없는 한 방에 답한다. 수는 `data/rules/response.json`.
+
+| 대응 | 언제 | 무엇 | 값 |
+|---|---|---|---|
+| **순간 반응** (몸) | 판단과 판단 사이에도, 걸음마다: 0.2 s 안에 닿을 보이는 탄(유도탄 빼고)이나 보이는 구름 안에 있고, 구를 수 있다(굳음·묶임·균사·경직 아님, 기력 1.5, 간격) | 확률 `reflex`로 옆(탄)·바깥(구름)으로 구른다. 한 번 본 뒤 0.25 s는 다시 보지 않는다 | 구르기와 같다(기력 1.5, 간격 0.8 s) |
+| **대비** (두뇌가 청함) | 읽은 큰 공격(큰 수, 또는 쏘는 사람의 가장 센 공격의 60% 이상, 추정 피해 12 이상)이 0.35 s 안에 닿는데 몸이 묶였다(묶임·균사·경직). 앞 방패가 없다 | 다음 걸음부터 0.6 s 몸을 굳힌다: 받는 피해 × 0.6 | 머리 + 5, 걸음 × 0.3 |
+| **풀기** (두뇌가 청함) | 몸 묶기(균사·경직·석회·족쇄)가 0.5 s 넘게 남았고 위협을 읽었거나 과녁이 모으고 있다 | 다음 걸음에 몸 묶기를 모두 푼다(족쇄로 걸린 묶임만 함께). 굳음과 보통 묶임은 못 푼다 | 머리 + 12, 당 4, 간격 5 s |
+
+| 판단 수준 | 순간 반응 확률 | 대비 | 풀기 |
+|---|---|---|---|
+| 초보 | 0 | 없음 | 없음 |
+| 중급 | 0.3 | 있음 | 없음 |
+| 상급 | 0.5 | 있음 | 있음 |
+| 대가 | 0.7 | 있음 | 있음 |
+| 전설 | 0.85 | 있음 | 있음 |
+| (판단 수준 없음) | 자동 구르기(등급)면 0.4, 아니면 0 | 자동 구르기면 있음 | 없음 |
+
+대비는 처음에 "구를 수 없으면"(구르기 간격이 남음)에도 굳혔는데, 굳힌 몸이 느려 걸어서 빠져나갈 수 있던 큰 구름 안에 남아 중간 대가가 상급에게 25%로 졌다(risk + 몸 묶기, 400판). 그래서 묶였을 때만 굳힌다(`reports/v1.13.0.md`).
+
 ## 10. 장비
 
 - **소금 밑창** (`gear.soles`, 기본 켜짐): 보이지 않는 발밑 공격의 피해와 굳힘·묶임 ×0.3
 - **소금 외투** (`gear.cloak`): 입은 사람 1.6 m 안에서 적이 만드는 마법의 장악 몫 ×0.3
+- **은실 옷** (`gear.silver`, `rules.silver`가 켜졌을 때만, 1.13.0, `src/rules/silver.js`): WORLD 3-4 "응답은 소금·은·독한 술·더 선명한 신호로 끊는다". 은실이 몸에 닿는 응답을 끊어 **붙잡는 효과**(굳음·묶임·균사·경직·석회·족쇄)의 길이 ×0.5(화상·냉기·눈멂·기침·젖음은 그대로). 값: 은은 전기를 잘 통해 전기 피해 ×1.1. 걸음 배수(`speed`)는 기본 ×1. 수는 `data/rules/silver.json`(`hold`, `elec`, `speed`). 두뇌는 아직 상대의 은실 옷을 셈에 넣지 않는다. 재 보니 입은 쪽이 이기지 못한다: 붙잡기만 반으로(값 없이) 해도 대가끼리 47~50%, 전기 ×1.1이면 39~49%(`reports/v1.13.0.md`)
+
+장비의 이름과 설명은 `data/gear.json`, 기본은 소금 밑창.
 
 ## 11. 지렛대: 화약통 (`rules.barrels`)
 
@@ -474,7 +498,7 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 | `walls` | 놓인 벽 | 없음 |
 | `layout` | 자리를 비운 사람을 놓는 법: `lines`(두 편 양쪽 줄), `ring`(첫 편의 첫 사람을 가운데, 나머지가 둘러쌈). 편이 셋 이상이면 `ring`이 아닌 한 둘레에 고루 | `lines` |
 | `sides[].brain` | 그 편의 두뇌. 사람마다 `brain`을 따로 줄 수도 있다 | `기본` |
-| `sides[].mages[]` | `tier`, `deck`(또는 `book` 마법 목록), `x`, `y`, `name`, `type`(서퍼·메타·이단), 덮어쓸 값 `C`·`circles`·`noise`·`dec`·`autoDodge`·`hp`, `gear`{soles·cloak}, `tac`{prefR·aggr·trapBias·zoneBias·dodge·stance·focusLow·crowd·rest} | 등급의 값 |
+| `sides[].mages[]` | `tier`, `deck`(또는 `book` 마법 목록), `x`, `y`, `name`, `type`(서퍼·메타·이단), 덮어쓸 값 `C`·`circles`·`noise`·`dec`·`autoDodge`·`hp`, `gear`{soles·cloak·silver}, `tac`{prefR·aggr·trapBias·zoneBias·dodge·stance·focusLow·crowd·rest} | 등급의 값 |
 | `spells`, `decks` | 이 장면에서만 기본을 덮는 마법(8장 필드)·덱 | 없음 |
 
 - 사람 자리(`x`, `y`)를 모두 비우고 바위를 비우면 `A.battle`과 **같은 판**이 된다. 예: `archmage-50`은 `node cli.js ring 대마법사 평범 50 기본기`의 씨앗 1과 같다
@@ -500,7 +524,7 @@ Arena.register.unrule('weather')   // 떼기
 | 영역 | 할 수 있는 것 |
 |---|---|
 | 싸움터 | 재생·멈춤·한 걸음·처음으로, 배속(0.25~8배, 최대), 씨앗. 도구: 고르기·옮기기(끌기, Delete로 지우기), 사람·바위·화약통·벽 놓기, 지우기 |
-| 편과 사람 | 편 추가·지우기(2편 이상), 이름, 두뇌. 사람 추가·복제·지우기. 등급, 덱, 부류, 선명도·서클·겨냥 흔들림·판단 간격, 자동 구르기, 소금 밑창·외투, 두뇌 성향(선호 거리, 공격 비중, 함정 비중, 구르기, 입장 판단) |
+| 편과 사람 | 편 추가·지우기(2편 이상), 이름, 두뇌. 사람 추가·복제·지우기. 등급, 덱, 부류, 선명도·서클·겨냥 흔들림·판단 간격, 자동 구르기, 소금 밑창·외투·은실 옷, 두뇌 성향(선호 거리, 공격 비중, 함정 비중, 구르기, 입장 판단) |
 | 규칙 | `DEFAULT_RULES` 전부(등록한 규칙 포함)를 스위치와 슬라이더로 |
 | 장면 | 이름, 씨앗, 넓이, 시간 제한. "자리 적어 넣기": 씨앗에 맡긴 자리를 장면에 적는다 |
 | 기록 | 판 결과, 사람별 체력·준 피해·맞힘/시전·헛시전·폭주·입장 |
@@ -583,15 +607,15 @@ node cli.js suite --jobs 1     한 줄로. 기본은 코어 수만큼 일꾼(exp
 | `src/data.js` | `data/`를 읽는다. 마법의 차례는 `data/spells/order.json` |
 | `src/core.js` | 바탕: 세계, 사람, 선명도·위력·장악권, 피해, 방출, 걸음, 녹화. 훅을 부르는 자리를 가진다 |
 | `src/rules/index.js` | 규칙 목록과 차례, 훅 이름 (`ENGINE_HOOKS`, `BRAIN_HOOKS`) |
-| `src/rules/*.js` | 규칙 모듈 아홉: `gear`, `terrain`, `saltRing`, `wave`, `control`(몸 묶기), `risk`, `taunt`, `multiSlot`(서클), `barrels` |
+| `src/rules/*.js` | 규칙 모듈: `gear`, `terrain`, `saltRing`, `wave`, `control`(몸 묶기), `risk`, `taunt`, `multiSlot`(서클), `barrels`, `response`(대응, 1.13.0), `silver`(은실 옷, 1.13.0) |
 | `src/brain/index.js` | `think(W, m)`: 읽기 → 입장 → 움직임 → 고르기 |
 | `src/brain/read.js`, `stance.js`, `move.js`, `choose.js` | 판단의 네 단계 (13장) |
 | `src/brain/techniques/*.js` | 기술 하나에 한 파일: `combo`, `cancel`, `feint`(속임수), `simul`(동시 착탄), `tempo`(멈춤·박자), `bait`(미끼), `learn`(학습), `counter`(덱 읽기), `cover`(엄폐·걷어내기), `position`(사거리 밖·자리), `lure`(유도·물러서기), `herd`(몰이), `crowd`, `dodgeAim`(피할 자리 겨냥), `grab`(붙잡기) |
 | `src/brain/skills.js` | 판단 수준 다섯 단계가 무엇을 켜는가 (`data/skills.json`) |
 | `src/brain/util.js`, `hooks.js` | 두뇌의 공용 도구(규칙 모듈의 `brain(B)`가 받는 `B`), 두뇌 훅 모으기 |
-| `data/` | `spells/*.json`(원소마다), `books.json`, `decks.json`, `tiers.json`, `skills.json`, `gear.json` |
+| `data/` | `spells/*.json`(원소마다), `books.json`, `decks.json`, `tiers.json`, `skills.json`, `gear.json`, `rules/*.json`(규칙의 수) |
 | `metrics/look.js` | 행동 지표 (13장 싸우는 모습) |
-| `experiments/` | `par.js`(병렬 실행기), `hash.js`(결과 지문) |
+| `experiments/` | `par.js`(병렬 실행기), `hash.js`(결과 지문), `versus.js`(대결 N판의 점수·시간·기록 합, 1.13.0) |
 | `reports/` | 버전마다 한 장의 측정 보고. `REPORT.md`는 요약과 목차 |
 
 장악권·피로·아군 사격·`hpScale`·`powerK` 같은 바탕 스위치는 모든 계산에 섞여 있어 `core.js`에 남는다(스위치는 그대로).
@@ -630,15 +654,16 @@ module.exports = {
 | `share` | 장악 몫 `f`의 끝 | `(W, m, x, y, f) → f` | gear(망토) |
 | `release` | 방출, 시전 기록 뒤·피로 앞 | `(W, m, c)` | risk |
 | `overload` | 피로를 더한 뒤 | `(W, m) → true면 넘침을 맡는다`(기본 폭주를 건너뜀) | wave |
-| `hurtMod` | 피해, 몸 효과 저항 뒤·젖음 앞 | `(W, m, v, kind) → v` | terrain |
+| `hurtMod` | 피해, 몸 효과 저항 뒤·젖음 앞 | `(W, m, v, kind) → v` | terrain, response, silver |
 | `hurt` | 피해, 체력을 깎은 뒤 | `(W, m, v, src, name, kind)` | control, risk |
+| `effHold` | 상태 걸기 첫머리: 붙잡는 효과(굳음·묶임, 그리고 `eff` 훅에 넘기는 몫)의 몫 (1.13.0) | `(W, m, o, g) → g` | silver |
 | `eff` | 상태 걸기, 굳음이 시전을 끊기 앞 | `(W, m, o, g)` | control |
 | `rain`, `smother`, `ring` | 비가 적실 때, 흙 이불, 불고리 | `(W, m)` | control |
 | `fatRecover` | 머리 회복(기본 초당 4) | `(W, m, k) → k` | wave |
-| `mageStep` | 사람의 걸음, 회복 뒤·옷의 불 앞 | `(W, m)` | saltRing, wave |
+| `mageStep` | 사람의 걸음, 회복 뒤·옷의 불 앞 | `(W, m)` | saltRing, wave, response |
 | `mageZones` | 옷의 불 뒤·판단 앞 | `(W, m)` | terrain |
-| `speed` | 걸음 속도의 첫머리(기본 5 m/s) | `(W, m, sp) → sp` | wave, risk |
-| `speedLate` | 몸 효과·냉기 뒤, 시전 중 걷기 앞 | `(W, m, sp) → sp` | control |
+| `speed` | 걸음 속도의 첫머리(기본 5 m/s) | `(W, m, sp) → sp` | wave, risk, silver |
+| `speedLate` | 몸 효과·냉기 뒤, 시전 중 걷기 앞 | `(W, m, sp) → sp` | control, response |
 | `accel` | 걸음 가속(기본 9) | `(W, m, acc) → acc` | terrain |
 | `chan` | 원뿔을 뿜는 걸음, 사람을 친 뒤 | `(W, m, ch)` | barrels |
 | `projSub` | 투사체의 잘게 나눈 걸음, 벽 뒤·사람 앞 | `(W, p)` | barrels |
@@ -658,7 +683,7 @@ module.exports = {
 | `avoid` | 알아챈 함정 비키기 뒤 | `(W, m, K)` | barrels |
 | `empty` | 고르기 첫머리 | `(W, m, K) → true면 빈손` | risk |
 | `circles` | 쓰는 서클 수(기본 1) | `(W, q, c) → c` | multiSlot |
-| `react` | 자동 진 | `(W, m, K)` | multiSlot |
+| `react` | 자동 진, 대비·풀기 청하기 | `(W, m, K)` | multiSlot, response |
 | `cancel` | 캔슬 첫머리 | `(W, m, K)` | risk |
 | `rest` | 휴식 | `(W, m, K, restNow) → restNow` | wave |
 | `prep` | 마법 고르기 앞. `K.bigs`·`holds`·`pinBy`… | `(W, m, K)` | control |
@@ -684,6 +709,10 @@ module.exports = {
 | `taunt` 도발 (8장) | `taunt` | | | `taunt` |
 | `multiSlot` 서클 (6장) | `circles` | | circles, react | |
 | `barrels` 화약통 (11장) | `barrels`, 또는 장면이 화약통을 놓으면 | place, ignite, chan, projSub | avoid, valueMid | |
+| `response` 대응 (9장, 1.13.0) | `response` | mageStep, hurtMod, speedLate | react | |
+| `silver` 은실 옷 (10장, 1.13.0) | `silver` | effHold, hurtMod, speed | | |
+
+`response`와 `silver`는 이 틀로 처음 넣은 규칙이다(1.13.0). 핵심에 더한 것은 훅 자리 하나(`effHold`)와 사람의 칸 다섯(`reflexT`·`braceT`·`unbindCd`·`unbindReq`·`braceReq`)뿐이고, 둘 다 끄면 지문 넷이 1.12.0과 같다.
 
 ### 새 규칙 넣기
 

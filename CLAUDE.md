@@ -20,6 +20,7 @@ node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌�
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # src/·metrics/·data/·장면을 고쳤으면 sandbox/arena.js 다시 싸기 (안 하면 시험이 알려 준다)
 node experiments/hash.js          # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v1.12.0.md)
+node experiments/versus.js '{"tier":"중간","skill":"대가"}' '{"tier":"중간","skill":"상급"}' 1000 '{"risk":true}' backfire   # 대결 N판 (병렬)
 node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
 # 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (reports/v1.3.1.md, 13절)
@@ -32,14 +33,14 @@ node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새
 | 자리 | 하는 일 |
 |---|---|
 | `src/core.js` | 규칙의 바탕: 세계, 물리, 마법 방출(`release`), 장악권(`share`·`gOf`), 피로, 판 돌리기(`run`), 녹화. 정해진 자리에서 켜진 규칙의 훅(`W.H`)을 부른다 |
-| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js` |
+| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels, response, silver). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js`. 규칙의 수는 `data/rules/*.json` |
 | `src/math.js`, `src/data.js` | 결정론 수학, `data/` 읽기 |
 | `src/brain/` | 판단: `index.js`의 `think(W, m)` → `read`·`stance`·`move`·`choose`. 기술은 `techniques/`에 하나씩, 판단 수준은 `skills.js`. 새 두뇌도 `think` 모양으로 내보내면 바꿔 끼울 수 있다 |
 | `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `SKILLS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn`, `look` |
 | `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule / unrule` |
 | `data/` | JSON: `spells/원소.json`(마법, 이름이 키, `t`가 틀, 차례는 `spells/order.json`), `books.json`(원소별 기본책), `decks.json`, `tiers.json`, `skills.json`, `gear.json` |
 | `metrics/look.js` | 행동 지표(싸우는 모습) |
-| `experiments/` | `par.js`(병렬 실행기, Node 전용, worker_threads. 일감 `{ mod, fn, args }`, 결과는 일꾼 수와 상관없이 같다), `hash.js`(결과 지문) |
+| `experiments/` | `par.js`(병렬 실행기, Node 전용, worker_threads. 일감 `{ mod, fn, args }`, 결과는 일꾼 수와 상관없이 같다), `hash.js`(결과 지문), `versus.js`(대결 N판: 점수·표준오차·시간·기록 칸의 합, 장비까지) |
 | `reports/` | 버전마다 한 장의 측정 보고. `REPORT.md`는 요약과 목차 |
 | `cli.js` | 명령줄 |
 | `test/test.js` | 규격 시험. `ok('설명', () => { ... assert ... })` 모양으로 더한다 |
