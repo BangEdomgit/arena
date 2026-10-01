@@ -254,6 +254,7 @@ module.exports = {
         let risk = m.fat > S.low;
         if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast; if (x && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
         if (c.cool) risk = true;
+        if (m.tac.sharp && W.t - K.wallT < 2 && W.t >= K.wallT - 1) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)
         if (c.cool && m.flyWant) {
           let bad = !B.groundSafe(W, m);
           for (const a of W.areas) if (a.src.side !== m.side && !a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + S.danger) { bad = true; break; }

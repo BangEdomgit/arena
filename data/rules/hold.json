@@ -1,0 +1,1 @@
+{ "desc": "붙잡아 둔 설계 (rules/hold, SPEC 32장): heat 붙잡은 동안 초당 머리 피로, maxT 다 지은 뒤 붙잡는 가장 긴 시간 (s), go 풀 맞을 가망", "heat": 1, "maxT": 3, "go": 0.25 }

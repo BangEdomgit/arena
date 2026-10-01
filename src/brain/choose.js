@@ -142,7 +142,7 @@ function pipeOf(W, m) {
 function valueSpell(W, m, K, bi) {
   const { T, e, Dm, d, slot } = K, bh = W._bh;   // 드물게 쓰는 값은 쓸 때 K에서 읽는다
   const n = Dm.nm[bi], s = Dm.sp[bi], mastN = Dm.mast[bi], isOff = Dm.off[bi];
-  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n) || (isOff && !T.slotBOff && !K.pressB))) return;   // slotBOff가 꺼지면 두 번째 칸엔 공격을 겹치지 않는다(묶기·준비 수는 된다, v2.0)
+  if (slot === 'B' && (s.t === 'cone' || s.t === 'move' || (m.cast && m.cast.s.n === n) || (isOff && !T.slotBOff && !K.pressB && !(T.hold && m.C >= 5 && W.rules.hold)))) return;   // slotBOff가 꺼지면 두 번째 칸엔 공격을 겹치지 않는다(묶기·준비 수는 된다, v2.0)
   if ((m.cd[n] || 0) > 0) return;
   const cost = s.cost * (1 - 0.25 * mastN) * (slot === 'B' ? 1.3 : 1); if (m.glu < cost) return;
   const Tw = s.cast * (1 - 0.35 * mastN);
@@ -195,6 +195,7 @@ function commit(W, m, K) {
   simul.fired(W, m, K, s, Tc);
   herd.commit(W, m, K, s);
   combo.plan(W, m, K, s, Tc);
+  if (T.sharp && (s.t === 'wall' || s.t === 'build')) K.wallT = W.t + Tc;   // 날카롭게 (v2.8): 세운 벽 뒤에 머문다 (sharp.behind)
   logDec(m, s, slot, { aimed, combo: eDown || (m.last && W.t - m.lastT < 1.5 && isSetup(K.S[m.last])), path: s.t === 'trap' && vt > 1.2 && d < 10, barrel: best.barrel });
   m.last = s.n; m.lastT = W.t;
 }

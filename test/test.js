@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.7.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.8.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -398,7 +398,7 @@ ok('v2.2 고수 싸움 (SPEC 26장): 리듬(틈이 있으면 들어가고 넘치
   // 모습 지표
   const r = A.duel(A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 운영' }), A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 운영' }), { seed: 2 }), L = A.look(r.ms[0], r.t);
   for (const k of ['거리 흔들림', '칸 A 공격', '헛손질 비율', '장악 경계 틈 (m)', '장악 경계 이동 (m/s)', '세운 지형', '없앤 지형']) assert.ok(k in L, k);
-  assert.ok(Object.keys(r.ms[0].mlog.phase).length >= 2, '단계가 바뀐다');
+  assert.ok(r.ms.some(q => Object.keys(q.mlog.phase).length >= 2), '단계가 바뀐다');   // v2.8: 이 판의 전설은 떠보기만 한다(붙잡아 둔 수로 친다)
 });
 ok('v2.0 비행 (SPEC 24장): 대마법사만 계속 난다, 떠 있으면 발밑 공격·함정에 닿지 않고 총은 맞는다, 굳으면 떨어진다(높이 × 4), 넓은 결투장', () => {
   const FL = A.RULES.find(r => r.name === 'flight').api;
@@ -550,16 +550,33 @@ ok('v2.7 마법의 부딪힘 감쇠·버티기·몰아치기 (SPEC 31장): 돌 �
   // 상위의 돌 비 한 방(14 × 5^2.5 = 783): 굳은 살만이면 771, 감쇠가 있으면 ÷ 10^2.3. 총(마법이 아님)·벽 밀기는 굳은 살만
   assert.ok(Math.abs(hit({ bluntK: 0 }, '돌 비') - 771) < 1e-6); assert.ok(Math.abs(hit({}, '돌 비') - 771 / Math.pow(10, 2.3)) < 1e-6, '감쇠');
   assert.ok(Math.abs(hit({}, '벽 밀기') - 771) < 1e-6 && Math.abs(hit({}, '머스킷') - 771) < 1e-6, '총·벽 밀기는 그대로'); assert.strictEqual(hit({}, '돌 비', '평범'), 783, '평범(선명도 1)은 그대로');
-  // 버티기: 평범·중간 × 1, 대마법사 × (10/2.5)^1.2 (머리·당 모두)
+  // 버티기: 평범·중간 × 1, 대마법사 × (10/2.5)^endureK (머리·당 모두)
   const rec = (tier, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false }, rules) }); const m = A.addMage(W, A.mage({ tier }), 0, 10, 10); A.addMage(W, A.mage({ tier: '평범' }), 1, 300, 10); m.fat = 50; m.glu = 10; m.thinkT = 1e9; W.ms[1].thinkT = 1e9; A.stepWorld(W); return [50 - m.fat, m.glu - 10]; };
   for (const t of ['평범', '중간']) assert.deepStrictEqual(rec(t, {}), rec(t, { endureK: 0 }), t + '는 그대로');
-  const [f1, g1] = rec('대마법사', {}), [f0, g0] = rec('대마법사', { endureK: 0 }), k = Math.pow(4, 1.2); assert.ok(Math.abs(f1 / f0 - k) < 1e-6 && Math.abs(g1 / g0 - k) < 1e-6, '대마법사 × ' + k);
+  const [f1, g1] = rec('대마법사', {}), [f0, g0] = rec('대마법사', { endureK: 0 }), k = Math.pow(4, A.DEFAULT_RULES.endureK); assert.ok(Math.abs(f1 / f0 - k) < 1e-6 && Math.abs(g1 / g0 - k) < 1e-6, '대마법사 × ' + k);
   // 대마법사 둘 대 상위 여섯(상위는 돌 비가 든 덱): 대마법사가 이긴다
   const sc = SCENES['v2-archmage-2v6']; for (let s2 = 1; s2 <= 4; s2++) assert.strictEqual(A.runScene(Object.assign({}, sc, { seed: s2 })).winner, 0, '씨앗 ' + s2);
   // 박자 흔들기: 날카롭게(대가부터)는 한 번의 확률이 판단 간격에 비례한다(0.13 s에 20%), 몰아칠 때(과녁이 굳음)는 쉬지 않는다
   const tempo = require('../src/brain/techniques/tempo'), W = A.createWorld({ seed: 1 }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 10, 10), e = A.addMage(W, A.mage({ tier: '대마법사' }), 1, 30, 10);
   let n = 0; for (let i = 0; i < 4000; i++) { m.hold = 0; if (tempo.hold(W, m, { T: m.tac, slot: 'A', aimed: false, e })) n++; } assert.ok(Math.abs(n / 4000 - 0.2 * m.dec / 0.13) < 0.02, '초당 ' + n / 4000);
   e.st.stun = 1; n = 0; for (let i = 0; i < 400; i++) { m.hold = 0; if (tempo.hold(W, m, { T: m.tac, slot: 'A', aimed: false, e })) n++; } assert.strictEqual(n, 0, '굳은 과녁엔 쉬지 않는다');
+});
+ok('v2.8 붙잡아 둔 설계·명중 가망·방패의 때 (SPEC 32장): 다 지은 두 번째 칸을 붙잡았다가 틈에 풀고, 구를 수 있는 과녁엔 가망이 낮고, 구름엔 방패를 들지 않는다', () => {
+  const sharp = require('../src/brain/techniques/sharp'), U = require('../src/brain/util');
+  const mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false, saltRing: false }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }), 0, 10, 10), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }), 1, 25, 10); m.thinkT = e.thinkT = 1e9; return [W, m, e]; };
+  // 엔진: 붙잡은 두 번째 칸은 다 지어도 풀리지 않고 머리가 든다. go면 풀린다. 규칙을 끄면 바로 풀린다
+  let [W, m, e] = mk({}); const s = W.spells['짧은 실'], c = { s, tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.2, B: true, cost: 3, hold: true, go: false, holdUntil: 3 };
+  m.castB = c; m.fat = 10; for (let i = 0; i < 30; i++) A.stepWorld(W); assert.ok(m.castB === c && m.fat > 10 - 30 * A.DT * 4 * 3.1, '붙잡는다'); c.go = true; A.stepWorld(W); assert.ok(m.castB !== c && m.log.casts['짧은 실'] === 1, 'go면 푼다');
+  [W, m, e] = mk({ hold: false }); m.castB = Object.assign({}, c, { go: false, t: 0 }); for (let i = 0; i < 10; i++) A.stepWorld(W); assert.strictEqual(m.log.casts['짧은 실'], 1, '끄면 바로 푼다');
+  // 명중 가망: 구를 수 있는 과녁 < 굳은 과녁, 판 중에 빗나간 수가 쌓이면 내려간다
+  [W, m, e] = mk({}); const K = { e, d: 15 }, o = { n: '짧은 실', he: 0.35 }; e.rollCd = 0; e.stam = 6; e.fly = 0; const free = sharp.chance(W, m, K, o, 0.3); e.st.stun = 1; const pin = sharp.chance(W, m, K, o, 0.3); assert.ok(pin > 3 * free, pin + ' > ' + free);
+  e.st.stun = 0; m.log.casts['짧은 실'] = 10; m.log.hits['짧은 실'] = 0; assert.ok(sharp.chance(W, m, K, o, 0.3) < free / 3, '빗나감이 쌓이면');
+  // 방패의 때: 0.4 s 안에 닿는 실에만. 구름·붙잡아 둔 수에는 아니다
+  const th = (st, T, t, hold) => sharp.threatSoon(W, m, { threat: { s: W.spells[st], T, t, hold, go: false }, d: 15 });
+  assert.ok(th('짧은 실', 0.25, 0.1) && !th('짧은 실', 1, 0.1) && !th('번개 그물', 0.3, 0.29) && !th('짧은 실', 0.2, 0.3, true));
+  // 판 하나: 붙잡았다가 푼 수가 있고 같은 씨앗이면 같다
+  const sc = SCENES['v2-tactics-legend'], g = () => { const w = A.sceneWorld(Object.assign({}, sc, { seed: 2 })); while (!A.over(w)) A.stepWorld(w); return w; }, x = g(), y = g();
+  assert.ok(x.t === y.t && x.ms[0].mlog.held + x.ms[1].mlog.held > 0 && x.ms[0].mlog.held === y.ms[0].mlog.held, '붙잡아 푼 수 ' + x.ms[0].mlog.held);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

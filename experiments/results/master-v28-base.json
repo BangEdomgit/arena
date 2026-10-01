@@ -1,0 +1,1086 @@
+{
+ "v": "2.8.0",
+ "date": "2026-10-01",
+ "deck": "대마법사 운영",
+ "tac": null,
+ "N": 400,
+ "result": {
+  "전설-대가": {
+   "games": 400,
+   "score": 0.569,
+   "len": 54.2,
+   "dist": 16.8,
+   "distSD": 6.5,
+   "distJitter": 0.388,
+   "castsPerS": 0.815,
+   "slotBPerGame": 17.2,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.87,
+    "out": 0.067,
+    "in": 0.063
+   },
+   "roles": {
+    "A": {
+     "n": 36.2,
+     "공격": 0.64,
+     "방어": 0.165,
+     "강화": 0.01,
+     "지형": 0.185
+    },
+    "B": {
+     "n": 17.2,
+     "공격": 0.96,
+     "지형": 0.018,
+     "방어": 0.021,
+     "강화": 0.001
+    },
+    "auto": {
+     "n": 3.6,
+     "방어": 0.997,
+     "지형": 0.003
+    }
+   },
+   "gap": 8.4,
+   "boundaryMove": 9.006,
+   "built": 7,
+   "razed": 0.3,
+   "offMiss": 0.642,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.7
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 2
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    },
+    "B": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 118.5,
+    "B": 104
+   },
+   "move": {
+    "A": {
+     "turnsPerS": 0.05,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    },
+    "B": {
+     "turnsPerS": 0.04,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    }
+   },
+   "ang": {
+    "A": {
+     "orbitDegPerS": 33.5,
+     "tangential": 0.744,
+     "oneSide": 0.028,
+     "foeResponding": 0.144,
+     "strips": 0.51,
+     "cutOff": 0.113
+    },
+    "B": {
+     "orbitDegPerS": 35.8,
+     "tangential": 0.758,
+     "oneSide": 0.028,
+     "foeResponding": 0.146,
+     "strips": 0.63,
+     "cutOff": 0.103
+    }
+   },
+   "ops": {
+    "A": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    },
+    "B": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    }
+   },
+   "bp": {
+    "A": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "B": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "names": {}
+   },
+   "spells": [
+    {
+     "spell": "번쩍임",
+     "share": 0.163,
+     "hit": 0.56,
+     "miss": 0.44
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.155,
+     "hit": 0.292,
+     "miss": 0.708
+    },
+    {
+     "spell": "흙먼지",
+     "share": 0.133,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.117,
+     "hit": 0.252,
+     "miss": 0.748
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.09,
+     "hit": 0.551,
+     "miss": 0.449
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.082,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "체인",
+     "share": 0.057,
+     "hit": 0.335,
+     "miss": 0.665
+    },
+    {
+     "spell": "산 안개",
+     "share": 0.046,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "불벽",
+     "share": 0.045,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.042,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "전설-전설": {
+   "games": 400,
+   "score": 0.477,
+   "len": 54.9,
+   "dist": 16.6,
+   "distSD": 6.5,
+   "distJitter": 0.393,
+   "castsPerS": 0.857,
+   "slotBPerGame": 17.9,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.864,
+    "out": 0.067,
+    "in": 0.069
+   },
+   "roles": {
+    "A": {
+     "n": 38.6,
+     "공격": 0.628,
+     "방어": 0.166,
+     "지형": 0.193,
+     "강화": 0.013
+    },
+    "B": {
+     "n": 17.9,
+     "공격": 0.955,
+     "지형": 0.02,
+     "방어": 0.024,
+     "강화": 0.001
+    },
+    "auto": {
+     "n": 4.4,
+     "방어": 0.995,
+     "지형": 0.005
+    }
+   },
+   "gap": 8.3,
+   "boundaryMove": 8.87,
+   "built": 7.8,
+   "razed": 0.3,
+   "offMiss": 0.655,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.9
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.9
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    },
+    "B": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 113.8,
+    "B": 115.3
+   },
+   "move": {
+    "A": {
+     "turnsPerS": 0.05,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    },
+    "B": {
+     "turnsPerS": 0.05,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    }
+   },
+   "ang": {
+    "A": {
+     "orbitDegPerS": 34.5,
+     "tangential": 0.746,
+     "oneSide": 0.029,
+     "foeResponding": 0.156,
+     "strips": 0.6,
+     "cutOff": 0.113
+    },
+    "B": {
+     "orbitDegPerS": 34.3,
+     "tangential": 0.748,
+     "oneSide": 0.029,
+     "foeResponding": 0.155,
+     "strips": 0.6,
+     "cutOff": 0.109
+    }
+   },
+   "ops": {
+    "A": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    },
+    "B": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    }
+   },
+   "bp": {
+    "A": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "B": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "names": {}
+   },
+   "spells": [
+    {
+     "spell": "번쩍임",
+     "share": 0.155,
+     "hit": 0.526,
+     "miss": 0.474
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.148,
+     "hit": 0.299,
+     "miss": 0.701
+    },
+    {
+     "spell": "흙먼지",
+     "share": 0.135,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.113,
+     "hit": 0.238,
+     "miss": 0.762
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.095,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.089,
+     "hit": 0.57,
+     "miss": 0.43
+    },
+    {
+     "spell": "체인",
+     "share": 0.051,
+     "hit": 0.303,
+     "miss": 0.697
+    },
+    {
+     "spell": "산 안개",
+     "share": 0.048,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "불벽",
+     "share": 0.047,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.044,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "대가-상급": {
+   "games": 400,
+   "score": 0.693,
+   "len": 44.7,
+   "dist": 17.4,
+   "distSD": 7,
+   "distJitter": 0.403,
+   "castsPerS": 1.155,
+   "slotBPerGame": 6.4,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.828,
+    "out": 0.077,
+    "in": 0.095
+   },
+   "roles": {
+    "A": {
+     "n": 48,
+     "공격": 0.842,
+     "지형": 0.067,
+     "방어": 0.086,
+     "강화": 0.005
+    },
+    "B": {
+     "n": 6.4,
+     "공격": 0.97,
+     "지형": 0.02,
+     "방어": 0.008,
+     "강화": 0.001
+    },
+    "auto": {
+     "n": 4.4,
+     "방어": 0.99,
+     "지형": 0.01
+    }
+   },
+   "gap": 8.7,
+   "boundaryMove": 10.311,
+   "built": 3.4,
+   "razed": 0,
+   "offMiss": 0.746,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 2.2
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.4
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    },
+    "B": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 128,
+    "B": 94.9
+   },
+   "move": {
+    "A": {
+     "turnsPerS": 0.05,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    },
+    "B": {
+     "turnsPerS": 0.03,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    }
+   },
+   "ang": {
+    "A": {
+     "orbitDegPerS": 30.7,
+     "tangential": 0.724,
+     "oneSide": 0.04,
+     "foeResponding": 0.118,
+     "strips": 0.35,
+     "cutOff": 0.13
+    },
+    "B": {
+     "orbitDegPerS": 38.4,
+     "tangential": 0.757,
+     "oneSide": 0.04,
+     "foeResponding": 0.238,
+     "strips": 0.36,
+     "cutOff": 0.1
+    }
+   },
+   "ops": {
+    "A": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    },
+    "B": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    }
+   },
+   "bp": {
+    "A": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "B": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "names": {}
+   },
+   "spells": [
+    {
+     "spell": "번개 그물",
+     "share": 0.15,
+     "hit": 0.161,
+     "miss": 0.839
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.141,
+     "hit": 0.201,
+     "miss": 0.799
+    },
+    {
+     "spell": "체인",
+     "share": 0.12,
+     "hit": 0.102,
+     "miss": 0.898
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.111,
+     "hit": 0.78,
+     "miss": 0.22
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.105,
+     "hit": 0.052,
+     "miss": 0.948
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.086,
+     "hit": 0.131,
+     "miss": 0.869
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.084,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "흙먼지",
+     "share": 0.076,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.06,
+     "hit": 0.518,
+     "miss": 0.482
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.033,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "상급-중급": {
+   "games": 400,
+   "score": 0.756,
+   "len": 28.2,
+   "dist": 17.9,
+   "distSD": 8.8,
+   "distJitter": 0.496,
+   "castsPerS": 1.694,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.715,
+    "out": 0.105,
+    "in": 0.18
+   },
+   "roles": {
+    "A": {
+     "n": 47,
+     "공격": 0.86,
+     "지형": 0.057,
+     "방어": 0.025,
+     "강화": 0.058
+    },
+    "auto": {
+     "n": 4.8,
+     "방어": 0.9,
+     "지형": 0.1
+    }
+   },
+   "gap": 8.9,
+   "boundaryMove": 10.256,
+   "built": 3.2,
+   "razed": 0,
+   "offMiss": 0.792,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.4
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 2
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    },
+    "B": {
+     "walls": 0,
+     "traps": 0,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 137.9,
+    "B": 89.5
+   },
+   "move": {
+    "A": {
+     "turnsPerS": 0.03,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    },
+    "B": {
+     "turnsPerS": 0.03,
+     "reactMs": null,
+     "noReact": null,
+     "missAfterJuke": null,
+     "missNoJuke": null,
+     "jukeMissed": 0,
+     "raw": {
+      "rS": 0,
+      "rN": 0,
+      "rMiss": 0,
+      "juke": 0,
+      "stop": 0,
+      "flip": 0,
+      "dodge": 0,
+      "shotJ": 0,
+      "missJ": 0,
+      "shotN": 0,
+      "missN": 0,
+      "lrtN": 0,
+      "saw": 0,
+      "bounce": 0,
+      "flips": 0
+     }
+    }
+   },
+   "ang": {
+    "A": {
+     "orbitDegPerS": 34.3,
+     "tangential": 0.709,
+     "oneSide": 0.078,
+     "foeResponding": 0.218,
+     "strips": 0.08,
+     "cutOff": 0.129
+    },
+    "B": {
+     "orbitDegPerS": 39.5,
+     "tangential": 0.764,
+     "oneSide": 0.078,
+     "foeResponding": 0.193,
+     "strips": 0.04,
+     "cutOff": 0.124
+    }
+   },
+   "ops": {
+    "A": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    },
+    "B": {
+     "share": {},
+     "done": {},
+     "forcedPerGame": 0,
+     "forceN": 0,
+     "forcedRate": null,
+     "ctrlRate": null,
+     "switchesPerGame": 0
+    }
+   },
+   "bp": {
+    "A": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "B": {
+     "perGame": 0,
+     "items": 0,
+     "secs": 0
+    },
+    "names": {}
+   },
+   "spells": [
+    {
+     "spell": "체인",
+     "share": 0.166,
+     "hit": 0.065,
+     "miss": 0.935
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.155,
+     "hit": 0.185,
+     "miss": 0.815
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.154,
+     "hit": 0.132,
+     "miss": 0.868
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.142,
+     "hit": 0.067,
+     "miss": 0.933
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.092,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.062,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번쩍임",
+     "share": 0.061,
+     "hit": 0.884,
+     "miss": 0.116
+    },
+    {
+     "spell": "근육 폭주",
+     "share": 0.057,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "돌 비",
+     "share": 0.048,
+     "hit": 0.3,
+     "miss": 0.7
+    },
+    {
+     "spell": "화염 방사",
+     "share": 0.047,
+     "hit": 0.491,
+     "miss": 0.509
+    }
+   ]
+  }
+ }
+}

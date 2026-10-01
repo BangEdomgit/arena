@@ -5,7 +5,7 @@
 module.exports = {
   name: 'multiSlot', switch: 'circles', on: W => W.rules.circles,
   brain: B => {
-    const { C, hyp, logDec, bigAttack, heatOver } = B;
+    const { C, hyp, logDec, bigAttack, heatOver, landDelay } = B;
     return {
       circles(W, q) { return q.circles; },
       // 자동 진: 3서클부터, 생각 없이 막는다. 방패 아끼기(상급)면 큰 공격에만. 앞 방패·벽은 투사체·실만 막는다
@@ -19,7 +19,8 @@ module.exports = {
           if (s.t === 'shoot' && !W.proj.some(p => p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < 6)) continue;
           const cost = s.cost * 1.2; if (m.glu < cost) continue;
           if (m.tac.survive && m.C >= 5 && heatOver(W, m, s.cost, 0, 0.8)) continue;
-          if (s.t === 'wall' && m.tac.sharp && m.C >= 5 && (m.z > 2 || (th.by && th.by.z > 2))) continue;   // 날카롭게 (v2.7): 둘 중 하나가 2 m 넘게 떠 있으면 기둥은 가리지 않는다   // 스스로 죽지 않기 (v2.6): 머리가 넘칠 막기는 하지 않는다
+          if (s.t === 'wall' && m.tac.sharp && m.C >= 5 && (m.z > 2 || (th.by && th.by.z > 2))) continue;   // 날카롭게 (v2.7): 둘 중 하나가 2 m 넘게 떠 있으면 기둥은 가리지 않는다
+          if ((s.t === 'wall' || (s.t === 'buff' && s.b.front)) && m.tac.sharp && m.C >= 5 && !((th.s.t === 'thread' || th.s.t === 'proj') && !(th.hold && !th.go) && th.T - th.t + landDelay(th.s, hyp(th.tx - m.x, th.ty - m.y) + 0.5) < 0.4)) continue;   // 날카롭게 (v2.8): 앞 방패·기둥은 막을 수 있는 실·투사체가 0.4 s 안에 닿을 때만   // 스스로 죽지 않기 (v2.6): 머리가 넘칠 막기는 하지 않는다
           m.glu -= cost; m.cd[n] = s.cd; m.autoCd = 0.7 * 3 / circ;
           logDec(m, s, 'auto', { aimed: true });
           C.release(W, m, { s, tx: e.x, ty: e.y, tgt: e, t: 0, T: 0, auto: true });
