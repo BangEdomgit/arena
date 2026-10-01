@@ -113,7 +113,7 @@ function cutBrain(W, m, K, lv) {
 // 끊는 움직임의 가속 a에 규칙이 곱한다: 빠른 판의 꺾기 (rules/pace, v2.14)
 function aF(W, m) { let a = aOf(W, m); const h = W.H.flyAccel; for (let i = 0; i < h.length; i++) a = h[i](W, m, a); return a; }
 module.exports = {
-  name: 'flight', switch: 'flight', on: W => W.rules.flight, api: { F, outP, canFly },
+  name: 'flight', switch: 'flight', on: W => W.rules.flight, api: { F, outP, canFly, aF: (W, m) => aF(W, m) },
   engine: X => {
     const { hurt } = X;
     return {

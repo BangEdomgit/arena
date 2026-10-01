@@ -6,9 +6,10 @@
  *   1 대마법사 결투장 전설 대 전설 (장면 v2-tactics-legend, n판, metrics/watch): 박자(v2.14: 속도·방향 전환·하는 일·교환·막기), 끝남·길이·스스로 입은 몫·폭주, 공격 시전·명중(마법별)·방패, 빈틈, 짓지 않는 시간·두 칸,
  *     리듬 단계·작전의 시간 몫·속임수, 벽(쓸모·사이·곁·벽 뒤에서 쏜 몫·막은 적 공격)
  *   2 단계 사다리 (같은 장면, lad판(v2.10부터 400, 그 앞은 100), 판마다 자리를 번갈아): 전설 / 대가, 대가 / 상급의 앞 사람 점수 (비김 0.5)
+ *   2½ 수읽기 (v2.15): 장면 v2-chess-legend(수읽기 덱)의 전설 대 전설 n판의 체크·자원·메이트·정석, 읽기 깊이 사다리(전설끼리 깊이만 달리, lad판)
  *   3 상위 무리 기준 (experiments/crowd, crowd판): 대마법사 하나 대 상위 6·10·14·20·30의 승률과 남은 체력 */
 const fs = require('fs'), path = require('path'), A = require('../src');
-const ROOT = path.join(__dirname, '..'), SCENE = path.join(ROOT, 'sandbox', 'scenes', 'v2-tactics-legend.json');
+const ROOT = path.join(__dirname, '..'), SCENE = path.join(ROOT, 'sandbox', 'scenes', 'v2-tactics-legend.json'), CHESS = path.join(ROOT, 'sandbox', 'scenes', 'v2-chess-legend.json');
 // 표의 줄: [열쇠, 이름, 꼴(% 몫 · n 수 · s 초 · x 점수 · w 승률·남은 체력), 목표 [아래, 위] (v2.10: 받은 요청의 목표. 무리는 승률)]
 const ROWS = [
   ['## 박자 (결투장 전설 대 전설, v2.14)'],
@@ -26,6 +27,11 @@ const ROWS = [
   ['방식 피해: 견제', '견제 피해 몫', '%'], ['방식 피해: 확정타', '확정타 피해 몫', '%'], ['방식 피해: 덮기', '덮기 피해 몫', '%'], ['방식 피해: 큰 한 방', '큰 한 방 피해 몫', '%'], ['방식 피해: 던지기', '던지기 피해 몫', '%'],
   ['확정타', '확정타 (판당)', 'n'], ['확정타 명중률', '확정타 명중률', '%'], ['견제', '견제 (판당)', 'n'], ['견제 명중률', '견제 명중률', '%'],
   ['덮기', '덮기 (판당)', 'n'], ['덮기 명중률', '덮기 명중률', '%'], ['덮기 갈 곳 덮은 비율', '덮기: 갈 곳 덮은 비율', '%'], ['구르기 빼낸 뒤 덮기', '피하기 빼낸 뒤 덮기 (판당)', 'n'], ['그중 맞힘', '　그중 맞힘 (판당)', 'n'], ['큰 수의 확정 순간 몫', '큰 수 가운데 확정 순간에 쓴 몫', '%'],
+  ['## 수읽기 (결투장 수읽기 덱 v2-chess-legend, 전설 대 전설, v2.15)'],
+  ['c:분당 체크', '분당 체크 (사람당)', 'n'], ['c:체크에 자원을 쓴 몫', '체크에 상대가 자원을 쓴 몫', '%'], ['c:자원 바닥', '방어 자원이 바닥난 순간 (사람당 판당)', 'n'], ['c:그물에서 빠져나감', '그물에서 빠져나감 (사람당 판당)', 'n'],
+  ['c:메이트로 끝난 판', '메이트로 끝난 판 (쓰러뜨린 한 방에 응수 0)', '%'], ['c:메이트 수 (읽음)', '읽은 메이트를 둔 수 (사람당 판당)', 'n'], ['c:정석 둠', '정석 첫 수 (사람당 판당)', 'n'], ['c:정석 끝까지', '정석을 끝까지', 'n'], ['c:정석 받음', '정석을 보고 받음', 'n'],
+  ['c:판 길이 (s)', '판 길이', 's'], ['c:초당 교환', '초당 교환', 'n'], ['c:읽은 마디 (판단당)', '읽기 한 번에 본 마디', 'n'],
+  ['깊이:10', '읽기 깊이 1 / 0 (전설끼리)', 'x', [0.5, 1]], ['깊이:2', '깊이 2 / 1', 'x', [0.5, 1]], ['깊이:3', '깊이 3 / 2', 'x', [0.5, 1]], ['깊이:4', '깊이 4 / 3', 'x', [0.5, 1]], ['깊이:40', '깊이 4 / 0', 'x', [0.5, 1]],
   ['## 단계 사다리 (결투장, 앞 사람 점수)'],
   ['사다리:전설-대가', '전설 / 대가', 'x', [0.65, 1]], ['사다리:대가-상급', '대가 / 상급', 'x', [0.7, 0.8]],
   ['## 상위 무리 기준 (대마법사 하나 대 상위 N: 승률 · 남은 체력)'],
@@ -43,14 +49,18 @@ async function measure(N, NC, NL) {
   for (let s = 1; s <= N; s += CH) { jobs.push({ mod: path.join(__dirname, 'diag.js'), fn: 'run', args: [sc, s, Math.min(CH, N - s + 1), null] }); tag.push('diag'); }
   const LAD = { '전설-대가': ['전설', '대가'], '대가-상급': ['대가', '상급'] };
   for (const k in LAD) for (let s = 1; s <= NL; s += CH * 2) { jobs.push({ mod: __filename, fn: 'ladder', args: [LAD[k], s, Math.min(CH * 2, NL - s + 1)] }); tag.push('lad:' + k); }
+  const csc = JSON.parse(fs.readFileSync(CHESS, 'utf8')), DEP = [[1, 0], [2, 1], [3, 2], [4, 3], [4, 0]];
+  for (let s = 1; s <= N; s += CH) { jobs.push({ mod: path.join(__dirname, 'diag.js'), fn: 'run', args: [csc, s, Math.min(CH, N - s + 1), null] }); tag.push('chess'); }
+  for (const [d1, d0] of DEP) for (let s = 1; s <= NL; s += CH * 2) { jobs.push({ mod: path.join(__dirname, 'ladder.js'), fn: 'games', args: [{ skill: '전설', tac: { read: d1 } }, { skill: '전설', tac: { read: d0 } }, s, Math.min(CH * 2, NL - s + 1), CHESS, null] }); tag.push('dep:' + d1 + (d0 ? '' : '0')); }
   const NS = [6, 10, 14, 20, 30]; for (const n of NS) for (let s = 1; s <= NC; s += CH) { jobs.push({ mod: path.join(__dirname, 'crowd.js'), fn: 'run', args: [n, s, Math.min(CH, NC - s + 1)] }); tag.push('crowd:' + n); }
-  const res = await runJobs(jobs), games = [], lad = {}, cr = {};
-  res.forEach((r, i) => { const t = tag[i]; if (t === 'diag') games.push(...r); else if (t.startsWith('lad:')) lad[t.slice(4)] = (lad[t.slice(4)] || 0) + r; else (cr[t.slice(6)] = cr[t.slice(6)] || []).push(...r); });
+  const res = await runJobs(jobs), games = [], chess = [], lad = {}, dep = {}, cr = {};
+  res.forEach((r, i) => { const t = tag[i]; if (t === 'diag') games.push(...r); else if (t === 'chess') chess.push(...r); else if (t.startsWith('dep:')) dep[t.slice(4)] = (dep[t.slice(4)] || 0) + r; else if (t.startsWith('lad:')) lad[t.slice(4)] = (lad[t.slice(4)] || 0) + r; else (cr[t.slice(6)] = cr[t.slice(6)] || []).push(...r); });
   const o = {}, d = D.sum(games);
   for (const k in d.look) o[k] = d.look[k];
   o['쓰러뜨림으로 끝난 판'] = games.filter(g => g.ms.some(m => m.hp <= 0)).length / games.length;
   for (const x of d.spells) o['명중:' + x.spell] = x.hit;
   for (const k in LAD) o['사다리:' + k] = lad[k] / NL;
+  const dc = D.sum(chess); for (const k in dc.look) o['c:' + k] = dc.look[k]; o['c:메이트로 끝난 판'] = dc.look['메이트로 끝난 판']; for (const k in dep) o['깊이:' + k] = dep[k] / NL;
   for (const n of NS) { const g = cr[n]; o['무리:' + n] = [g.reduce((a, x) => a + x.win, 0) / g.length, g.reduce((a, x) => a + x.hp, 0) / g.length]; }
   return o;
 }

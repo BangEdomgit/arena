@@ -29,6 +29,7 @@ const RULE_TXT = {
   fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
   gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3']
 };
+const PLN = window.ArenaBrain && window.ArenaBrain.plan, PSD = PLN ? PLN.ST.newSide() : null, PRB = new Float64Array(6);   // 수읽기 (v2.15): 줄인 상태를 읽어 그린다 (판에 닿지 않는다)
 const OFFT = { proj: 1, thread: 1, area: 1, lob: 1, touch: 1, cone: 1 };   // 공격 틀 (판단 그림, v0.2)
 const MODEN = { poke: '견제', sure: '확정타', cover: '덮기', big: '큰 한 방', throw: '던지기', repeat: '반복' };   // 공격 방식 (v2.12)
 const breathDots = m => { const n = A.RULES.find(r => r.name === 'breath').api.P.n, u = Math.min(n, m.mlog.breath); return '●'.repeat(n - u) + '○'.repeat(u) + (m.st.breath > 0 ? ' 마심' : ''); };   // 남은 숨 (v2.11)
@@ -97,7 +98,7 @@ function seek(t) {
   if (n < S.W.step) { const ah = S.ah; S.W = null; S.W2 = null; start(); if (ah) { S.ah = ah; ah.i = 0; } }
   S.fast = true; while (S.W.step < n && step()); S.fast = false; S.prev = null; S.prev2 = null; S.ev = []; S.acc = 0; S.hud = null; renderStats(); syncButtons();
 }
-// 앞서 보기 (v0.2): 프레임마다 ms 동안 따로 돌린 세계에서 사건을 찾는다. 큰 피해(한 걸음에 체력 8% 넘게)·쓰러짐·덫 발동·속임수(속임 수를 지음)·미끼 덮기(구르기를 빼낸 뒤 덮기)
+// 앞서 보기 (v0.2): 프레임마다 ms 동안 따로 돌린 세계에서 사건을 찾는다. 큰 피해(한 걸음에 체력 8% 넘게)·쓰러짐·덫 발동·메이트(수읽기, v2.15)·속임수(속임 수를 지음)·미끼 덮기(구르기를 빼낸 뒤 덮기)
 const SLOW = { pre: 0.35, post: 0.6, k: 0.15, gap: 0.8 };   // 직전 몇 초부터·뒤 몇 초까지·배속·사건 사이 (게임 초)
 function aheadRun(ms) {
   const a = S.ah; if (!a || A.over(a.W)) return; const W = a.W, t0 = performance.now();
@@ -105,7 +106,7 @@ function aheadRun(ms) {
     const hp0 = W.ms.map(m => m.hp), tr0 = W.traps.filter(t => !t.done), c0 = W.ms.map(m => m.cast);
     A.stepWorld(W);
     const add = (txt, m) => { if (W.t - a.last < SLOW.gap) return; a.last = W.t; a.ev.push({ t: W.t, txt: (m ? m.name + ' ' : '') + txt }); };
-    W.ms.forEach((m, i) => { if (hp0[i] > 0 && m.hp <= 0) add('쓰러짐', m); else if (hp0[i] - Math.max(0, m.hp) > 0.08 * m.hpMax) add('큰 피해', m); const c = m.cast; if (c && c !== c0[i] && c.feint) add('속임수', m); else if (c && c !== c0[i] && c.mode === 'cover' && c.bait) add('미끼 덮기', m); });
+    W.ms.forEach((m, i) => { if (hp0[i] > 0 && m.hp <= 0) add('쓰러짐', m); else if (hp0[i] - Math.max(0, m.hp) > 0.08 * m.hpMax) add('큰 피해', m); const c = m.cast; if (c && c !== c0[i] && c.mate) add('메이트', m); else if (c && c !== c0[i] && c.feint) add('속임수', m); else if (c && c !== c0[i] && c.mode === 'cover' && c.bait) add('미끼 덮기', m); });
     for (const t of tr0) if (t.done) { add((t.src.name || '') + '의 ' + t.s.n + ' 발동', null); break; }
   }
 }
@@ -266,6 +267,15 @@ function mind(W, X, F) {
       if (cs.hold && !cs.go) { ctx.strokeStyle = '#c9b0ff'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.moveTo(X(m.x), X(m.y)); ctx.lineTo(X(cs.tx), X(cs.ty)); ctx.stroke(); ctx.setLineDash([]); lab('걸어둠 ' + cs.s.n, X((m.x + cs.tx) / 2), X((m.y + cs.ty) / 2) - 4, '#c9b0ff'); }
     }
     if (m.flog && m._feC && m._feC === (k && k.e && k.e.cast)) lab('날기 속이기', X(m.x), X(m.y) + 52, '#ff9a8a');
+    // 수읽기 (v2.15): 거는 체크·메이트, 상대의 남은 방어 자원(막대)과 피할 곳(점: 열림 빈 점, 막힘 붉은 점), 그물·깨기
+    if (PLN && k && m.tac.read && m.C >= 5 && e && e.hp > 0) {
+      const S = PLN.ST.build(W, e, m, PSD, 0.5), b = PLN.resBars(S, PRB), ex = X(e.x), ey = X(e.y);
+      for (let j = 0; j < 9; j++) { const bl = S.blk[j] > 0.05; ctx.globalAlpha = 0.8; ctx.fillStyle = '#ff6a5a'; ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(S.bx[j]), X(S.by[j]), bl ? 2.5 : 2, 0, 7); if (bl) ctx.fill(); else ctx.stroke(); }
+      for (let i = 0; i < 6; i++) { if (b[i] < 0) continue; const x0 = ex - 21 + i * 7.2, y0 = ey + 14; ctx.globalAlpha = 0.9; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x0, y0, 6, 10); ctx.fillStyle = b[i] <= 0.02 ? '#7fe08a' : '#e0b25a'; const h = 10 * (1 - b[i]); ctx.fillRect(x0, y0 + 10 - h, 6, h); }
+      ctx.globalAlpha = 1; ctx.font = F(7) + 'px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#e9e4d8'; ctx.fillText('구튀막방벽털', ex - 21, ey + 31);
+    }
+    for (const cs of [m.cast, m.castB]) if (cs && cs.tgt && cs.tgt.hp > 0) { if (cs.mate) { ctx.strokeStyle = '#ffd25a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X(cs.tgt.x), X(cs.tgt.y), 24, 0, 7); ctx.stroke(); lab('메이트', X(cs.tgt.x), X(cs.tgt.y) - 30, '#ffd25a'); } else if (cs.chk) lab('체크', X(cs.tgt.x), X(cs.tgt.y) - 30, '#ff7a6b'); }
+    if (k && k.brk > W.t) lab('그물 깨기', X(m.x), X(m.y) + 62, '#9fe0ff'); else if (k && m.tac.read && k.netN <= 1) lab('그물', X(m.x), X(m.y) + 62, '#ff9a8a');
   }
 }
 function winText(r) { return r.winner < 0 ? '무승부' : (S.scene.sides[r.winner].name || '편 ' + r.winner) + ' 승리' + (r.byTime ? ' (시간 판정)' : ''); }

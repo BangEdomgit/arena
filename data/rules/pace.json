@@ -3,6 +3,6 @@
  "cMin": 8, "bulk": 0.35, "cool": 2, "run": 2.2, "agile": 4,
  "castK": 0.6, "cdK": 0.5, "costK": 0.6, "threadK": 3,
  "track": [0, 1, 2, 5],
- "guard": { "k": 0.45, "glu": 5, "pow": 0.7, "min": 0.12, "lead": 0.3, "near": 2.2, "gluMin": 12 },
+ "guard": { "cd": 0.35, "k": 0.45, "glu": 5, "pow": 0.7, "min": 0.12, "lead": 0.3, "near": 2.2, "gluMin": 12 },
  "move": { "vMin": 26, "vIn": 34, "inK": 0.35, "outK": 0.5, "lat": 0.6, "flip": [0.35, 0.8], "flipL": [0.25, 0.55], "turnP": 0.8, "hurry": [0.4, 0.6, 0.8], "fly": true, "noDrop": true, "read": true }
 }

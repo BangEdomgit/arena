@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.14.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.15.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -541,7 +541,7 @@ ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막�
   m.cast = { s: W.spells['체인'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.4, cost: 4 }; sharp.losCancel(W, m, { los: false, e }); assert.ok(!m.cast && m.glu > g0 && m.mlog.losCut === 1, '끊기');
   // 판 하나 (v2.6의 규칙: 버티기·마법의 부딪힘 감쇠 없이): 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
   const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0 }); if (tac) for (const sd of x.sides) sd.mages[0].tac = tac; const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };
-  const a = run(), b = run(), c = run({ survive: false, sharp: false });
+  const a = run({ read: 0 }), b = run({ read: 0 }), c = run({ survive: false, sharp: false, read: 0 });   // 수읽기(v2.15)는 끄고 이 둘만 견준다
   assert.deepStrictEqual(a, b); for (const k of ['스스로 입은 몫', '사거리 안 짓는 몫', '사거리 안 두 칸 몫', '쓸모 있는 벽 몫', '빈틈 찌른 몫', '폭주', '막힌 직사 몫']) assert.ok(k in a[0], k);
   const fall = r => r.reduce((x, q) => x + q['받은 피해'] * q['추락 몫'], 0), over = r => r.reduce((x, q) => x + q['폭주'], 0); assert.ok(fall(a) < fall(c) && over(a) < over(c), '추락 ' + fall(a) + ' < ' + fall(c) + ', 폭주 ' + over(a) + ' < ' + over(c));
 });
@@ -672,6 +672,30 @@ ok('v2.14 잘게 걷기·빠른 판 (SPEC 38장): 1/60 s 걸음도 같은 씨앗
   // 감각 조준: 전설은 track[3] m 안이면 과녁의 자리로 고쳐 겨눈다, 밖이면 그대로
   const ct = (dx) => { const c = { s: W1.spells['체인'], tgt: q1, tx: q1.x + dx, ty: q1.y, auto: false }; for (const h of W1.H.track) h(W1, m1, c); return c.tx; };
   assert.ok(ct(P.track[3] - 0.5) === q1.x && ct(P.track[3] + 0.5) === q1.x + P.track[3] + 0.5 && !W0.H.track.length);
+});
+ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 한 방은 메이트에만·정석·깊이 0이면 없다', () => {
+  const PL = A.brain.plan, ST = PL.ST, SE = require('../src/brain/plan/search');
+  assert.ok(A.mage({ tier: '대마법사', skill: '전설' }).tac.read === 4 && A.mage({ tier: '대마법사', skill: '대가' }).tac.read === 3 && A.mage({ tier: '대마법사', skill: '중급' }).tac.read === 1 && !A.mage({ tier: '대마법사', skill: '초보' }).tac.read);
+  const mk = (rules, deck) => { const W = A.createWorld({ seed: 1, obstacles: [], width: 200, height: 150, rules: Object.assign({ flightCut: true, reflex: true, snap: true, pace: true, fineStep: true }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: deck || '대마법사 수읽기' }), 0, 90, 75), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: deck || '대마법사 수읽기' }), 1, 104, 75); A.stepWorld(W); A.brain.think(W, m); return [W, m, e]; };
+  // 줄인 상태: 땅에 선 전설은 구르기·막기·방패·벽을 가졌고, 굳으면 굳음이 풀릴 때까지 몸을 못 쓴다
+  let [W, m, e] = mk(); e.z = 0; e.fly = 0; e.vz = 0; e.stam = 6; e.rollCd = 0; const S = ST.build(W, e, m, ST.newSide(), 0.5);
+  assert.ok(S.has & 1 && S.has & 4 && S.has & 8 && S.has & 16 && S.av[0] === 0, S.has.toString(2));
+  e.st.stun = 0.9; const S2 = ST.build(W, e, m, ST.newSide(), 0.5); assert.ok(S2.av[0] >= 0.9 && !ST.moveOK(S2, 0.5, 2) && ST.moveOK(S2, 1.6, 2));
+  // 응수 0: 자원을 다 쓰고(간격), 피할 곳이 모두 막히고, 굳었으면 대낙뢰가 메이트다. 큰 한 방은 메이트일 때만 값이 있다
+  for (let i = 0; i < 6; i++) S2.av[i] = Infinity; S2.has = 0; for (let j = 0; j < 9; j++) S2.blk[j] = Infinity; S2.up = 5;
+  const lt = new Float64Array(16).fill(10); for (let i = 0; i < 8; i++) lt[8 + i] = 9; m.glu = 100; for (const n in m.cd) m.cd[n] = 0; m.cast = m.castB = null;
+  const o = SE.read(W, m, e, S2, 2, lt); assert.ok(o.k >= 0 && o.mate && o.ans === 0 && o.nodes > 0, JSON.stringify(o));
+  const K = { foes: [e], e, pl: { n: '', mate: false }, brk: -9, keep: 0, keepT: -9, jsL: null, jo: -1 }, big = { s: W.spells['대낙뢰'], n: '대낙뢰', v: 1 }, small = { s: W.spells['짧은 실'], n: '짧은 실', v: 1 };
+  PL.value(W, m, K, big); assert.strictEqual(big.v, 0, '메이트가 아니면 큰 한 방 0'); K.pl = { n: '대낙뢰', mate: true, check: true, j: 0 }; big.v = 1; PL.value(W, m, K, big); assert.ok(big.v > 1);
+  // 깊이 0이면 아무것도 안 한다
+  m.tac.read = 0; small.v = 1; PL.value(W, m, K, small); assert.strictEqual(small.v, 1); m.tac.read = 4;
+  // 정석: 아는 수준만, 첫 수를 두면 다음 수를 잇는다
+  const JO = PL.JO, L = JO.LINES.find(x => x.name === '폭풍의 세 수'); assert.ok(L && JO.knows(m, L) && !JO.knows({ skill: '중급' }, L));
+  const K2 = { e, jo: -1, joI: 0, joT: -9 }; JO.commit(W, m, K2, '번개 그물'); assert.ok(K2.jo >= 0 && K2.joI === 1); const nx = { n: '짧은 실', s: W.spells['짧은 실'], v: 0.5 }; JO.value(W, m, K2, nx); assert.ok(nx.v > 0.5);
+  // 판 하나: 같은 씨앗이면 같고, 지표가 있다
+  const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
+  const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
+  const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

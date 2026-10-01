@@ -4,7 +4,7 @@
  * 엔진 (대마법사 누구나):
  *   떡대 — 적이 준 피해(추락·소금·폭주 빼고) × bulk. 빨리 식기(머리 회복 × cool), 땅 걸음 × run, 꺾는 가속(걷기·날기의 끊는 움직임) × agile
  *   막기 — 순간 켜기 패시브 (st.guard: 켠 뒤 지난 시간, 0이면 꺼짐). 켠 동안 피해 × guard.k, 당 초당 guard.glu, 그동안 지어 푼 마법의 위력 × guard.pow.
- *     켜고 끄는 데 시간이 들지 않는다. 당이 guard.gluMin 아래거나 굳으면 꺼진다. 기록 m.mlog.guardN(켜고 끈 수)·guardT(켠 시간)·guardBlk(막은 피해)
+ *     켜고 끄는 데 시간이 들지 않는다. 끈 뒤 guard.cd s는 다시 못 켠다(v2.15: 수읽기의 자원). 당이 guard.gluMin 아래거나 굳으면 꺼진다. 기록 m.mlog.guardN(켜고 끈 수)·guardT(켠 시간)·guardBlk(막은 피해)
  *   감각 조준 (track 훅) — 실·투사체·구름을 풀 때 과녁의 지금 자리(구름은 터질 때까지의 반쯤 앞)가 겨눈 곳에서 track[tac.pace] m 안이면 그리로 고쳐 겨눈다. 기록 mlog.trackN
  * 두뇌 (대마법사 누구나): 시전 시간 × castK, 되쓰기 × cdK, 당 × costK, 실은 threadK 배 빨리 뻗는다 (빠른 수의 연속)
  * 두뇌 (판단 수준 tac.pace: 상급 1·대가 2·전설 3):
@@ -54,7 +54,7 @@ module.exports = {
     mageStep(W, m) {
       if (!(m.st.guard > 0)) return;
       m.st.guard += W.dt; m.mlog.guardT += W.dt; m.glu -= G.glu * W.dt;
-      if (m.glu < G.gluMin || m.st.stun > 0) { m.st.guard = 0; m.mlog.guardN++; }   // 당이 바닥나거나 굳으면 꺼진다
+      if (m.glu < G.gluMin || m.st.stun > 0) { m.st.guard = 0; m.mlog.guardN++; m.mlog.gdOff = W.t; }   // 당이 바닥나거나 굳으면 꺼진다
     },
   }),
   brain: B => {
@@ -77,15 +77,15 @@ module.exports = {
         K.hurry = MV.hurry[L - 1] || 0;   // 서두름: 날카롭게의 명중 문턱 × (1 − hurry) (techniques/sharp, 이 판단의 고르기에)
         // 막기
         const th = soon(W, m, K), g = m.st.guard > 0;
-        if (th && !g && m.glu > G.gluMin + 3 && !(m.st.stun > 0)) { m.st.guard = 1e-6; m.mlog.guardN++; m.mlog.gdT = W.t; }
-        else if (g) { if (th) m.mlog.gdT = W.t; else if (W.t - m.mlog.gdT >= G.min) { m.st.guard = 0; m.mlog.guardN++; } }
+        if (th && !g && m.glu > G.gluMin + 3 && !(m.st.stun > 0) && W.t - m.mlog.gdOff >= G.cd && !(K.keep & 4 && W.t < K.keepT)) { m.st.guard = 1e-6; m.mlog.guardN++; m.mlog.gdT = W.t; }
+        else if (g) { if (th) m.mlog.gdT = W.t; else if (W.t - m.mlog.gdT >= G.min) { m.st.guard = 0; m.mlog.guardN++; m.mlog.gdOff = W.t; } }
         // 늘 움직이기 (결투에서만)
         if (K.foes.length !== 1 || m.st.breath > 0 || m.retreat) return;
         const e = K.e; if (!e) return;
         const pl = m.mlog;
         if (MV.fly && !m.cut.cool && !m.flyWant && FL.outP(m) >= FL.F.minP && FL.canFly(m)) { m.flyWant = true; if (m.fz < FL.F.zMin) m.fz = FL.F.zMin + 1; }   // 늘 난다 (식히러 내려앉을 때만 땅)
         if (m.fly === 1 && m.fv < MV.vMin) m.fv = pl.pcIn ? MV.vIn : MV.vMin;
-        if (K.dodge) return;   // 피하기의 걸음은 그대로
+        if (K.dodge || K.brk > W.t) return;   // 피하기의 걸음·그물 깨기(수읽기, v2.15)는 그대로
         if (!pl.pcR0) { let a = 1e9, b = 0; for (const n of m.book) { const x = W.spells[n]; if (!x || x.t !== 'thread') continue; const r = B.C.rangeOf(m, x); if (r < a) { a = r; pl.pcN = n; } if (r > b) b = r; } pl.pcR0 = a < 1e9 ? a : 10; pl.pcR1 = b || 20; }   // 실의 사거리 (가장 짧은 것·긴 것)
         const dx = e.x - m.x, dy = e.y - m.y, d = B.C.hyp(dx, dy) || 1, ux = dx / d, uy = dy / d, w0 = pl.pcR0 * MV.inK, w1 = pl.pcR1 * MV.outK;
         // 들기는 가까운 거리에 닿거나 move.flip이 지나면 나기로, 나기는 먼 거리에 닿거나 지나면 들기로. 바꿀 때 둘레 방향을 반쯤 뒤집는다
