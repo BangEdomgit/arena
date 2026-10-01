@@ -1,0 +1,2 @@
+{ "desc": "교전 유지 (techniques/engage, SPEC 37장). idle: 쏠 것 없이 이만큼(s) 지나면 다가간다, reachK: 선호 거리의 끝 = 닿는 사거리 × reachK, closeK: 다가갈 거리 = 가장 긴 공격 사거리 × closeK, chaseK: 끝내기 작전이면 사거리 × chaseK까지 쫓는다, low: 몰렸다고 보는 체력 몫, kiteK: 몰린 쪽이 지키는 거리 = 사거리 × kiteK, breathR: 몰린 쪽이 숨을 마시는 남은 몫, huntK: 숨은 상대 자리에 지연 폭발·곡사·번쩍임의 값 배수",
+  "idle": 1.2, "reachK": 0.9, "closeK": 0.65, "chaseK": 0.45, "low": 0.3, "kiteK": 0.8, "breathR": 0.6, "huntK": 1.8 }

@@ -47,7 +47,7 @@ module.exports = {
       if (W.t - R.sfT > P.flip[0]) { R.sfT = W.t + W.rng() * (P.flip[1] - P.flip[0]); m.sf = -m.sf; R.flips++; }
       K.vx += -uy * m.sf * P.flipK; K.vy += ux * m.sf * P.flipK;
       // 거리 톱질: 사거리 끝 둘레에서 모을 땐 들어가고, 아니면 나간다
-      if (lv >= 2 && m.phase === 'probe') {
+      if (lv >= 2 && m.phase === 'probe' && !K.closeIn) {   // 교전 유지(v2.13)가 다가가는 중엔 쉰다: 짓지 않으면 나가는 톱질이 둘을 사거리 끝에 붙들었다
         const edge = Math.min(K.Dm.maxR, K.prefR + P.saw[0]);
         if (K.d > edge + P.saw[1] && K.d < edge + P.saw[2]) { const inn = !!m.cast, s = inn ? 1 : -1; K.vx += ux * s * P.sawK; K.vy += uy * s * P.sawK; if (R.ly !== s) { R.ly = s; R.saw++; } }
       }

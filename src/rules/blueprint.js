@@ -1,11 +1,11 @@
 'use strict';
 /* 규칙: 청사진 짓기 (rules.blueprint, v2.4, SPEC 28장, 청사진은 data/blueprints.json, 수는 data/rules/blueprint.json)
- * 청사진 = 구조물 배치 묶음(반원 보루·몰이길·함정 격자·하늘 막기·엄폐 사다리). 마법 '청사진'(틀 blueprint)이 한 번에 짓는다.
+ * 청사진 = 구조물 배치 묶음(반원 보루·몰이길·덫길·하늘 막기·엄폐 사다리). 마법 '청사진'(틀 blueprint)이 한 번에 짓는다.
  * 여러 칸(서클)으로 한꺼번에: 갈래 수 = min(구조물 수, 서클 − 1(떠 있으면 − 1 더), 적어도 1). 갈래마다 제 출력으로 하나씩 차례로 짓는다(출력·머리 피로·당은 갈래 수만큼 든다).
  *   흙벽(블록 둘, 두께 0.4 m, 1.0 m³): 벽 규칙의 세우는 속도(초당 0.6 m³ × 출력/632 kW, 대마법사 1.7 s). 땅에 서서만, 벽 규칙이 켜져 있어야
  *   석회 기둥: 0.4 s. 함정·지대(하늘 덮개·빙판): 그 마법의 예비동작 시간 뒤 그 마법을 그 자리에 푼다(책에 있어야, 방출은 core release 그대로)
  *   구조물을 시작할 때 당을 내고(모자라면 건너뛴다), 벽·기둥은 머리 피로 당 × 1.6(넘칠 것 같으면 건너뛴다). 걸리는 시간은 미리 짜 둔 차례표 그대로(굳으면 멈추고 지은 것은 남는다)
- *   대마법사: 반원 보루(벽 다섯) 약 2 s, 하늘 막기 약 0.9 s, 함정 격자 약 1.2 s
+ *   대마법사: 반원 보루(벽 다섯) 약 2 s, 하늘 막기 약 0.9 s, 덫길 약 1.2 s
  * 두뇌 (생각 겹, 선명도 5 이상, 판단 수준의 tac.blueprint: 1 상급 = 책에 맞는 첫 청사진, 2 대가부터 = 상황에 맞게):
  *   짓기 단계(리듬): 떠보기 중 상대가 60 m 안이면서 30 m 넘게 멀거나 물러나면(진지 규칙과 같은 때), 청사진이 준비됐고 지난 청사진에서 8 s 지났으면
  *   고르기: 당이 모자라지 않는 것 가운데, 특징(상대가 떠 있음·땅·다가옴·멂, 내 피로·다친 몫)에 청사진의 무게를 곱해 더한 값이 가장 큰 것
@@ -14,7 +14,7 @@ const { hyp, sin, cos } = require('../math');
 const BPD = require('../../data/blueprints.json'), P = require('../../data/rules/blueprint.json');
 const BK = require('../../data/rules/bulwark.json').block;
 const { rateOf } = require('./bulwark').api, { saltR } = require('./saltRing').api;
-const NAMES = Object.keys(BPD.blueprints), D2R = Math.PI / 180;
+const NAMES = Object.keys(BPD.blueprints), D2R = Math.PI / 180; let TL = null;   // 덫길의 칸 (두뇌 기술, 처음 부를 때)
 // 구조물에 쓸 마법 (책에서): 함정(안 보이는 것을 바라면 안 보이는 것), 지대
 function spellFor(W, m, it) {
   const S = W.spells; let any = null;
@@ -60,6 +60,7 @@ function step(W, m, c, all, X) {
     if (o.on === 2 || (!all && tc < o.s0)) continue;
     if (!o.on) {   // 시작: 당·머리 피로, 땅
       const cost = o.s ? o.s.cost : o.it.cost;
+      if (o.it.cast === 'trap' && m.tac.trapLine && (TL || (TL = require('../brain/techniques/trapline'))).crowded(W, m, o.x, o.y)) { o.on = 2; continue; }   // 꽉 찬 칸엔 덫을 놓지 않는다 (덫길, v2.13)
       if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100)) || (!o.it.build && hot(W, m, cost)) || (o.it.build && m.tac.sharp && m.C >= 5 && e && e.z > 2)) { o.on = 2; continue; }   // 날카롭게 (v2.7): 높이 뜬 과녁에겐 벽·기둥이 가리지 않는다
       m.glu -= cost; if (o.it.build && W.rules.fatigue) m.fat += cost * 1.6; o.on = 1;
     }

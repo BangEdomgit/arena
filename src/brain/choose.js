@@ -10,7 +10,7 @@ const combo = require('./techniques/combo'), cancel = require('./techniques/canc
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
 const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
-const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp'), mode = require('./techniques/mode');
+const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp'), mode = require('./techniques/mode'), engage = require('./techniques/engage'), trapline = require('./techniques/trapline');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -138,6 +138,8 @@ function pipeOf(W, m) {
   if (T.sharp) P.push(sharp.value);       // 날카롭게: 빈틈·나는 과녁·벽과 방패 (대가, v2.6)
   if (T.survive) P.push(survive.value);   // 스스로 죽지 않기: 풀 때 머리가 넘칠 마법은 버린다 (v2.6)
   if (T.mode) P.push(mode.value);         // 공격 방식 안에서 고르기 (v2.12)
+  if (T.engage) P.push(engage.value);     // 숨은 상대를 쫓아 들춘다 (v2.13)
+  if (T.trapLine) P.push(trapline.value); // 덫은 길에, 한 칸에 둘까지, 0.8 s에 하나 (v2.13)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
@@ -198,6 +200,7 @@ function commit(W, m, K) {
   herd.commit(W, m, K, s);
   combo.plan(W, m, K, s, Tc);
   if (T.mode) mode.commit(W, m, K, best, cast);   // 시전에 방식을 적는다 (v2.12)
+  if (T.trapLine) trapline.commit(W, m, K, best);
   if (T.sharp && (s.t === 'wall' || s.t === 'build')) K.wallT = W.t + Tc;   // 날카롭게 (v2.8): 세운 벽 뒤에 머문다 (sharp.behind)
   logDec(m, s, slot, { aimed, combo: eDown || (m.last && W.t - m.lastT < 1.5 && isSetup(K.S[m.last])), path: s.t === 'trap' && vt > 1.2 && d < 10, barrel: best.barrel });
   m.last = s.n; m.lastT = W.t;

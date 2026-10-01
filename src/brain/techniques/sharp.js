@@ -26,7 +26,9 @@ function losCancel(W, m, K) {
   const b = m.castB; if (b && !b.auto && (b.s.t === 'thread' || (b.s.t === 'proj' && !b.s.home)) && b.tgt === K.e && b.T - b.t > 0.03) { m.castB = null; m.glu += (b.cost || 0) * 0.7; }
 }
 // 명중 가망 (v2.8): 판 중의 명중률(쏜 수 대비, 앞의 짐작 0.35를 세 번 몫으로 섞는다) × 지금의 형편(과녁이 묶였나·구를 수 있나·닿는 데 얼마나 걸리나)
-const P = { prior: 3, pin: 2.5, roll: 0.6, fly: 0.7, landT: 0.6, min: 0.14, use: 1, minOpen: 0.05, hotF: 85, inHeld: 0.5, waitW: 0.5, prep: 1.2, prepMin: 0.6, prepFat: 50, anchorT: 10, ownCover: 0.4, losPrior: 30 };
+// 기다림의 끝 (v2.13): 쏜 지 waitMax 넘게 지나면 문턱을 waitFade 동안 0까지 낮춘다. 문턱에 막혀 둘 다 쏘지 않는 침묵이 판의 20%였다
+const patience = (W, m) => { const t = W.t - m.lastRel - P.waitMax; return t > 0 ? (t < P.waitFade ? 1 - t / P.waitFade : 0) : 1; };
+const P = { prior: 3, pin: 2.5, roll: 0.6, fly: 0.7, landT: 0.6, min: 0.14, use: 1, minOpen: 0.05, hotF: 85, inHeld: 0.5, waitW: 0.5, prep: 1.2, prepMin: 0.6, prepFat: 50, anchorT: 10, ownCover: 0.4, losPrior: 30, waitMax: 1.5, waitFade: 1.5 };
 // 몰아칠 틈 (v2.9): 과녁의 빈틈(굳음·묶임·꺼짐·빈손), 과열이 다가옴(머리 hotF 넘음, 파도 아님), 내 작전 끝내기. 이때 명중 문턱은 minOpen
 const storm = (W, m, K) => { const e = K.e; return openFor(W, e) > 0 || (e.fat > P.hotF && !e.wave) || (m.op && m.op.cur === 'finish'); };
 function chance(W, m, K, o, land) {
@@ -51,7 +53,7 @@ function value(W, m, K, o) {
     const land = castTime(W, m, o.Tw) + landDelay(s, K.d), win = openFor(W, e);
     if (win > 0.15 && land < win && !off(m, 'open')) o.v *= 2 * (1 + 0.5 / (land + 0.2));   // 빈틈: 닫히기 전에 닿는 것, 빠를수록
     if (s.t !== 'trap' && s.t !== 'topple' && P.use && m.tac.aim && !off(m, 'chance') && !SW.on(W, m, e) && !(K.mode === 'poke' && MD.pokeOk(o))) {   // 공격 방식(v2.12): 견제의 싼·빠른 수만 문턱을 건너뛴다(맞히려는 게 아니라 움직이게 한다). 덮기·확정타까지 건너뛰니 전설 / 대가 0.71 → 0.48   // 무리 싸움(협공)엔 명중 문턱을 쓰지 않는다 (v2.10)
-      const ch = chance(W, m, K, o, land); o.v *= ch / (o.he > 0.05 ? o.he : 0.05); if (ch < (storm(W, m, K) ? P.minOpen : P.min) && !(win > land) && !(K.slot === 'B' && m.tac.hold && W.rules.hold)) { o.v = 0; K.waitT = W.t; } }   // 명중 가망: 낮으면 빈틈을 기다린다 (v2.8)
+      const ch = chance(W, m, K, o, land); o.v *= ch / (o.he > 0.05 ? o.he : 0.05); if (ch < (storm(W, m, K) ? P.minOpen : P.min) * patience(W, m) && !(win > land) && !(K.slot === 'B' && m.tac.hold && W.rules.hold)) { o.v = 0; K.waitT = W.t; } }   // 명중 가망: 낮으면 빈틈을 기다린다 (v2.8)
     if (e.z >= 1 && !off(m, 'fly')) {
       const fast = s.t === 'thread' || (s.t === 'proj') || (s.t === 'area' && s.delay <= 0.6);
       if (fast) o.v *= 1.2;

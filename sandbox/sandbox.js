@@ -23,7 +23,7 @@ const RULE_TXT = {
   tactics: ['작전 겹', '강자(대가부터)가 1~2 s마다 작전(진지·소모·압박·몰이·사냥·끝내기)과 상대 둘레 자리 24개를 고른다. 전설은 강요하는 수·상대 작전 읽기'],
   reflex: ['반사 겹', '강자(대가부터)는 매 걸음 위협을 보고 몸이 먼저: 피하기·멈칫·옆 뒤집기·내려앉기-구르기 (반응 지연 대가 0.1 s, 전설 0.05 s)'],
   snap: ['끊는 움직임', '걸음 속도가 목표를 가속 한계(대마법사 4.6 g) 안에서 곧장 따라간다. 끊어 걷기·옆 뒤집기·거리 톱질·높이 튕기기'],
-  blueprint: ['청사진', "'청사진' 마법으로 반원 보루·몰이길·함정 격자·하늘 막기·엄폐 사다리를 여러 칸으로 한꺼번에 (대마법사 1~3 s)"],
+  blueprint: ['청사진', "'청사진' 마법으로 반원 보루·몰이길·덫길·하늘 막기·엄폐 사다리를 여러 칸으로 한꺼번에 (대마법사 1~3 s)"],
   fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
   gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3']
 };
@@ -37,7 +37,7 @@ const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => 
 const clone = o => JSON.parse(JSON.stringify(o)), r2 = v => Math.round(v * 100) / 100;
 
 // S.scene: 고치는 장면, S.W: 도는 세계(없으면 편집 중), S.P: 편집 중에 보여 줄 첫 걸음 전 세계
-const S = { scene: null, W: null, P: null, play: false, speed: 1, acc: 0, tool: 'move', sel: null, side: 0, drag: null, sc: 20, tab: 'rules' };
+const S = { scene: null, W: null, P: null, play: false, speed: 1, acc: 0, tool: 'move', sel: null, side: 0, drag: null, sc: 20, tab: 'rules', cam: { x: 400, y: 300, z: 1 }, follow: true, ev: [], slowT: 0, seen: null };   // 카메라·사건 줄·느리게 (v2.13)
 const cv = $('cv'), ctx = cv.getContext('2d');
 
 /* ---------------- 장면 ---------------- */
@@ -74,7 +74,16 @@ function start() { if (!S.W) { S.W = A.sceneWorld(S.scene, { record: true }); S.
 function step() {
   start(); if (A.over(S.W)) { S.play = false; return false; }
   if (!S.fast) { S.prev = S.W.ms.map(m => [m.x, m.y, m.z]); S.pp = new Map(S.W.proj.map(p => [p, [p.x, p.y]])); }   // 사이를 이어 그리려고 지난 걸음의 자리를 둔다 (v2.4)
-  A.stepWorld(S.W); if (A.over(S.W)) S.play = false; return true;
+  const hp0 = S.fast ? null : S.W.ms.map(m => m.hp), br0 = S.fast ? null : S.W.ms.map(m => m.st.breath > 0), tr0 = S.fast ? null : S.W.traps.slice();
+  A.stepWorld(S.W); if (!S.fast) events(S.W, hp0, br0, tr0); if (A.over(S.W)) S.play = false; return true;
+}
+// 큰 사건 (v2.13): 한 걸음에 체력 15% 넘게 잃음·쓰러짐·덫 발동·숨. 사건 줄에 6 s 띄우고, 큰 피해·쓰러짐은 1.2 s(화면 시간) 0.25배로 느리게
+function events(W, hp0, br0, tr0) {
+  const add = (txt, col, slow) => { S.ev.push({ t: W.t, txt: W.t.toFixed(1) + ' s  ' + txt, col }); if (S.ev.length > 6) S.ev.shift(); if (slow && $('slowmo').checked) S.slowT = performance.now() + 1200; };
+  W.ms.forEach((m, i) => { const name = m.name, c = COL[m.side % COL.length], d = hp0[i] - Math.max(0, m.hp);
+    if (hp0[i] > 0 && m.hp <= 0) add(name + ' 쓰러짐', c, true); else if (d > 0.15 * m.hpMax) add(name + ' 큰 피해 −' + Math.round(d), c, true);
+    if (!br0[i] && m.st.breath > 0) add(name + ' 숨', c, false); });
+  for (const t of tr0) if (t.done) add((t.src.name || '') + '의 ' + t.s.n + ' 발동', COL[t.src.side % COL.length], false);
 }
 function runToEnd() { start(); S.fast = true; while (step()); S.fast = false; S.prev = null; renderStats(); syncButtons(); return A.result(S.W); }
 let last = performance.now(), frame = 0;
@@ -83,7 +92,7 @@ function loop(now) {
   if (S.play) {
     const t0 = performance.now();
     if (S.speed === 0) { while (S.play && performance.now() - t0 < 12) step(); }
-    else { S.acc += dt * S.speed; let n = 0; while (S.play && S.acc >= A.DT && n < 600) { step(); S.acc -= A.DT; n++; } }
+    else { S.acc += dt * S.speed * (performance.now() < S.slowT ? 0.25 : 1); let n = 0; while (S.play && S.acc >= A.DT && n < 600) { step(); S.acc -= A.DT; n++; } }
     if (++frame % 8 === 0 || !S.play) renderStats();
     if (!S.play) syncButtons();
   }
@@ -101,9 +110,20 @@ function draw() {
   W.proj.forEach(p => { const q = S.pp.get(p); if (q) { p.x = q[0] + (p.x - q[0]) * a; p.y = q[1] + (p.y - q[1]) * a; } });
   try { draw0(); } finally { W.ms.forEach((m, i) => { m.x = keep[i][0]; m.y = keep[i][1]; m.z = keep[i][2]; }); W.proj.forEach((p, i) => { p.x = kp[i][0]; p.y = kp[i][1]; }); }
 }
+// 카메라 (v2.13): 판이 돌면 살아 있는 사람들을 따라가며 확대한다(둘레 12 m 여유, 1~4배, 멀어지면 줌아웃). 편집할 땐(판이 없거나 끔) 싸움터 전체
+function camera(W, sc) {
+  let tx = W.width * sc / 2, ty = W.height * sc / 2, tz = 1;
+  if (S.W && S.follow && $('follow').checked) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const m of W.ms) if (m.hp > 0) { if (m.x < x0) x0 = m.x; if (m.x > x1) x1 = m.x; if (m.y < y0) y0 = m.y; if (m.y > y1) y1 = m.y; }
+    if (x1 >= x0) { const pad = 12; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad; tx = (x0 + x1) / 2 * sc; ty = (y0 + y1) / 2 * sc; tz = Math.max(1, Math.min(4, 800 / ((x1 - x0) * sc), 600 / ((y1 - y0) * sc))); }
+  }
+  const c = S.cam, k = S.W && S.follow ? 0.12 : 1; c.x += (tx - c.x) * k; c.y += (ty - c.y) * k; c.z += (tz - c.z) * k;
+}
 function draw0() {
   const W = world(); S.sc = Math.min(800 / W.width, 600 / W.height); const sc = S.sc, X = v => v * sc;
-  ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
+  camera(W, sc); const cz = S.cam.z, F = px => (px / Math.sqrt(cz)).toFixed(1); ctx.setTransform(cz, 0, 0, cz, 400 - S.cam.x * cz, 300 - S.cam.y * cz);   // 확대해도 글자는 덜 커진다
+  const lab = [];   // 이름표 자리 (겹치면 아래로 민다)
   ctx.fillStyle = '#34322d'; ctx.fillRect(0, 0, X(W.width), X(W.height));
   ctx.fillStyle = 'rgba(235,232,220,.13)'; for (const r of W.salt || []) ctx.fillRect(X(r.x), X(r.y), X(r.w), X(r.h));   // 소금 땅 (rules/saltLand)
   ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 1; ctx.beginPath();
@@ -136,28 +156,30 @@ function draw0() {
     ctx.fillStyle = '#1b1c20'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(m.aim) * 13, y + Math.sin(m.aim) * 13); ctx.stroke();
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
-    if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]); if (W.ms.length <= 60) { ctx.font = '9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)
+    if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]); if (W.ms.length <= 60) { ctx.font = '' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)
     const k = m._k; if (k && k.covPts && !dead && W.t - k.covT < 0.6) { ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; for (let i = 0; i < k.covN; i++) { ctx.beginPath(); ctx.arc(X(k.covPts[i * 3]), X(k.covPts[i * 3 + 1]), k.covPts[i * 3 + 2] ? 2 : 3, 0, 7); if (k.covPts[i * 3 + 2]) ctx.stroke(); else ctx.fill(); } ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 || m.flee ? 0.55 : 1); }   // 덮기: 상대가 갈 수 있는 곳 (속 찬 점 땅, 빈 점 하늘, v2.12)
     if (m.st.breath > 0 && !dead) { ctx.strokeStyle = 'rgba(200,235,210,.35)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.stroke(); }   // 숨을 마시는 중 (v2.11): 옅은 고리
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
     if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     const cs = m.cast || m.chan;
-    if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
+    if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '' + F(10) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
     ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 14, y - 16, 28, 3); ctx.fillStyle = c; ctx.fillRect(x - 14, y - 16, 28 * Math.max(0, m.hp) / m.hpMax, 3);
     ctx.fillStyle = '#ff8a7a'; ctx.fillRect(x - 14, y - 12, 28 * Math.min(1, m.fat / 100), 1.5);
-    if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0] + (m.tac.rhythm && m.C >= 5 && !dead ? ' · ' + PHASE[m.phase] : '') + (m.op.cur && !dead ? ' · ' + OPN[m.op.cur] : ''), x, y - 20); }   // 리듬 단계 (v2.2)
-    if (zy) { ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s' + (m.cut.k ? ' · ' + CUTN[m.cut.k] : '') + (m.cut.on ? ' · 쿠션' : ''), x + 12, y + 4); }
-    if (!dead && W.t < m.rx.until) { ctx.font = '600 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe28a'; ctx.fillText(m.rx.vx || m.rx.vy ? '반사' : '멈칫', x, y + 32); }   // 반사 겹이 걸음을 덮는 중 (v2.4)
-    if (!dead && m.cast && m.cast.bp) { ctx.font = '600 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#c9b08a'; ctx.fillText('청사진 ' + m.cast.bp.name + ' ' + m.cast.bp.built + '/' + m.cast.bp.items.length, x, y + 42); }
+    if (W.ms.length <= 12) { ctx.font = '600 ' + F(10) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; const tx = m.name + ' ' + m.stance[0] + (m.tac.rhythm && m.C >= 5 && !dead ? ' · ' + PHASE[m.phase] : '') + (m.op.cur && !dead ? ' · ' + OPN[m.op.cur] : ''), lw = ctx.measureText(tx).width, lh = 11 / Math.sqrt(cz); let ly = y - 20; for (let k = 0; k < 8 && lab.some(b => Math.abs(b[0] - x) < (b[2] + lw) / 2 && Math.abs(b[1] - ly) < lh); k++) ly -= lh; lab.push([x, ly, lw]); ctx.fillText(tx, x, ly); }   // 이름표가 겹치면 위로 민다 (v2.13)   // 리듬 단계 (v2.2)
+    if (zy) { ctx.font = '' + F(10) + 'px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s' + (m.cut.k ? ' · ' + CUTN[m.cut.k] : '') + (m.cut.on ? ' · 쿠션' : ''), x + 12, y + 4); }
+    if (!dead && W.t < m.rx.until) { ctx.font = '600 ' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe28a'; ctx.fillText(m.rx.vx || m.rx.vy ? '반사' : '멈칫', x, y + 32); }   // 반사 겹이 걸음을 덮는 중 (v2.4)
+    if (!dead && m.cast && m.cast.bp) { ctx.font = '600 ' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#c9b08a'; ctx.fillText('청사진 ' + m.cast.bp.name + ' ' + m.cast.bp.built + '/' + m.cast.bp.items.length, x, y + 42); }
   }
   if (S.sel && S.sel.k !== 'mage') { const it = itemOf(S.sel); if (it) { ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(it.x), X(it.y), X(it.r || 0.4) + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); } }
-  if (S.W && A.over(S.W)) { const r = A.result(S.W); ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(winText(r), X(W.width) / 2, 34); }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);   // 여기부터 화면 위 (카메라와 상관없이)
+  if (S.W) { ctx.font = '600 12px system-ui'; ctx.textAlign = 'left'; let yy = 18; for (const e of S.ev) { if (S.W.t - e.t > 6) continue; ctx.globalAlpha = Math.max(0.3, 1 - (S.W.t - e.t) / 6); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(8, yy - 12, ctx.measureText(e.txt).width + 10, 16); ctx.fillStyle = e.col; ctx.fillText(e.txt, 13, yy); yy += 18; } ctx.globalAlpha = 1; if (performance.now() < S.slowT) { ctx.fillStyle = '#ffe28a'; ctx.textAlign = 'right'; ctx.fillText('느리게', 792, 18); } }   // 사건 줄 (v2.13)
+  if (S.W && A.over(S.W)) { const r = A.result(S.W); ctx.font = '600 ' + F(22) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(winText(r), X(W.width) / 2, 34); }
   $('clock').textContent = (S.W ? S.W.t.toFixed(2) : '0.00') + ' / ' + S.scene.maxT + '초';
 }
 function winText(r) { return r.winner < 0 ? '무승부' : (S.scene.sides[r.winner].name || '편 ' + r.winner) + ' 승리' + (r.byTime ? ' (시간 판정)' : ''); }
 
 /* ---------------- 싸움터 입력 ---------------- */
-function mpos(e) { const b = cv.getBoundingClientRect(); return { x: (e.clientX - b.left) / b.width * 800 / S.sc, y: (e.clientY - b.top) / b.height * 600 / S.sc }; }
+function mpos(e) { const b = cv.getBoundingClientRect(), c = S.cam, sx = (e.clientX - b.left) / b.width * 800, sy = (e.clientY - b.top) / b.height * 600; return { x: ((sx - 400) / c.z + c.x) / S.sc, y: ((sy - 300) / c.z + c.y) / S.sc }; }   // 카메라를 거꾸로 (v2.13)
 function itemOf(sel) { const sc = S.scene; if (sel.k === 'obs') return Array.isArray(sc.obstacles) && sc.obstacles[sel.i]; if (sel.k === 'barrel') return sc.barrels && sc.barrels[sel.i]; if (sel.k === 'wall') return sc.walls && sc.walls[sel.i]; if (sel.k === 'mage') return sc.sides[sel.s] && sc.sides[sel.s].mages[sel.i]; }
 function hitTest(p) {
   const W = world(); let best = null, bd = 1e9; const tryIt = (sel, x, y, r) => { const d = Math.hypot(p.x - x, p.y - y); if (d < r && d < bd) { bd = d; best = sel; } };

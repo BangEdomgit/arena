@@ -8,7 +8,7 @@
  *   두 칸이 비어 있을 때만 마신다(짓던 설계는 버리지 않는다)
  * 기록 (m.mlog): breath 쓴 수, breathHit 마시다 맞은 수(빈틈, 한 번 마실 때 한 번), breathAtk·breathAtkHit 숨 뒤 after 5 s 안에 쏜 공격·맞힌 공격 */
 const P = require('../../data/rules/breath.json');
-let MP = null;   // 공격 방식의 수 (덮기 뒤 숨, data/mode.json)
+let MP = null, EP = null;   // 공격 방식의 수 (덮기 뒤 숨, data/mode.json)
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 // 쏜 공격·맞힌 공격의 합 (숨 뒤 명중을 세려고)
 function atk(W, m) { let c = 0, h = 0; const L = m.log; for (const n in L.casts) { const s = W.spells[n]; if (s && OFF[s.t]) { c += L.casts[n]; h += Math.min(L.casts[n], L.hits[n] || 0); } } return [c, h]; }
@@ -35,6 +35,7 @@ module.exports = {
       const T = m.tac, r = Math.min(W.rules.fatigue ? 1 - m.fat / 100 : 1, m.glu / m.gluMax), threat = !!(K.aimed || K.threat);
       let go = r < T.breathAt && (!T.breathSafe || !threat);
       if (!go && K.coverDone > W.t - 1.5 && m.fat > (MP || (MP = require('../../data/mode.json'))).heat && !threat && r < 0.5) go = true;   // 덮기 뒤 머리가 뜨거우면 (v2.12)
+      if (!go && K.low && r < (EP || (EP = require('../../data/engage.json'))).breathR && !threat) go = true;   // 몰린 쪽은 깊이 마신다 (v2.13)
       if (!go && T.breathPre && r < T.breathPre && !threat && m.op && (m.op.cur === 'press' || m.op.cur === 'finish') && W.t - m.op.t0 < P.pre) go = true;   // 몰아치기 직전에 미리 (대가·전설)
       if (!go) return restNow;
       m.st.breath = P.T; m.mlog.breath++; m.mlog.brHitF = false; m.mlog.brV = Math.max(B.C.hyp(m.vx, m.vy) * P.slow, 2.5); m.relT = null; return true;

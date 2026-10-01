@@ -1,0 +1,2 @@
+{ "desc": "덫길 (techniques/trapline, SPEC 37장): cell 덫 한 칸의 반지름(m), cellMax 한 칸에 둘 수 있는 내 덫, gap 한 사람이 덫을 놓는 사이(s), along 상대가 올 길(나와 상대 사이) 위의 자리(거리 몫), side 옆으로 비킨 거리(m), behind 상대 뒤(도망칠 길)의 거리(m)",
+  "cell": 3, "cellMax": 2, "gap": 0.8, "along": [0.4, 0.55, 0.7], "side": 2.5, "behind": 4 }

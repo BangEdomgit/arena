@@ -113,7 +113,7 @@ function value(W, m, K, o) {
     if (!off || !(s.t === 'area' || s.t === 'lob' || s.t === 'proj' || s.t === 'thread')) return;
     const p = K.covPts, n = K.covN; let best = -1, bc = 0;
     for (let i = 0; i < n; i++) { if (taken(W, m, i)) continue; let c = 0; for (let j = 0; j < n; j++) if (!taken(W, m, j) && covers(W, m, s, p[i * 3], p[i * 3 + 1], p[j * 3], p[j * 3 + 1], p[j * 3 + 2])) c++; if (c > bc) { bc = c; best = i; } }
-    if (best < 0) { o.v = 0; return; }   // 덮을 곳이 없는 수는 쓰지 않는다 (떠 있는 상대에 지연 폭발)
+    if (best < 0) { o.v *= P.offK; return; }   // 덮을 곳이 없는 수는 낮춘다 (0으로 하니 떠 있는 상대 앞에서 아무것도 안 쓰는 침묵이 생겼다, v2.13)
     o.tx = p[best * 3]; o.ty = p[best * 3 + 1]; o.v *= P.coverK * (1 + bc / n);
   } else if (mode === 'big') { if (off) o.v *= big ? P.bigK : P.offK; }
   else if (mode === 'throw') { if (!off) return; o.v *= s.t === 'lob' ? (K.e.z >= 1 ? P.offK : P.throwK * 1.2) : s.t === 'proj' && !s.home ? P.throwK : 0.7; }
