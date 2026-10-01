@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.4.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.5.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -505,6 +505,22 @@ ok('v2.4 두 겹의 두뇌·끊는 움직임·청사진·매 걸음 녹화 (SPEC
   // 판단까지: 모두 켜면 반사·발놀림·청사진이 쓰이고, 같은 씨앗이면 같다
   const g = () => { const w = A.sceneWorld({ seed: 2, rules: { flightCut: true, fort: true, reflex: true, snap: true, blueprint: true }, sides: [{ mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }, { mages: [{ tier: '대마법사', skill: '대가', deck: '대마법사 청사진' }] }] }); while (!A.over(w)) A.stepWorld(w); return w; };
   const x = g(), y = g(); assert.ok(x.t === y.t && x.ms[0].hp === y.ms[0].hp && x.ms[0].rx.dodge === y.ms[0].rx.dodge && x.ms[0].rx.dodge + x.ms[0].rx.juke > 0 && x.ms[0].rx.flips > 0 && x.ms[0].fort.bpN + x.ms[1].fort.bpN > 0, '판단');
+});
+ok('v2.5 작전 겹과 각도 판단 (SPEC 29장): 대가부터 작전을 고르고, 숨은 상대엔 사냥(보이는 자리로), 다 잡은 상대엔 끝내기, 끄면 없다', () => {
+  const mk = (rules, sa = '전설', sb = '대가') => { const W = A.createWorld({ seed: 1, obstacles: [{ x: 60, y: 40, r: 1.8 }], width: 120, height: 80, rules: Object.assign({ saltRing: false, tactics: true }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: sa, deck: '대마법사 청사진' }), 0, 40, 40), e = A.addMage(W, A.mage({ tier: '대마법사', skill: sb, deck: '대마법사 청사진' }), 1, 62.5, 40); return [W, m, e]; };
+  const st = (W, n) => { for (let i = 0; i < n; i++) A.stepWorld(W); };
+  // 숨은 상대 (바위 뒤): 사냥, 고른 자리에선 보인다
+  let [W, m, e] = mk({}); m.z = e.z = 0; m.fly = e.fly = 0; m.thinkT = e.thinkT = 1e9; e.flyWant = m.flyWant = false; st(W, 1); A.brain.think(W, m);   // 적 목록은 걸음이 채운다
+  assert.ok(A.blocked(W, m.x, m.y, e.x, e.y, 0) && m.op.cur === 'hunt', '사냥 ' + m.op.cur); assert.ok(!A.blocked(W, m.op.tx, m.op.ty, e.x, e.y, 0) && (m.op.kind & 4), '벗기는 자리');
+  // 다 잡은 상대: 끝내기 (두 번째 칸도 공격)
+  [W, m, e] = mk({}); m.thinkT = e.thinkT = 1e9; e.hp = e.hpMax * 0.2; e.x = 40; e.y = 60; st(W, 1); A.brain.think(W, m); assert.strictEqual(m.op.cur, 'finish'); assert.ok(m._k.pressB, '모든 칸');
+  // 상급은 작전 겹이 없다, 규칙을 끄면 없다
+  [W, m, e] = mk({}, '상급', '상급'); st(W, 60); assert.ok(!m.op.cur && !e.op.cur, '상급');
+  [W, m, e] = mk({ tactics: false }); st(W, 60); assert.ok(!m.op.cur && !e.op.cur, '끄면');
+  // 판 하나: 작전을 고르고 바꾸며, 같은 씨앗이면 같다
+  const g = () => { const w = A.sceneWorld({ seed: 3, rules: { flightCut: true, fort: true, reflex: true, snap: true, blueprint: true, tactics: true }, sides: [{ mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }, { mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }] }); while (!A.over(w)) A.stepWorld(w); return w; };
+  const x = g(), y = g(); assert.ok(x.t === y.t && x.ms[0].hp === y.ms[0].hp && x.ms[0].op.log.pick >= 1 && x.ms[0].op.log.ticks > 5 && JSON.stringify(x.ms[0].op.log) === JSON.stringify(y.ms[0].op.log), '판단');
+  const L = A.look(x.ms[0], x.t); assert.ok('작전 바꾼 수' in L && '자리: 한쪽 사거리' in L);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

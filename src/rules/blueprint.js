@@ -73,8 +73,24 @@ function step(W, m, c, all, X) {
     }
   }
 }
+// 두뇌 (생각 겹): 판단 수준, 특징(0~1), 고르기, 땅이 드는가
+const lvOf = m => (m.C >= 5 && m.tac.blueprint) || 0;
+function feats(m, K) { const e = K.e; return { base: 1, eFly: e.z >= 1 ? 1 : 0, eGround: e.z >= 1 ? 0 : 1, approach: Math.max(0, Math.min(1, K.vt / 5)), far: Math.max(0, Math.min(1, (K.d - 20) / 30)), tired: Math.max(0, Math.min(1, (m.fat - 60) / 40)), hurt: 1 - m.hp / m.hpMax }; }
+function pick(W, m, K) {
+  const lv = lvOf(m); let best = null, bs = -1; const F = lv >= 2 ? feats(m, K) : null;
+  for (const n of NAMES) { const bp = BPD.blueprints[n]; if (!can(W, m, bp) || m.glu < costOf(W, m, bp)) continue; if (lv < 2) return n; let s = 0; for (const k in bp.score) s += bp.score[k] * F[k]; if (s > bs) { bs = s; best = n; } }   // 당이 모자라면 고르지 않는다
+  return best;
+}
+const needGround = n => BPD.blueprints[n].items.some(([k]) => BPD.items[k].build);
+// 짓기 단계로: 청사진이 준비됐고(책·간격·지난 청사진에서 8 s) 고를 게 있으면. 작전 겹(진지, rules/tactics)도 이것으로 짓는다(v2.5)
+function startBuild(W, m, K) {
+  const f = m.fort, s = W.spells['청사진'];
+  if (!lvOf(m) || !s || !m.book.includes('청사진') || (m.cd['청사진'] || 0) > 0 || W.t - f.bpLast < P.again) { f.bpPick = null; return false; }
+  f.bpPick = pick(W, m, K); if (!f.bpPick) return false;
+  m.phase = 'build'; K.prefR = K.d; K.aggr *= 0.6; K.pressB = false; return true;
+}
 module.exports = {
-  name: 'blueprint', switch: 'blueprint', on: W => W.rules.blueprint, form: { blueprint: 'self' }, api: { plan, can, BPD },
+  name: 'blueprint', switch: 'blueprint', on: W => W.rules.blueprint, form: { blueprint: 'self' }, api: { plan, can, BPD, startBuild },
   engine: X => ({ mageStep(W, m) { const c = m.cast; if (c && c.bp && c.s.t === 'blueprint' && c.t >= c.s.cast) step(W, m, c, false, X); } }),
   types: X => ({
     // 다 지었다: 남은 반올림 몫까지 짓고 센다
@@ -82,24 +98,14 @@ module.exports = {
   }),
   brainTypes: B => ({ blueprint(W, m, K, o) { o.v = 0; } }),   // 값은 두뇌 훅이
   brain: B => {
-    const lvOf = m => (m.C >= 5 && m.tac.blueprint) || 0;
-    // 특징 (0~1)
-    function feats(m, K) { const e = K.e; return { base: 1, eFly: e.z >= 1 ? 1 : 0, eGround: e.z >= 1 ? 0 : 1, approach: Math.max(0, Math.min(1, K.vt / 5)), far: Math.max(0, Math.min(1, (K.d - 20) / 30)), tired: Math.max(0, Math.min(1, (m.fat - 60) / 40)), hurt: 1 - m.hp / m.hpMax }; }
-    function pick(W, m, K) {
-      const lv = lvOf(m); let best = null, bs = -1; const F = lv >= 2 ? feats(m, K) : null;
-      for (const n of NAMES) { const bp = BPD.blueprints[n]; if (!can(W, m, bp) || m.glu < costOf(W, m, bp)) continue; if (lv < 2) return n; let s = 0; for (const k in bp.score) s += bp.score[k] * F[k]; if (s > bs) { bs = s; best = n; } }   // 당이 모자라면 고르지 않는다
-      return best;
-    }
-    const needGround = n => BPD.blueprints[n].items.some(([k]) => BPD.items[k].build);
     return {
       // 리듬의 짓기 단계 (진지 규칙의 짓기를 대신한다)
       phase(W, m, K) {
         if (!lvOf(m) || m.phase !== 'probe') return;
-        const e = K.e, d = K.d, f = m.fort, s = W.spells['청사진'];
+        const e = K.e, d = K.d;
         const away = d > P.buildD || ((e.phase === 'out' || K.vt < -2) && d > P.backD);
-        if (!away || d > P.near || !s || !m.book.includes('청사진') || (m.cd['청사진'] || 0) > 0 || W.t - f.bpLast < P.again) { f.bpPick = null; return; }
-        f.bpPick = pick(W, m, K); if (!f.bpPick) return;
-        m.phase = 'build'; K.prefR = d; K.aggr *= 0.6; K.pressB = false;
+        if (!away || d > P.near) { m.fort.bpPick = null; return; }
+        startBuild(W, m, K);
       },
       steer(W, m, K) {
         const f = m.fort, c = m.cast;

@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.4.0
+ * 숨 결투장 — 엔진 핵심 v2.5.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.4.0';
+const VERSION = '2.5.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -144,7 +144,7 @@ function addMage(W, spec, side, x, y) {
       swarm: true, siege: true, wallSite: false, wallBreak: false, retreat: false,
       rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false,
       flyCut: 0, fortify: 0, breach: false,
-      reflex: 0, chop: false, footwork: 0, blueprint: 0 }, spec.tac),   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+      reflex: 0, chop: false, footwork: 0, blueprint: 0, ops: 0 }, spec.tac),   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
     st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
@@ -162,6 +162,10 @@ function addMage(W, spec, side, x, y) {
     //   기록: 방향 전환, 반응 시간 합·수·못 한 수, 흔들기(멈칫·뒤집기)·피하기, 흔든 뒤·안 흔든 뒤 나를 겨눈 수와 빗나간 수, 내려앉기-구르기, 톱질·튕기기·옆 뒤집기
     rx: { th: null, thq: null, kind: 0, t0: 0, done: false, met: false, vx0: 0, vy0: 0, pr: 0, pk: 0, until: -9, vx: 0, vy: 0, fv: -1, pend: null, jukeT: -9, lrt: 0, lx: 0, ly: 0, sfT: 0, bT: 0, bUp: false, tvx: 0, tvy: 0,
       turns: 0, rS: 0, rN: 0, rMiss: 0, juke: 0, stop: 0, flip: 0, dodge: 0, shotJ: 0, missJ: 0, shotN: 0, missN: 0, lrtN: 0, saw: 0, bounce: 0, flips: 0 },
+    // 작전 겹 (v2.5, rules/tactics): 지금 작전·시작 시각·다음 고를 시각, 고른 자리와 그 성질, 상대의 다가오는 속도 평균·짐작한 작전, 마지막 강요한 시각, 뒤를 볼 수, 이번 작전의 시작 값
+    //   기록: 작전마다 고른 수·완수·시간, 강요한 수와 그 뒤 상대가 길을 바꾼 수, 대조(다른 공격), 고른 자리의 성질(한쪽 사거리·엿보기·벗기기·퇴로)과 고른 횟수.  맨 위 칸은 이로써 127개(가득): 새 칸은 하위 객체에
+    op: { cur: null, t0: -9, next: 0, tx: NaN, ty: NaN, kind: 0, dir: 1, eVt: 0, eOp: null, fT: -9, pend: null, st: null,
+      log: { n: {}, ok: {}, time: {}, dealt: {}, took: {}, forced: 0, forceN: 0, ctrlN: 0, ctrlMoved: 0, pick: 0, ticks: 0, oneSide: 0, peek: 0, strip: 0, cut: 0 } },
     // 사람의 맨 위 칸은 127개까지다: 넘으면 V8이 리터럴을 느린 길로 만들어 판이 두 배 느려진다 (v2.3에서 쟀다). 새 칸은 하위 객체에 (SPEC 17장)
       // 사기 (rules/morale): 도망 중, 충격
     // 비행의 기록 (v2.0, 행동 지표): 난 시간, 속도 합·제곱 합, 코너 속도 근처 시간, 속도 속임, 높이 변화 합, 추락, 스쳐 치기 시도·적중
