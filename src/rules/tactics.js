@@ -21,6 +21,7 @@
  * 기록 (m.op.log): 작전마다 고른 수·완수·시간, 강요하는 수와 그 뒤 상대가 길을 바꾼 수(대조: 다른 공격), 고른 자리의 성질(한쪽 사거리·엿보기·벗기기·퇴로) */
 const { hyp, atan2, sin, cos } = require('../math');
 const P = require('../../data/rules/tactics.json');
+let SH = null;   // 날카롭게의 벽 자리 (두뇌를 처음 부를 때 읽는다: 순환)
 const OPS = ['fort', 'attrit', 'press', 'herd', 'hunt', 'finish'];
 const DIRECT = { proj: 1, thread: 1, touch: 1, cone: 1 }, INDIRECT = { area: 1, lob: 1 }, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const TERR = { wall: 1, build: 1, trap: 1, cage: 1, blueprint: 1, topple: 1 };
@@ -155,7 +156,7 @@ module.exports = {
       // 걸음: 고른 자리로, 상대 둘레를 돌아서 (둘레 방향 1, 반지름 방향 0.4)
       steer(W, m, K) {
         const O = m.op; if (!lvOf(m) || !O.cur || K.dodge || m.phase === 'build') return;
-        if (m.tac.sharp && W.t - K.wallT < 2 && W.t >= K.wallT - 1) return;   // 세운 벽 뒤에 머문다 (날카롭게, v2.8)
+        if ((SH || (SH = require('../brain/techniques/sharp'))).behind(W, m, K)) return;   // 세운 벽 뒤에 머문다 (날카롭게, v2.8)
         if (m.phase === 'out') {   // 빠지기: 곧장 물러나지 않고 상대 둘레로 돌며 벌린다 (나선)
           if (m.retreat || !P.spiral || lvOf(m) < P.circleLv) return;   // 무리 앞 물러나기는 그대로. 나선은 전설만
           if (m.x < P.spiralEdge || m.y < P.spiralEdge || m.x > W.width - P.spiralEdge || m.y > W.height - P.spiralEdge || (W.rules.saltRing && hyp(m.x - W.width / 2, m.y - W.height / 2) > C.saltR(W) - P.spiralEdge)) return;   // 끝·소금 선 가까이선 소금 원의 걸음 그대로 (벌리다 선 밖으로 나가지 않게)

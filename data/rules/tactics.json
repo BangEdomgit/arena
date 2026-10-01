@@ -2,7 +2,7 @@
  "every": [2, 1],
  "stick": 0.25, "stall": [8, 0.6], "learn": [3, 2, 1],
  "score": {
-  "finish": { "eLow": 2.5, "finishable": 1.2, "lead": 1 },
+  "finish": { "eLow": 2.5, "finishable": 1.2, "lead": 1, "eHalf": 2 },
   "press": { "base": 0.6, "lead": 1, "eWeak": 0.8, "stronger": 0.4, "tired": -0.8 },
   "attrit": { "base": 0.5, "rangeAdv": 1, "behind": 0.8, "eTired": 0.3 },
   "hunt": { "base": 0.2, "covered": 2 },

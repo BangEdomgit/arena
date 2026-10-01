@@ -6,7 +6,7 @@
 
 - `SPEC.md`가 **유일한 기준**이다. 코드와 SPEC이 어긋나면 코드가 틀린 것이다. 규칙을 바꾸려면 SPEC부터 고친다.
 - `WORLD.md`는 세계관의 근거(설정집 3판). 규칙의 "왜"를 찾을 때 본다. 고치지 않는다.
-- `REPORT.md`는 측정 보고의 요약과 목차, 본문은 `reports/`에 버전마다 한 장(`reports/v1.12.0.md`). 결과가 바뀌는 변경을 했으면 다시 재서 그 버전의 장을 쓰고 `REPORT.md`의 요약·목차를 고친다.
+- `REPORT.md`는 측정 보고의 요약과 목차, 본문은 `reports/`에 버전마다 한 장(`reports/v1.12.0.md`). 결과가 바뀌는 변경을 했으면 다시 재서 그 버전의 장을 쓰고 `REPORT.md`의 요약·목차를 고친다. 성적표(`reports/scorecard.md`)는 `node cli.js report`로 그 버전의 열을 더한다.
 
 ## 명령
 
@@ -30,6 +30,8 @@ node experiments/diag.js 100 [--tac '{"survive":false}'] [--skill 전설,대가]
 node experiments/versus.js '{"tier":"중간","skill":"대가"}' '{"tier":"중간","skill":"상급"}' 1000 '{"risk":true}' backfire   # 대결 N판 (병렬)
 node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
+node cli.js report                # v2.9 성적표: 결투장 전설 대 전설·사다리·상위 무리 기준을 재서 reports/scorecard.md에 이 버전으로 쌓는다 (약 20 s, --show는 보기만)
+node experiments/crowd.js 20 [--n 6,10,14,20]   # v2.9 상위 무리 기준: 대마법사(전설) 하나 대 상위 N
 node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단계는 조합 이름을 준다, reports/v2.0-rules.md)
 # 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (reports/v1.3.1.md, 13절)
 ```
@@ -65,6 +67,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **결정론**: 난수는 세계마다 하나. `W.rng()`·`W.rnd(a, b)`만 쓰고 `Math.random`이나 시계에 기대는 코드는 넣지 않는다. 같은 씨앗이면 같은 결과가 나와야 한다(시험 1번).
 - **결정론 수학**: 엔진(`src/` 아래 모두, `metrics/`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `src/math.js`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(core도 내보낸다. brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
 - **모듈과 묶음**: 엔진 파일은 평범한 CommonJS다(1.12.0, UMD는 없앴다). 브라우저는 `node cli.js pack`이 묶은 `sandbox/arena.js`로 읽는다. 그래서 엔진 안의 `require`는 **정적인 상대 경로**(`require('./util')`, `require('../../data/skills.json')`)만 쓴다. 표준 모듈(`fs` 등)이나 변수 경로는 묶이지 않는다. 새 파일을 더하면 `node cli.js pack`.
+- **v2.9 (SPEC 33장)**: 두뇌 기술만(날카롭게 `techniques/sharp`의 `P`, 모두 끄면 v2.8 지문): 몰아칠 틈(`storm`)엔 명중 문턱 `minOpen`, 붙잡아 둔 수가 있으면 리듬 들어가기(`inHeld`), 문턱에 막혀 기다리는 동안(`K.waitT`) 빈 칸을 벽·함정·지대에(`wait`, 빈틈이 열리면 끊는다), 세운 벽에 머물기(`behind`: 날기·작전 규칙도 이걸 부른다, 처음 부를 때 읽는다). 성적표는 `node cli.js report`(`experiments/report.js` → `reports/scorecard.json`·`.md`, 버전마다 쌓는다: 결과가 바뀌는 변경을 했으면 돌린다). 상위 무리 기준은 `experiments/crowd.js`(결투장 들판, 대가·상급 반반, 광역·기술·합법 최강)
 - **v2.8 (SPEC 32장)**: 붙잡아 둔 설계(`rules/hold`, `hold` 기본 켬, 수는 `data/rules/hold.json`): 두 번째 칸의 시전에 `hold`가 붙으면 엔진 훅 `castHold`가 풀지 않는다. 푸는 판단은 두뇌 훅 `cancel`(칸 고르기 앞). 규칙 모듈이 두뇌 기술을 쓸 땐 처음 부를 때 읽는다(엔진이 규칙을 읽을 때 두뇌는 아직 없다: 순환). 명중 가망·방패의 때는 `techniques/sharp`(`chance`·`threatSoon`), 세운 벽은 `K.wallT`. `endureK`는 0.8(대마법사 하나 대 상위 열이 반반: 장면 `v2-archmage-1v10`)
 - **v2.7 (SPEC 31장)**: 기본 규칙 둘. 버티기(`rules/endure`, `endureK`·`endureC`): 상위·대마법사의 머리·당 회복 × (C/2.5)^endureK(v2.8부터 0.8), 평범·중간은 그대로(중간의 판단 사다리가 머리 아끼기에 걸려 있다). 마법의 부딪힘 감쇠(`bluntK`, `rules/body`): 굳은 살 뒤 ÷ C^2.3, 총·화약통·벽 밀기 빼고. 둘 다 0이면 v2.6.0(V1_RULES도 0). 당 회복은 엔진 훅 `gluRegen`. 판단이 잦은 사람의 확률적 기술은 초당으로 맞춘다(박자 흔들기가 판단마다 20%라 전설이 35%를 쉬었다). 장면 `v2-archmage-2v6`(대마법사 둘 대 상위 여섯)은 크기를 적어 둔다(샌드박스의 기본 크기는 40 × 30)
 - **v2.6 (SPEC 30장)**: 판단 수준의 기술 `survive`(스스로 죽지 않기)·`sharp`(날카롭게)는 대가부터·선명도 5 이상. 머리 넘침은 `brain/util`의 `heatOver`로 본다(시전·자동 진·청사진 모두). 소금 원·비행의 단단한 벽은 두뇌 훅 `bound`(움직임의 맨 끝)에, 구르기 훅은 방향(`o.dx`·`o.dy`)도 고친다. 땅이 안전한가는 `groundSafe`(대마법사의 함정은 땅에 선 대마법사를 한 방에 죽인다: 내려앉히는 새 코드는 이걸 본다). 걸음마다 보는 지표는 `metrics/watch.js`(판에 닿지 않게 읽기만, 기록 칸을 `m.log`에 더하면 지문이 바뀌니 모습 기록은 `m.mlog`에). 머리 피로가 짓는 시간을 막는다(날면 남는 회복 1.2/s, reports/v2.6.0.md)

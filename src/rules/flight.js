@@ -14,6 +14,7 @@
 const { pow, hyp, clamp } = require('../math');
 const F = require('../../data/rules/flight.json');
 const { saltR } = require('./saltRing').api, SR = require('./saltRing').api;
+let SH = null;   // 날카롭게의 벽 자리 (두뇌를 처음 부를 때 읽는다: 순환)
 const { aOf } = require('./snap').api;   // 끊는 움직임 (v2.4): 옆·오르내림 가속의 바닥
 const G = F.g, M = F.mass, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, CU = F.cut;
 // 출력 (W). C^2.5는 선명도마다 한 번
@@ -254,7 +255,7 @@ module.exports = {
         let risk = m.fat > S.low;
         if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast; if (x && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
         if (c.cool) risk = true;
-        if (m.tac.sharp && W.t - K.wallT < 2 && W.t >= K.wallT - 1) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)
+        if ((SH || (SH = require('../brain/techniques/sharp'))).behind(W, m, K)) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)
         if (c.cool && m.flyWant) {
           let bad = !B.groundSafe(W, m);
           for (const a of W.areas) if (a.src.side !== m.side && !a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + S.danger) { bad = true; break; }

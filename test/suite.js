@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.8.0 — 표준 시험 묶음
+/* 숨 결투장 v2.9.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -96,6 +96,7 @@ function table() {
   T.push({ id: '모습: 대마법사 결투장 전설 대 전설', group: '모습', N: 20, job: { fn: 'arena', args: ['v2-tactics-legend.json', 20] } });   // 걸음마다 본 지표 (v2.6)
   T.push({ id: '모습: 대마법사 둘 대 상위 여섯', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['v2-archmage-2v6.json', 20] } });   // 상위의 부딪힘이 대마법사를 한 방에 죽이지 않는가 (v2.7)
   T.push({ id: '모습: 대마법사 하나 대 상위 열', group: '모습', N: 40, job: { fn: 'sceneWins', args: ['v2-archmage-1v10.json', 40] } });   // 대마법사 하나가 상위 열과 반반인가 (v2.8, WORLD 4-1)
+  T.push({ id: '모습: 상위 무리 기준 1 대 20', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['v2-crowd-1v20.json', 20] } });   // 상위 무리 기준(대가·상급 반반, 덱 섞기, 결투장 들판)의 1 대 20 (v2.9)
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);

@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.8.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.9.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -577,6 +577,30 @@ ok('v2.8 붙잡아 둔 설계·명중 가망·방패의 때 (SPEC 32장): 다 �
   // 판 하나: 붙잡았다가 푼 수가 있고 같은 씨앗이면 같다
   const sc = SCENES['v2-tactics-legend'], g = () => { const w = A.sceneWorld(Object.assign({}, sc, { seed: 2 })); while (!A.over(w)) A.stepWorld(w); return w; }, x = g(), y = g();
   assert.ok(x.t === y.t && x.ms[0].mlog.held + x.ms[1].mlog.held > 0 && x.ms[0].mlog.held === y.ms[0].mlog.held, '붙잡아 푼 수 ' + x.ms[0].mlog.held);
+});
+ok('v2.9 몰아치기·빈 칸의 준비·벽 자리·성적표 (SPEC 33장): 틈엔 문턱이 낮고, 기다리는 동안 벽·함정, 세운 벽에 머문다, 무리 기준, 성적표', () => {
+  const sharp = require('../src/brain/techniques/sharp'), P = sharp.P;
+  const W = A.createWorld({ seed: 1, obstacles: 0, rules: { flight: false, saltRing: false } }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }), 0, 50, 50), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }), 1, 70, 50);
+  const K = { e, d: 20, waitT: -9, wallT: -9, los: true, ux: 1, uy: 0 };
+  // 몰아칠 틈: 굳음·과열이 다가옴·끝내기
+  assert.ok(!sharp.storm(W, m, K)); e.fat = P.hotF + 1; assert.ok(sharp.storm(W, m, K)); e.fat = 0; e.st.stun = 0.5; assert.ok(sharp.storm(W, m, K)); e.st.stun = 0;
+  // 기다리는 동안: 문턱에 막힌 뒤 0.5 s 안이면 벽·함정에 값 (둘 다 낮을 때 벽)
+  const o = { s: W.spells['석회 기둥'], v: 0, he: 0.35 }; sharp.value(W, m, K, o); assert.strictEqual(o.v, 0, '기다리지 않으면 그대로');
+  K.waitT = W.t; sharp.value(W, m, K, o); assert.ok(o.v >= P.prepMin, '기다리는 동안 벽 ' + o.v);
+  const tr = { s: W.spells['숨 덫'], v: 0, he: 0.35 }; sharp.value(W, m, K, tr); assert.ok(tr.v > 0 && tr.tx > m.x, '함정은 적 쪽 3 m');
+  m.fat = P.prepFat + 1; const o2 = { s: W.spells['석회 기둥'], v: 0, he: 0.35 }; sharp.value(W, m, K, o2); assert.strictEqual(o2.v, 0, '머리를 남겨 둔다'); m.fat = 0;
+  // 벽 자리: 세운 지 10 s 안, 제 벽이 15 m 안이면 머문다. 들어갈 땐 떠난다
+  K.wallT = W.t - 5; assert.ok(!sharp.behind(W, m, K), '벽이 없으면');
+  A.addWall(W, { x: 53, y: 50, r: 0.6, hp: 100, t: 30, own: 0, mk: m.id }); assert.ok(sharp.behind(W, m, K), '제 벽 곁');
+  m.phase = 'in'; assert.ok(!sharp.behind(W, m, K), '들어갈 땐 떠난다'); m.phase = 'probe'; K.wallT = W.t - 11; assert.ok(!sharp.behind(W, m, K), '10 s 뒤');
+  // 상위 무리 기준: 대가·상급 반반, 덱 셋을 돌려, 결투장 들판
+  const CR = require('../experiments/crowd'), sc = CR.scene(6, 1), cm = sc.sides[1].mages;
+  assert.ok(sc.width === 200 && sc.height === 150 && sc.rules.tactics && cm.filter(x => x.skill === '대가').length === 3 && new Set(cm.map(x => x.deck)).size === 3);
+  // 걸음마다 지표의 새 칸, 성적표
+  const Wt = require('../metrics/watch'), w = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 20 })); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); }
+  const lk = Wt.seen(w, w.ms[0]); for (const k of ['짓지 않는 몫', '들어가기 몫', '끝내기 몫', '제 벽 곁 몫', '벽 뒤에서 쏜 몫']) assert.ok(lk[k] >= 0 && lk[k] <= 1, k);
+  const R = require('../experiments/report'), md = R.render({ versions: { '2.10.0': { date: 'd', N: 1, crowd: 1, o: { '공격 명중률': 0.25, '무리:6': [1, 0.5] } }, '2.9.0': { date: 'd', N: 1, crowd: 1, o: {} } } });
+  assert.ok(md.indexOf('v2.9.0 | v2.10.0') > 0 && md.includes('| 25% |') && md.includes('100% · 50%'), '성적표: 버전 차례');
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

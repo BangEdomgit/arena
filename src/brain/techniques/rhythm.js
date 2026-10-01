@@ -8,7 +8,7 @@
  * 대가·전설(tac.rhythm = true, tac.rhythmTime): 모든 틈을 보고, 붙는 데 드는 시간(거리 / 속도 + 0.25 s)보다 틈이 길 때만 들어간다
  * 장악권 밀기(tac.domainPush, 대가부터): 들어갈 거리 = 두 신호가 맞서는 경계가 상대에게서 3 m 안으로 오는 거리(5장 식을 풀어서, 4~12 m).
  *   다가갈수록 상대 자리의 공기를 빼앗아 상대 자리에서 만드는 내 마법(발밑·구름·지대·실)의 몫이 오른다 */
-const { C, defenseDown } = require('../util');
+const { C, defenseDown } = require('../util'), SH = require('./sharp');
 const PROBE_R = 14, OUT_R = 22, GAP = 3, STRONG = 5;   // 강자(선명도 5 이상: 상위·대마법사, 나는 사람)만: 평범·중간의 판단 사다리는 v2.1 그대로
 // 들어갈 거리: 경계에서 상대까지의 틈이 GAP가 되는 거리. 경계(나에게서) x = L(A−B)/(A+B) + A·d/(A+B) → d − x = GAP를 푼다
 function inDist(W, m, e) {
@@ -19,6 +19,10 @@ function window(W, m, K, full) {
   const e = K.e, st = e.st; let w = 0;
   if (st.stun > w) w = st.stun; if (st.root > w) w = st.root;
   if (e.fat > 92 && !e.wave) w = w > 1.5 ? w : 1.5;   // 과열: 넘치기 직전이라 곧 쉬어야 한다
+  if (full && SH.on(m)) {   // 날카롭게 (v2.9): 과열이 다가오면(머리 85 넘음) 1 s, 다 지어 붙잡아 둔 공격이 있으면 1 s 들어간다 (가까울수록 닿는 때가 짧아 맞을 가망이 오른다)
+    if (e.fat > SH.P.hotF && !e.wave && w < 1) w = 1;
+    const b = m.castB; if (SH.P.inHeld && b && b.hold && !b.go && b.t >= b.T && w < SH.P.inHeld) w = SH.P.inHeld;
+  }
   if (full) { if (e.emptyT > W.t && e.emptyT - W.t > w) w = e.emptyT - W.t; if (e.crash > w) w = e.crash; if (w < 1 && defenseDown(e, K.S, W)) w = 1; }
   return w;
 }
