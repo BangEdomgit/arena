@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.10.0
+ * 숨 결투장 — 엔진 핵심 v2.11.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,11 +9,11 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.10.0';
+const VERSION = '2.11.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, bluntK: 0, endureK: 0, hold: false, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, bluntK: 0, endureK: 0, hold: false, gluRegen: 1.2, breath: false, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -38,6 +38,7 @@ const DEFAULT_RULES = {
   callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
   endureK: 0.8,        // (v2.7, v2.8에 1.2 → 0.8) 버티기: 머리 회복(초당 4)과 당 회복(초당 1.2 g) × max(1, C / endureC)^endureK (평범·중간 × 1 · 상위 × 1.74 · 대마법사 × 3.0). 0이면 누구나 같다 (SPEC 31장, rules/endure)
   endureC: 2.5,        // (v2.7) 버티기가 시작하는 선명도 (중간까지는 그대로)
+  gluRegen: 3,         // (v2.11, 1.2 → 3) 당 회복 (초당 g, 버티기가 상위·대마법사에게 곱한다). 숨(rules/breath)은 규칙 모듈의 스위치
   bluntK: 2.3,         // (v2.7) 마법의 부딪힘: 굳은 살을 뺀 뒤 ÷ max(C, 1)^bluntK (총·화약통·벽 밀기는 빼고). 0이면 굳은 살만(v2.6까지: 상위의 돌 비가 대마법사를 한 방에 죽였다) (SPEC 31장, rules/body)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
   army: true,          // (v2.0 둘째) 군대: 머스킷의 장전·화승·사거리 100 m, 박격포, 돌아가며 쏘기 (SPEC 25장, rules/army)
@@ -148,8 +149,8 @@ function addMage(W, spec, side, x, y) {
       rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false,
       flyCut: 0, fortify: 0, breach: false,
       reflex: 0, chop: false, footwork: 0, blueprint: 0, ops: 0,
-      aim: false, wallLos: 0, swarmR: 0 }, spec.tac),   // (v2.10) 명중 가망(전설, techniques/sharp), 시야 공격 몫이 이만큼일 때만 벽(대가부터), 협공: 선명도 몇 배부터 무리 싸움인가(상위 1.8, 0이면 3, techniques/swarm)   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
-    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
+      aim: false, wallLos: 0, swarmR: 0, breathAt: 0.05, breathSafe: false, breathPre: 0 }, spec.tac),   // (v2.10) 명중 가망(전설, techniques/sharp), 시야 공격 몫이 이만큼일 때만 벽(대가부터), 협공: 선명도 몇 배부터 무리 싸움인가(상위 1.8, 0이면 3, techniques/swarm)   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0, breath: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
@@ -180,7 +181,7 @@ function addMage(W, spec, side, x, y) {
       bpN: 0, bpItems: 0, bpT: 0, bpName: {}, bpPick: null, bpLast: -9 },   // 청사진 (v2.4, rules/blueprint): 다 지은 청사진 수·구조물 수·걸린 시간 합, 이름별 수, 고른 것, 마지막 시각
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
     // 고수 싸움의 기록 (v2.2, 26장 지표): 칸마다 역할별 시전(A·B·자동), 리듬 단계별 시간, 세운·없앤 지형
-    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
+    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, breath: 0, breathHit: 0, brHitF: false, breathAtk: 0, breathAtkHit: 0, brT: -9, brA: 0, brH: 0, brV: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
     alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
@@ -477,7 +478,7 @@ function stepMage(W, m) {
   // 간격은 0 아래로 더 줄이지 않는다: 읽는 곳은 모두 (cd || 0)을 0 이상 문턱과 견주거나 0 이상과 min·max하므로 0 아래는 얼마든 같다 (속도, 1.11.1)
   const cd = m.cd; for (const n in cd) { const v = cd[n]; if (v > 0) cd[n] = v - DT; }
   m.rollCd -= DT; m.autoCd -= DT; if (m.vault > 0) m.vault -= DT;
-  let gr = BODY.gluRegen; const hg = W.H.gluRegen; for (let i = 0; i < hg.length; i++) gr = hg[i](W, m, gr); m.glu = Math.min(m.gluMax, m.glu + gr * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;   // 당 회복 (버티기, rules/endure)
+  let gr = W.rules.gluRegen ?? BODY.gluRegen; const hg = W.H.gluRegen; for (let i = 0; i < hg.length; i++) gr = hg[i](W, m, gr); m.glu = Math.min(m.gluMax, m.glu + gr * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;   // 당 회복 (버티기, rules/endure)
   const H = W.H;
   if (m.fat > 0) { let k = 4; const hf = H.fatRecover; for (let i = 0; i < hf.length; i++) k = hf[i](W, m, k); m.fat = Math.max(0, m.fat - k * DT); }   // 머리 회복 (메타 × 1.05, rules/wave)
   const hs = H.mageStep; for (let i = 0; i < hs.length; i++) hs[i](W, m);   // 소금 선 밖 (rules/saltRing), 파도가 몸을 태움·꺼짐 (rules/wave)
@@ -652,7 +653,7 @@ function result(W) {
 }
 
 // 규칙 모듈이 쓰는 엔진의 것 (X)
-X = { DT, hyp, hyp3, clamp, addWall, trapCap, canHit, release, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
+X = { DT, BODY, hyp, hyp3, clamp, addWall, trapCap, canHit, release, keepIf, onSalt, wallsIn, sin, cos, atan2, pow, log, hurt, hit, eff, burst, addZone, formPoint, inZone, blocked, share, gOf, power, sizeOf, rangeOf, roll };
 formsOf();
 const { SALT, saltR, outSalt } = require('./rules/saltRing').api;   // 예전 이름 그대로 (소금 원, rules/saltRing)
 module.exports = { VERSION, DT, SPELLS, sigOf, TYPES, SALT, saltR, outSalt, sin, cos, atan2, pow, exp, log, DEFAULT_RULES, V1_RULES, RULES: R.RULES, BODY, FORM, THREAT, createWorld, addMage, addWall, trapCap, onSalt, wallsIn, stepWorld, run, over, result, snapshot, release, roll, share, gOf, gAt, power, rangeOf, sizeOf, blocked, inZone, hyp, hyp3, clamp };

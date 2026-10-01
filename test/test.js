@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.10.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.11.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -620,6 +620,23 @@ ok('v2.10 명중 가망은 전설만·시야 공격에만 벽·벽이 실을 끊
   const sp = w.ms.slice(1).filter(q => q.hp > 0); let sx = 0, sy = 0; for (const q of sp) { const d = Math.hypot(q.x - ar.x, q.y - ar.y); sx += (q.x - ar.x) / d; sy += (q.y - ar.y) / d; } assert.ok(sp.length < 3 || Math.hypot(sx, sy) / sp.length < 0.9, '둘레로 흩어진다');
   // 벽이 없었다면 맞았을 피해: 지표가 있다
   const Wt = require('../metrics/watch'), v = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } const lk = Wt.seen(v, v.ms[0]); assert.ok(lk['벽이 없었다면 맞았을 피해'] >= 0 && lk['그중 맞은 몫'] >= 0);
+});
+ok('v2.11 당 회복 3 g/s·숨 (SPEC 35장): 마시는 0.5 s는 못 짓고 느리다, 끝나면 당 +80·머리 −30·기력 +3, 판마다 세 번, 판단 수준마다 문턱', () => {
+  const mk = (skill, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false, saltRing: false }, rules) }); const m = A.addMage(W, A.mage({ tier: '상위', skill, deck: '합법 최강' }), 0, 10, 10), e = A.addMage(W, A.mage({ tier: '상위', skill: '상급', deck: '합법 최강' }), 1, 30, 10); e.thinkT = m.thinkT = 1e9; A.stepWorld(W); return [W, m, e]; };
+  // 당 회복: 기본 3 (상위는 버티기 × 1.74), 1.2로 하면 예전
+  let [W, m] = mk('상급'); m.thinkT = 1e9; m.glu = 0; A.stepWorld(W); const g3 = m.glu; [W, m] = mk('상급', { gluRegen: 1.2 }); m.thinkT = 1e9; m.glu = 0; A.stepWorld(W); assert.ok(Math.abs(g3 / m.glu - 2.5) < 1e-6, '2.5배');
+  // 숨: 남은 몫(머리·당 가운데 적은 쪽)이 문턱 아래면 마신다. 마시는 동안은 새 마법을 고르지 않고, 끝나면 채운다
+  [W, m] = mk('상급'); m.fat = 80; m.glu = 20; m.stam = 1; m.thinkT = 0; A.brain.think(W, m); assert.ok(m.st.breath > 0 && m.mlog.breath === 1 && !m.cast, '마신다');
+  for (let i = 0; i < 6; i++) { m.thinkT = 0; A.stepWorld(W); } assert.ok(m.st.breath > 0 && !m.cast, '마시는 동안 못 짓는다');
+  const f0 = m.fat; for (let i = 0; i < 12; i++) A.stepWorld(W); assert.ok(m.st.breath === 0 && m.glu > 95 && m.fat < f0 - 25 && m.stam > 3.5, '채운다 ' + m.glu.toFixed(0) + ' ' + m.fat.toFixed(0));
+  m.mlog.breath = 3; m.fat = 99; m.thinkT = 0; A.brain.think(W, m); assert.ok(!(m.st.breath > 0), '세 번까지');
+  // 판단 수준: 상급은 위협이 있으면 참는다, 초보는 넘치기 직전이면 마신다(문턱 5%)
+  [W, m] = mk('상급'); const e = W.ms[1]; e.cast = { s: W.spells['짧은 실'], tgt: m, tx: m.x, ty: m.y, t: 0, T: 1 }; m.fat = 80; m.thinkT = 0; A.brain.think(W, m); assert.ok(!(m.st.breath > 0), '위협이면 참는다');
+  [W, m] = mk('초보'); m.fat = 90; m.thinkT = 0; A.brain.think(W, m); assert.ok(!(m.st.breath > 0), '초보는 90에선 아니다'); m.fat = 96; m.thinkT = 0; A.brain.think(W, m); assert.ok(m.st.breath > 0, '초보는 넘치기 직전');
+  // 대가: 압박·끝내기를 고른 직후 남은 몫 45% 아래면 미리
+  [W, m] = mk('대가'); m.fat = 60; m.op.cur = 'press'; m.op.t0 = W.t; m.thinkT = 0; A.brain.think(W, m); assert.ok(m.st.breath > 0, '몰아치기 직전에 미리');
+  // 끄면 없다, 1.x는 1.2·없음
+  [W, m] = mk('상급', { breath: false }); m.fat = 95; m.thinkT = 0; A.brain.think(W, m); assert.ok(!(m.st.breath > 0)); assert.ok(A.V1_RULES.gluRegen === 1.2 && A.V1_RULES.breath === false && A.DEFAULT_RULES.breath === true && A.DEFAULT_RULES.gluRegen === 3);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

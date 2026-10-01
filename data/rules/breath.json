@@ -1,0 +1,1 @@
+{ "desc": "숨 (rules/breath, SPEC 35장): n 판마다 쓸 수 있는 수, T 마시는 시간 (s), slow 마시는 동안 속도 배수, glu·fat·stam 끝나면 당 +g · 머리 피로 − · 기력 +, after 숨 뒤 공격 명중을 세는 시간 (s), pre 작전 압박·끝내기를 고른 뒤 '직전'으로 보는 시간 (s)", "n": 3, "T": 0.5, "slow": 0.5, "glu": 80, "fat": 30, "stam": 3, "after": 5, "pre": 1 }

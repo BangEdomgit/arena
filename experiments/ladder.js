@@ -1,6 +1,6 @@
 'use strict';
 /* 숨 결투장 — 단계 사다리 떼어 재기 (v2.10, SPEC 34장): 대마법사끼리 앞 사람의 점수(비김 0.5), 판마다 자리를 번갈아
- *   node experiments/ladder.js [전설-대가] [N=400] [--base] [--tacA '{…}'] [--tacB '{…}'] [--as 대가] [--abl]
+ *   node experiments/ladder.js [전설-대가] [N=400] [--base] [--tacA '{…}'] [--tacB '{…}'] [--as 대가] [--rules '{…}'] [--abl]
  *   기본은 대마법사 결투장(장면 v2-tactics-legend: 청사진 덱, 결투장 규칙). --base는 기본 규칙·'대마법사 운영' 덱(200 × 150)
  *   --tacA: 앞 사람에게만 덧씌울 tac. --as: 앞 사람의 판단 수준(선명도·판단 간격·서클)을 이것으로 하고 tac은 원래 수준의 것을 그대로(판단 속도만 떼기)
  *   --abl: 전설의 기술을 하나씩 떼어 표로 (속임수·판 중 학습·파도 고르기·덱 읽기·세 겹치기·강요하는 수·미끼·약한 척·동시 착탄·작전 2·판단 속도)
@@ -12,8 +12,8 @@ function sceneOf(base) {
   return { seed: 1, width: 200, height: 150, sides: [{ mages: [{ tier: '대마법사', deck: '대마법사 운영' }] }, { mages: [{ tier: '대마법사', deck: '대마법사 운영' }] }] };
 }
 // 앞 사람 a = { skill, tac, as }, 뒤 사람 b. 씨앗 s0..s0+n−1. 앞 사람의 점수 합
-function games(a, b, s0, n, base) {
-  const sc = sceneOf(base); let x = 0;
+function games(a, b, s0, n, base, rules) {
+  const sc = sceneOf(base); let x = 0; if (rules) sc.rules = Object.assign({}, sc.rules, rules);
   const spec = p => { const o = { tier: '대마법사', deck: sc.sides[0].mages[0].deck, skill: p.as || p.skill }; if (p.as) o.tac = Object.assign({}, fullTac(p.skill), p.tac); else if (p.tac) o.tac = p.tac; return o; };
   for (let s = s0; s < s0 + n; s++) { const sw = s % 2, c = JSON.parse(JSON.stringify(sc)); c.seed = s; c.sides[0].mages = [spec(sw ? b : a)]; c.sides[1].mages = [spec(sw ? a : b)];
     const r = A.runScene(c), me = sw ? 1 : 0; x += r.winner === me ? 1 : r.winner < 0 ? 0.5 : 0; }
@@ -21,8 +21,8 @@ function games(a, b, s0, n, base) {
 }
 // 판단 수준의 tac 전부 (from을 따라 올라가며)
 function fullTac(sk) { const L = S.levels[sk]; if (!L) return {}; const up = L.from && L.from !== 'basic' ? fullTac(L.from) : Object.assign({}, S.basic); return Object.assign(up, L.tac); }
-async function score(a, b, N, base) {
-  const { runJobs } = require('./par'), jobs = [], CH = 4; for (let s = 1; s <= N; s += CH) jobs.push({ mod: __filename, fn: 'games', args: [a, b, s, Math.min(CH, N - s + 1), base] });
+async function score(a, b, N, base, rules) {
+  const { runJobs } = require('./par'), jobs = [], CH = 4; for (let s = 1; s <= N; s += CH) jobs.push({ mod: __filename, fn: 'games', args: [a, b, s, Math.min(CH, N - s + 1), base, rules] });
   const r = await runJobs(jobs); return r.reduce((p, q) => p + q, 0) / N;
 }
 // 전설의 기술을 하나씩 뗀다 (대가의 값으로)
@@ -41,7 +41,7 @@ async function main() {
     return;
   }
   const a = { skill: sa, tac: opt('--tacA') ? JSON.parse(opt('--tacA')) : null, as: opt('--as') };
-  console.log(`${sa} / ${sb} ${base ? '기본' : '결투장'} ${N}판: ${(await score(a, b, N, base)).toFixed(3)}`);
+  console.log(`${sa} / ${sb} ${base ? '기본' : '결투장'} ${N}판: ${(await score(a, b, N, base, opt('--rules') ? JSON.parse(opt('--rules')) : null)).toFixed(3)}`);
 }
 if (require.main === module) main().catch(e => { console.error(e); process.exitCode = 1; });
 module.exports = { games, score, fullTac, ABL };
