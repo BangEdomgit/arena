@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.11.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.12.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -615,9 +615,11 @@ ok('v2.10 명중 가망은 전설만·시야 공격에만 벽·벽이 실을 끊
     A.addWall(W2, { x: 17, y: 10, r: 0.7, hp: 100, t: 30, own: 1 }); a.cast = { s: W2.spells['짧은 실'], tgt: b, tx: b.x, ty: b.y, t: 0, T: 0.1, cost: 0 }; for (let i = 0; i < 8; i++) A.stepWorld(W2); return a.log.hits['짧은 실'] || 0; };
   assert.strictEqual(shot(0), 0, '벽이 실을 끊는다'); assert.strictEqual(shot(3), 1, '떠 있으면 넘는다');
   // 협공: 상위는 대마법사(선명도 두 배)에게 무리 싸움, 둘레를 나눠 선다
-  const sc = require('../experiments/crowd').scene(6, 1), w = A.sceneWorld(sc); for (let i = 0; i < 300; i++) A.stepWorld(w);
-  const ar = w.ms[0]; assert.ok(w.ms.slice(1).every(q => q.hp <= 0 || SW.on(w, q, ar)), '협공이 켜진다');
-  const sp = w.ms.slice(1).filter(q => q.hp > 0); let sx = 0, sy = 0; for (const q of sp) { const d = Math.hypot(q.x - ar.x, q.y - ar.y); sx += (q.x - ar.x) / d; sy += (q.y - ar.y) / d; } assert.ok(sp.length < 3 || Math.hypot(sx, sy) / sp.length < 0.9, '둘레로 흩어진다');
+  const spread = tac => { const w = A.sceneWorld(require('../experiments/crowd').scene(14, 1, tac)); let res = 0, rn = 0, on = null;
+    for (let i = 0; i < 600; i++) { A.stepWorld(w); if (i === 150) on = w.ms.slice(1).every(q => q.hp <= 0 || SW.on(w, q, w.ms[0])); if (i % 15) continue; const a0 = w.ms[0], sp = w.ms.slice(1).filter(q => q.hp > 0); if (sp.length < 3) continue; let sx = 0, sy = 0; for (const q of sp) { const d = Math.hypot(q.x - a0.x, q.y - a0.y); sx += (q.x - a0.x) / d; sy += (q.y - a0.y) / d; } res += Math.hypot(sx, sy) / sp.length; rn++; }
+    return [on, res / rn]; };
+  const [on, r1] = spread(null), [, r0] = spread({ swarmR: 0 }); assert.ok(r1 < 0.9 && r1 < r0 - 0.05, '둘레로 흩어진다 (20 s 평균, 동료 방향의 합) ' + r1.toFixed(2) + ' / 끄면 ' + r0.toFixed(2));
+  assert.ok(on, '협공이 켜진다');
   // 벽이 없었다면 맞았을 피해: 지표가 있다
   const Wt = require('../metrics/watch'), v = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } const lk = Wt.seen(v, v.ms[0]); assert.ok(lk['벽이 없었다면 맞았을 피해'] >= 0 && lk['그중 맞은 몫'] >= 0);
 });
@@ -637,6 +639,22 @@ ok('v2.11 당 회복 3 g/s·숨 (SPEC 35장): 마시는 0.5 s는 못 짓고 느�
   [W, m] = mk('대가'); m.fat = 60; m.op.cur = 'press'; m.op.t0 = W.t; m.thinkT = 0; A.brain.think(W, m); assert.ok(m.st.breath > 0, '몰아치기 직전에 미리');
   // 끄면 없다, 1.x는 1.2·없음
   [W, m] = mk('상급', { breath: false }); m.fat = 95; m.thinkT = 0; A.brain.think(W, m); assert.ok(!(m.st.breath > 0)); assert.ok(A.V1_RULES.gluRegen === 1.2 && A.V1_RULES.breath === false && A.DEFAULT_RULES.breath === true && A.DEFAULT_RULES.gluRegen === 3);
+});
+ok('v2.12 공격 방식 (SPEC 36장): 판단 단계마다 방식을 고르고, 확정 순간·갈 곳 계산·시전에 방식 기록', () => {
+  const MD = require('../src/brain/techniques/mode');
+  const mk = (skill, ex) => { const W = A.createWorld({ seed: 1, obstacles: [], rules: { flight: false, saltRing: false } }); const m = A.addMage(W, A.mage({ tier: '상위', skill, deck: '합법 최강' }), 0, 10, 15), e = A.addMage(W, A.mage({ tier: '상위', skill: '상급', deck: '합법 최강' }), 1, ex || 22, 15); e.thinkT = m.thinkT = 1e9; A.stepWorld(W); return [W, m, e]; };
+  assert.ok(A.mage({ tier: '평범', skill: '초보' }).tac.mode === 1 && A.mage({ tier: '평범', skill: '전설' }).tac.mode === 5 && !A.mage({ tier: '평범' }).tac.mode);
+  // 초보는 반복, 중급은 굳은 상대에만 확정타
+  let [W, m, e] = mk('초보'); m.thinkT = 0; A.brain.think(W, m); assert.strictEqual(m._k.mode, 'repeat');
+  [W, m, e] = mk('중급'); m.thinkT = 0; A.brain.think(W, m); assert.strictEqual(m._k.mode, ''); e.st.stun = 1; m.cast = m.castB = null; m.thinkT = 0; A.brain.think(W, m); assert.strictEqual(m._k.mode, 'sure', '굳은 상대');
+  // 확정 순간: 굳음·숨 마시는 중·기력 바닥(땅)
+  const K = { e, los: true }; e.st.stun = 0; assert.strictEqual(MD.sureWin(W, m, K), 0); e.st.breath = 0.4; assert.ok(Math.abs(MD.sureWin(W, m, K) - 0.4) < 1e-9); e.st.breath = 0; e.stam = 0.7; assert.ok(MD.sureWin(W, m, K) > 0.9, '기력 바닥'); e.stam = 6;
+  // 대가: 갈 곳 계산 — 바위가 막은 곳은 지운다
+  [W, m, e] = mk('대가'); const K2 = Object.assign({}, m._k || {}, { e, ux: 1, uy: 0, covPts: null }); e.vx = e.vy = 0; e.rollCd = 0; e.stam = 6;
+  MD.reach(W, m, K2, true); const n0 = K2.covN; W.obs.push({ x: 22, y: 12.5, r: 1 }); const cut = MD.reach(W, m, K2, true); assert.ok(n0 >= 4 && K2.covN === n0 - 1 && cut > 0, '막힌 곳 ' + n0 + ' → ' + K2.covN);
+  // 판 하나: 시전에 방식이 적히고, 지표가 있다
+  const Wt = require('../metrics/watch'), v = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 30 })); let marked = 0; while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); for (const q of v.ms) if (q.cast && q.cast.mode) marked++; }
+  const lk = Wt.seen(v, v.ms[0]); assert.ok(marked > 0 && v.ms[0].mlog.mode.n && lk['방식 시간: 견제'] >= 0 && lk['덮기 갈 곳 덮은 비율'] >= 0 && lk['큰 수의 확정 순간 몫'] >= 0);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

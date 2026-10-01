@@ -10,7 +10,7 @@ const combo = require('./techniques/combo'), cancel = require('./techniques/canc
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
 const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
-const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp');
+const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp'), mode = require('./techniques/mode');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -48,6 +48,7 @@ function decide(W, m, K) {
   if (simul.wait(W, m, K)) return;     // 동시 착탄 (대가): 묶기가 결정타 직전에 떨어지게 기다린다
   if (tempo.hold(W, m, K)) return;     // 박자 흔들기 (상급)
   K.defDown = defDown; K.plan = combo.planOf(W, m, K);   // 두 수 콤보 계획 (상급)
+  if (T.mode) mode.pick(W, m, K);   // 공격 방식: 견제·확정타·덮기·큰 한 방·던지기 (v2.12)
   // ---- 마법 고르기 ----
   K.lead = T.lead; K.cb = T.combo; K.down0 = K.cb && eDown;
   K.ek = T.counter ? De.kinds : NOKIND;
@@ -136,6 +137,7 @@ function pipeOf(W, m) {
   if (T.shape || T.roles) P.push(shape.value);   // 지형 설계·칸의 역할 (대가, v2.2)
   if (T.sharp) P.push(sharp.value);       // 날카롭게: 빈틈·나는 과녁·벽과 방패 (대가, v2.6)
   if (T.survive) P.push(survive.value);   // 스스로 죽지 않기: 풀 때 머리가 넘칠 마법은 버린다 (v2.6)
+  if (T.mode) P.push(mode.value);         // 공격 방식 안에서 고르기 (v2.12)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
@@ -195,6 +197,7 @@ function commit(W, m, K) {
   simul.fired(W, m, K, s, Tc);
   herd.commit(W, m, K, s);
   combo.plan(W, m, K, s, Tc);
+  if (T.mode) mode.commit(W, m, K, best, cast);   // 시전에 방식을 적는다 (v2.12)
   if (T.sharp && (s.t === 'wall' || s.t === 'build')) K.wallT = W.t + Tc;   // 날카롭게 (v2.8): 세운 벽 뒤에 머문다 (sharp.behind)
   logDec(m, s, slot, { aimed, combo: eDown || (m.last && W.t - m.lastT < 1.5 && isSetup(K.S[m.last])), path: s.t === 'trap' && vt > 1.2 && d < 10, barrel: best.barrel });
   m.last = s.n; m.lastT = W.t;

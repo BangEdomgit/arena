@@ -27,6 +27,7 @@ const RULE_TXT = {
   fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
   gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3']
 };
+const MODEN = { poke: '견제', sure: '확정타', cover: '덮기', big: '큰 한 방', throw: '던지기', repeat: '반복' };   // 공격 방식 (v2.12)
 const breathDots = m => { const n = A.RULES.find(r => r.name === 'breath').api.P.n, u = Math.min(n, m.mlog.breath); return '●'.repeat(n - u) + '○'.repeat(u) + (m.st.breath > 0 ? ' 마심' : ''); };   // 남은 숨 (v2.11)
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const PHASE = { probe: '떠보기', in: '들어가기', out: '빠지기', build: '짓기', home: '진지' };
@@ -136,6 +137,7 @@ function draw0() {
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(m.aim) * 13, y + Math.sin(m.aim) * 13); ctx.stroke();
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
     if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]); if (W.ms.length <= 60) { ctx.font = '9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)
+    const k = m._k; if (k && k.covPts && !dead && W.t - k.covT < 0.6) { ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; for (let i = 0; i < k.covN; i++) { ctx.beginPath(); ctx.arc(X(k.covPts[i * 3]), X(k.covPts[i * 3 + 1]), k.covPts[i * 3 + 2] ? 2 : 3, 0, 7); if (k.covPts[i * 3 + 2]) ctx.stroke(); else ctx.fill(); } ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 || m.flee ? 0.55 : 1); }   // 덮기: 상대가 갈 수 있는 곳 (속 찬 점 땅, 빈 점 하늘, v2.12)
     if (m.st.breath > 0 && !dead) { ctx.strokeStyle = 'rgba(200,235,210,.35)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.stroke(); }   // 숨을 마시는 중 (v2.11): 옅은 고리
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
     if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
@@ -307,11 +309,11 @@ function renderSceneTab() {
 function renderStats() {
   const W = world(), tb = $('stats'), sum = o => Object.values(o).reduce((a, b) => a + b, 0);
   tb.textContent = '';
-  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '파도', '입장', '작전', '숨'].map(h => el('th', {}, h))));
+  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '파도', '입장', '작전', '방식', '숨'].map(h => el('th', {}, h))));
   const rows = W.ms.length > 40 ? W.ms.filter((m, i) => i < 20 || m.hp > 0).slice(0, 40) : W.ms;
   for (const m of rows) tb.append(el('tr', {}, el('td', { style: 'color:' + COL[m.side % COL.length] }, m.name), el('td', {}, S.scene.sides[m.side] ? S.scene.sides[m.side].name : m.side), el('td', {}, (m.hp > 0 ? Math.max(1, Math.round(m.hp)) : 0) + '/' + Math.round(m.hpMax)),
-    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, m.log.waves + (m.wave ? ' 탐' : '')), el('td', {}, STANCE[m.stance] || m.stance), el('td', {}, m.op.cur ? OPN[m.op.cur] + (m.op.eOp ? ' (상대 ' + OPN[m.op.eOp] + ')' : '') : ''), el('td', { title: '남은 숨 (판마다 세 번, v2.11)' }, W.rules.breath ? breathDots(m) : '')));
-  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 11, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
+    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, m.log.waves + (m.wave ? ' 탐' : '')), el('td', {}, STANCE[m.stance] || m.stance), el('td', {}, m.op.cur ? OPN[m.op.cur] + (m.op.eOp ? ' (상대 ' + OPN[m.op.eOp] + ')' : '') : ''), el('td', { title: '지금 공격 방식 (v2.12)' }, m.hp > 0 && m._k && m._k.mode ? MODEN[m._k.mode] || m._k.mode : ''), el('td', { title: '남은 숨 (판마다 세 번, v2.11)' }, W.rules.breath ? breathDots(m) : '')));
+  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 12, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
   $('result').textContent = S.W && A.over(S.W) ? winText(A.result(S.W)) : '';
 }
 

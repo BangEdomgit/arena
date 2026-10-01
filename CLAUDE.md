@@ -19,7 +19,7 @@ node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # src/·metrics/·data/·장면을 고쳤으면 sandbox/arena.js 다시 싸기 (안 하면 시험이 알려 준다)
-node experiments/hash.js [--v1]   # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v2.11.0.md. --v1은 1.x 기본 A.V1_RULES 위에서, --rules '{…}'는 덧씌움)
+node experiments/hash.js [--v1]   # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v2.12.0.md. --v1은 1.x 기본 A.V1_RULES 위에서, --rules '{…}'는 덧씌움)
 node experiments/v2tune.js all    # v2.0 목표 측정: 이웃·부류·원소(원 안·밖)·무리 (약 50 s). ablate는 기술 떼기, sky는 대마법사끼리
 node experiments/army.js all 20   # v2.1 대마법사 대 무리: 들판·기습·준비·소금 도시·던지기·등급 무리 (약 60 s). scenes는 대표 장면
 node experiments/master.js all 200 --deck '대마법사 운영'   # v2.2 고수 싸움: 대마법사끼리 판단 단계별 모습 지표 (--tac로 새 기술 끄기, --tacA로 앞 사람 기술 떼기)
@@ -68,6 +68,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **결정론**: 난수는 세계마다 하나. `W.rng()`·`W.rnd(a, b)`만 쓰고 `Math.random`이나 시계에 기대는 코드는 넣지 않는다. 같은 씨앗이면 같은 결과가 나와야 한다(시험 1번).
 - **결정론 수학**: 엔진(`src/` 아래 모두, `metrics/`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `src/math.js`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(core도 내보낸다. brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
 - **모듈과 묶음**: 엔진 파일은 평범한 CommonJS다(1.12.0, UMD는 없앴다). 브라우저는 `node cli.js pack`이 묶은 `sandbox/arena.js`로 읽는다. 그래서 엔진 안의 `require`는 **정적인 상대 경로**(`require('./util')`, `require('../../data/skills.json')`)만 쓴다. 표준 모듈(`fs` 등)이나 변수 경로는 묶이지 않는다. 새 파일을 더하면 `node cli.js pack`.
+- **v2.12 (SPEC 36장)**: 공격 방식은 두뇌 기술 `techniques/mode`(판단 수준 `tac.mode` 1~5, 수는 `data/mode.json`, 전설만의 것은 `l5`). `choose`에서 칸 고르기 뒤 `mode.pick`(→ `K.mode`, 확정 순간 `K.sureW`, 갈 곳 `K.covPts`·`K.covN`), 값 고치기 끝에 `mode.value`, 시전에 `mode.commit`(`cast.mode`·`cov`·`bait`). 기록은 `m.mlog.mode`, 명중·피해 몫은 `metrics/watch`가 시전의 mode로. 명중 가망의 문턱은 견제의 싼·빠른 수만 건너뛴다(다 건너뛰면 전설이 진다)
 - **v2.11 (SPEC 35장)**: 기본 규칙 둘. 당 회복 `gluRegen`(`DEFAULT_RULES`, 3 g/s, V1 1.2)과 숨(`rules/breath`, `breath` 기본 켬, 수는 `data/rules/breath.json`): 상태 `st.breath`(마시는 남은 시간), 기록 `m.mlog.breath*`·`brT`·`brA`·`brH`·`brV`(`mlog.bT`는 장악 경계의 것이라 쓰지 않는다). 마시기는 두뇌 훅 `rest`(쉬려던 참이어도 본다), 판단 수준 `breathAt`·`breathSafe`·`breathPre`. 둘 다 끄면 v2.10 지문
 - **v2.10 (SPEC 34장)**: 판단 수준 값 셋(`addMage`의 tac 리터럴): `aim`(명중 가망, 전설만), `wallLos`(상대 피해 가운데 시야 공격 몫이 이만큼일 때만 벽, 대가부터 0.5, `sharp.losShare`), `swarmR`(선명도 몇 배부터 무리 싸움인가, 상위 1.8 `data/tiers.json`: 협공은 `techniques/swarm`, 편의 첫 각은 세계마다 WeakMap). 사다리 떼어 재기는 `experiments/ladder.js`(`--abl`, `--tacA`·`--tacB`), 날카롭게의 기능 하나 끄기는 `tac.sharpOff`(실험). 무리의 경계를 정하는 것은 장악권 규칙이다(끄면 1 대 10 반반, reports/v2.10.0.md)
 - **v2.9 (SPEC 33장)**: 두뇌 기술만(날카롭게 `techniques/sharp`의 `P`, 모두 끄면 v2.8 지문): 몰아칠 틈(`storm`)엔 명중 문턱 `minOpen`, 붙잡아 둔 수가 있으면 리듬 들어가기(`inHeld`), 문턱에 막혀 기다리는 동안(`K.waitT`) 빈 칸을 벽·함정·지대에(`wait`, 빈틈이 열리면 끊는다), 세운 벽에 머물기(`behind`: 날기·작전 규칙도 이걸 부른다, 처음 부를 때 읽는다). 성적표는 `node cli.js report`(`experiments/report.js` → `reports/scorecard.json`·`.md`, 버전마다 쌓는다: 결과가 바뀌는 변경을 했으면 돌린다). 상위 무리 기준은 `experiments/crowd.js`(결투장 들판, 대가·상급 반반, 광역·기술·합법 최강)

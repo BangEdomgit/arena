@@ -12,7 +12,7 @@
  * 방패는 0.4 s 안에 닿는 위협(나를 겨눈 예비동작이 풀려 닿는 때, 날아오는 투사체)에만 (v2.8). (둘 다 높이 떠 있을 때 기둥·벽을 막으면 대가/상급이 0.06 떨어졌다: 굳을 위험에 낮게 날아 벽이 곧 다시 가린다) */
 const { OFF, landDelay, castTime, hyp, C } = require('../util'), { undo } = require('./cancel');
 const on = m => m.tac.sharp && m.C >= 5;
-const SW = require('./swarm');
+const SW = require('./swarm'); let MD = null;
 const off = (m, k) => m.tac.sharpOff && m.tac.sharpOff[k];   // 떼어 재기 (실험): 기능 하나를 끈다
 const PREP = { trap: 1, wall: 1, build: 1, blueprint: 1, cage: 1, zone: 1 }, ZK = { fire: 1, nh3: 1, spore: 1, ice: 1, acid: 1, mist: 1, absorb: 1 };   // 지형과 준비 (v2.9)
 // 과녁의 빈틈이 앞으로 열려 있을 시간 (s). 과열(머리 92 넘음)은 0.8 s로 본다. 없으면 0
@@ -43,14 +43,14 @@ function threatSoon(W, m, K) {
   return false;
 }
 function value(W, m, K, o) {
-  if (!on(m)) return;
+  if (!on(m)) return; if (!MD) MD = require('./mode');
   if (PREP[o.s.t] && W.t - K.waitT < P.waitW && !off(m, 'wait')) wait(W, m, K, o);
   if (!(o.v > 0)) return;
   const s = o.s, e = K.e;
   if (OFF[s.t]) {
     const land = castTime(W, m, o.Tw) + landDelay(s, K.d), win = openFor(W, e);
     if (win > 0.15 && land < win && !off(m, 'open')) o.v *= 2 * (1 + 0.5 / (land + 0.2));   // 빈틈: 닫히기 전에 닿는 것, 빠를수록
-    if (s.t !== 'trap' && s.t !== 'topple' && P.use && m.tac.aim && !off(m, 'chance') && !SW.on(W, m, e)) {   // 무리 싸움(협공)엔 명중 문턱을 쓰지 않는다 (v2.10)
+    if (s.t !== 'trap' && s.t !== 'topple' && P.use && m.tac.aim && !off(m, 'chance') && !SW.on(W, m, e) && !(K.mode === 'poke' && MD.pokeOk(o))) {   // 공격 방식(v2.12): 견제의 싼·빠른 수만 문턱을 건너뛴다(맞히려는 게 아니라 움직이게 한다). 덮기·확정타까지 건너뛰니 전설 / 대가 0.71 → 0.48   // 무리 싸움(협공)엔 명중 문턱을 쓰지 않는다 (v2.10)
       const ch = chance(W, m, K, o, land); o.v *= ch / (o.he > 0.05 ? o.he : 0.05); if (ch < (storm(W, m, K) ? P.minOpen : P.min) && !(win > land) && !(K.slot === 'B' && m.tac.hold && W.rules.hold)) { o.v = 0; K.waitT = W.t; } }   // 명중 가망: 낮으면 빈틈을 기다린다 (v2.8)
     if (e.z >= 1 && !off(m, 'fly')) {
       const fast = s.t === 'thread' || (s.t === 'proj') || (s.t === 'area' && s.delay <= 0.6);
