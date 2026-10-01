@@ -4,6 +4,7 @@
  *   빈틈에 쉬지 않기도 해 봤으나 대가/상급이 0.02 떨어졌다(머리를 써 버려 다음 수가 없다)
  * 날고 있는 과녁: 빠른 것(실·투사체·0.6 s 안에 떨어지는 구름) × 1.2로 먼저 떨어뜨리고, 느린 구름(0.6 s 넘게 늦게 떨어진다)은 과녁이 그동안 굳거나 묶여 있을 때만(아니면 × 0.3)
  * 막힌 직사 끊기: 실·곧게 나는 투사체를 모으는 중에 과녁과 사이가 막히면 끊는다(당의 70% 돌려받음, 머리 피로는 풀 때 들어 아직 안 들었다)
+ * 몰아칠 때(작전 압박·끝내기, 과녁의 굳음·묶임·꺼짐·빈손, v2.7): 쉬지 않고 피로 벌점 없이, 두 번째 칸에도 공격을 겹친다. 두 번째 칸의 값 문턱은 늘 × 0.4
  * 방패는 나를 겨눈 수가 있을 때만. (둘 다 높이 떠 있을 때 기둥·벽을 막으면 대가/상급이 0.06 떨어졌다: 굳을 위험에 낮게 날아 벽이 곧 다시 가린다) */
 const { OFF, landDelay, castTime } = require('../util'), { undo } = require('./cancel');
 const on = m => m.tac.sharp && m.C >= 5;
@@ -28,5 +29,8 @@ function value(W, m, K, o) {
     }
   }
   if (s.t === 'buff' && s.b && s.b.front && !K.aimed && !K.threat) o.v = 0;  // 방패는 실제 위협에만
+  if ((s.t === 'wall' || s.t === 'build' || s.t === 'blueprint') && (m.z > 2 || e.z > 2)) o.v = 0;   // 둘 중 하나가 2 m 넘게 떠 있으면 벽은 가리지 않는다 (v2.7)
 }
-module.exports = { value, losCancel, openFor };
+// 몰아칠 때 (v2.7): 작전이 압박·끝내기이거나 과녁의 빈틈(과열 빼고)이 열려 있다. 이때는 쉬지 않고, 피로 벌점이 없고, 두 번째 칸도 공격을 겹친다
+const push = (W, m, K) => on(m) && ((m.op && (m.op.cur === 'press' || m.op.cur === 'finish')) || Math.max(K.e.st.stun || 0, K.e.st.root || 0, K.e.crash > 0 ? K.e.crash : 0, K.e.emptyT > W.t ? K.e.emptyT - W.t : 0) > 0.15);
+module.exports = { value, losCancel, openFor, push };

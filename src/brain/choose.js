@@ -37,7 +37,9 @@ function decide(W, m, K) {
   // ---- 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다. 규칙이 고친다(파도의 부류, rules/wave) ----
   // 방어 간격 세기 (대가): 과녁의 방어 마법이 모두 간격 중이면(자동 진도) 칠 때다. 쉬지 않고, 공격 가치 × 1.4
   const defDown = T.cdRead && defenseDown(e, S, W);
-  let restNow = W.rules.fatigue && m.fat > rest && !aimed && d > 4 && !defDown;
+  const push = T.sharp && sharp.push(W, m, K); K.push = push;   // 몰아칠 때: 작전 압박·끝내기, 과녁의 빈틈 (대가, v2.7)
+  if (push) K.pressB = true;
+  let restNow = W.rules.fatigue && m.fat > rest && !aimed && d > 4 && !defDown && !push;
   h = bh.rest; for (let i = 0; i < h.length; i++) restNow = h[i](W, m, K, restNow);
   if (T.survive && !restNow) restNow = survive.rest(W, m, K);   // 고르지 않은 파도에서 내려온다 (v2.6)
   if (restNow) { m.log.dec.rest++; m.relT = null; return; }
@@ -152,7 +154,7 @@ function valueSpell(W, m, K, bi) {
   const P = K.pipe || (K.pipe = pipeOf(W, m)); for (let i = 0; i < P.length; i++) P[i](W, m, K, o);   // 값 고치기: 규칙의 훅과 켜진 기술 (pipeOf의 차례)
   // 지연 폭발은 쏜 사람도 맞힌다: 떨어질 자리가 내 둘레면 쓰지 않는다 (v1.0.1)
   if (s.t === 'area' && hyp(o.tx - m.x, o.ty - m.y) < s.r * C.sizeOf(m, s) + SELF_GAP) return;
-  if (W.rules.fatigue && !s.react && !m.wave) o.v -= m.fat / 100 * T.fatPen;   // 피로 벌점 (v2.6부터 판단 수준의 값)
+  if (W.rules.fatigue && !s.react && !m.wave && !K.push) o.v -= m.fat / 100 * T.fatPen;   // 피로 벌점 (v2.6부터 판단 수준의 값). 몰아칠 때는 없다 (v2.7)
   const h = bh.valueLate; for (let i = 0; i < h.length; i++) h[i](W, m, K, o);        // 파도 위에선 막기보다 친다 (rules/wave)
   if (slot === 'B') o.v -= 0.1;
   if (isOff) o.v *= K.aggr * (K.defDown ? 1.4 : 1);
@@ -173,7 +175,7 @@ function commit(W, m, K) {
     if (!best || v > best.v2) { best = c; best.v2 = v; }
   }
   if (!best || best.v2 <= T.valMin) { m.relT = null; return; }
-  if (slot === 'B' && T.plan && best.v2 < T.slotBMin) return;   // 기술이 있는 사람은 두 번째 칸을 값진 수에만 쓴다 (문턱은 판단 수준마다, v2.0)
+  if (slot === 'B' && T.plan && best.v2 < T.slotBMin * (T.sharp && m.C >= 5 ? 0.4 : 1)) return;   // 날카롭게(대가부터, v2.7): 두 번째 칸 문턱 × 0.4   // 기술이 있는 사람은 두 번째 칸을 값진 수에만 쓴다 (문턱은 판단 수준마다, v2.0)
   K.best = best;
   bait.start(W, m, K);                    // 방어 미끼 시작 (전설)
   simul.start(W, m, K);                   // 동시 착탄 시작 (대가)

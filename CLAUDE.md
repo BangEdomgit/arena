@@ -19,7 +19,7 @@ node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
 node cli.js scene sandbox/scenes/duel.json # 장면 한 판
 node cli.js pack                  # src/·metrics/·data/·장면을 고쳤으면 sandbox/arena.js 다시 싸기 (안 하면 시험이 알려 준다)
-node experiments/hash.js [--v1]   # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v2.6.0.md. --v1은 1.x 기본 A.V1_RULES 위에서, --rules '{…}'는 덧씌움)
+node experiments/hash.js [--v1]   # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v2.7.0.md. --v1은 1.x 기본 A.V1_RULES 위에서, --rules '{…}'는 덧씌움)
 node experiments/v2tune.js all    # v2.0 목표 측정: 이웃·부류·원소(원 안·밖)·무리 (약 50 s). ablate는 기술 떼기, sky는 대마법사끼리
 node experiments/army.js all 20   # v2.1 대마법사 대 무리: 들판·기습·준비·소금 도시·던지기·등급 무리 (약 60 s). scenes는 대표 장면
 node experiments/master.js all 200 --deck '대마법사 운영'   # v2.2 고수 싸움: 대마법사끼리 판단 단계별 모습 지표 (--tac로 새 기술 끄기, --tacA로 앞 사람 기술 떼기)
@@ -41,7 +41,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 | 자리 | 하는 일 |
 |---|---|
 | `src/core.js` | 규칙의 바탕: 세계, 물리, 마법 방출(`release`), 장악권(`share`·`gOf`), 피로, 판 돌리기(`run`), 녹화. 정해진 자리에서 켜진 규칙의 훅(`W.H`)을 부른다 |
-| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels, response, silver, body, evade, flight, light, bulwark, army, morale, saltLand, fort, snap, reflex, blueprint, tactics). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js`. 규칙의 수는 `data/rules/*.json` |
+| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels, response, silver, body, evade, flight, light, bulwark, army, morale, saltLand, fort, snap, reflex, blueprint, tactics, endure). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js`. 규칙의 수는 `data/rules/*.json` |
 | `src/math.js`, `src/data.js` | 결정론 수학, `data/` 읽기 |
 | `src/brain/` | 판단: `index.js`의 `think(W, m)` → `read`·`stance`·`move`·`choose`. 기술은 `techniques/`에 하나씩, 판단 수준은 `skills.js`. 새 두뇌도 `think` 모양으로 내보내면 바꿔 끼울 수 있다 |
 | `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `SKILLS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn`, `look` |
@@ -65,6 +65,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **결정론**: 난수는 세계마다 하나. `W.rng()`·`W.rnd(a, b)`만 쓰고 `Math.random`이나 시계에 기대는 코드는 넣지 않는다. 같은 씨앗이면 같은 결과가 나와야 한다(시험 1번).
 - **결정론 수학**: 엔진(`src/` 아래 모두, `metrics/`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `src/math.js`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(core도 내보낸다. brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
 - **모듈과 묶음**: 엔진 파일은 평범한 CommonJS다(1.12.0, UMD는 없앴다). 브라우저는 `node cli.js pack`이 묶은 `sandbox/arena.js`로 읽는다. 그래서 엔진 안의 `require`는 **정적인 상대 경로**(`require('./util')`, `require('../../data/skills.json')`)만 쓴다. 표준 모듈(`fs` 등)이나 변수 경로는 묶이지 않는다. 새 파일을 더하면 `node cli.js pack`.
+- **v2.7 (SPEC 31장)**: 기본 규칙 둘. 버티기(`rules/endure`, `endureK`·`endureC`): 상위·대마법사의 머리·당 회복 × (C/2.5)^1.2, 평범·중간은 그대로(중간의 판단 사다리가 머리 아끼기에 걸려 있다). 마법의 부딪힘 감쇠(`bluntK`, `rules/body`): 굳은 살 뒤 ÷ C^2.3, 총·화약통·벽 밀기 빼고. 둘 다 0이면 v2.6.0(V1_RULES도 0). 당 회복은 엔진 훅 `gluRegen`. 판단이 잦은 사람의 확률적 기술은 초당으로 맞춘다(박자 흔들기가 판단마다 20%라 전설이 35%를 쉬었다). 장면 `v2-archmage-2v6`(대마법사 둘 대 상위 여섯)은 크기를 적어 둔다(샌드박스의 기본 크기는 40 × 30)
 - **v2.6 (SPEC 30장)**: 판단 수준의 기술 `survive`(스스로 죽지 않기)·`sharp`(날카롭게)는 대가부터·선명도 5 이상. 머리 넘침은 `brain/util`의 `heatOver`로 본다(시전·자동 진·청사진 모두). 소금 원·비행의 단단한 벽은 두뇌 훅 `bound`(움직임의 맨 끝)에, 구르기 훅은 방향(`o.dx`·`o.dy`)도 고친다. 땅이 안전한가는 `groundSafe`(대마법사의 함정은 땅에 선 대마법사를 한 방에 죽인다: 내려앉히는 새 코드는 이걸 본다). 걸음마다 보는 지표는 `metrics/watch.js`(판에 닿지 않게 읽기만, 기록 칸을 `m.log`에 더하면 지문이 바뀌니 모습 기록은 `m.mlog`에). 머리 피로가 짓는 시간을 막는다(날면 남는 회복 1.2/s, reports/v2.6.0.md)
 - **v2.5 (SPEC 29장)**: 작전 겹(`rules/tactics`, 수·무게는 `data/rules/tactics.json`)은 기본 꺼짐, 판단 수준의 `tac.ops`(대가 1, 전설 2)가 켠다. 두뇌 훅 `phase`·`steer`·`value`·`commit`과 엔진 훅 `mageStep`만 쓴다. 상태·기록은 `m.op`(작전 `cur`, 고른 자리 `tx`·`ty`, 읽은 상대 작전 `eOp`, 기록 `log`). 청사진 짓기는 `blueprint`의 api `startBuild`로 건다. 원 돌기·나선 빠지기는 전설만(`circleLv`)
 - **v2.4 (SPEC 28장)**: 반사 겹(`rules/reflex`)·끊는 움직임(`rules/snap`)·청사진(`rules/blueprint`, 청사진은 `data/blueprints.json`)은 기본 꺼짐. 반사 겹은 엔진 쪽(몸)에서 매 걸음 돌고 선명도 5 이상·위협이 있을 때만 훑는다(무리전 속도). 상태·기록은 `m.rx`, 청사진 기록은 `m.fort.bp*`. 나는 사람의 가속 바닥은 발놀림 2부터(누구나 주면 대가의 끊기가 지워진다). 녹화 간격 `recEvery`

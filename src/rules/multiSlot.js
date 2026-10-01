@@ -18,7 +18,8 @@ module.exports = {
           if (!((s.t === 'buff' && s.react) || s.t === 'wall' || s.t === 'shoot')) continue;
           if (s.t === 'shoot' && !W.proj.some(p => p.src.side !== m.side && p.s.el !== '흙' && !p.s.mundane && hyp(p.x - m.x, p.y - m.y) < 6)) continue;
           const cost = s.cost * 1.2; if (m.glu < cost) continue;
-          if (m.tac.survive && m.C >= 5 && heatOver(W, m, s.cost, 0, 0.8)) continue;   // 스스로 죽지 않기 (v2.6): 머리가 넘칠 막기는 하지 않는다
+          if (m.tac.survive && m.C >= 5 && heatOver(W, m, s.cost, 0, 0.8)) continue;
+          if (s.t === 'wall' && m.tac.sharp && m.C >= 5 && (m.z > 2 || (th.by && th.by.z > 2))) continue;   // 날카롭게 (v2.7): 둘 중 하나가 2 m 넘게 떠 있으면 기둥은 가리지 않는다   // 스스로 죽지 않기 (v2.6): 머리가 넘칠 막기는 하지 않는다
           m.glu -= cost; m.cd[n] = s.cd; m.autoCd = 0.7 * 3 / circ;
           logDec(m, s, 'auto', { aimed: true });
           C.release(W, m, { s, tx: e.x, ty: e.y, tgt: e, t: 0, T: 0, auto: true });

@@ -4,8 +4,8 @@
  * 판을 돌리는 쪽이 stepWorld 뒤마다 watch(W)를 부르고, 끝나면 seen(W, m)으로 그 사람의 지표를 받는다. 판에는 닿지 않는다(읽기만, 사람 객체에 칸을 더하지 않는다).
  *   스스로 입은 피해: 받은 피해 − 적이 준 피해. 걸음마다 체력이 준 만큼만 센다(마지막 한 방의 넘친 몫은 빼고). 추락·소금·폭주(파도·역류)·그 밖(제 폭발·지대)으로 가른다
  *   짓는 시간: 과녁이 내 가장 긴 공격 사거리 안인 동안, 칸(첫 칸·두 번째 칸·뿜기·청사진 갈래) 하나라도 짓고 있는 시간의 몫. 두 칸 이상·세 칸 이상의 몫
- *   쓸모 있는 벽: 블록 가운데 두 사람 사이(선 뒤 0.5 s 넘게 두 사람을 잇는 선을 갈랐다. 둘 중 하나가 2 m 넘게 떠 있으면 벽은 가리지 않는다),
- *     엄폐 각(세운 순간 내 6 m 안, 적 쪽 35° 안, 내가 땅에), 퇴로(세운 순간 적 뒤 10 m 안, 선에서 5 m 안, 적이 땅에)인 몫
+ *   쓸모 있는 벽: 블록 가운데 막아 냈거나(맞아 깎였다, 또는 적의 실·투사체가 풀릴 때 선을 막았다) 두 사람 사이(선 뒤 0.5 s 넘게 두 사람을 잇는 선을 갈랐다. 둘 중 하나가 2 m 넘게 떠 있으면 벽은 가리지 않는다),
+ *     엄폐 각(세운 순간 내 6 m 안, 적 쪽 35° 안, 내가 땅에, 적이 2 m 아래: 높이 뜬 적에겐 벽이 가리지 않는다), 퇴로(세운 순간 적 뒤 10 m 안, 선에서 5 m 안, 적이 땅에)인 몫
  *   빈틈 찌르기: 과녁의 빈틈(굳음·묶임·꺼짐·빈손·과열)이 열린 수 가운데, 열린 동안 내 공격을 시작했거나 풀었던 몫. 맞힌 몫: 열린 동안 내 피해가 들어갔다
  *   막힌 직사: 투사체·실이 풀릴 때 과녁과 사이가 막혀 있던 몫 (시작할 때 막혀 있던 몫도) */
 const C = require('../src/core'), { hyp } = require('../src/math');
@@ -29,7 +29,7 @@ function maxR(W, m) { let r = 0; for (const n of m.book) { const s = W.spells[n]
 function wallKind(m, e, w) {
   const dx = e.x - m.x, dy = e.y - m.y, L2 = dx * dx + dy * dy || 1, L = Math.sqrt(L2), t = ((w.x - m.x) * dx + (w.y - m.y) * dy) / L2, lat = Math.abs((w.x - m.x) * dy - (w.y - m.y) * dx) / L;
   let k = 0;
-  const wm = hyp(w.x - m.x, w.y - m.y); if (m.z < 2 && wm < 6 && wm > 0.1 && ((w.x - m.x) * dx + (w.y - m.y) * dy) / (wm * L) > 0.819) k |= 2;
+  const wm = hyp(w.x - m.x, w.y - m.y); if (m.z < 2 && e.z <= 2 && wm < 6 && wm > 0.1 && ((w.x - m.x) * dx + (w.y - m.y) * dy) / (wm * L) > 0.819) k |= 2;
   if (e.z < 2 && t > 1 && hyp(w.x - e.x, w.y - e.y) < 10 && lat < 5) k |= 4;
   return k;
 }
@@ -51,7 +51,7 @@ function watch(W) {
     for (let j = 0; j < 2; j++) {
       const c = j ? m.castB : m.cast, p = j ? a.pb : a.pc;
       if (c && c !== p && OFF[c.s.t] && !c.auto) { started = true; if (DIRECT[c.s.t]) { a.dirN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) a.dirBlk++; } }
-      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) a.relBlk++; } }
+      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) { a.relBlk++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) { const r = A.wall.get(w); if (r && !r.hit && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) r.hit = true; } } } }   // 벽이 풀린 직사를 막았다
       if (j) a.pb = c; else a.pc = c;
     }
     // 빈틈 찌르기
@@ -66,9 +66,10 @@ function watch(W) {
   for (const w of W.walls) {
     let r = A.wall.get(w);
     if (r === undefined) {
-      r = null; if (w.mk != null && w.mk >= 0) { const m = W.ms.find(q => q.id === w.mk), a = m && A.by.get(m), e = m && foeOf(W, m); if (a && e) { r = { m, k: wallKind(m, e, w), cut: 0 }; a.W.push(r); } }
+      r = null; if (w.mk != null && w.mk >= 0) { const m = W.ms.find(q => q.id === w.mk), a = m && A.by.get(m), e = m && foeOf(W, m); if (a && e) { r = { m, k: wallKind(m, e, w), cut: 0, w, hp: w.hp, hit: false }; a.W.push(r); } }
       A.wall.set(w, r);
     }
+    if (r && !r.hit && w.hp < r.hp - 1e-9) r.hit = true;   // 맞아 깎였다: 투사체를 막아 냈다
     if (!r || !chk || r.m.hp <= 0) continue;
     const e = foeOf(W, r.m); if (e && (r.m.z > e.z ? r.m.z : e.z) <= 2 && segCircle(r.m.x, r.m.y, e.x, e.y, w.x, w.y, w.r + 0.2)) r.cut += 0.1;
   }
@@ -76,12 +77,13 @@ function watch(W) {
 // 판이 끝난 뒤: 그 사람의 지표
 function seen(W, m) {
   const a = (W._wt && W._wt.by.get(m)) || newA(), L = m.log, took = a.took, foe = a.foe;
-  let nw = 0, use = 0, bt = 0, cv = 0, rt = 0; for (const r of a.W) { nw++; const k = r.k | (r.cut >= 0.5 ? 1 : 0); if (k & 1) bt++; if (k & 2) cv++; if (k & 4) rt++; if (k) use++; }   // 사이: 선 뒤 0.5 s 넘게 두 사람 사이를 갈랐다
+  let nw = 0, use = 0, bt = 0, cv = 0, rt = 0; let hb = 0; for (const r of a.W) { nw++; const k = r.k | (r.cut >= 0.5 ? 1 : 0) | (r.hit ? 8 : 0); if (k & 1) bt++; if (k & 2) cv++; if (k & 4) rt++; if (k & 8) hb++; if (k) use++; }   // 사이: 선 뒤 0.5 s 넘게 두 사람 사이를 갈랐다
   const fall = a.by.fall, salt = a.by.salt, wave = a.by.wave, self = Math.max(0, took - foe), other = Math.max(0, self - fall - salt - wave);
   const o = {
     '받은 피해': took, '스스로 입은 몫': took ? self / took : 0, '추락 몫': took ? fall / took : 0, '소금 몫': took ? salt / took : 0, '폭주 몫': took ? wave / took : 0, '제 폭발 몫': took ? other / took : 0,
     '나는 시간 몫': a.t ? a.air / a.t : 0, '사거리 안 짓는 몫': a.inR ? a.busy / a.inR : 0, '사거리 안 두 칸 몫': a.inR ? a.two / a.inR : 0, '사거리 안 세 칸 몫': a.inR ? a.three / a.inR : 0,
-    '세운 벽': nw, '쓸모 있는 벽 몫': nw ? use / nw : 0, '두 사람 사이 벽': bt, '엄폐 각 벽': cv, '퇴로 벽': rt,
+    '세운 벽': nw, '쓸모 있는 벽 몫': nw ? use / nw : 0, '두 사람 사이 벽': bt, '엄폐 각 벽': cv, '퇴로 벽': rt, '막아 낸 벽': hb,
+    '쓰러뜨림으로 끝남': W.ms.some(q => q.hp <= 0) ? 1 : 0, '판 길이 (s)': W.t, '공격 시전': L.dec.atk,
     '빈틈': a.opN, '빈틈 찌른 몫': a.opN ? a.opDid / a.opN : 0, '빈틈에 맞힌 몫': a.opN ? a.opLand / a.opN : 0, '폭주': L.over, '막힌 직사 몫': a.relN ? a.relBlk / a.relN : 0, '막힌 채 시작한 직사 몫': a.dirN ? a.dirBlk / a.dirN : 0,
   };
   return o;

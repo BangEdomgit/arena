@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.6.0
+ * 숨 결투장 — 엔진 핵심 v2.7.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,11 +9,11 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.6.0';
+const VERSION = '2.7.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
-const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
+const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, bluntK: 0, endureK: 0, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
 const DEFAULT_RULES = {
   domain: true,        // 장악권: 같은 공기는 가장 선명한 신호를 따른다
   circles: true,       // 서클: 두 번째 칸, 3서클부터 자동 진
@@ -36,6 +36,9 @@ const DEFAULT_RULES = {
   silver: false,       // 은실 옷: gear.silver를 입은 사람에게 붙잡는 효과 × 0.5, 전기 × 1.1 (1.13.0, SPEC 10장, rules/silver)
   bodyK: 2.3,          // (v2.0) 몸 받침: 받는 에너지 피해 ÷ max(C, 1)^bodyK. 0이면 끔 (SPEC 24장, rules/body)
   callus: 12,          // (v2.0 둘째) 굳은 살: 부딪히는 피해는 한 방마다 callus × log₂ C / log₂ 10 만큼 뺀다. 0이면 첫 묶음(부딪힘도 ÷ C^bodyK, 총은 그대로)
+  endureK: 1.2,        // (v2.7) 버티기: 머리 회복(초당 4)과 당 회복(초당 1.2 g) × max(1, C / endureC)^endureK (평범·중간 × 1 · 상위 × 2.3 · 대마법사 × 5.3). 0이면 누구나 같다 (SPEC 31장, rules/endure)
+  endureC: 2.5,        // (v2.7) 버티기가 시작하는 선명도 (중간까지는 그대로)
+  bluntK: 2.3,         // (v2.7) 마법의 부딪힘: 굳은 살을 뺀 뒤 ÷ max(C, 1)^bluntK (총·화약통·벽 밀기는 빼고). 0이면 굳은 살만(v2.6까지: 상위의 돌 비가 대마법사를 한 방에 죽였다) (SPEC 31장, rules/body)
   evade: true,         // (v2.0) 회피: 달리기·구르기 속도 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C) (SPEC 24장, rules/evade)
   army: true,          // (v2.0 둘째) 군대: 머스킷의 장전·화승·사거리 100 m, 박격포, 돌아가며 쏘기 (SPEC 25장, rules/army)
   morale: true,        // (v2.0 둘째) 사기: 셋 이상인 편은 사상자·큰 수의 충격에 도망친다 (SPEC 25장, rules/morale)
@@ -61,7 +64,7 @@ const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [] }; }
+function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [], gluRegen: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -100,7 +103,7 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
-    H: null, mods: null, _bh: null, _fly: false, _recN: opt.recEvery >= 1 ? Math.floor(opt.recEvery) : 2, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [],   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
+    H: null, mods: null, _bh: null, _fly: false, _recN: opt.recEvery >= 1 ? Math.floor(opt.recEvery) : 2, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [], _en: null,   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
     salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
       // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
   };
@@ -473,7 +476,7 @@ function stepMage(W, m) {
   // 간격은 0 아래로 더 줄이지 않는다: 읽는 곳은 모두 (cd || 0)을 0 이상 문턱과 견주거나 0 이상과 min·max하므로 0 아래는 얼마든 같다 (속도, 1.11.1)
   const cd = m.cd; for (const n in cd) { const v = cd[n]; if (v > 0) cd[n] = v - DT; }
   m.rollCd -= DT; m.autoCd -= DT; if (m.vault > 0) m.vault -= DT;
-  m.glu = Math.min(m.gluMax, m.glu + BODY.gluRegen * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;
+  let gr = BODY.gluRegen; const hg = W.H.gluRegen; for (let i = 0; i < hg.length; i++) gr = hg[i](W, m, gr); m.glu = Math.min(m.gluMax, m.glu + gr * DT); if (m.stam < BODY.stam) m.stam += BODY.stamRegen * DT;   // 당 회복 (버티기, rules/endure)
   const H = W.H;
   if (m.fat > 0) { let k = 4; const hf = H.fatRecover; for (let i = 0; i < hf.length; i++) k = hf[i](W, m, k); m.fat = Math.max(0, m.fat - k * DT); }   // 머리 회복 (메타 × 1.05, rules/wave)
   const hs = H.mageStep; for (let i = 0; i < hs.length; i++) hs[i](W, m);   // 소금 선 밖 (rules/saltRing), 파도가 몸을 태움·꺼짐 (rules/wave)

@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.6.0 — 표준 시험 묶음
+/* 숨 결투장 v2.7.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -53,6 +53,14 @@ function arena(file, N) {
   return { N: acc['받은 피해'].length, look };
 }
 
+// 장면 N판의 이긴 몫과 길이 (v2.7): 앞 편(0)이 이긴 몫, 판 길이
+function sceneWins(file, N) {
+  const sc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', file), 'utf8')), w = [], t = [];
+  for (let k = 1; k <= N; k++) { const r = A.runScene(Object.assign({}, sc, { seed: k })); w.push(r.winner === 0 ? 1 : 0); t.push(r.t); }
+  const st = xs => { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); return { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; };
+  return { N, look: { '앞 편 이긴 몫': st(w), '판 길이 (s)': st(t) } };
+}
+
 // 대진표. 줄의 id는 기준과 맞춰 보는 열쇠라 바꾸지 않는다 (바꾸면 새 줄·사라진 줄로 나온다)
 function table() {
   const T = [], duel = (group, a, b, N, rules) => T.push({ id: group + ': ' + who(a) + ' 대 ' + who(b) + (rules ? ' ' + JSON.stringify(rules) : ''), group, N, job: { fn: 'duels', args: [a, b, N, rules] } });
@@ -86,6 +94,7 @@ function table() {
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
   for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, job: { fn: 'looks', args: [t, sk, 40] } });
   T.push({ id: '모습: 대마법사 결투장 전설 대 전설', group: '모습', N: 20, job: { fn: 'arena', args: ['v2-tactics-legend.json', 20] } });   // 걸음마다 본 지표 (v2.6)
+  T.push({ id: '모습: 대마법사 둘 대 상위 여섯', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['v2-archmage-2v6.json', 20] } });   // 상위의 부딪힘이 대마법사를 한 방에 죽이지 않는가 (v2.7)
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
@@ -173,4 +182,4 @@ async function main(args) {
   console.log(`\n바뀐 줄 ${ch.length} (진짜 차이 ${real}, 운일 수 있음 ${ch.length - real})${added ? ', 새 줄 ' + added : ''}${gone.length ? ', 사라진 줄 ' + gone.length : ''}`);
 }
 
-module.exports = { GROUPS, table, run, duels, duelsFrom, rings, looks, arena, summarize, compare, zScore, zTime, verdict, format, main, Z };
+module.exports = { GROUPS, table, run, duels, duelsFrom, rings, looks, arena, sceneWins, summarize, compare, zScore, zTime, verdict, format, main, Z };

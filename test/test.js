@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.6.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.7.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -494,7 +494,7 @@ ok('v2.4 두 겹의 두뇌·끊는 움직임·청사진·매 걸음 녹화 (SPEC
   [W, m] = mk({ reflex: true, snap: true }); const e = W.ms[1]; m.mv.x = 0; m.mv.y = 1; st(W, 20); e.cast = { s: W.spells['짧은 실'], tgt: m, tx: m.x, ty: m.y + 3, t: 0.8, T: 1, B: false }; st(W, 10);   // 0.1 s 뒤 멈칫, 4.6 g로 0.2 s
   assert.ok(m.rx.stop === 1 && m.rx.juke === 1 && Math.hypot(m.vx, m.vy) < 1, '멈칫 ' + Math.hypot(m.vx, m.vy));
   // 청사진: 반원 보루 = 흙벽 다섯을 다섯 갈래로 한꺼번에. 대마법사 약 1.7 s (+ 준비 0.3 s)
-  [W, m] = mk({ blueprint: true, bulwark: true }); const BP = A.RULES.find(r => r.name === 'blueprint').api, b = BP.plan(W, m, '반원 보루', m.x, m.y, 1, 0);
+  [W, m] = mk({ blueprint: true, bulwark: true, endureK: 0 }); const BP = A.RULES.find(r => r.name === 'blueprint').api, b = BP.plan(W, m, '반원 보루', m.x, m.y, 1, 0);
   assert.ok(b.lanes === 5 && b.items.length === 5 && b.T > 1.5 && b.T < 2, '차례표 ' + b.lanes + ' ' + b.T);
   const f0 = m.fat; m.cast = { s: W.spells['청사진'], tgt: W.ms[1], tx: 40, ty: 20, t: 0, T: 0.3 + b.T, B: false, bp: b }; let k = 0; while (m.cast && k++ < 120) A.stepWorld(W);
   assert.ok(W.walls.filter(w => w.mk === m.id).length === 10 && m.fort.bpN === 1 && m.fort.bpItems === 5 && m.fat > f0, '다섯 벽 ' + W.walls.length);
@@ -530,7 +530,7 @@ ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막�
   m.waveWant = true; assert.ok(!U.heatOver(W, m, 7, 0, 1)); m.waveWant = false; m.wave = 1; m.fat = 150; assert.ok(!U.heatOver(W, m, 7, 0, 1) && U.heatOver(W, m, 12, 0, 1), '탄 파도는 165까지');
   [W, m, e] = mk('대가', '대가'); m.fat = 95; m.z = 0; m.fly = 0; assert.ok(U.heatOver(W, m, 3, 0, 1), '대가는 고르지 않은 파도에 오르지 않는다');
   // 땅이 안전한가: 적의 책에 함정·안 보이는 구름·벽 밀기·가두기가 있으면 아니다
-  assert.ok(!U.groundSafe(W, m)); [W, m, e] = mk('전설', '전설', '기본기'); assert.ok(U.groundSafe(W, m) === !U.deck(e, W.spells).ground);
+  W.rules.bluntK = 0; assert.ok(!U.groundSafe(W, m)); W.rules.bluntK = 2.3; assert.ok(U.groundSafe(W, m), '마법의 부딪힘에 비율 감쇠가 있으면(v2.7) 함정은 한 방이 아니다'); W.rules.bluntK = 0; [W, m, e] = mk('전설', '전설', '기본기'); W.rules.bluntK = 0; assert.ok(U.groundSafe(W, m) === !U.deck(e, W.spells).ground);
   // 소금 원의 벽: 원이 반지름 20 m일 때 선 가까이에서 바깥으로 가려는 걸음은 지워지고 안으로 돈다
   [W, m, e] = mk(); W.t = 15 + 60 * (125.0 - 20) / (125.0 - 4); W.rules.saltRing = true; m.x = 100 + 18.5; m.y = 75; m.vx = 6; m.vy = 0; m.fly = 0; m.z = 0;
   const K = { vx: 2, vy: 0.5, foes: [e], e }, B = SR.brain(U); B.bound(W, m, K); assert.ok(K.vx < 0, '안으로 ' + K.vx);
@@ -539,11 +539,27 @@ ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막�
   // 막힌 직사 끊기: 바위 뒤 과녁에 실을 모으면 끊고 당을 돌려받는다
   [W, m, e] = mk('대가', '대가', '대마법사 청사진', [{ x: 100, y: 75, r: 2 }]); m.z = e.z = 0; const g0 = m.glu;
   m.cast = { s: W.spells['체인'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.4, cost: 4 }; sharp.losCancel(W, m, { los: false, e }); assert.ok(!m.cast && m.glu > g0 && m.mlog.losCut === 1, '끊기');
-  // 판 하나: 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
-  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; if (tac) for (const sd of x.sides) sd.mages[0].tac = tac; const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };
+  // 판 하나 (v2.6의 규칙: 버티기·마법의 부딪힘 감쇠 없이): 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
+  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0 }); if (tac) for (const sd of x.sides) sd.mages[0].tac = tac; const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };
   const a = run(), b = run(), c = run({ survive: false, sharp: false });
   assert.deepStrictEqual(a, b); for (const k of ['스스로 입은 몫', '사거리 안 짓는 몫', '사거리 안 두 칸 몫', '쓸모 있는 벽 몫', '빈틈 찌른 몫', '폭주', '막힌 직사 몫']) assert.ok(k in a[0], k);
   const fall = r => r.reduce((x, q) => x + q['받은 피해'] * q['추락 몫'], 0), over = r => r.reduce((x, q) => x + q['폭주'], 0); assert.ok(fall(a) < fall(c) && over(a) < over(c), '추락 ' + fall(a) + ' < ' + fall(c) + ', 폭주 ' + over(a) + ' < ' + over(c));
+});
+ok('v2.7 마법의 부딪힘 감쇠·버티기·몰아치기 (SPEC 31장): 돌 비가 대마법사를 한 방에 죽이지 않고, 중간까지는 회복이 그대로, 판단이 잦아도 박자 흔들기는 초당 같다', () => {
+  const BD = require('../src/rules/body').engine(), hit = (rules, name, tier = '대마법사') => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, A.mage({ tier }), 0, 10, 10); return BD.hurtMod(W, m, 783, 'blunt', name); };
+  // 상위의 돌 비 한 방(14 × 5^2.5 = 783): 굳은 살만이면 771, 감쇠가 있으면 ÷ 10^2.3. 총(마법이 아님)·벽 밀기는 굳은 살만
+  assert.ok(Math.abs(hit({ bluntK: 0 }, '돌 비') - 771) < 1e-6); assert.ok(Math.abs(hit({}, '돌 비') - 771 / Math.pow(10, 2.3)) < 1e-6, '감쇠');
+  assert.ok(Math.abs(hit({}, '벽 밀기') - 771) < 1e-6 && Math.abs(hit({}, '머스킷') - 771) < 1e-6, '총·벽 밀기는 그대로'); assert.strictEqual(hit({}, '돌 비', '평범'), 783, '평범(선명도 1)은 그대로');
+  // 버티기: 평범·중간 × 1, 대마법사 × (10/2.5)^1.2 (머리·당 모두)
+  const rec = (tier, rules) => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ flight: false }, rules) }); const m = A.addMage(W, A.mage({ tier }), 0, 10, 10); A.addMage(W, A.mage({ tier: '평범' }), 1, 300, 10); m.fat = 50; m.glu = 10; m.thinkT = 1e9; W.ms[1].thinkT = 1e9; A.stepWorld(W); return [50 - m.fat, m.glu - 10]; };
+  for (const t of ['평범', '중간']) assert.deepStrictEqual(rec(t, {}), rec(t, { endureK: 0 }), t + '는 그대로');
+  const [f1, g1] = rec('대마법사', {}), [f0, g0] = rec('대마법사', { endureK: 0 }), k = Math.pow(4, 1.2); assert.ok(Math.abs(f1 / f0 - k) < 1e-6 && Math.abs(g1 / g0 - k) < 1e-6, '대마법사 × ' + k);
+  // 대마법사 둘 대 상위 여섯(상위는 돌 비가 든 덱): 대마법사가 이긴다
+  const sc = SCENES['v2-archmage-2v6']; for (let s2 = 1; s2 <= 4; s2++) assert.strictEqual(A.runScene(Object.assign({}, sc, { seed: s2 })).winner, 0, '씨앗 ' + s2);
+  // 박자 흔들기: 날카롭게(대가부터)는 한 번의 확률이 판단 간격에 비례한다(0.13 s에 20%), 몰아칠 때(과녁이 굳음)는 쉬지 않는다
+  const tempo = require('../src/brain/techniques/tempo'), W = A.createWorld({ seed: 1 }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 10, 10), e = A.addMage(W, A.mage({ tier: '대마법사' }), 1, 30, 10);
+  let n = 0; for (let i = 0; i < 4000; i++) { m.hold = 0; if (tempo.hold(W, m, { T: m.tac, slot: 'A', aimed: false, e })) n++; } assert.ok(Math.abs(n / 4000 - 0.2 * m.dec / 0.13) < 0.02, '초당 ' + n / 4000);
+  e.st.stun = 1; n = 0; for (let i = 0; i < 400; i++) { m.hold = 0; if (tempo.hold(W, m, { T: m.tac, slot: 'A', aimed: false, e })) n++; } assert.strictEqual(n, 0, '굳은 과녁엔 쉬지 않는다');
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

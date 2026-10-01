@@ -60,7 +60,7 @@ function step(W, m, c, all, X) {
     if (o.on === 2 || (!all && tc < o.s0)) continue;
     if (!o.on) {   // 시작: 당·머리 피로, 땅
       const cost = o.s ? o.s.cost : o.it.cost;
-      if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100)) || (!o.it.build && hot(W, m, cost))) { o.on = 2; continue; }
+      if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100)) || (!o.it.build && hot(W, m, cost)) || (o.it.build && m.tac.sharp && m.C >= 5 && e && e.z > 2)) { o.on = 2; continue; }   // 날카롭게 (v2.7): 높이 뜬 과녁에겐 벽·기둥이 가리지 않는다
       m.glu -= cost; if (o.it.build && W.rules.fatigue) m.fat += cost * 1.6; o.on = 1;
     }
     const k = all || tc >= o.s1 ? 1 : (tc - o.s0) / ((o.s1 - o.s0) || 1);

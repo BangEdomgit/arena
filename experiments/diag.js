@@ -29,7 +29,7 @@ async function main() {
   if (opt('--skill')) { const [a, b] = opt('--skill').split(','); sc.sides[0].mages[0].skill = a; sc.sides[1].mages[0].skill = b || a; }
   const { runJobs } = require('./par'), CH = 2, jobs = []; for (let s = 1; s <= N; s += CH) jobs.push({ mod: __filename, fn: 'run', args: [sc, s, Math.min(CH, N - s + 1), rules] });
   const games = (await runJobs(jobs)).flat(), out = sum(games), wins = [0, 0]; for (const g of games) if (g.winner >= 0) wins[g.winner]++;
-  out.wins = wins; console.log(JSON.stringify(out.look, null, 1)); console.log('이긴 판', wins.join(' : '));
+  out.wins = wins; out.look['쓰러뜨림으로 끝난 판'] = +(games.filter(g => g.ms.some(m => m.hp <= 0)).length / games.length).toFixed(3); console.log(JSON.stringify(out.look, null, 1)); console.log('이긴 판', wins.join(' : '));
   for (const x of out.spells) console.log(`  ${x.spell}  판당 ${x.castsPerMage} · 명중 ${(x.hit * 100).toFixed(0)}% · 피해 몫 ${(x.dmgShare * 100).toFixed(0)}%`);
   const sv = opt('--save'); if (sv) { fs.mkdirSync(path.join(__dirname, 'results'), { recursive: true }); fs.writeFileSync(path.join(__dirname, 'results', `diag-${sv}.json`), JSON.stringify(Object.assign({ v: A.VERSION, date: new Date().toISOString().slice(0, 10), N, rules }, out), null, 1) + '\n'); }
 }

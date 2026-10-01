@@ -54,7 +54,8 @@ function heatOver(W, m, cost, Tc, mul) {
   return f > 97;   // 모으는 동안 끊기·쿠션(1.5씩)이 더할 몫을 남긴다
 }
 // 땅이 안전한가 (v2.6): 살아 있는 적 누구도 땅에 선 사람만 치는 수(함정·안 보이는 구름·벽 밀기·가두기)를 갖고 있지 않다. 대마법사의 함정은 위력 C^2.5로 한 방이다
-function groundSafe(W, m) { const f = W.foes[m.side]; for (let i = 0; i < f.length; i++) if (deck(f[i], W.spells).ground) return false; return true; }
+function groundSafe(W, m) { if (W.rules.bluntK > 0) return true; const f = W.foes[m.side];   // 마법의 부딪힘에 비율 감쇠가 있으면(v2.7) 함정은 한 방이 아니다
+   for (let i = 0; i < f.length; i++) if (deck(f[i], W.spells).ground) return false; return true; }
 // 쓰는 서클 수: 서클 규칙(rules/multiSlot)이 꺼지면 누구나 1
 function circOf(W, q) { let c = 1; const h = W._bh.circles; for (let i = 0; i < h.length; i++) c = h[i](W, q, c); return c; }
 // 큰 수와 짝 (1.9.0): 짝 묶기를 쓰면 그 틈에 큰 수를 꽂는다. bind = 굳힘 시간 안에 닿게, wet = 젖은 동안, ice = 내 빙판 위에 있을 때, herd = 불벽으로 몬 쪽에
