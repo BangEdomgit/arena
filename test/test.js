@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.5.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.6.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -521,6 +521,29 @@ ok('v2.5 작전 겹과 각도 판단 (SPEC 29장): 대가부터 작전을 고르
   const g = () => { const w = A.sceneWorld({ seed: 3, rules: { flightCut: true, fort: true, reflex: true, snap: true, blueprint: true, tactics: true }, sides: [{ mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }, { mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }] }); while (!A.over(w)) A.stepWorld(w); return w; };
   const x = g(), y = g(); assert.ok(x.t === y.t && x.ms[0].hp === y.ms[0].hp && x.ms[0].op.log.pick >= 1 && x.ms[0].op.log.ticks > 5 && JSON.stringify(x.ms[0].op.log) === JSON.stringify(y.ms[0].op.log), '판단');
   const L = A.look(x.ms[0], x.t); assert.ok('작전 바꾼 수' in L && '자리: 한쪽 사거리' in L);
+});
+ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막기, 소금 원의 벽, 땅이 안전한가, 막힌 직사 끊기, 걸음마다 지표', () => {
+  const U = require('../src/brain/util'), SR = require('../src/rules/saltRing'), Wt = require('../metrics/watch'), sharp = require('../src/brain/techniques/sharp');
+  const mk = (sa = '전설', sb = '전설', deck = '대마법사 청사진', obstacles) => { const W = A.createWorld({ seed: 1, width: 200, height: 150, obstacles: obstacles || [], rules: { flightCut: true, fort: true, blueprint: true } }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: sa, deck }), 0, 90, 75), e = A.addMage(W, A.mage({ tier: '대마법사', skill: sb, deck }), 1, 110, 75); A.stepWorld(W); require('../src/brain/hooks').hooks(W); return [W, m, e]; };
+  // 머리 넘침: 전설(파도 고르기)은 100에서 굳는다 → 97을 넘길 수는 버린다. 고른 파도·탄 파도는 165까지. 대가(고르지 않음)도 파도에 오를 수는 버린다
+  let [W, m, e] = mk(); m.z = 0; m.fly = 0; m.fat = 90; assert.ok(U.heatOver(W, m, 7, 0, 1) && !U.heatOver(W, m, 3, 0, 1), '전설 넘침');
+  m.waveWant = true; assert.ok(!U.heatOver(W, m, 7, 0, 1)); m.waveWant = false; m.wave = 1; m.fat = 150; assert.ok(!U.heatOver(W, m, 7, 0, 1) && U.heatOver(W, m, 12, 0, 1), '탄 파도는 165까지');
+  [W, m, e] = mk('대가', '대가'); m.fat = 95; m.z = 0; m.fly = 0; assert.ok(U.heatOver(W, m, 3, 0, 1), '대가는 고르지 않은 파도에 오르지 않는다');
+  // 땅이 안전한가: 적의 책에 함정·안 보이는 구름·벽 밀기·가두기가 있으면 아니다
+  assert.ok(!U.groundSafe(W, m)); [W, m, e] = mk('전설', '전설', '기본기'); assert.ok(U.groundSafe(W, m) === !U.deck(e, W.spells).ground);
+  // 소금 원의 벽: 원이 반지름 20 m일 때 선 가까이에서 바깥으로 가려는 걸음은 지워지고 안으로 돈다
+  [W, m, e] = mk(); W.t = 15 + 60 * (125.0 - 20) / (125.0 - 4); W.rules.saltRing = true; m.x = 100 + 18.5; m.y = 75; m.vx = 6; m.vy = 0; m.fly = 0; m.z = 0;
+  const K = { vx: 2, vy: 0.5, foes: [e], e }, B = SR.brain(U); B.bound(W, m, K); assert.ok(K.vx < 0, '안으로 ' + K.vx);
+  const o = { v: 8, cd: 1, skip: false, dx: 1, dy: 0 }; SR.engine({ hurt() {}, DT: 1 / 30 }).roll(W, m, o); assert.ok(o.dx < 0 || o.skip, '선 밖으로 구르지 않는다');
+  m.tac.survive = false; const K2 = { vx: 2, vy: 0.5 }; B.bound(W, m, K2); assert.strictEqual(K2.vx, 2, '기술이 없으면 그대로');
+  // 막힌 직사 끊기: 바위 뒤 과녁에 실을 모으면 끊고 당을 돌려받는다
+  [W, m, e] = mk('대가', '대가', '대마법사 청사진', [{ x: 100, y: 75, r: 2 }]); m.z = e.z = 0; const g0 = m.glu;
+  m.cast = { s: W.spells['체인'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.4, cost: 4 }; sharp.losCancel(W, m, { los: false, e }); assert.ok(!m.cast && m.glu > g0 && m.mlog.losCut === 1, '끊기');
+  // 판 하나: 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
+  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; if (tac) for (const sd of x.sides) sd.mages[0].tac = tac; const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };
+  const a = run(), b = run(), c = run({ survive: false, sharp: false });
+  assert.deepStrictEqual(a, b); for (const k of ['스스로 입은 몫', '사거리 안 짓는 몫', '사거리 안 두 칸 몫', '쓸모 있는 벽 몫', '빈틈 찌른 몫', '폭주', '막힌 직사 몫']) assert.ok(k in a[0], k);
+  const fall = r => r.reduce((x, q) => x + q['받은 피해'] * q['추락 몫'], 0), over = r => r.reduce((x, q) => x + q['폭주'], 0); assert.ok(fall(a) < fall(c) && over(a) < over(c), '추락 ' + fall(a) + ' < ' + fall(c) + ', 폭주 ' + over(a) + ' < ' + over(c));
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

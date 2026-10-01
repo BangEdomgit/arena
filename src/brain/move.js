@@ -36,6 +36,8 @@ function steer(W, m, K) {
   vx = K.vx; vy = K.vy;
   // 내가 떨어뜨린 지연 폭발 안으로 걸어 들어가지 않는다. 돌파 중에도 (v1.0.1)
   for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
+  // 단단한 벽: 모든 걸음이 정해진 뒤 규칙이 막는다 (소금 원의 안전 반경·과열 전 착지, v2.6). 훅이 없으면 그대로
+  const hb = W._bh.bound; if (hb.length) { K.vx = vx; K.vy = vy; for (let i = 0; i < hb.length; i++) hb[i](W, m, K); vx = K.vx; vy = K.vy; }
   m.mv.x = vx; m.mv.y = vy;
 }
 module.exports = { steer };

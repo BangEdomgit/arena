@@ -1,0 +1,137 @@
+{
+ "v": "2.6.0",
+ "date": "2026-10-01",
+ "N": 100,
+ "rules": null,
+ "mages": 200,
+ "look": {
+  "받은 피해": 43.715,
+  "스스로 입은 몫": 0.456,
+  "추락 몫": 0.131,
+  "소금 몫": 0.299,
+  "폭주 몫": 0.009,
+  "제 폭발 몫": 0.017,
+  "나는 시간 몫": 0.845,
+  "사거리 안 짓는 몫": 0.066,
+  "사거리 안 두 칸 몫": 0.027,
+  "사거리 안 세 칸 몫": 0.024,
+  "세운 벽": 12.645,
+  "쓸모 있는 벽 몫": 0.613,
+  "두 사람 사이 벽": 5.21,
+  "엄폐 각 벽": 5.215,
+  "퇴로 벽": 0.025,
+  "빈틈": 10.475,
+  "빈틈 찌른 몫": 0.507,
+  "빈틈에 맞힌 몫": 0.102,
+  "폭주": 0.09,
+  "막힌 직사 몫": 0.07,
+  "막힌 채 시작한 직사 몫": 0.09,
+  "(합) 스스로 입은 몫": 0.338,
+  "(합) 추락 몫": 0.148,
+  "(합) 소금 몫": 0.147,
+  "판당 추락 피해": 6.5,
+  "판 길이 (s)": 117.5
+ },
+ "spells": [
+  {
+   "spell": "번개 지뢰",
+   "castsPerMage": 6.4,
+   "hit": 0.005,
+   "dmgShare": 0.019
+  },
+  {
+   "spell": "석회 기둥",
+   "castsPerMage": 5.7,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "석회 방패",
+   "castsPerMage": 4.8,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "짧은 실",
+   "castsPerMage": 4.4,
+   "hit": 0.181,
+   "dmgShare": 0.373
+  },
+  {
+   "spell": "번개 그물",
+   "castsPerMage": 3.5,
+   "hit": 0.103,
+   "dmgShare": 0.136
+  },
+  {
+   "spell": "청사진",
+   "castsPerMage": 3.2,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "낙뢰",
+   "castsPerMage": 2.3,
+   "hit": 0.046,
+   "dmgShare": 0.066
+  },
+  {
+   "spell": "체인",
+   "castsPerMage": 1.7,
+   "hit": 0.078,
+   "dmgShare": 0.053
+  },
+  {
+   "spell": "걸어둔 구름",
+   "castsPerMage": 1.2,
+   "hit": 0.033,
+   "dmgShare": 0.025
+  },
+  {
+   "spell": "하늘 덮개",
+   "castsPerMage": 0.4,
+   "hit": 0,
+   "dmgShare": 0.025
+  },
+  {
+   "spell": "불기둥",
+   "castsPerMage": 0.2,
+   "hit": 0.362,
+   "dmgShare": 0.008
+  },
+  {
+   "spell": "벽 밀기",
+   "castsPerMage": 0.1,
+   "hit": 0.091,
+   "dmgShare": 0.003
+  },
+  {
+   "spell": "비 뿌리기",
+   "castsPerMage": 0.1,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "빙판",
+   "castsPerMage": 0.1,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "숨 덫",
+   "castsPerMage": 0.1,
+   "hit": 0.125,
+   "dmgShare": 0.007
+  },
+  {
+   "spell": "흙 꺼짐",
+   "castsPerMage": 0,
+   "hit": 0,
+   "dmgShare": 0
+  }
+ ],
+ "wins": [
+  49,
+  37
+ ]
+}

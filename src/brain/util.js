@@ -43,6 +43,18 @@ function estDmg0(s) {
   return s.dmg || 0;
 }
 
+// 머리 넘침 (v2.6, 스스로 죽지 않기): 지금 이 마법을 시작해 Tc 뒤에 풀면 그때 굳는가(폭주). 날면 머리가 더 뜨거워진다(비행 피로 − 회복 4/s).
+// 파도: 이미 탔거나 스스로 고른 파도(파도 고르기, 전설)면 170에서 휩쓸리는지만 본다. 고르지 않은 파도(100을 넘으면 저절로 오른다)는 타지 않는다:
+// 몸을 태우고(초당 1.5~2.4) 170에서 휩쓸린다. 대가/상급이 0.63 → 0.76 (reports/v2.6.0.md)
+function heatOver(W, m, cost, Tc, mul) {
+  if (!W.rules.fatigue) return false;
+  const L = m.load || 0, air = m.fly === 1 && m.z >= 1 ? 1 + 6 * L + (L > 1 ? 40 * (L - 1) : 0) : 0, f0 = m.fat + (air - 4) * (Tc > 0 ? Tc : 0), f = (air && m.fat <= 100 && f0 > 100 ? 100 : f0) + cost * mul * 1.6;   // 비행 피로는 100에서 멈춘다
+  if (W.rules.wave && m.type !== '이단' && (m.wave || (m.tac.waveChoose && m.waveWant))) return f > 165;   // 고르지 않은 파도는 타지 않는다: 몸을 태우고 170에서 휩쓸린다
+  if (W.rules.wave && m.type === '이단') return false;
+  return f > 97;   // 모으는 동안 끊기·쿠션(1.5씩)이 더할 몫을 남긴다
+}
+// 땅이 안전한가 (v2.6): 살아 있는 적 누구도 땅에 선 사람만 치는 수(함정·안 보이는 구름·벽 밀기·가두기)를 갖고 있지 않다. 대마법사의 함정은 위력 C^2.5로 한 방이다
+function groundSafe(W, m) { const f = W.foes[m.side]; for (let i = 0; i < f.length; i++) if (deck(f[i], W.spells).ground) return false; return true; }
 // 쓰는 서클 수: 서클 규칙(rules/multiSlot)이 꺼지면 누구나 1
 function circOf(W, q) { let c = 1; const h = W._bh.circles; for (let i = 0; i < h.length; i++) c = h[i](W, q, c); return c; }
 // 큰 수와 짝 (1.9.0): 짝 묶기를 쓰면 그 틈에 큰 수를 꽂는다. bind = 굳힘 시간 안에 닿게, wet = 젖은 동안, ice = 내 빙판 위에 있을 때, herd = 불벽으로 몬 쪽에
@@ -103,7 +115,7 @@ function pinOf(s, e) {
 // 덱이 정하는 값: 사람마다 한 번 만든다 (속도, 1.11.1). 책과 선명도는 판 중에 바뀌지 않는다
 function deck(m, S) {
   const k = m._deck; if (k && k.S === S) return k;
-  const D = { S, maxR: 0, offMax: 0, def: [], front: [], kinds: {}, mund: false, threadTouch: false, fireThread: false, bluntHit: false, bigs: [], nm: [], sp: [], mast: [], he: [], off: [], R: [] };
+  const D = { S, maxR: 0, offMax: 0, def: [], front: [], kinds: {}, mund: false, threadTouch: false, fireThread: false, bluntHit: false, ground: false, bigs: [], nm: [], sp: [], mast: [], he: [], off: [], R: [] };
   for (const n of m.book) {
     const s = S[n]; if (!s) continue;
     D.nm.push(n); D.sp.push(s); D.mast.push(m.mast[n] || 0); D.he.push(m.hitEst[n] ?? 0.35); D.off.push(OFF[s.t]); D.R.push(C.rangeOf(m, s));   // 후보 고르기가 이름으로 찾지 않게
@@ -113,6 +125,7 @@ function deck(m, S) {
     const kd = kindOf(s); if (kd) D.kinds[kd] = 1;
     if (s.mundane) D.mund = true; if (s.t === 'thread' || s.t === 'touch') D.threadTouch = true; if (s.kind === 'fire' || s.t === 'thread') D.fireThread = true;
     if (s.hit && s.hit.kind === 'blunt') D.bluntHit = true; if (s.big) D.bigs.push(s);
+    if (s.t === 'trap' || (s.t === 'area' && !s.vis) || s.t === 'topple' || s.t === 'cage') D.ground = true;   // 땅에 선 사람만 치는 수 (v2.6: 떠 있으면 닿지 않는다)
   }
   return (m._deck = D);
 }
@@ -148,4 +161,4 @@ function defenseDown(e, S, W) {
   return true;
 }
 
-module.exports = { C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf };
+module.exports = { heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf };

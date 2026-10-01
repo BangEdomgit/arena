@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.5.0 — 표준 시험 묶음
+/* 숨 결투장 v2.6.0 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -40,6 +40,19 @@ function looks(tier, skill, N) {
   return { N, look };
 }
 
+// 대마법사 결투장의 모습 (v2.6, SPEC 30장): 장면(전설 대 전설, 200 × 150, 청사진 덱, v2.4 스위치 + 작전 겹)을 씨앗 1..N으로 걸음마다 지켜본다(metrics/watch).
+// 두 사람 모두의 지표: 스스로 입은 피해, 사거리 안 짓는 시간·동시 칸, 쓸모 있는 벽, 빈틈 찌르기, 폭주, 막힌 직사, 큰 마법의 명중
+const BIG = ['짧은 실', '체인', '번개 그물', '낙뢰', '걸어둔 구름'];
+function arena(file, N) {
+  const Wt = require('../metrics/watch'), sc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', file), 'utf8')), acc = {};
+  for (let k = 1; k <= N; k++) {
+    const W = A.sceneWorld(Object.assign({}, sc, { seed: k })); while (!A.over(W)) { A.stepWorld(W); Wt.watch(W); }
+    for (const m of W.ms) { const o = Wt.seen(W, m), sp = Wt.spells(m); for (const n of BIG) o['명중 ' + n] = sp[n] ? sp[n].hit : 0; for (const [key, v] of Object.entries(o)) (acc[key] = acc[key] || []).push(v); }
+  }
+  const look = {}; for (const [key, xs] of Object.entries(acc)) { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); look[key] = { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; }
+  return { N: acc['받은 피해'].length, look };
+}
+
 // 대진표. 줄의 id는 기준과 맞춰 보는 열쇠라 바꾸지 않는다 (바꾸면 새 줄·사라진 줄로 나온다)
 function table() {
   const T = [], duel = (group, a, b, N, rules) => T.push({ id: group + ': ' + who(a) + ' 대 ' + who(b) + (rules ? ' ' + JSON.stringify(rules) : ''), group, N, job: { fn: 'duels', args: [a, b, N, rules] } });
@@ -72,6 +85,7 @@ function table() {
   for (const t of ['평범', '중간']) duel('대응', { tier: t, skill: '대가', gear: { silver: true } }, { tier: t, skill: '대가', deck: '기술' }, 100, { risk: true, bodyBind: true, silver: true });
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
   for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, job: { fn: 'looks', args: [t, sk, 40] } });
+  T.push({ id: '모습: 대마법사 결투장 전설 대 전설', group: '모습', N: 20, job: { fn: 'arena', args: ['v2-tactics-legend.json', 20] } });   // 걸음마다 본 지표 (v2.6)
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);
@@ -159,4 +173,4 @@ async function main(args) {
   console.log(`\n바뀐 줄 ${ch.length} (진짜 차이 ${real}, 운일 수 있음 ${ch.length - real})${added ? ', 새 줄 ' + added : ''}${gone.length ? ', 사라진 줄 ' + gone.length : ''}`);
 }
 
-module.exports = { GROUPS, table, run, duels, duelsFrom, rings, looks, summarize, compare, zScore, zTime, verdict, format, main, Z };
+module.exports = { GROUPS, table, run, duels, duelsFrom, rings, looks, arena, summarize, compare, zScore, zTime, verdict, format, main, Z };

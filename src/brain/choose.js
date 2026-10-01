@@ -10,7 +10,7 @@ const combo = require('./techniques/combo'), cancel = require('./techniques/canc
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
 const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
-const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape');
+const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -24,6 +24,7 @@ function decide(W, m, K) {
   h = bh.cancel; for (let i = 0; i < h.length; i++) h[i](W, m, K);       // 짝에 맞춰 모으던 큰 수 (rules/risk)
   cancel.opportunity(W, m, K);   // 기회 캔슬 (대가)
   cancel.onDodge(W, m, K);       // 캔슬 (상급)
+  if (T.sharp) sharp.losCancel(W, m, K);   // 막힌 직사 끊기 (대가, v2.6)
   combo.drop(W, m, K);           // 묶기가 빗나갔다: 계획을 버린다
   feint.react(W, m, K);          // 속임수 (전설)
 
@@ -38,6 +39,7 @@ function decide(W, m, K) {
   const defDown = T.cdRead && defenseDown(e, S, W);
   let restNow = W.rules.fatigue && m.fat > rest && !aimed && d > 4 && !defDown;
   h = bh.rest; for (let i = 0; i < h.length; i++) restNow = h[i](W, m, K, restNow);
+  if (T.survive && !restNow) restNow = survive.rest(W, m, K);   // 고르지 않은 파도에서 내려온다 (v2.6)
   if (restNow) { m.log.dec.rest++; m.relT = null; return; }
 
   if (tempo.pause(W, m)) return;       // 쏜 뒤 멈춤 (초보)
@@ -130,6 +132,8 @@ function pipeOf(W, m) {
   if (T.rhythm) P.push(rhythm.value);     // 리듬: 떠보기엔 가볍게, 빠지기엔 방어 (v2.2)
   if (T.efficacy || T.buffNeed) P.push(efficacy.value);   // 효과 학습(대가), 강화의 때(상급) (v2.2)
   if (T.shape || T.roles) P.push(shape.value);   // 지형 설계·칸의 역할 (대가, v2.2)
+  if (T.sharp) P.push(sharp.value);       // 날카롭게: 빈틈·나는 과녁·벽과 방패 (대가, v2.6)
+  if (T.survive) P.push(survive.value);   // 스스로 죽지 않기: 풀 때 머리가 넘칠 마법은 버린다 (v2.6)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다
@@ -148,12 +152,12 @@ function valueSpell(W, m, K, bi) {
   const P = K.pipe || (K.pipe = pipeOf(W, m)); for (let i = 0; i < P.length; i++) P[i](W, m, K, o);   // 값 고치기: 규칙의 훅과 켜진 기술 (pipeOf의 차례)
   // 지연 폭발은 쏜 사람도 맞힌다: 떨어질 자리가 내 둘레면 쓰지 않는다 (v1.0.1)
   if (s.t === 'area' && hyp(o.tx - m.x, o.ty - m.y) < s.r * C.sizeOf(m, s) + SELF_GAP) return;
-  if (W.rules.fatigue && !s.react && !m.wave) o.v -= m.fat / 100 * 0.5;
+  if (W.rules.fatigue && !s.react && !m.wave) o.v -= m.fat / 100 * T.fatPen;   // 피로 벌점 (v2.6부터 판단 수준의 값)
   const h = bh.valueLate; for (let i = 0; i < h.length; i++) h[i](W, m, K, o);        // 파도 위에선 막기보다 친다 (rules/wave)
   if (slot === 'B') o.v -= 0.1;
   if (isOff) o.v *= K.aggr * (K.defDown ? 1.4 : 1);
   const v = o.v;
-  if (v > 0.15) { const tx = o.tx, ty = o.ty, barrel = o.barrel, down = o.down, pin = o.pin; let c = K.pool[K.cand.length]; if (!c) c = K.pool[K.cand.length] = { s, n, v, tx, ty, Tw, cost, barrel, down, pin, v2: undefined }; else { c.s = s; c.n = n; c.v = v; c.tx = tx; c.ty = ty; c.Tw = Tw; c.cost = cost; c.barrel = barrel; c.down = down; c.pin = pin; c.v2 = undefined; } K.cand.push(c); }
+  if (v > T.valMin) { const tx = o.tx, ty = o.ty, barrel = o.barrel, down = o.down, pin = o.pin; let c = K.pool[K.cand.length]; if (!c) c = K.pool[K.cand.length] = { s, n, v, tx, ty, Tw, cost, barrel, down, pin, v2: undefined }; else { c.s = s; c.n = n; c.v = v; c.tx = tx; c.ty = ty; c.Tw = Tw; c.cost = cost; c.barrel = barrel; c.down = down; c.pin = pin; c.v2 = undefined; } K.cand.push(c); }
 }
 // 후보 중 고르고 시전을 건다
 function commit(W, m, K) {
@@ -168,7 +172,7 @@ function commit(W, m, K) {
     if (W.rules.domain && !c.barrel && !c.s.mundane) v *= C.gAt(W, m, c.s, c.tx, c.ty);
     if (!best || v > best.v2) { best = c; best.v2 = v; }
   }
-  if (!best || best.v2 <= 0.15) { m.relT = null; return; }
+  if (!best || best.v2 <= T.valMin) { m.relT = null; return; }
   if (slot === 'B' && T.plan && best.v2 < T.slotBMin) return;   // 기술이 있는 사람은 두 번째 칸을 값진 수에만 쓴다 (문턱은 판단 수준마다, v2.0)
   K.best = best;
   bait.start(W, m, K);                    // 방어 미끼 시작 (전설)

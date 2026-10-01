@@ -17,7 +17,7 @@
  * 기록 (C ≥ 5, 반사 겹이 없어도): 방향 전환(0.1 s 사이 속도가 90° 넘게 돌았다), 위협을 본 때부터 몸이 움직이기 시작한 때(구르기·끊기·60° 넘게 돌거나 반 넘게 줄었다)까지,
  *   나를 겨눈 공격이 흔든 뒤(0.4 s 안에 풀림)·안 흔든 뒤에 빗나간 수 */
 const { hyp } = require('../math');
-const P = require('../../data/rules/reflex.json');
+const P = require('../../data/rules/reflex.json'), SR = require('./saltRing').api;
 const LEAD = { proj: 1, thread: 1 }, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const canRoll = m => m.roll <= 0 && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0 || m.st.mycel > 0 || m.st.cramp > 0);
 const TH = { th: null, q: null, kind: 0, dx: 0, dy: 0 };   // 찾은 위협 (새로 만들지 않는다)
@@ -99,7 +99,7 @@ module.exports = {
         over(W, R, dx, dy, P.airV, P.dodgeT);
       },
       // 판단 뒤·움직임 앞: 덮는 걸음
-      preMove(W, m) { const R = m.rx; if (W.t < R.until) { m.mv.x = R.vx; m.mv.y = R.vy; if (R.fv >= 0 && m.fly === 1) m.fv = R.fv; } },
+      preMove(W, m) { const R = m.rx; if (W.t < R.until) { m.mv.x = R.vx; m.mv.y = R.vy; if (R.fv >= 0 && m.fly === 1) m.fv = R.fv; if (W.rules.saltRing && m.tac.survive && m.C >= 5) SR.wall(W, m); } },   // 반사도 소금 원의 벽을 넘지 않는다 (v2.6)
       // 나를 겨눈 공격이 풀렸다: 빗나가는지 본다 (흔든 뒤 0.4 s 안이면 흔든 몫)
       release(W, m, c) {
         const q = c.tgt; if (!q || q.C < 5 || q.side === m.side || !OFF[c.s.t] || c.auto) return;

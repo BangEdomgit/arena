@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.5.0
+ * 숨 결투장 — 엔진 핵심 v2.6.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 const DT = 1 / 30;
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -135,7 +135,7 @@ function addMage(W, spec, side, x, y) {
       // 판단 스위치 (1.5.0, SPEC 13장). 기본값이 1.4.0까지의 두뇌. 판단 수준(skill)이 덮는다
       readCast: true, lead: 1, combo: true, lever: true, pathTrap: true, slotB: true, terrain: false, readWave: false, cdRead: false, outrange: false, feint: false, learn: false, waveChoose: false, counter: false, rollCap: 9, rollBias: null,
       // 기술 사다리 (1.7.0, SPEC 13장): 시전 중 걷기 비율, 쏜 뒤 멈춤(범위, 사람마다 한 번), 쏘는 중에 다음 수 정하기, 두 수 콤보 계획
-      castMove: 0.5, pause: null, plan: false, combo2: false, slotBMin: 1, slotBOff: true, learnAim: 'narrow', readLob: true,   // (v2.0) 두 번째 칸: 쓸 수의 값 문턱(plan이 있는 사람)·공격을 겹치는가, 학습한 구르는 쪽 겨냥('narrow' 투사체·실 / 'wide' 넓은 마법만 반쯤), 떨어지는 돌 읽기
+      castMove: 0.5, pause: null, plan: false, combo2: false, slotBMin: 1, slotBOff: true, valMin: 0.15, fatPen: 0.5, learnAim: 'narrow', readLob: true,   // (v2.0) 두 번째 칸: 쓸 수의 값 문턱(plan이 있는 사람)·공격을 겹치는가, 학습한 구르는 쪽 겨냥('narrow' 투사체·실 / 'wide' 넓은 마법만 반쯤), 떨어지는 돌 읽기
       // (1.7.0 상급) 방패는 아무 때나(초보), 큰 공격을 위해 방패 아끼기, 상대가 피하면 캔슬, 엄폐, 박자 흔들기
       shieldAny: false, shieldSave: false, cancel: false, cover: false, tempo: false, coverW: 1.5,
       // (1.7.0 대가·전설) 몰이, 엄폐 걷어내기, 유도, 동시 착탄, 기회 캔슬 / 방어 미끼, 약한 척 물러서기, 세 마법 겹치기
@@ -157,7 +157,7 @@ function addMage(W, spec, side, x, y) {
     // 리듬 (v2.2, brain/techniques/rhythm): 단계(떠보기·들어가기·빠지기, v2.3: 짓기·진지)와 속 값(단계 시각·물러남 끝·2 s 전 체력과 그 시각, 몰이 자리를 고른 시각)
     phase: 'probe', ph: { t: 0, until: -9, hp: 0, hpT: -9, shT: -9 },
     // 날기 끊기 (v2.3, rules/flight): 두뇌가 청한 끊기(w), 하는 중인 끊기(k: 1 급정지·2 옆 튀기·3 튀어오르기·4 떨어지기·5 내리꽂기)와 남은 시간·간격, 옆 방향, 공기 쿠션을 뿜을 높이(−1 없음)·뿜는 중, 떨어지기 시작 높이, 내려앉으며 친 수와 시각
-    cut: { w: 0, k: 0, t: 0, cd: 0, x: 0, y: 0, z: -1, on: false, z0: 0, n: null, nT: -9 },
+    cut: { w: 0, k: 0, t: 0, cd: 0, x: 0, y: 0, z: -1, on: false, z0: 0, n: null, nT: -9, cool: false },   // cool: 머리를 식히러 내려앉은 중 (v2.6, 스스로 죽지 않기)
     // 반사 겹 (v2.4, rules/reflex·snap): 지금 위협(투사체·구름·예비동작)과 본 시각·쏜 시각, 덮는 걸음(끝 시각·방향·목표 속도), 빗나가길 기다리는 적의 수, 흔들기·내려앉기-구르기, 생각 겹의 발놀림 때
     //   기록: 방향 전환, 반응 시간 합·수·못 한 수, 흔들기(멈칫·뒤집기)·피하기, 흔든 뒤·안 흔든 뒤 나를 겨눈 수와 빗나간 수, 내려앉기-구르기, 톱질·튕기기·옆 뒤집기
     rx: { th: null, thq: null, kind: 0, t0: 0, done: false, met: false, vx0: 0, vy0: 0, pr: 0, pk: 0, until: -9, vx: 0, vy: 0, fv: -1, pend: null, jukeT: -9, lrt: 0, lx: 0, ly: 0, sfT: 0, bT: 0, bUp: false, tvx: 0, tvy: 0,
@@ -176,7 +176,7 @@ function addMage(W, spec, side, x, y) {
       bpN: 0, bpItems: 0, bpT: 0, bpName: {}, bpPick: null, bpLast: -9 },   // 청사진 (v2.4, rules/blueprint): 다 지은 청사진 수·구조물 수·걸린 시간 합, 이름별 수, 고른 것, 마지막 시각
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
     // 고수 싸움의 기록 (v2.2, 26장 지표): 칸마다 역할별 시전(A·B·자동), 리듬 단계별 시간, 세운·없앤 지형
-    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
+    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
     alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
@@ -523,11 +523,11 @@ function stepMage(W, m) {
   }
 }
 // 구르기 (SPEC 3장): 두뇌·대응이 모두 이것으로 구른다. 속도 v와 간격 cd는 규칙이 고친다(회피, rules/evade)
-const RO = { v: 0, cd: 0, skip: false };
+const RO = { v: 0, cd: 0, skip: false, dx: 0, dy: 0 };   // 구르는 방향도 훅이 고칠 수 있다 (소금 원 밖으로 구르지 않기, v2.6)
 function roll(W, m, dx, dy, v, cd) {
-  RO.v = v; RO.cd = cd; RO.skip = false; const h = W.H.roll; for (let i = 0; i < h.length; i++) h[i](W, m, RO);
+  RO.v = v; RO.cd = cd; RO.skip = false; RO.dx = dx; RO.dy = dy; const h = W.H.roll; for (let i = 0; i < h.length; i++) h[i](W, m, RO);
   if (RO.skip) return;   // 나는 사람은 구르지 않는다 (rules/flight가 옆으로 꺾는다)
-  const l = hyp(dx, dy) || 1; m.vx = dx / l * RO.v; m.vy = dy / l * RO.v; m.roll = 0.25; m.rollCd = RO.cd; m.stam -= 1.5;
+  const l = hyp(RO.dx, RO.dy) || 1; m.vx = RO.dx / l * RO.v; m.vy = RO.dy / l * RO.v; m.roll = 0.25; m.rollCd = RO.cd; m.stam -= 1.5;
 }
 // 안 보이는 함정을 알아챌 걸음당 확률 (이단의 함정은 어렵다, rules/wave)
 function notice(W, t) { let k = DT * 0.25; const h = W.H.notice; for (let i = 0; i < h.length; i++) k = h[i](W, t, k); return k; }

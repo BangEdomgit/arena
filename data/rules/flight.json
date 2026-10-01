@@ -12,5 +12,6 @@
  "graze": { "v": 15, "within": 2 },
  "cut": { "brake": 5, "side": 5, "sideT": 0.25, "hop": 3, "hopT": 0.3, "dive": 4, "cush": 5, "soft": 2, "safeV": 4, "fat": 1.5, "cd": 0.6, "minZ": 1.5, "within": 2,
   "brain": { "margin": [0, 0, 0.8, 0.5], "catch": 3.5, "tca": 0.45, "tcaL": 0.8, "miss": 1.2, "release": 0.25, "strikeZ": 4, "strikeT": 0.25, "catchS": 2, "again": 2, "hopRead": 0.35 } },
- "brain": { "hover": 3, "approach": 50, "full": 100, "slow": 15, "z": 6, "zLow": 3, "zHigh": 15, "near": 10, "danger": 6, "crowd": 8, "elecMany": 2, "bind": 2, "lead": 1.5, "leadV": 60, "tiredFat": 60, "hopN": 2, "hopT": 3, "restFat": 999, "restWave": 100, "guns": 3, "zCrowd": 10, "vCrowd": 5, "waveLand": true, "gunFar": 110, "ownGap": 2, "gunR": 30, "feintV": 40, "strike": 1.5 }
+ "brain": { "hover": 3, "approach": 50, "full": 100, "slow": 15, "z": 6, "zLow": 3, "zHigh": 15, "near": 10, "danger": 6, "crowd": 8, "elecMany": 2, "bind": 2, "lead": 1.5, "leadV": 60, "tiredFat": 60, "hopN": 2, "hopT": 3, "restFat": 999, "restWave": 100, "guns": 3, "zCrowd": 10, "vCrowd": 5, "waveLand": true, "gunFar": 110, "ownGap": 2, "gunR": 30, "feintV": 40, "strike": 1.5,
+  "survive": { "land": 75, "up": 45, "low": 70, "lowT": 1, "danger": 6 } }
 }

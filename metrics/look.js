@@ -39,6 +39,8 @@ function look(m, t) {
   // 작전 겹 (v2.5, SPEC 29장): 작전을 바꾼 수, 작전 완수 비율, 강요한 수와 그 뒤 상대가 길을 바꾼 몫, 고른 자리가 한쪽 사거리·엿보기·엄폐 벗기기·퇴로 자르기였던 몫
   const OL = m.op && m.op.log;
   if (OL && OL.pick) { let n = 0, ok = 0; for (const k in OL.n) { n += OL.n[k]; ok += OL.ok[k] || 0; } o['작전 바꾼 수'] = OL.pick; o['작전 완수 비율'] = n ? ok / n : 0; o['강요한 수'] = OL.forceN; o['강요 뒤 길 바꾼 몫'] = OL.forceN ? OL.forced / OL.forceN : 0; if (OL.ticks) { o['자리: 한쪽 사거리'] = OL.oneSide / OL.ticks; o['자리: 엿보기'] = OL.peek / OL.ticks; o['자리: 엄폐 벗기기'] = OL.strip / OL.ticks; o['자리: 퇴로 자르기'] = OL.cut / OL.ticks; } }
+  // 날카롭게 (v2.6, SPEC 30장): 막혀서 끊은 직사 (걸음마다 보는 지표는 metrics/watch)
+  if (ml && ml.losCut) o['막혀서 끊은 직사'] = ml.losCut;
   if (P && P.bpN) { o['청사진'] = P.bpN; o['청사진 한 번의 구조물'] = P.bpItems / P.bpN; o['청사진 한 번의 시간 (s)'] = P.bpT / P.bpN; }
   return o;
 }

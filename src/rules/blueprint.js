@@ -52,13 +52,15 @@ function plan(W, m, name, ax, ay, ux, uy) {
   return { name, x: ax + sx, y: ay + sy, ux, uy, items: out, T, lanes: L, built: 0, ground: out.some(o => o.it.build) };
 }
 // 짓기: 청사진 시전의 준비(마법의 예비동작) 뒤 차례표대로. all이면 남은 것을 모두
+// 함정·지대도 풀 때 머리가 넘쳐 굳거나 고르지 않은 파도에 오를 것이면 건너뛴다 (v2.6, 스스로 죽지 않기: tac.survive, 선명도 5 이상, brain/util의 heatOver와 같은 문턱)
+function hot(W, m, cost) { if (!m.tac.survive || m.C < 5 || !W.rules.fatigue) return false; const f = m.fat + cost * 1.6; if (W.rules.wave) { if (m.type === '이단') return false; if (m.wave || (m.tac.waveChoose && m.waveWant)) return f > 165; } return f > 97; }
 function step(W, m, c, all, X) {
   const b = c.bp, tc = c.t - c.s.cast, e = c.tgt;
   for (const o of b.items) {
     if (o.on === 2 || (!all && tc < o.s0)) continue;
     if (!o.on) {   // 시작: 당·머리 피로, 땅
       const cost = o.s ? o.s.cost : o.it.cost;
-      if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100))) { o.on = 2; continue; }
+      if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100)) || (!o.it.build && hot(W, m, cost))) { o.on = 2; continue; }
       m.glu -= cost; if (o.it.build && W.rules.fatigue) m.fat += cost * 1.6; o.on = 1;
     }
     const k = all || tc >= o.s1 ? 1 : (tc - o.s0) / ((o.s1 - o.s0) || 1);
@@ -68,6 +70,7 @@ function step(W, m, c, all, X) {
       if (o.placed >= n) { o.on = 2; b.built++; }
     } else if (k >= 1) {
       if (o.it.build === 'lime') X.addWall(W, { x: o.x, y: o.y, r: o.it.r, hp: o.it.hp * (1 + (m.C - 1) * 0.5), t: 1e9, own: -1, mat: 'lime', thick: o.it.r * 2, grp: W._grp++, mk: m.id });
+      else if (hot(W, m, o.s.cost)) { o.on = 2; continue; }   // 풀 때 넘칠 것이면 건너뛴다 (여럿이 한 걸음에 풀린다)
       else X.release(W, m, { s: o.s, tx: o.x, ty: o.y, tgt: e, t: 0, T: 0, lane: true });   // 함정·지대: 그 마법을 그 자리에 (방출 그대로: 머리 피로·장악권)
       o.on = 2; b.built++;
     }

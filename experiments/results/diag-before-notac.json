@@ -1,0 +1,139 @@
+{
+ "v": "2.6.0",
+ "date": "2026-10-01",
+ "N": 100,
+ "rules": {
+  "tactics": false
+ },
+ "mages": 200,
+ "look": {
+  "받은 피해": 120.997,
+  "스스로 입은 몫": 0.791,
+  "추락 몫": 0.412,
+  "소금 몫": 0.35,
+  "폭주 몫": 0.021,
+  "제 폭발 몫": 0.008,
+  "나는 시간 몫": 0.803,
+  "사거리 안 짓는 몫": 0.144,
+  "사거리 안 두 칸 몫": 0.029,
+  "사거리 안 세 칸 몫": 0.017,
+  "세운 벽": 12.38,
+  "쓸모 있는 벽 몫": 0.269,
+  "두 사람 사이 벽": 0.985,
+  "엄폐 각 벽": 2.695,
+  "퇴로 벽": 0,
+  "빈틈": 6.795,
+  "빈틈 찌른 몫": 0.686,
+  "빈틈에 맞힌 몫": 0.164,
+  "폭주": 2.885,
+  "막힌 직사 몫": 0.029,
+  "막힌 채 시작한 직사 몫": 0.003,
+  "(합) 스스로 입은 몫": 0.782,
+  "(합) 추락 몫": 0.376,
+  "(합) 소금 몫": 0.377,
+  "판당 추락 피해": 45.5,
+  "판 길이 (s)": 84.5
+ },
+ "spells": [
+  {
+   "spell": "석회 방패",
+   "castsPerMage": 9.7,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "석회 기둥",
+   "castsPerMage": 8.1,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "번개 지뢰",
+   "castsPerMage": 6,
+   "hit": 0.004,
+   "dmgShare": 0.012
+  },
+  {
+   "spell": "짧은 실",
+   "castsPerMage": 5.5,
+   "hit": 0.108,
+   "dmgShare": 0.247
+  },
+  {
+   "spell": "번개 그물",
+   "castsPerMage": 5.3,
+   "hit": 0.105,
+   "dmgShare": 0.207
+  },
+  {
+   "spell": "체인",
+   "castsPerMage": 5.3,
+   "hit": 0.042,
+   "dmgShare": 0.084
+  },
+  {
+   "spell": "낙뢰",
+   "castsPerMage": 4.5,
+   "hit": 0.085,
+   "dmgShare": 0.195
+  },
+  {
+   "spell": "걸어둔 구름",
+   "castsPerMage": 3.1,
+   "hit": 0.033,
+   "dmgShare": 0.065
+  },
+  {
+   "spell": "청사진",
+   "castsPerMage": 1.6,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "하늘 덮개",
+   "castsPerMage": 0.8,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "불기둥",
+   "castsPerMage": 0.8,
+   "hit": 0.432,
+   "dmgShare": 0.054
+  },
+  {
+   "spell": "비 뿌리기",
+   "castsPerMage": 0.5,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "흙 꺼짐",
+   "castsPerMage": 0.2,
+   "hit": 0.024,
+   "dmgShare": 0.005
+  },
+  {
+   "spell": "벽 밀기",
+   "castsPerMage": 0.1,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "숨 덫",
+   "castsPerMage": 0.1,
+   "hit": 0,
+   "dmgShare": 0
+  },
+  {
+   "spell": "빙판",
+   "castsPerMage": 0,
+   "hit": 0,
+   "dmgShare": 0
+  }
+ ],
+ "wins": [
+  51,
+  48
+ ]
+}

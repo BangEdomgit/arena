@@ -13,7 +13,7 @@
  *     4 m/s 넘게 땅에 닿으면 추락: 피해 = 닿는 속도의 높이(v²/2g) × 4 (그냥 떨어지면 높이 × 4), 1 s 굳음. 날다 굳어 떨어진 사람(fly 2)도 굳음이 풀리면 쿠션을 뿜을 수 있다 */
 const { pow, hyp, clamp } = require('../math');
 const F = require('../../data/rules/flight.json');
-const { saltR } = require('./saltRing').api;
+const { saltR } = require('./saltRing').api, SR = require('./saltRing').api;
 const { aOf } = require('./snap').api;   // 끊는 움직임 (v2.4): 옆·오르내림 가속의 바닥
 const G = F.g, M = F.mass, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, CU = F.cut;
 // 출력 (W). C^2.5는 선명도마다 한 번
@@ -96,7 +96,11 @@ function cutBrain(W, m, K, lv) {
     if (how === 1 && lv >= 3 && T.flyFeint !== false) { if (m.z >= 5) { m.cut.w = 5; const h = cushAt(m.z, 0, true, lv), c = m.z - CBR.catch; m.cut.z = h > c ? h : c; } else m.cut.w = 3; m.flog.hfeint++; }   // 높이 속이기: 겨눠진 높이에서 벗어난다
     else if (how === 1 && m.z >= 5) { m.cut.w = 5; const h = cushAt(m.z, 0, true, lv), c = m.z - CBR.catch; m.cut.z = h > c ? h : c; }   // 높으면 내리꽂았다 받아 잡는다
     else if (how === 1 && v > 15) m.cut.w = 1;                                                        // 빠르면 급정지 (앞길 겨냥이 빗나간다)
-    else { const l = hyp(tx, ty) || 1; let sx = -ty / l, sy = tx / l; if (how === 2) { sx = tx / l; sy = ty / l; } else if (sx * m.vx + sy * m.vy < 0) { sx = -sx; sy = -sy; } m.cut.x = sx; m.cut.y = sy; m.cut.w = 2; }   // 옆 튀기 (가던 쪽에 가까운 옆)
+    else {   // 옆 튀기 (가던 쪽에 가까운 옆)
+      const l = hyp(tx, ty) || 1; let sx = -ty / l, sy = tx / l; if (how === 2) { sx = tx / l; sy = ty / l; } else if (sx * m.vx + sy * m.vy < 0) { sx = -sx; sy = -sy; }
+      if (W.rules.saltRing && SR.safeOn(m)) { const k = CU.side * G * CU.sideT * CU.sideT / 2 + 0.3; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) { sx = -sx; sy = -sy; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) return; } }   // 소금 원 밖으로 튀지 않는다 (v2.6)
+      m.cut.x = sx; m.cut.y = sy; m.cut.w = 2;
+    }
     return;
   }
   // 전설: 내려앉으며 치기. 내 공격이 곧(0.25 s 안) 풀리면 뜨는 힘을 끊는다: 풀리는 순간 비행에 묶였던 서클·출력(위력 × 0.8 · 부하)이 풀린다. 2 m 떨어진 뒤 받아 잡는다 (2 s에 한 번, 적의 덮개 밑은 빼고)
@@ -239,6 +243,26 @@ module.exports = {
       },
       // 하늘에서 쉬기: 떠 있고 파도가 깊으면(restWave) 쏘기를 멈추고 머리를 식힌다 (땅의 무리는 쉽게 닿지 못한다)
       rest(W, m, K, restNow) { return restNow || (m.z >= F.zMin && m.fat > Bn.restWave); },
+      // 스스로 죽지 않기 (v2.6, tac.survive, 선명도 5 이상, SPEC 30장). 모든 걸음이 정해진 뒤(bound):
+      //   과열 전 착지: 머리 75 넘으면 내려앉아 식히고 45 아래에서 다시 뜬다. 땅이 위험하면(적이 함정·안 보이는 구름·벽 밀기를 가졌다: 대마법사의 함정은 위력 C^2.5로 한 방,
+      //     또는 안 보이는 구름·함정·해로운 지대가 6 m 안) 내려앉지 않고 2 m로 낮춘다. 쏘기를 멈추지는 않는다: 풀 때 넘칠 수만 버린다(techniques/survive)
+      //   굳을 위험엔 낮게: 상대가 나에게 굳히기·묶기·번개를 1 s 안에 풀거나 머리 70 넘으면 목표 높이 2 m (날다 굳으면 높이 × 4로 떨어진다: 3.6 m 14 → 2 m 8. 1 s 굳음은 쿠션보다 길다)
+      bound(W, m, K) {
+        if (!(m.tac.survive && m.C >= 5) || outP(m) < F.minP) return;
+        const S = Bn.survive, c = m.cut;
+        if (m.wave) c.cool = false; else if (m.fat > S.land) c.cool = true; else if (m.fat < S.up) c.cool = false;
+        let risk = m.fat > S.low;
+        if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast; if (x && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
+        if (c.cool) risk = true;
+        if (c.cool && m.flyWant) {
+          let bad = !B.groundSafe(W, m);
+          for (const a of W.areas) if (a.src.side !== m.side && !a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + S.danger) { bad = true; break; }
+          if (!bad) for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < S.danger) { bad = true; break; }
+          if (!bad) for (const z of W.zones) if (z.src.side !== m.side && z.dps && hyp(z.x - m.x, z.y - m.y) < (z.r || 2) + S.danger) { bad = true; break; }
+          if (bad) risk = true; else m.flyWant = false;
+        }
+        if (risk && m.fz > F.zMin) m.fz = F.zMin;
+      },
       // 떠 있는 적: 굳히기·묶기 × 2 (떨어뜨리기), 헛된 수는 버린다. 빠른 적엔 번개·구름을 앞길에. 전설은 꺾지 못하는 순간을 친다
       value(W, m, K, o) {
         const s = o.s, e = K.e; if (!(o.v > 0)) return;
