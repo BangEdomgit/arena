@@ -1,0 +1,68 @@
+{
+ "v": "2.14.0",
+ "name": "나란히: 대마법사 전설 대 전설(빠른 판) · 평범 대 평범, 같은 시간",
+ "seed": 3,
+ "width": 200,
+ "height": 150,
+ "rules": {
+  "flightCut": true,
+  "fort": true,
+  "trapChain": true,
+  "reflex": true,
+  "snap": true,
+  "blueprint": true,
+  "tactics": true,
+  "fineStep": true,
+  "pace": true
+ },
+ "sides": [
+  {
+   "name": "전설 A",
+   "mages": [
+    {
+     "tier": "대마법사",
+     "skill": "전설",
+     "deck": "대마법사 청사진"
+    }
+   ]
+  },
+  {
+   "name": "전설 B",
+   "mages": [
+    {
+     "tier": "대마법사",
+     "skill": "전설",
+     "deck": "대마법사 청사진"
+    }
+   ]
+  }
+ ],
+ "note": "샌드박스는 beside 장면을 오른쪽 칸에 같은 시간만큼 나란히 돌린다(명령줄은 왼쪽 판만). 아래 띠는 지금까지의 평균 속도·방향 전환·하는 일·교환 (v2.14). 씨앗 3: 편 1이 56.7 s에 이긴다",
+ "beside": {
+  "name": "평범 대 평범 (합법 최강, 40×30)",
+  "seed": 3,
+  "width": 40,
+  "height": 30,
+  "maxT": 120,
+  "sides": [
+   {
+    "name": "평범 A",
+    "mages": [
+     {
+      "tier": "평범",
+      "deck": "합법 최강"
+     }
+    ]
+   },
+   {
+    "name": "평범 B",
+    "mages": [
+     {
+      "tier": "평범",
+      "deck": "합법 최강"
+     }
+    ]
+   }
+  ]
+ }
+}

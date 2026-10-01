@@ -1,14 +1,14 @@
 'use strict';
-/* 숨 샌드박스 v0.1 — 묶기 (node cli.js pack)
+/* 숨 샌드박스 v0.2 — 묶기 (node cli.js pack)
  * 브라우저는 file://에서 JSON도 모듈도 읽지 못한다. 그래서 엔진(src/의 모듈들, metrics/)과 데이터(data/), 예시 장면(sandbox/scenes/*.json)을
  * sandbox/arena.js 한 장에 그대로 싼다. 빌드 도구 없이 표준 라이브러리만: src/index.js에서 시작해 정적 require('./…')를 따라가 모은다.
  * 파일마다 function (module, exports, require)로 감싸고, 작은 require가 묶음 안에서 찾는다. 코드는 한 글자도 고치지 않는다.
- * 브라우저 전역: Arena(바깥 API), ArenaCore, ArenaBrain, ArenaRegistry, ArenaData({ spells, books, scenes }).
+ * 브라우저 전역: Arena(바깥 API), ArenaCore, ArenaBrain, ArenaRegistry, ArenaWatch(걸음마다 보는 지표 metrics/watch, v0.2), ArenaData({ spells, books, scenes }).
  * 기준은 늘 원본 파일이다. arena.js는 손으로 고치지 않는다. 시험(test/test.js)이 어긋났는지 본다.
  * 엔진 안의 require는 정적이고 상대 경로('./', '../')여야 한다(표준 모듈이나 변수 경로는 묶을 수 없다) */
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..'), OUT = path.join(__dirname, 'arena.js');
-const ENTRY = 'src/index.js';
+const ENTRY = 'src/index.js', WATCH = 'metrics/watch.js';   // 박자 지표를 샌드박스에서도 본다 (v0.2)
 const REQ = /\brequire\((['"])([^'"]+)\1\)/g;
 const code = src => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');   // 주석 속 require는 따라가지 않는다
 const rel = f => path.relative(ROOT, f).split(path.sep).join('/');
@@ -21,7 +21,7 @@ function resolve(from, p) {
 }
 // 엔진에서 닿는 모든 파일 (차례: 경로 이름 순, 결과가 늘 같게)
 function modules() {
-  const seen = new Map(), todo = [path.join(ROOT, ENTRY)];
+  const seen = new Map(), todo = [path.join(ROOT, WATCH), path.join(ROOT, ENTRY)];
   while (todo.length) {
     const f = todo.pop(); if (seen.has(f)) continue;
     const src = fs.readFileSync(f, 'utf8'), deps = {};
@@ -53,7 +53,7 @@ function load(id) {
   return c.exports;
 }
 G.Arena = load(${JSON.stringify(ENTRY)});
-G.ArenaCore = load('src/core.js'); G.ArenaBrain = load('src/brain/index.js'); G.ArenaRegistry = load('src/registry.js');
+G.ArenaCore = load('src/core.js'); G.ArenaBrain = load('src/brain/index.js'); G.ArenaRegistry = load('src/registry.js'); G.ArenaWatch = load(${JSON.stringify(WATCH)});
 G.ArenaData = { spells: G.ArenaCore.SPELLS, books: load('data/books.json'), scenes: ${JSON.stringify(scenes())} };
 })(typeof globalThis !== 'undefined' ? globalThis : this);`);
   return L.join('\n') + '\n';

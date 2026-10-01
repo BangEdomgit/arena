@@ -50,7 +50,7 @@ function flightT(m, q, s) { if (s.t === 'proj') return hyp(q.x - m.x, q.y - m.y)
 module.exports = {
   name: 'reflex', switch: 'reflex', on: W => W.rules.reflex, api: { P },
   engine: X => {
-    const { DT, roll } = X;
+    const { roll } = X;
     const over = (W, R, vx, vy, fv, dur) => { R.vx = vx; R.vy = vy; R.fv = fv; R.until = W.t + dur; };
     function done(R) { const p = R.pend; if (p.j) { R.shotJ++; if (!p.hit) R.missJ++; } else { R.shotN++; if (!p.hit) R.missN++; } R.pend = null; }
     return {
@@ -59,7 +59,7 @@ module.exports = {
         const R = m.rx;
         if (R.pend && W.t > R.pend.until) done(R);
         if (R.lrt && m.fly === 0) { R.lrt = 0; if (canRoll(m)) roll(W, m, R.lx, R.ly, m.st.lime > 0 ? 4 : 8, m.autoDodge ? 0.6 : 0.8); }   // 내려앉았다: 구른다
-        if (W.step % 3 === 0) { const a = R.tvx, b = R.tvy; if ((m.vx * a + m.vy * b) < 0 && hyp(m.vx, m.vy) > 1 && hyp(a, b) > 1) R.turns++; R.tvx = m.vx; R.tvy = m.vy; }   // 방향 전환
+        if (W.step % (3 * W.sk) === 0) { const a = R.tvx, b = R.tvy; if ((m.vx * a + m.vy * b) < 0 && hyp(m.vx, m.vy) > 1 && hyp(a, b) > 1) R.turns++; R.tvx = m.vx; R.tvy = m.vy; }   // 방향 전환
         if (!W.proj.length && !W.areas.length && !m.tac.readCast) { R.th = null; return; }
         // 반응 시간: 본 때부터 몸이 움직이기 시작한 때까지 (반사 겹이든 생각 겹이든). 위협이 바뀌기 전에 본다(피하면 위협이 사라진다)
         if (R.th && !R.met) {

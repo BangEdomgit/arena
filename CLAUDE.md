@@ -26,7 +26,7 @@ node experiments/master.js all 200 --deck '대마법사 운영'   # v2.2 고수 
 node experiments/master.js all 200 --deck '대마법사 진지' --rules '{"flightCut":true,"fort":true,"trapChain":true}'   # v2.3 날기 끊기·진지 (사람마다 끊기·진지 수). scene fort는 대표 장면
 node experiments/master.js all 200 --deck '대마법사 청사진' --rules '{"flightCut":true,"fort":true,"trapChain":true,"reflex":true,"snap":true,"blueprint":true}'   # v2.4 반사 겹·끊는 움직임·청사진 (방향 전환·반응 시간·흔들기·청사진). scene agile은 매 걸음 녹화 장면
 node experiments/master.js all 400 --deck '대마법사 청사진' --rules '{"flightCut":true,"fort":true,"trapChain":true,"reflex":true,"snap":true,"blueprint":true,"tactics":true}'   # v2.5 작전 겹·각도 판단 (각도 …·작전 … 줄: 둘레 각속도·한쪽 사거리·강요한 수·작전별 완수). scene tactics는 전설 대 전설 장면
-node experiments/diag.js 100 [--tac '{"survive":false}'] [--skill 전설,대가] [--save 이름]   # v2.6 대마법사 결투장 진단: 걸음마다 지표(스스로 입은 피해·짓는 시간·동시 칸·쓸모 있는 벽·빈틈·막힌 직사·마법별 명중, metrics/watch)
+node experiments/diag.js 100 [--tac '{"survive":false}'] [--skill 전설,대가] [--rules '{"pace":false}'] [--save 이름]   # v2.6 대마법사 결투장 진단: 걸음마다 지표(스스로 입은 피해·짓는 시간·동시 칸·쓸모 있는 벽·빈틈·막힌 직사·마법별 명중, v2.14 박자, metrics/watch)
 node experiments/versus.js '{"tier":"중간","skill":"대가"}' '{"tier":"중간","skill":"상급"}' 1000 '{"risk":true}' backfire   # 대결 N판 (병렬)
 node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
@@ -44,7 +44,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 | 자리 | 하는 일 |
 |---|---|
 | `src/core.js` | 규칙의 바탕: 세계, 물리, 마법 방출(`release`), 장악권(`share`·`gOf`), 피로, 판 돌리기(`run`), 녹화. 정해진 자리에서 켜진 규칙의 훅(`W.H`)을 부른다 |
-| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels, response, silver, body, evade, flight, light, bulwark, army, morale, saltLand, fort, snap, reflex, blueprint, tactics, endure, hold, breath). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js`. 규칙의 수는 `data/rules/*.json` |
+| `src/rules/*.js` | **규칙 하나 = 파일 하나** (gear, terrain, saltRing, wave, control, risk, taunt, multiSlot, barrels, response, silver, body, evade, flight, light, bulwark, army, morale, saltLand, fort, snap, reflex, blueprint, tactics, endure, hold, breath, pace). 엔진 훅·두뇌 훅·새 틀. 목록과 차례는 `rules/index.js`. 규칙의 수는 `data/rules/*.json` |
 | `src/math.js`, `src/data.js` | 결정론 수학, `data/` 읽기 |
 | `src/brain/` | 판단: `index.js`의 `think(W, m)` → `read`·`stance`·`move`·`choose`. 기술은 `techniques/`에 하나씩, 판단 수준은 `skills.js`. 새 두뇌도 `think` 모양으로 내보내면 바꿔 끼울 수 있다 |
 | `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `SKILLS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn`, `look` |
@@ -59,7 +59,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 | `viewer.html` | 녹화 보기. 혼자 도는 HTML 한 장(보기용 녹화 하나가 박혀 있다) |
 | `sandbox/index.html`, `sandbox/sandbox.js` | 샌드박스 화면. 묶음 `arena.js`를 읽는다(SPEC 19장) |
 | `sandbox/scenes/*.json` | 예시 장면 |
-| `sandbox/arena.js` | **만든 파일**(`node cli.js pack`, `sandbox/pack.js`). 엔진 모듈·데이터·장면을 브라우저 전역(`Arena`, `ArenaData`…)으로 싼 것. 손으로 고치지 않는다 |
+| `sandbox/arena.js` | **만든 파일**(`node cli.js pack`, `sandbox/pack.js`). 엔진 모듈·데이터·장면을 브라우저 전역(`Arena`, `ArenaData`, `ArenaWatch`…)으로 싼 것. 손으로 고치지 않는다 |
 
 데이터(`data/`) · 규칙(`core.js`와 `rules/`) · 판단(`brain/`)을 섞지 않는다.
 
@@ -68,6 +68,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **결정론**: 난수는 세계마다 하나. `W.rng()`·`W.rnd(a, b)`만 쓰고 `Math.random`이나 시계에 기대는 코드는 넣지 않는다. 같은 씨앗이면 같은 결과가 나와야 한다(시험 1번).
 - **결정론 수학**: 엔진(`src/` 아래 모두, `metrics/`)에서 `Math.pow·sin·cos·atan2·hypot·exp·log` 같은 초월 함수를 쓰지 않는다. JS 엔진마다 마지막 자리가 달라 Node와 브라우저의 판이 갈라진다. 대신 `src/math.js`의 `pow`, `sin`, `cos`, `atan2`, `exp`, `log`, `hyp`(core도 내보낸다. brain에선 `C.pow` 등). 시험이 본다(SPEC 20장).
 - **모듈과 묶음**: 엔진 파일은 평범한 CommonJS다(1.12.0, UMD는 없앴다). 브라우저는 `node cli.js pack`이 묶은 `sandbox/arena.js`로 읽는다. 그래서 엔진 안의 `require`는 **정적인 상대 경로**(`require('./util')`, `require('../../data/skills.json')`)만 쓴다. 표준 모듈(`fs` 등)이나 변수 경로는 묶이지 않는다. 새 파일을 더하면 `node cli.js pack`.
+- **v2.14 (SPEC 38장)**: 엔진 시계: 걸음 간격은 세계마다 `W.dt`(`rules.fineStep`이면 1/60 s), 걸음 수로 잰 간격은 `W.sk`배. 엔진·규칙·지표의 새 코드는 `DT` 대신 `W.dt`(core 안은 `stepWorld`가 맞춰 둔 모듈 `DT`), `W.step % n`은 `n * W.sk`. 빠른 판 `rules/pace`(`pace`, 기본 꺼짐, 대마법사 결투 장면이 켠다, `data/rules/pace.json`): 선명도 8 이상의 떡대·막기(`st.guard`, 기록 `mlog.guard*`)·감각 조준(엔진 훅 `track`)·꺾기(엔진 훅 `flyAccel`), 두뇌 `tac.pace`(상급 1·대가 2·전설 3)의 서두름 `K.hurry`(날카롭게의 문턱)·막기·늘 움직이기(`bound` 맨 뒤, 소금 원의 벽을 다시 부른다). 박자 지표는 `metrics/watch`(평균 속도·초당 방향 전환·하는 일·교환). 샌드박스 v0.2: 앞서 보기(`S.ah`)·사건 직전 느리게·되감기(`seek`)·판단 그림·나란히(`beside`, `ArenaWatch`)
 - **v2.13 (SPEC 37장)**: 두뇌 기술 둘: 교전 유지 `techniques/engage`(`tac.engage`, `data/engage.json`, `brain/index`의 think에서 steer 앞에 `engage.adjust`: `K.closeIn`이면 작전의 둘레 걸음·거리 톱질이 쉰다, `K.low`면 숨, 결투에서만)와 덫길 `techniques/trapline`(`tac.trapLine`, `crowded`는 청사진도 부른다). 날카롭게의 기다림의 끝(`waitMax`·`waitFade`). 침묵·결판·덫 지표는 `metrics/watch`의 `silence`(판 전체 값). 샌드박스의 카메라는 그리기 변환만(`S.cam`, 마우스는 `mpos`가 거꾸로), 사건은 `events`가 읽기만
 - **v2.12 (SPEC 36장)**: 공격 방식은 두뇌 기술 `techniques/mode`(판단 수준 `tac.mode` 1~5, 수는 `data/mode.json`, 전설만의 것은 `l5`). `choose`에서 칸 고르기 뒤 `mode.pick`(→ `K.mode`, 확정 순간 `K.sureW`, 갈 곳 `K.covPts`·`K.covN`), 값 고치기 끝에 `mode.value`, 시전에 `mode.commit`(`cast.mode`·`cov`·`bait`). 기록은 `m.mlog.mode`, 명중·피해 몫은 `metrics/watch`가 시전의 mode로. 명중 가망의 문턱은 견제의 싼·빠른 수만 건너뛴다(다 건너뛰면 전설이 진다)
 - **v2.11 (SPEC 35장)**: 기본 규칙 둘. 당 회복 `gluRegen`(`DEFAULT_RULES`, 3 g/s, V1 1.2)과 숨(`rules/breath`, `breath` 기본 켬, 수는 `data/rules/breath.json`): 상태 `st.breath`(마시는 남은 시간), 기록 `m.mlog.breath*`·`brT`·`brA`·`brH`·`brV`(`mlog.bT`는 장악 경계의 것이라 쓰지 않는다). 마시기는 두뇌 훅 `rest`(쉬려던 참이어도 본다), 판단 수준 `breathAt`·`breathSafe`·`breathPre`. 둘 다 끄면 v2.10 지문
@@ -84,7 +85,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **v2.0 기본 (SPEC 24장)**: `risk`·`saltRing`·`wave`·`evade`·`flight`가 켜져 있고 `bodyK`는 2.3(`hpScale`은 끔). 비행은 높이 `z`를 더한다: 새 거리 계산은 높이를 넣어(`hyp3`), 땅에 서는 것(지대·함정·지연 폭발)은 `z ≥ 1`이면 건너뛴다. 1.x 동작을 볼 땐 `rules: A.V1_RULES`. 1.x를 전제로 한 시험은 `test/test.js`의 `legacy(true)` 구간에 둔다
 - **새 규칙은 규칙 모듈로만 (SPEC 22장)**: `src/rules/새규칙.js` 한 파일에 `{ name, switch, on, engine: X => ({훅}), brain: B => ({훅}), types, brainTypes }`로 넣고 `rules/index.js` 목록 끝에 붙인다. 정해진 훅(쏠 때 `release`, 맞을 때 `hurt`·`hurtMod`, 걸음마다 `mageStep`·`world`, 위력·선명도·시전 시간·장악 `power`·`ceff`·`castTime`·`share`·`gate`, 두뇌의 후보 가치 `value`·`valueRisk`·`valueMid`·`valueLate` …)에만 끼어든다. `core.js`·`brain/`에 `if (W.rules.새규칙)`을 흩뿌리지 않는다. 꼭 필요한 새 자리는 훅 하나로 더하고(빈 배열이면 예전과 같게) SPEC 22장 표에 적는다. `DEFAULT_RULES`에 스위치(기본 꺼짐)를 더하고, 끄면 이전 동작과 똑같아야 한다(`suite` 바뀐 줄 없음, `hash.js` 그대로). 같은 훅 안의 차례는 목록 차례다.
 - **기술은 techniques/에**: 판단 수준이 켜는 기술(콤보·속임수·엄폐…)은 `src/brain/techniques/`에 하나씩, 켜는 스위치는 `data/skills.json`의 `tac`. 규칙에 딸린 판단은 그 규칙 파일의 `brain` 훅에.
-- **단위**: m, s, kg, J. 시간 간격 `DT = 1/30 s`.
+- **단위**: m, s, kg, J. 시간 간격 `DT = 1/30 s` (세계마다 `W.dt`, 잘게 걷기 1/60 s).
 - **등급·덱·마법 이름**은 한국어 문자열이 곧 키다(`'대마법사'`, `'합법 최강'`, `'낙뢰'`). 이름을 바꾸면 `data/`(`books.json`, `decks.json`, `spells/order.json`), 시험, 문서를 함께 고친다.
 - **금지 마법**(`banned: 1`)은 `addMage`에서 기본으로 책에서 빠진다. `allowBanned`로만 쓴다.
 - 의존성을 들이지 않는다. 표준 라이브러리만.
@@ -97,7 +98,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 버전 자리: 큰 수는 규칙의 뜻이 바뀔 때, 가운데는 새 마법·스위치·두뇌 기능(끄면 예전과 같음), 끝 수는 버그 수정·수치 조정.
 
 버전 문자열은 여러 곳에 있다. 올릴 때 함께 고친다:
-`src/core.js`(`VERSION`, 머리 주석), `src/brain/index.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`experiments/par.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `REPORT.md`, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.1)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
+`src/core.js`(`VERSION`, 머리 주석), `src/brain/index.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`experiments/par.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `REPORT.md`, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.2)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
 
 시험이 실패하면 규격을 어긴 것이다. 규칙을 일부러 바꾼 거라면 시험도 고치고 CHANGELOG에 이유를 적는다.
 

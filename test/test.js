@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.13.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.14.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -655,6 +655,23 @@ ok('v2.12 공격 방식 (SPEC 36장): 판단 단계마다 방식을 고르고, �
   // 판 하나: 시전에 방식이 적히고, 지표가 있다
   const Wt = require('../metrics/watch'), v = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 30 })); let marked = 0; while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); for (const q of v.ms) if (q.cast && q.cast.mode) marked++; }
   const lk = Wt.seen(v, v.ms[0]); assert.ok(marked > 0 && v.ms[0].mlog.mode.n && lk['방식 시간: 견제'] >= 0 && lk['덮기 갈 곳 덮은 비율'] >= 0 && lk['큰 수의 확정 순간 몫'] >= 0);
+});
+ok('v2.14 잘게 걷기·빠른 판 (SPEC 38장): 1/60 s 걸음도 같은 씨앗이면 같은 판, 떡대·막기·감각 조준, 박자 지표', () => {
+  const sc = SCENES['v2-tactics-legend'], Wt = require('../metrics/watch'), run = (rules, seed) => { const W = A.sceneWorld(Object.assign({}, sc, { seed, maxT: 10, rules: Object.assign({}, sc.rules, rules) })); while (!A.over(W)) { A.stepWorld(W); Wt.watch(W); } return W; };
+  const a = run({}, 2), b = run({}, 2), c = run({ fineStep: false }, 2);
+  assert.ok(sc.rules.fineStep && sc.rules.pace && a.dt === 1 / 60 && a.sk === 2 && c.dt === A.DT && c.sk === 1);
+  assert.strictEqual(dig(A.result(a)) + JSON.stringify(a.ms.map(m => [m.x, m.y, m.hp])), dig(A.result(b)) + JSON.stringify(b.ms.map(m => [m.x, m.y, m.hp])), '같은 씨앗 같은 판');
+  if (a.ms.every(m => m.hp > 0)) assert.ok(Math.abs(a.step - 600) <= 1 && Math.abs(c.step - 300) <= 1, a.step + ' ' + c.step);
+  const lk = Wt.seen(a, a.ms[0]); assert.ok(lk['평균 속도 (m/s)'] > 10 && lk['초당 하는 일'] > 2 && lk['초당 방향 전환'] > 0.5 && lk['막기'] > 0, JSON.stringify([lk['평균 속도 (m/s)'], lk['초당 하는 일'], lk['초당 방향 전환'], lk['막기']]));
+  // 떡대 × 0.35, 막기를 켜면 × 0.45 더. 대마법사만, 추락은 빼고
+  const mk = rules => { const W = A.createWorld({ seed: 1, obstacles: [], rules }); return [W, A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 10, 15), A.addMage(W, A.mage({ tier: '평범' }), 1, 30, 15)]; };
+  const hm = (W, m, k) => { let v = 100; for (const h of W.H.hurtMod) v = h(W, m, v, k, 'x'); return v; };
+  const [W0, m0, q0] = mk({}), [W1, m1, q1] = mk({ pace: true }), P = A.RULES.find(r => r.name === 'pace').api.P;
+  assert.ok(Math.abs(hm(W1, m1, 'elec') / hm(W0, m0, 'elec') - P.bulk) < 1e-9 && hm(W1, m1, 'fall') === hm(W0, m0, 'fall') && hm(W1, q1, 'elec') === hm(W0, q0, 'elec'));
+  m1.st.guard = 0.1; assert.ok(Math.abs(hm(W1, m1, 'elec') / hm(W0, m0, 'elec') - P.bulk * P.guard.k) < 1e-9);
+  // 감각 조준: 전설은 track[3] m 안이면 과녁의 자리로 고쳐 겨눈다, 밖이면 그대로
+  const ct = (dx) => { const c = { s: W1.spells['체인'], tgt: q1, tx: q1.x + dx, ty: q1.y, auto: false }; for (const h of W1.H.track) h(W1, m1, c); return c.tx; };
+  assert.ok(ct(P.track[3] - 0.5) === q1.x && ct(P.track[3] + 0.5) === q1.x + P.track[3] + 0.5 && !W0.H.track.length);
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {

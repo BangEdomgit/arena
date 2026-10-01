@@ -19,7 +19,7 @@ module.exports = {
     mageStep(W, m) {
       const L = m.mlog;
       if (m.st.breath > 0) {
-        m.st.breath -= X.DT;
+        m.st.breath -= W.dt;
         if (m.z >= 1) { const v = X.hyp(m.vx, m.vy); if (v > L.brV && v > 0) { m.vx *= L.brV / v; m.vy *= L.brV / v; } }   // 날면 마시기 시작한 속도의 절반
         if (m.st.breath <= 0) { m.st.breath = 0; m.glu = Math.min(m.gluMax, m.glu + P.glu); if (W.rules.fatigue) m.fat = Math.max(0, m.fat - P.fat); m.stam = Math.min(X.BODY.stam, m.stam + P.stam); const a = atk(W, m); L.brT = W.t; L.brA = a[0]; L.brH = a[1]; }
       } else if (L.brT >= 0 && W.t - L.brT >= P.after) { const a = atk(W, m); L.breathAtk += a[0] - L.brA; L.breathAtkHit += a[1] - L.brH; L.brT = -9; }   // 숨 뒤 5 s

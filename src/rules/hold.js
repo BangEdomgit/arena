@@ -13,7 +13,7 @@ module.exports = {
     castHold(W, m, c) {
       if (!c.hold || c.go) return false;
       if (W.t > c.holdUntil) { const e = c.tgt; if (e && e.hp > 0) { c.tx = e.x; c.ty = e.y; } return false; }   // 너무 오래: 그때의 과녁 자리로 푼다
-      if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + P.heat * X.DT);
+      if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + P.heat * W.dt);
       return true;
     },
   }),

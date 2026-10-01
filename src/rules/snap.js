@@ -23,12 +23,11 @@ function aOf(W, m) {
 module.exports = {
   name: 'snap', switch: 'snap', on: W => W.rules.snap, api: { aOf },
   engine: X => {
-    const { DT } = X;
     return {
       // 걸음: 가속 한계 안에서 목표 속도로 곧장
       // 속도 차를 지금 가는 쪽(앞뒤)과 옆으로 나눠: 옆·가속은 a, 거꾸로 밟아 서기(앞뒤로 줄이기)는 brake × a. 가는 게 없으면 a
       walk(W, m, tx, ty, acc) {
-        const a = aOf(W, m) * (acc < 9 ? acc / 9 : 1) * DT, dx = tx - m.vx, dy = ty - m.vy, v = hyp(m.vx, m.vy);
+        const a = aOf(W, m) * (acc < 9 ? acc / 9 : 1) * W.dt, dx = tx - m.vx, dy = ty - m.vy, v = hyp(m.vx, m.vy);
         let lx = 0, ly = 0, px = dx, py = dy;
         if (v > 0.1) { const ux = m.vx / v, uy = m.vy / v, dl = dx * ux + dy * uy, cap = dl < 0 ? a * P.brake : a, k = dl > cap ? cap : dl < -cap ? -cap : dl; lx = ux * k; ly = uy * k; px = dx - ux * dl; py = dy - uy * dl; }
         const pl = hyp(px, py); if (pl > a) { px *= a / pl; py *= a / pl; }

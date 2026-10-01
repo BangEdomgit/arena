@@ -14,7 +14,6 @@ const canRoll = m => m.roll <= 0 && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun
 module.exports = {
   name: 'response', switch: 'response', on: W => W.rules.response, api: { levelOf, P },
   engine: X => {
-    const { DT } = X;
     const bump = (m, k) => { m.log[k] = (m.log[k] || 0) + 1; };   // 규칙이 켜졌을 때만 칸이 생긴다
     return {
       mageStep(W, m) {

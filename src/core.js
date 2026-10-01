@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.13.0
+ * 숨 결투장 — 엔진 핵심 v2.14.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,8 +9,8 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.13.0';
-const DT = 1 / 30;
+const VERSION = '2.14.0';
+const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
 const V1_RULES = { risk: false, saltRing: false, wave: false, hpScale: false, hpK: 2.5, hpFloor: 0, bodyK: 0, evade: false, flight: false, domainR: 0, domainPath: false, callus: 0, bluntK: 0, endureK: 0, hold: false, gluRegen: 1.2, breath: false, light: false, bulwark: false, army: false, morale: false };   // hpK·hpFloor: 1.x에서 hpScale을 켠 판도 그대로
@@ -51,6 +51,8 @@ const DEFAULT_RULES = {
   hpScale: false,      // 켜면 체력 = 150 × max(C, hpFloor)^hpK (SPEC 3장. v2.0의 버팀은 몸 받침이 맡는다)
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
+  fineStep: false,     // (v2.14) 잘게 걷기: 한 걸음 1/60 s (W.dt). 대마법사 장면이 켠다: 빠른 판의 피하기·끊기가 걸음 크기에 덜 묶인다 (SPEC 38장)
+  pace: false,         // (v2.14) 빠른 판: 대마법사의 떡대·막기(순간 켜기)·빠른 시전과 늘 움직이기 (SPEC 38장, rules/pace)
 };
 // 규칙 모듈이 스위치의 기본값을 따로 적었으면 (등록한 규칙). 기본 규칙의 스위치는 위 표에 있다
 for (const r of R.RULES) if (r.switch && !(r.switch in DEFAULT_RULES)) DEFAULT_RULES[r.switch] = r.default ?? false;
@@ -65,7 +67,7 @@ const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [], gluRegen: [], castHold: [] }; }
+function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [], gluRegen: [], castHold: [], track: [], flyAccel: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -104,10 +106,11 @@ function createWorld(opt = {}) {
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
     foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
-    H: null, mods: null, _bh: null, _fly: false, _recN: opt.recEvery >= 1 ? Math.floor(opt.recEvery) : 2, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [], _en: null,   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
+    H: null, mods: null, _bh: null, _fly: false, _recN: opt.recEvery >= 1 ? Math.floor(opt.recEvery) : 2, dt: DT0, sk: 1, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [], _en: null,   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
     salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
       // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
   };
+  if (W.rules.fineStep) { W.dt = DT0 / 2; W.sk = 2; if (!(opt.recEvery >= 1)) W._recN = 4; }   // 잘게 걷기: 걸음은 1/60 s, 기본 녹화는 같은 시간 간격 (v2.14, SPEC 38장)
   hooksFor(W, opt);
   W.rnd = (a, b) => a + W.rng() * (b - a);
   // 바위·화약통·벽은 목록으로 직접 줄 수 있다(장면). 안 주면 씨앗을 따라 놓는다
@@ -149,8 +152,8 @@ function addMage(W, spec, side, x, y) {
       rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false,
       flyCut: 0, fortify: 0, breach: false,
       reflex: 0, chop: false, footwork: 0, blueprint: 0, ops: 0,
-      aim: false, wallLos: 0, swarmR: 0, breathAt: 0.05, breathSafe: false, breathPre: 0, mode: 0, engage: 0, trapLine: false }, spec.tac),   // (v2.10) 명중 가망(전설, techniques/sharp), 시야 공격 몫이 이만큼일 때만 벽(대가부터), 협공: 선명도 몇 배부터 무리 싸움인가(상위 1.8, 0이면 3, techniques/swarm)   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
-    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0, breath: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
+      aim: false, wallLos: 0, swarmR: 0, breathAt: 0.05, breathSafe: false, breathPre: 0, mode: 0, engage: 0, trapLine: false, pace: 0 }, spec.tac),   // (v2.10) 명중 가망(전설, techniques/sharp), 시야 공격 몫이 이만큼일 때만 벽(대가부터), 협공: 선명도 몇 배부터 무리 싸움인가(상위 1.8, 0이면 3, techniques/swarm)   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
+    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0, breath: 0, guard: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,
@@ -181,7 +184,7 @@ function addMage(W, spec, side, x, y) {
       bpN: 0, bpItems: 0, bpT: 0, bpName: {}, bpPick: null, bpLast: -9 },   // 청사진 (v2.4, rules/blueprint): 다 지은 청사진 수·구조물 수·걸린 시간 합, 이름별 수, 고른 것, 마지막 시각
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
     // 고수 싸움의 기록 (v2.2, 26장 지표): 칸마다 역할별 시전(A·B·자동), 리듬 단계별 시간, 세운·없앤 지형
-    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, mode: { t: {}, n: {}, bigN: 0, bigSure: 0, covS: 0, covN: 0, bait: 0 }, breath: 0, breathHit: 0, brHitF: false, breathAtk: 0, breathAtkHit: 0, brT: -9, brA: 0, brH: 0, brV: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
+    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, mode: { t: {}, n: {}, bigN: 0, bigSure: 0, covS: 0, covN: 0, bait: 0 }, breath: 0, breathHit: 0, brHitF: false, breathAtk: 0, breathAtkHit: 0, brT: -9, brA: 0, brH: 0, brV: 0, guardN: 0, guardT: 0, guardBlk: 0, gdT: -9, pcT: 0, pcIn: false, pcS: 1, pcR0: 0, pcR1: 0, pcN: '', trackN: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
     alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
@@ -328,6 +331,7 @@ function canHit(W, p, q) { return q !== p.src && q.hp > 0 && (W.rules.friendlyFi
 
 /* ---------------- 마법 방출 ---------------- */
 function release(W, m, c) {
+  const ht = W.H.track; for (let i = 0; i < ht.length; i++) ht[i](W, m, c);   // 풀 때 겨냥을 고친다: 감각 조준 (rules/pace, v2.14)
   const s = c.s, tx = c.tx, ty = c.ty, dx0 = tx - m.x, dy0 = ty - m.y, d0 = hyp(dx0, dy0) || 1, ux = dx0 / d0, uy = dy0 / d0;
   m.aim = atan2(uy, ux);
   m.log.casts[s.n] = (m.log.casts[s.n] || 0) + 1;
@@ -539,7 +543,7 @@ function roll(W, m, dx, dy, v, cd) {
 // 안 보이는 함정을 알아챌 걸음당 확률 (이단의 함정은 어렵다, rules/wave)
 function notice(W, t) { let k = DT * 0.25; const h = W.H.notice; for (let i = 0; i < h.length; i++) k = h[i](W, t, k); return k; }
 function stepWorld(W) {
-  W.t += DT; W.step++;
+  DT = W.dt; X.DT = DT; W.t += DT; W.step++;
   refreshSides(W);
   const H = W.H, hw = H.world; for (let i = 0; i < hw.length; i++) hw[i](W);   // 등록한 규칙의 걸음마다 할 일
   for (const m of W.ms) if (m.hp > 0) stepMage(W, m);

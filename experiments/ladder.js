@@ -33,15 +33,15 @@ async function main() {
   const args = process.argv.slice(2), opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; }, base = args.includes('--base');
   const pos = args.filter((x, i) => !x.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--') && !['--base', '--abl'].includes(args[i - 1])));
   const [sa, sb] = (pos[0] || '전설-대가').split('-'), N = +(pos[1] || 400);
-  const b = { skill: sb, tac: opt('--tacB') ? JSON.parse(opt('--tacB')) : null };
+  const b = { skill: sb, tac: opt('--tacB') ? JSON.parse(opt('--tacB')) : null }, rules = opt('--rules') ? JSON.parse(opt('--rules')) : null;
   if (args.includes('--abl')) {
-    const out = []; for (const [nm, t] of ABL) { const sc = await score({ skill: sa, tac: t }, b, N, base); out.push([nm, sc]); console.log(`${nm.padEnd(16)} ${sc.toFixed(3)}`); }
-    const sp = await score({ skill: sa, as: sb }, b, N, base); console.log(`${'판단 속도 → ' + sb}  ${sp.toFixed(3)}  (선명도·판단 간격·서클을 ${sb}의 것으로, 기술은 ${sa})`); out.push(['판단 속도', sp]);
+    const out = []; for (const [nm, t] of ABL) { const sc = await score({ skill: sa, tac: t }, b, N, base, rules); out.push([nm, sc]); console.log(`${nm.padEnd(16)} ${sc.toFixed(3)}`); }
+    const sp = await score({ skill: sa, as: sb }, b, N, base, rules); console.log(`${'판단 속도 → ' + sb}  ${sp.toFixed(3)}  (선명도·판단 간격·서클을 ${sb}의 것으로, 기술은 ${sa})`); out.push(['판단 속도', sp]);
     const sv = opt('--save'); if (sv) fs.writeFileSync(path.join(__dirname, 'results', `ladder-${sv}.json`), JSON.stringify({ v: A.VERSION, N, base, pair: [sa, sb], out }, null, 1) + '\n');
     return;
   }
   const a = { skill: sa, tac: opt('--tacA') ? JSON.parse(opt('--tacA')) : null, as: opt('--as') };
-  console.log(`${sa} / ${sb} ${base ? '기본' : '결투장'} ${N}판: ${(await score(a, b, N, base, opt('--rules') ? JSON.parse(opt('--rules')) : null)).toFixed(3)}`);
+  console.log(`${sa} / ${sb} ${base ? '기본' : '결투장'} ${N}판: ${(await score(a, b, N, base, rules)).toFixed(3)}`);
 }
 if (require.main === module) main().catch(e => { console.error(e); process.exitCode = 1; });
 module.exports = { games, score, fullTac, ABL };

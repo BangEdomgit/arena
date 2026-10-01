@@ -7,7 +7,7 @@
 module.exports = {
   name: 'wave', on: W => W.rules.wave,
   engine: X => {
-    const { hurt, DT } = X;
+    const { hurt } = X;
     return {
       ceff(W, m, x) { return m.wave ? x * 1.1 : x; },
       power(W, m, s, x) { return x * (m.wave ? (m.type === '서퍼' ? 2.0 : 1.3) : m.type === '이단' ? 0.9 : m.type === '메타' && m.fat >= 80 && m.fat <= 100 ? 1.08 : 1); },
@@ -23,10 +23,10 @@ module.exports = {
       },
       fatRecover(W, m, k) { return k * (m.type === '메타' ? 1.05 : m.type === '이단' ? 1.3 : 1); },   // 메타: 머리 회복 × 1.05. 이단 × 1.3 (v2.0: 파도의 도파민도 꺼짐도 없어 머리가 빨리 식는다)
       mageStep(W, m) {
-        if (m.crash > 0) m.crash -= DT;
+        if (m.crash > 0) m.crash -= W.dt;
         if (m.wave) {
           // 파도는 몸을 태운다. 깊을수록 세게. 서퍼는 익숙하고 메타는 조절한다. 피로가 75 아래로 내려오면 꺼짐(crash)
-          m.waveT += DT; const wd = (1.5 + (m.fat - 90) * 0.06) * (m.type === '서퍼' ? 0.8 : 0.6) * DT;
+          m.waveT += W.dt; const wd = (1.5 + (m.fat - 90) * 0.06) * (m.type === '서퍼' ? 0.8 : 0.6) * W.dt;
           m.log.waveDmg += Math.max(0, wd); hurt(W, m, wd, null, '파도', 'wave'); if (m.hp <= 0) m.log.waveDeath = 1;
           if (m.fat < 75) { m.wave = 0; m.crash = m.type === '메타' ? 0 : 2; }   // 메타는 조절해 내려와 꺼짐이 없다
         }

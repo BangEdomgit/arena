@@ -12,7 +12,7 @@ module.exports = {
   engine: X => ({
     world(W) {
       if (!W._sideN) { W._sideN = []; for (const m of W.ms) W._sideN[m.side] = (W._sideN[m.side] || 0) + 1; }
-      const every = Math.round(M.every / X.DT); if (W.step % every) return;
+      const every = Math.round(M.every / W.dt); if (W.step % every) return;
       const down = []; for (const m of W.ms) if (m.hp <= 0) down[m.side] = (down[m.side] || 0) + 1;
       const k = pow(M.decay, M.every);   // 충격은 초당 반으로
       for (const m of W.ms) {

@@ -1,7 +1,9 @@
 /* =========================================================================
- * 숨 샌드박스 v0.1 — 화면 논리 (편집, 그리기, 입력)
+ * 숨 샌드박스 v0.2 — 화면 논리 (편집, 그리기, 입력)
  * 판은 엔진(전역 Arena)이 돌린다. 여기선 장면(JSON)을 고치고, 세계를 걸음씩 돌리고, 그린다.
  * 장면을 고치면 판은 처음으로 돌아간다. 같은 장면·씨앗이면 node cli.js scene과 같은 결과.
+ * v0.2 (엔진 v2.14): 중계처럼 본다. 걸음 간격은 세계마다(W.dt, 잘게 걷기 1/60 s). 같은 장면을 따로 앞서 돌려(결정론이라 같은 판) 사건의 때를 미리 알고
+ *   그 직전에 느려진다. 되감기 막대(앞으로는 걷고, 뒤로는 처음부터 다시 걷는다). 판단 그림. 장면에 beside가 있으면 그 장면을 나란히 같은 시간만큼 돌린다
  * ========================================================================= */
 (function () {
 'use strict';
@@ -27,6 +29,7 @@ const RULE_TXT = {
   fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
   gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3']
 };
+const OFFT = { proj: 1, thread: 1, area: 1, lob: 1, touch: 1, cone: 1 };   // 공격 틀 (판단 그림, v0.2)
 const MODEN = { poke: '견제', sure: '확정타', cover: '덮기', big: '큰 한 방', throw: '던지기', repeat: '반복' };   // 공격 방식 (v2.12)
 const breathDots = m => { const n = A.RULES.find(r => r.name === 'breath').api.P.n, u = Math.min(n, m.mlog.breath); return '●'.repeat(n - u) + '○'.repeat(u) + (m.st.breath > 0 ? ' 마심' : ''); };   // 남은 숨 (v2.11)
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
@@ -37,7 +40,9 @@ const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => 
 const clone = o => JSON.parse(JSON.stringify(o)), r2 = v => Math.round(v * 100) / 100;
 
 // S.scene: 고치는 장면, S.W: 도는 세계(없으면 편집 중), S.P: 편집 중에 보여 줄 첫 걸음 전 세계
-const S = { scene: null, W: null, P: null, play: false, speed: 1, acc: 0, tool: 'move', sel: null, side: 0, drag: null, sc: 20, tab: 'rules', cam: { x: 400, y: 300, z: 1 }, follow: true, ev: [], slowT: 0, seen: null };   // 카메라·사건 줄·느리게 (v2.13)
+const S = { scene: null, W: null, P: null, play: false, speed: 1, acc: 0, tool: 'move', sel: null, side: 0, drag: null, sc: 20, tab: 'rules', cam: { x: 400, y: 300, z: 1 }, follow: true, ev: [], slowT: 0, seen: null,   // 카메라·사건 줄·느리게 (v2.13)
+  ah: null, W2: null, cam2: { x: 200, y: 300, z: 1 }, vp: null, prev2: null, scrub: false, hud: null, hudF: 0 };   // 앞서 보기·나란히 보는 세계·화면 칸·되감기 끄는 중·나란히 지표 (v0.2)
+const Wt = window.ArenaWatch;
 const cv = $('cv'), ctx = cv.getContext('2d');
 
 /* ---------------- 장면 ---------------- */
@@ -48,7 +53,7 @@ function normalize(sc) {
   return sc;
 }
 function loadScene(sc) { S.scene = normalize(clone(sc)); S.sel = null; S.side = 0; reset(); note(''); renderAll(); }
-function reset() { S.W = null; S.P = null; S.play = false; S.acc = 0; $('err').textContent = ''; }
+function reset() { S.W = null; S.W2 = null; S.ah = null; S.P = null; S.play = false; S.acc = 0; S.ev = []; S.hud = null; $('err').textContent = ''; }
 function lib() { return { spells: Object.assign({}, A.SPELLS, S.scene.spells), decks: Object.assign({}, A.DECKS, S.scene.decks) }; }
 function preview() {
   if (!S.P) try { S.P = A.sceneWorld(S.scene); $('err').textContent = ''; } catch (e) { $('err').textContent = '장면 오류: ' + e.message; S.P = A.createWorld({ width: S.scene.width, height: S.scene.height, obstacles: [] }); }
@@ -70,59 +75,116 @@ function fixLayout() {
 }
 
 /* ---------------- 돌리기 ---------------- */
-function start() { if (!S.W) { S.W = A.sceneWorld(S.scene, { record: true }); S.P = null; } }
+// 나란히 보는 장면 (v0.2): beside는 장면 객체이거나 예시 장면의 이름
+function besideOf(sc) { const b = sc.beside; return !b ? null : typeof b === 'string' ? D.scenes[b] || null : b; }
+function start() {
+  if (S.W) return;
+  S.W = A.sceneWorld(S.scene, { record: true }); S.P = null; S.ev = [];
+  const b = besideOf(S.scene); S.W2 = b ? A.sceneWorld(b) : null;
+  S.ah = { W: A.sceneWorld(S.scene), ev: [], i: 0, last: -9 };   // 앞서 보기: 같은 장면을 따로 돌린다
+}
 function step() {
   start(); if (A.over(S.W)) { S.play = false; return false; }
   if (!S.fast) { S.prev = S.W.ms.map(m => [m.x, m.y, m.z]); S.pp = new Map(S.W.proj.map(p => [p, [p.x, p.y]])); }   // 사이를 이어 그리려고 지난 걸음의 자리를 둔다 (v2.4)
   const hp0 = S.fast ? null : S.W.ms.map(m => m.hp), br0 = S.fast ? null : S.W.ms.map(m => m.st.breath > 0), tr0 = S.fast ? null : S.W.traps.slice();
-  A.stepWorld(S.W); if (!S.fast) events(S.W, hp0, br0, tr0); if (A.over(S.W)) S.play = false; return true;
+  A.stepWorld(S.W); if (S.W2) Wt.watch(S.W); if (!S.fast) events(S.W, hp0, br0, tr0);
+  const W2 = S.W2; if (W2) while (!A.over(W2) && W2.t < S.W.t - 1e-9) { if (!S.fast) S.prev2 = W2.ms.map(m => [m.x, m.y, m.z]); A.stepWorld(W2); Wt.watch(W2); }   // 나란히: 같은 시간만큼
+  if (A.over(S.W)) S.play = false; return true;
+}
+// 되감기 (v0.2): 앞으로는 그냥 걷고, 뒤로는 처음부터 다시 걷는다 (같은 장면·씨앗이면 같은 판)
+function seek(t) {
+  start(); const n = Math.max(0, Math.round(t / S.W.dt));
+  if (n < S.W.step) { const ah = S.ah; S.W = null; S.W2 = null; start(); if (ah) { S.ah = ah; ah.i = 0; } }
+  S.fast = true; while (S.W.step < n && step()); S.fast = false; S.prev = null; S.prev2 = null; S.ev = []; S.acc = 0; S.hud = null; renderStats(); syncButtons();
+}
+// 앞서 보기 (v0.2): 프레임마다 ms 동안 따로 돌린 세계에서 사건을 찾는다. 큰 피해(한 걸음에 체력 8% 넘게)·쓰러짐·덫 발동·속임수(속임 수를 지음)·미끼 덮기(구르기를 빼낸 뒤 덮기)
+const SLOW = { pre: 0.35, post: 0.6, k: 0.15, gap: 0.8 };   // 직전 몇 초부터·뒤 몇 초까지·배속·사건 사이 (게임 초)
+function aheadRun(ms) {
+  const a = S.ah; if (!a || A.over(a.W)) return; const W = a.W, t0 = performance.now();
+  while (!A.over(W) && performance.now() - t0 < ms) {
+    const hp0 = W.ms.map(m => m.hp), tr0 = W.traps.filter(t => !t.done), c0 = W.ms.map(m => m.cast);
+    A.stepWorld(W);
+    const add = (txt, m) => { if (W.t - a.last < SLOW.gap) return; a.last = W.t; a.ev.push({ t: W.t, txt: (m ? m.name + ' ' : '') + txt }); };
+    W.ms.forEach((m, i) => { if (hp0[i] > 0 && m.hp <= 0) add('쓰러짐', m); else if (hp0[i] - Math.max(0, m.hp) > 0.08 * m.hpMax) add('큰 피해', m); const c = m.cast; if (c && c !== c0[i] && c.feint) add('속임수', m); else if (c && c !== c0[i] && c.mode === 'cover' && c.bait) add('미끼 덮기', m); });
+    for (const t of tr0) if (t.done) { add((t.src.name || '') + '의 ' + t.s.n + ' 발동', null); break; }
+  }
+}
+// 지금 느려야 하나: 다음 사건의 직전~뒤면 SLOW.k, 아니면 1. 앞서 보기가 아직 못 닿았으면 그 전처럼 큰 사건 뒤에 (v2.13)
+function slowNow() {
+  if (!$('slowmo').checked || !S.W) return null; const a = S.ah, t = S.W.t;
+  if (a) { while (a.i < a.ev.length && a.ev[a.i].t + SLOW.post < t) a.i++; const e = a.ev[a.i]; if (e && t >= e.t - SLOW.pre) return e; }
+  return performance.now() < S.slowT ? { txt: '' } : null;
 }
 // 큰 사건 (v2.13): 한 걸음에 체력 15% 넘게 잃음·쓰러짐·덫 발동·숨. 사건 줄에 6 s 띄우고, 큰 피해·쓰러짐은 1.2 s(화면 시간) 0.25배로 느리게
 function events(W, hp0, br0, tr0) {
-  const add = (txt, col, slow) => { S.ev.push({ t: W.t, txt: W.t.toFixed(1) + ' s  ' + txt, col }); if (S.ev.length > 6) S.ev.shift(); if (slow && $('slowmo').checked) S.slowT = performance.now() + 1200; };
+  const add = (txt, col, slow) => { S.ev.push({ t: W.t, txt: W.t.toFixed(1) + ' s  ' + txt, col }); if (S.ev.length > 6) S.ev.shift(); if (slow && $('slowmo').checked && !(S.ah && S.ah.W.t > W.t)) S.slowT = performance.now() + 1200; };   // 앞서 보기가 닿았으면 그쪽이 미리 늦춘다
   W.ms.forEach((m, i) => { const name = m.name, c = COL[m.side % COL.length], d = hp0[i] - Math.max(0, m.hp);
     if (hp0[i] > 0 && m.hp <= 0) add(name + ' 쓰러짐', c, true); else if (d > 0.15 * m.hpMax) add(name + ' 큰 피해 −' + Math.round(d), c, true);
     if (!br0[i] && m.st.breath > 0) add(name + ' 숨', c, false); });
   for (const t of tr0) if (t.done) add((t.src.name || '') + '의 ' + t.s.n + ' 발동', COL[t.src.side % COL.length], false);
 }
-function runToEnd() { start(); S.fast = true; while (step()); S.fast = false; S.prev = null; renderStats(); syncButtons(); return A.result(S.W); }
+function runToEnd() { start(); S.fast = true; while (step()); S.fast = false; S.prev = null; S.prev2 = null; renderStats(); syncButtons(); return A.result(S.W); }
 let last = performance.now(), frame = 0;
 function loop(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
   if (S.play) {
     const t0 = performance.now();
     if (S.speed === 0) { while (S.play && performance.now() - t0 < 12) step(); }
-    else { S.acc += dt * S.speed * (performance.now() < S.slowT ? 0.25 : 1); let n = 0; while (S.play && S.acc >= A.DT && n < 600) { step(); S.acc -= A.DT; n++; } }
+    else { const sl = slowNow(), sd = S.W ? S.W.dt : A.DT; S.acc += dt * S.speed * (sl ? (S.ah && sl.t != null ? SLOW.k : 0.25) : 1); let n = 0; while (S.play && S.acc >= sd && n < 600) { step(); S.acc -= sd; n++; } }   // 걸음 간격은 세계마다 (v2.14)
     if (++frame % 8 === 0 || !S.play) renderStats();
     if (!S.play) syncButtons();
   }
-  draw(); requestAnimationFrame(loop);
+  if (S.W) aheadRun(S.play ? 6 : 12);
+  scrubSync(); draw(); requestAnimationFrame(loop);
+}
+// 되감기 막대: 끝은 앞서 본 판의 끝 (아직 돌리는 중이면 거기까지)
+function scrubSync() {
+  const b = $('scrub'), a = S.ah, W = S.W; if (!W) { b.max = 0; b.value = 0; $('scrubT').textContent = ''; return; }
+  const end = a ? (A.over(a.W) ? a.W.t : Math.max(a.W.t, W.t)) : W.t; b.max = end.toFixed(3);
+  if (!S.scrub) { b.value = W.t.toFixed(3); $('scrubT').textContent = W.t.toFixed(2) + ' / ' + end.toFixed(1) + ' s' + (a && !A.over(a.W) ? ' …' : ''); }
 }
 
 /* ---------------- 그리기 ---------------- */
-// 사이를 부드럽게 (v2.4): 걸음(1/30 s)보다 화면이 잦으면 지난 걸음과 이번 걸음 사이를 남은 시간 몫(α)만큼 이어 그린다.
-// 그리는 동안만 자리를 바꿔 두고 그린 뒤 그대로 돌려놓는다 (판에는 닿지 않는다)
-function draw() {
-  const W = S.W, a = W && S.prev && S.play && S.speed > 0 && S.prev.length === W.ms.length ? Math.min(1, S.acc / A.DT) : 1;
-  if (a >= 1) return draw0();
-  const keep = W.ms.map(m => [m.x, m.y, m.z]), kp = W.proj.map(p => [p.x, p.y]);
-  W.ms.forEach((m, i) => { const q = S.prev[i]; m.x = q[0] + (m.x - q[0]) * a; m.y = q[1] + (m.y - q[1]) * a; m.z = q[2] + (m.z - q[2]) * a; });
-  W.proj.forEach(p => { const q = S.pp.get(p); if (q) { p.x = q[0] + (p.x - q[0]) * a; p.y = q[1] + (p.y - q[1]) * a; } });
-  try { draw0(); } finally { W.ms.forEach((m, i) => { m.x = keep[i][0]; m.y = keep[i][1]; m.z = keep[i][2]; }); W.proj.forEach((p, i) => { p.x = kp[i][0]; p.y = kp[i][1]; }); }
+// 사이를 부드럽게 (v2.4): 걸음보다 화면이 잦으면 지난 걸음과 이번 걸음 사이를 남은 시간 몫(α)만큼 이어 그린다.
+// 그리는 동안만 자리를 바꿔 두고 그린 뒤 그대로 돌려놓는다 (판에는 닿지 않는다). 나란히 보는 세계도 같은 시각으로 (v0.2)
+function lerped(W, prev, pp, a, fn) {
+  if (!W || !prev || a >= 1 || prev.length !== W.ms.length) return fn();
+  const keep = W.ms.map(m => [m.x, m.y, m.z]), kp = pp ? W.proj.map(p => [p.x, p.y]) : null;
+  W.ms.forEach((m, i) => { const q = prev[i]; m.x = q[0] + (m.x - q[0]) * a; m.y = q[1] + (m.y - q[1]) * a; m.z = q[2] + (m.z - q[2]) * a; });
+  if (pp) W.proj.forEach(p => { const q = pp.get(p); if (q) { p.x = q[0] + (p.x - q[0]) * a; p.y = q[1] + (p.y - q[1]) * a; } });
+  try { fn(); } finally { W.ms.forEach((m, i) => { m.x = keep[i][0]; m.y = keep[i][1]; m.z = keep[i][2]; }); if (kp) W.proj.forEach((p, i) => { p.x = kp[i][0]; p.y = kp[i][1]; }); }
 }
-// 카메라 (v2.13): 판이 돌면 살아 있는 사람들을 따라가며 확대한다(둘레 12 m 여유, 1~4배, 멀어지면 줌아웃). 편집할 땐(판이 없거나 끔) 싸움터 전체
-function camera(W, sc) {
+function draw() {
+  const W = world(), live = S.W && S.play && S.speed > 0, a = live && S.prev ? Math.min(1, S.acc / S.W.dt) : 1;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
+  const two = !!(S.W && S.W2), vp = two ? { x: 0, w: 398, h: 600, cam: S.cam, main: true } : { x: 0, w: 800, h: 600, cam: S.cam, main: true }; S.vp = vp;
+  lerped(live ? W : null, S.prev, S.pp, a, () => draw0(W, vp));
+  if (two) {
+    const W2 = S.W2, td = S.W.t - (1 - a) * S.W.dt, a2 = live && S.prev2 ? Math.max(0, Math.min(1, (td - (W2.t - W2.dt)) / W2.dt)) : 1;
+    lerped(live ? W2 : null, S.prev2, null, a2, () => draw0(W2, { x: 402, w: 398, h: 600, cam: S.cam2, main: false }));
+    ctx.fillStyle = '#2a2b31'; ctx.fillRect(398, 0, 4, 600); hud();
+  }
+}
+// 나란히 (v0.2): 칸마다 같은 시간 동안의 박자 (metrics/watch: 평균 속도·방향 전환·하는 일·교환)
+function hud() {
+  if (!S.hud || ++S.hudF % 15 === 0) S.hud = [S.W, S.W2].map(W => { let v = 0, tr = 0, ac = 0, n = 0, ex = 0; for (const m of W.ms) { const o = Wt.seen(W, m); v += o['평균 속도 (m/s)']; tr += o['초당 방향 전환']; ac += o['초당 하는 일']; ex = o['초당 교환']; n++; } return n ? [v / n, tr / n, ac / n, ex] : [0, 0, 0, 0]; });
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = '600 12px system-ui'; ctx.textAlign = 'left';
+  [S.W, S.W2].forEach((W, i) => { const h = S.hud[i], x = i ? 410 : 8, y = 582, name = (i ? besideOf(S.scene) : S.scene).name || '', tx = W.t.toFixed(1) + ' s · ' + h[0].toFixed(1) + ' m/s · 방향 전환 ' + h[1].toFixed(1) + '/s · 하는 일 ' + h[2].toFixed(1) + '/s · 교환 ' + h[3].toFixed(2) + '/s';
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 4, y - 30, 386, 36); ctx.fillStyle = '#e9e4d8'; ctx.fillText(name.slice(0, 44), x, y - 14); ctx.fillStyle = '#ffe28a'; ctx.fillText(tx, x, y); });
+}
+// 카메라 (v2.13): 판이 돌면 살아 있는 사람들을 따라가며 확대한다(둘레 12 m 여유, 1~4배, 멀어지면 줌아웃). 편집할 땐(판이 없거나 끔) 싸움터 전체. 화면 칸마다 (v0.2)
+function camera(W, sc, vp) {
   let tx = W.width * sc / 2, ty = W.height * sc / 2, tz = 1;
   if (S.W && S.follow && $('follow').checked) {
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const m of W.ms) if (m.hp > 0) { if (m.x < x0) x0 = m.x; if (m.x > x1) x1 = m.x; if (m.y < y0) y0 = m.y; if (m.y > y1) y1 = m.y; }
-    if (x1 >= x0) { const pad = 12; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad; tx = (x0 + x1) / 2 * sc; ty = (y0 + y1) / 2 * sc; tz = Math.max(1, Math.min(4, 800 / ((x1 - x0) * sc), 600 / ((y1 - y0) * sc))); }
+    if (x1 >= x0) { const pad = 12; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad; tx = (x0 + x1) / 2 * sc; ty = (y0 + y1) / 2 * sc; tz = Math.max(1, Math.min(4, vp.w / ((x1 - x0) * sc), vp.h / ((y1 - y0) * sc))); }
   }
-  const c = S.cam, k = S.W && S.follow ? 0.12 : 1; c.x += (tx - c.x) * k; c.y += (ty - c.y) * k; c.z += (tz - c.z) * k;
+  const c = vp.cam, k = S.W && S.follow ? 0.12 : 1; c.x += (tx - c.x) * k; c.y += (ty - c.y) * k; c.z += (tz - c.z) * k;
 }
-function draw0() {
-  const W = world(); S.sc = Math.min(800 / W.width, 600 / W.height); const sc = S.sc, X = v => v * sc;
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
-  camera(W, sc); const cz = S.cam.z, F = px => (px / Math.sqrt(cz)).toFixed(1); ctx.setTransform(cz, 0, 0, cz, 400 - S.cam.x * cz, 300 - S.cam.y * cz);   // 확대해도 글자는 덜 커진다
+function draw0(W, vp) {
+  const sc = Math.min(vp.w / W.width, vp.h / W.height), X = v => v * sc; if (vp.main) S.sc = sc;
+  ctx.save(); ctx.beginPath(); ctx.rect(vp.x, 0, vp.w, vp.h); ctx.clip();
+  camera(W, sc, vp); const cam = vp.cam, cz = cam.z, F = px => (px / Math.sqrt(cz)).toFixed(1); ctx.setTransform(cz, 0, 0, cz, vp.x + vp.w / 2 - cam.x * cz, vp.h / 2 - cam.y * cz);   // 확대해도 글자는 덜 커진다
   const lab = [];   // 이름표 자리 (겹치면 아래로 민다)
   ctx.fillStyle = '#34322d'; ctx.fillRect(0, 0, X(W.width), X(W.height));
   ctx.fillStyle = 'rgba(235,232,220,.13)'; for (const r of W.salt || []) ctx.fillRect(X(r.x), X(r.y), X(r.w), X(r.h));   // 소금 땅 (rules/saltLand)
@@ -158,6 +220,7 @@ function draw0() {
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
     if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]); if (W.ms.length <= 60) { ctx.font = '' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)
     const k = m._k; if (k && k.covPts && !dead && W.t - k.covT < 0.6) { ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; for (let i = 0; i < k.covN; i++) { ctx.beginPath(); ctx.arc(X(k.covPts[i * 3]), X(k.covPts[i * 3 + 1]), k.covPts[i * 3 + 2] ? 2 : 3, 0, 7); if (k.covPts[i * 3 + 2]) ctx.stroke(); else ctx.fill(); } ctx.globalAlpha = dead ? 0.25 : (m.roll > 0 || m.flee ? 0.55 : 1); }   // 덮기: 상대가 갈 수 있는 곳 (속 찬 점 땅, 빈 점 하늘, v2.12)
+    if (m.st.guard > 0 && !dead) { ctx.strokeStyle = 'rgba(159,224,255,.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10.5, 0, 7); ctx.stroke(); }   // 막기를 켰다 (v2.14, rules/pace): 몸에 붙은 얇은 고리
     if (m.st.breath > 0 && !dead) { ctx.strokeStyle = 'rgba(200,235,210,.35)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.stroke(); }   // 숨을 마시는 중 (v2.11): 옅은 고리
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
     if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
@@ -171,15 +234,44 @@ function draw0() {
     if (!dead && m.cast && m.cast.bp) { ctx.font = '600 ' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#c9b08a'; ctx.fillText('청사진 ' + m.cast.bp.name + ' ' + m.cast.bp.built + '/' + m.cast.bp.items.length, x, y + 42); }
   }
   if (S.sel && S.sel.k !== 'mage') { const it = itemOf(S.sel); if (it) { ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(it.x), X(it.y), X(it.r || 0.4) + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); } }
+  if ($('mind').checked && S.W) mind(W, X, F);   // 판단 그림 (v0.2)
   ctx.setTransform(1, 0, 0, 1, 0, 0);   // 여기부터 화면 위 (카메라와 상관없이)
-  if (S.W) { ctx.font = '600 12px system-ui'; ctx.textAlign = 'left'; let yy = 18; for (const e of S.ev) { if (S.W.t - e.t > 6) continue; ctx.globalAlpha = Math.max(0.3, 1 - (S.W.t - e.t) / 6); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(8, yy - 12, ctx.measureText(e.txt).width + 10, 16); ctx.fillStyle = e.col; ctx.fillText(e.txt, 13, yy); yy += 18; } ctx.globalAlpha = 1; if (performance.now() < S.slowT) { ctx.fillStyle = '#ffe28a'; ctx.textAlign = 'right'; ctx.fillText('느리게', 792, 18); } }   // 사건 줄 (v2.13)
-  if (S.W && A.over(S.W)) { const r = A.result(S.W); ctx.font = '600 ' + F(22) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(winText(r), X(W.width) / 2, 34); }
-  $('clock').textContent = (S.W ? S.W.t.toFixed(2) : '0.00') + ' / ' + S.scene.maxT + '초';
+  if (S.W && vp.main) { ctx.font = '600 12px system-ui'; ctx.textAlign = 'left'; let yy = 18; for (const e of S.ev) { if (S.W.t - e.t > 6) continue; ctx.globalAlpha = Math.max(0.3, 1 - (S.W.t - e.t) / 6); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(8, yy - 12, ctx.measureText(e.txt).width + 10, 16); ctx.fillStyle = e.col; ctx.fillText(e.txt, 13, yy); yy += 18; } ctx.globalAlpha = 1; const sl = S.play ? slowNow() : null; if (sl) { ctx.fillStyle = '#ffe28a'; ctx.textAlign = 'right'; ctx.fillText('느리게' + (sl.txt ? ' · ' + sl.txt : ''), vp.x + vp.w - 8, 18); } }   // 사건 줄 (v2.13), 사건 직전 느리게 (v0.2)
+  if (S.W && A.over(W)) { const r = A.result(W); ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(vp.main ? winText(r) : r.winner < 0 ? '무승부' : '편 ' + r.winner + ' 승리', vp.x + vp.w / 2, 34); }
+  ctx.restore();
+  if (vp.main) $('clock').textContent = (S.W ? S.W.t.toFixed(2) : '0.00') + ' / ' + S.scene.maxT + '초' + (S.W && S.W.dt < A.DT ? ' · 1/' + Math.round(1 / S.W.dt) + ' s 걸음' : '');
+}
+// 판단 그림 (v0.2): 판에 닿지 않고 두뇌가 남긴 것(m._k, 시전 객체, m.herd)을 읽기만 한다
+//   몰이 화살표(m.herd: 상대를 어느 옆으로 미는가, 작전 몰이), 덮기(상대가 갈 수 있는 곳 점 + 그곳을 덮는 지어지는 마법의 원),
+//   노리는 자리(흐림: 지어지는 공격이 과녁이 있으리라 믿는 곳)와 실제 자리를 잇는 선, 속임수(속임 수·미끼 덮기·날기 속이기), 걸어둔 마법(붙잡아 둔 두 번째 칸) 점선
+function mind(W, X, F) {
+  const lab = (t, x, y, c) => { ctx.font = '600 ' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(t, x, y); };
+  for (const m of W.ms) {
+    if (m.hp <= 0) continue; const c = COL[m.side % COL.length], k = m._k;
+    // 몰이: 과녁을 옆으로 미는 화살표
+    const e = k && k.e; if (e && e.hp > 0 && ((m.herd && W.t < m.herd.until) || m.op.cur === 'herd')) {
+      const dx = e.x - m.x, dy = e.y - m.y, l = Math.hypot(dx, dy) || 1, sd = m.herd && W.t < m.herd.until ? m.herd.side : (m.op.tx === m.op.tx ? Math.sign((m.op.tx - e.x) * -dy / l + (m.op.ty - e.y) * dx / l) || 1 : 1), px = -dy / l * sd, py = dx / l * sd;
+      const x0 = X(e.x), y0 = X(e.y), x1 = X(e.x + px * 6), y1 = X(e.y + py * 6); ctx.strokeStyle = c; ctx.fillStyle = c; ctx.globalAlpha = 0.85; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      const an = Math.atan2(y1 - y0, x1 - x0); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - 9 * Math.cos(an - 0.45), y1 - 9 * Math.sin(an - 0.45)); ctx.lineTo(x1 - 9 * Math.cos(an + 0.45), y1 - 9 * Math.sin(an + 0.45)); ctx.fill(); lab('몰이', x1, y1 - 6, c); ctx.globalAlpha = 1;
+    }
+    for (const cs of [m.cast, m.castB]) {
+      if (!cs) continue; const q = cs.tgt;
+      // 노리는 자리(흐림)와 실제 자리
+      if (q && q.hp > 0 && OFFT[cs.s.t]) { ctx.globalAlpha = 0.3; ctx.fillStyle = COL[q.side % COL.length]; ctx.beginPath(); ctx.arc(X(cs.tx), X(cs.ty), 8, 0, 7); ctx.fill(); ctx.globalAlpha = 0.5; ctx.strokeStyle = COL[q.side % COL.length]; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(X(cs.tx), X(cs.ty)); ctx.lineTo(X(q.x), X(q.y)); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+      // 덮기: 덮는 마법의 원과 갈 곳 점
+      if (cs.mode === 'cover') { const r = (cs.s.r || 1) * (A.sizeOf ? A.sizeOf(m, cs.s) : 1); ctx.strokeStyle = c; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(cs.tx), X(cs.ty), X(r), 0, 7); ctx.stroke(); lab(cs.bait ? '미끼 덮기' : '덮기', X(cs.tx), X(cs.ty) - X(r) - 3, c); ctx.globalAlpha = 1;
+        if (k && k.covPts) { ctx.fillStyle = c; ctx.globalAlpha = 0.85; for (let i = 0; i < k.covN; i++) { ctx.beginPath(); ctx.arc(X(k.covPts[i * 3]), X(k.covPts[i * 3 + 1]), 2.5, 0, 7); ctx.fill(); } ctx.globalAlpha = 1; } }
+      if (cs.feint) lab('속임수', X(m.x), X(m.y) + 52, '#ff9a8a');
+      // 걸어둔 마법: 붙잡아 둔 칸은 과녁까지 점선
+      if (cs.hold && !cs.go) { ctx.strokeStyle = '#c9b0ff'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]); ctx.beginPath(); ctx.moveTo(X(m.x), X(m.y)); ctx.lineTo(X(cs.tx), X(cs.ty)); ctx.stroke(); ctx.setLineDash([]); lab('걸어둠 ' + cs.s.n, X((m.x + cs.tx) / 2), X((m.y + cs.ty) / 2) - 4, '#c9b0ff'); }
+    }
+    if (m.flog && m._feC && m._feC === (k && k.e && k.e.cast)) lab('날기 속이기', X(m.x), X(m.y) + 52, '#ff9a8a');
+  }
 }
 function winText(r) { return r.winner < 0 ? '무승부' : (S.scene.sides[r.winner].name || '편 ' + r.winner) + ' 승리' + (r.byTime ? ' (시간 판정)' : ''); }
 
 /* ---------------- 싸움터 입력 ---------------- */
-function mpos(e) { const b = cv.getBoundingClientRect(), c = S.cam, sx = (e.clientX - b.left) / b.width * 800, sy = (e.clientY - b.top) / b.height * 600; return { x: ((sx - 400) / c.z + c.x) / S.sc, y: ((sy - 300) / c.z + c.y) / S.sc }; }   // 카메라를 거꾸로 (v2.13)
+function mpos(e) { const b = cv.getBoundingClientRect(), c = S.cam, v = S.vp || { x: 0, w: 800, h: 600 }, sx = (e.clientX - b.left) / b.width * 800, sy = (e.clientY - b.top) / b.height * 600; return { x: ((sx - v.x - v.w / 2) / c.z + c.x) / S.sc, y: ((sy - v.h / 2) / c.z + c.y) / S.sc }; }   // 카메라를 거꾸로 (v2.13), 화면 칸 (v0.2)
 function itemOf(sel) { const sc = S.scene; if (sel.k === 'obs') return Array.isArray(sc.obstacles) && sc.obstacles[sel.i]; if (sel.k === 'barrel') return sc.barrels && sc.barrels[sel.i]; if (sel.k === 'wall') return sc.walls && sc.walls[sel.i]; if (sel.k === 'mage') return sc.sides[sel.s] && sc.sides[sel.s].mages[sel.i]; }
 function hitTest(p) {
   const W = world(); let best = null, bd = 1e9; const tryIt = (sel, x, y, r) => { const d = Math.hypot(p.x - x, p.y - y); if (d < r && d < bd) { bd = d; best = sel; } };
@@ -362,6 +454,8 @@ $('play').onclick = togglePlay;
 $('step').onclick = () => { S.play = false; step(); renderStats(); renderMageEd(); syncButtons(); };
 $('reset').onclick = () => { reset(); renderAll(); };
 $('speed').onchange = e => { S.speed = +e.target.value; };
+$('scrub').addEventListener('input', e => { S.scrub = true; $('scrubT').textContent = '→ ' + (+e.target.value).toFixed(2) + ' s'; });
+$('scrub').addEventListener('change', e => { S.scrub = false; const p = S.play; seek(+e.target.value); S.play = p && !A.over(S.W); last = performance.now(); });   // 놓으면 그 시각으로 (v0.2)
 $('seed').onchange = e => edit(sc => { sc.seed = Math.round(+e.target.value) || 1; });
 for (const b of document.querySelectorAll('#tools [data-tool]')) b.onclick = () => setTool(b.dataset.tool);
 for (const b of document.querySelectorAll('[data-tab]')) b.onclick = () => { S.tab = b.dataset.tab; for (const x of document.querySelectorAll('[data-tab]')) x.classList.toggle('on', x === b); $('tab-rules').hidden = S.tab !== 'rules'; $('tab-scene').hidden = S.tab !== 'scene'; };
@@ -372,10 +466,10 @@ $('file').onchange = e => { const f = e.target.files[0]; if (f) f.text().then(im
 document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) f.text().then(importText); });
 $('addSide').onclick = () => edit(sc => { sc.sides.push({ name: '편' + sc.sides.length, brain: '기본', mages: [] }); S.side = sc.sides.length - 1; });
-$('ver').textContent = 'v0.1 · 엔진 v' + A.VERSION;
+$('ver').textContent = 'v0.2 · 엔진 v' + A.VERSION;
 
 // 시험·자동화용 손잡이
-window.Sandbox = { S, loadScene, step, runToEnd, exportScene, exportRecording, importText, reset: () => { reset(); renderAll(); } };
+window.Sandbox = { S, loadScene, step, runToEnd, seek, exportScene, exportRecording, importText, reset: () => { reset(); renderAll(); } };
 
 // 열면 첫 예시 장면이 바로 돈다
 loadScene(D.scenes.duel || Object.values(D.scenes)[0]); S.play = true; start(); syncButtons();

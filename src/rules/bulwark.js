@@ -43,7 +43,7 @@ function segHit(x1, y1, x2, y2, w) { const dx = x2 - x1, dy = y2 - y1, L2 = dx *
 module.exports = {
   name: 'bulwark', switch: 'bulwark', on: W => W.rules.bulwark, form: { build: 'self', topple: 'target' }, api: { rateOf, buildT, nOf, volOf, crushed },
   engine: X => {
-    const { DT, addWall } = X;
+    const { addWall } = X;
     return {
       // 흙·석회·얼음 벽은 시간으로 사라지지 않는다 (가두는 기둥은 그대로 짧다)
       wall(W, w) { if (!w.cage && (EARTH[w.mat] || w.mat === 'ice')) w.t = 1e9; },
@@ -61,14 +61,14 @@ module.exports = {
       world(W) {
         for (const w of W.walls) if (w.mat === 'ice') {   // 얼음은 녹는다, 불 곁에선 빨리
           let k = P.ice.melt; for (const z of W.zones) if (z.k === 'fire' && hyp(z.x - w.x, z.y - w.y) < (z.r || (z.len || 2) / 2) + w.r + 0.5) { k = P.ice.fire; break; }
-          w.hp -= k * DT;
+          w.hp -= k * W.dt;
         }
         // 버티는 벽(불벽·물 장막): 세운 사람이 굳지 않고 당이 있는 동안 남는다. 멈추면 사라진다
         for (const z of W.zones) {
           if (z.up === undefined) z.up = (z.n === '불벽' || z.n === '물 장막') ? 1 : 0;
-          if (!z.up) continue; const q = z.src; z.age = (z.age || 0) + DT;
-          if (q.hp <= 0 || q.st.stun > 0 || q.glu < P.upkeep.glu * DT || z.age > P.upkeep.max) { z.t = 0; z.up = 0; continue; }
-          q.glu -= P.upkeep.glu * DT; if (z.t < 1) z.t = 1;
+          if (!z.up) continue; const q = z.src; z.age = (z.age || 0) + W.dt;
+          if (q.hp <= 0 || q.st.stun > 0 || q.glu < P.upkeep.glu * W.dt || z.age > P.upkeep.max) { z.t = 0; z.up = 0; continue; }
+          q.glu -= P.upkeep.glu * W.dt; if (z.t < 1) z.t = 1;
         }
       },
       mageStep(W, m) {
@@ -76,7 +76,7 @@ module.exports = {
           if (m.z >= 1) { m.cast = null; return; }   // 떠서는 흙을 못 끌어온다
           const t = c.t - c.s.cast; begin(W, m, c); if (t > 0) place(W, m, c, Math.floor(t * rateOf(m) / volOf(c.s) + 1e-9), addWall);
         }
-        if ((W.step + m.id) % 6 === 0 && W.walls.length) { const ws = W.walls, q = X.wallsIn(W, m.x - 3, m.y - 3, m.x + 3, m.y + 3); for (let i = 0; i < q.length; i++) { const w = ws[q[i]]; if (w.grp >= 0 && !w.cage && hyp(w.x - m.x, w.y - m.y) < w.r + 1.2) { m.alog.wallT += 6 * DT; break; } } }   // 벽 곁에 있던 시간 (지표, 벽 격자)
+        if ((W.step + m.id) % 6 === 0 && W.walls.length) { const ws = W.walls, q = X.wallsIn(W, m.x - 3, m.y - 3, m.x + 3, m.y + 3); for (let i = 0; i < q.length; i++) { const w = ws[q[i]]; if (w.grp >= 0 && !w.cage && hyp(w.x - m.x, w.y - m.y) < w.r + 1.2) { m.alog.wallT += 6 * W.dt; break; } } }   // 벽 곁에 있던 시간 (지표, 벽 격자)
       },
       speedLate(W, m, sp) { if (m.z < 1) for (const z of W.zones) if (z.k === 'pit' && hyp(z.x - m.x, z.y - m.y) < z.r) return sp * P.pit.speed; return sp; },   // 구덩이
     };

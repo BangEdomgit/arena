@@ -45,15 +45,15 @@ function cutStart(W, m) {
   if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + CU.fat);
 }
 // 떨어지기·내리꽂기 (fly 3): 중력(+ 아래로 뿜기), 공기 쿠션, 받아 잡기, 닿기
-function dropStep(W, m, hurt, DT) {
+function dropStep(W, m, hurt) {
   if (m.st.stun > 0) m.cut.on = false;
   else if (!m.cut.on && m.cut.z >= 0 && m.z <= m.cut.z) { m.cut.on = true; m.flog.cush++; if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + CU.fat); }
   if (m.cut.on) {
-    if (m.vz < -CU.soft) { m.vz += (CU.cush - 1) * G * DT; if (m.vz > -CU.soft) m.vz = -CU.soft; }
+    if (m.vz < -CU.soft) { m.vz += (CU.cush - 1) * G * W.dt; if (m.vz > -CU.soft) m.vz = -CU.soft; }
     else if (m.flyWant && m.z >= 0.5 && canFly(m)) { m.fly = 1; m.cut.k = 0; m.cut.z = -1; m.cut.on = false; m.vz = -CU.soft; return; }   // 받아 잡기: 그 높이에서 다시 난다
     else m.vz = -CU.soft;
-  } else m.vz -= (m.cut.k === 5 ? 1 + CU.dive : 1) * G * DT;
-  m.z += m.vz * DT; m.flog.dz -= m.vz * DT; const k = 1 - 0.3 * DT; m.vx *= k; m.vy *= k; edge(W, m);
+  } else m.vz -= (m.cut.k === 5 ? 1 + CU.dive : 1) * G * W.dt;
+  m.z += m.vz * W.dt; m.flog.dz -= m.vz * W.dt; const k = 1 - 0.3 * W.dt; m.vx *= k; m.vy *= k; edge(W, m);
   if (m.z <= 0) {
     const v = -m.vz; m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.cut.k = 0; m.cut.z = -1; m.cut.on = false;
     if (v > CU.safeV) { m.flog.crash++; m.flog.falls++; hurt(W, m, v * v / (2 * G) * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun); m.cast = m.castB = m.chan = null; }   // 쿠션을 못 뿜었다
@@ -110,22 +110,24 @@ function cutBrain(W, m, K, lv) {
     m.cut.w = 4; const h = cushAt(m.z, 0, false, lv), k = m.z - CBR.catchS; m.cut.z = h > k ? h : k;
   }
 }
+// 끊는 움직임의 가속 a에 규칙이 곱한다: 빠른 판의 꺾기 (rules/pace, v2.14)
+function aF(W, m) { let a = aOf(W, m); const h = W.H.flyAccel; for (let i = 0; i < h.length; i++) a = h[i](W, m, a); return a; }
 module.exports = {
   name: 'flight', switch: 'flight', on: W => W.rules.flight, api: { F, outP, canFly },
   engine: X => {
-    const { hurt, DT } = X;
+    const { hurt } = X;
     return {
       init(W) { W._fly = true; },   // 녹화에 높이·속도를 적는다
       mageStep(W, m) {
-        if (m.cut.cd > 0) m.cut.cd -= DT;
+        if (m.cut.cd > 0) m.cut.cd -= W.dt;
         if (m.fly === 1) {
           if (m.st.stun > 0) fall(m);   // 날다가 굳으면(폭주 포함) 떨어진다
           else {
             const L = m.load;
-            if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + (F.fat[0] + F.fat[1] * L + (L > 1 ? F.fat[2] * (L - 1) : 0)) * DT);
+            if (W.rules.fatigue && m.fat < 100) m.fat = Math.min(100, m.fat + (F.fat[0] + F.fat[1] * L + (L > 1 ? F.fat[2] * (L - 1) : 0)) * W.dt);
             const v = hyp(m.vx, m.vy); m.airFilm = false;
             if (v > F.film) { if (m.circles >= 3) m.airFilm = true; else m.st.blind = Math.max(m.st.blind, F.filmBlind); }   // 공기막이 없으면 눈이 먼다
-            const lg = m.flog; lg.t += DT; lg.v += v * DT; lg.v2 += v * v * DT; if (v > F.corner - 5 && v < F.corner + 5) lg.corner += DT;
+            const lg = m.flog; lg.t += W.dt; lg.v += v * W.dt; lg.v2 += v * v * W.dt; if (v > F.corner - 5 && v < F.corner + 5) lg.corner += W.dt;
           }
         }
         m._nm = m.z >= 1 && m.fly !== 3 ? 1 + m.load : 1;   // 겨냥 흔들림 × (1 + L). 끊은 동안은 풀린다 (v2.3)
@@ -137,46 +139,46 @@ module.exports = {
           if (!(m.flyWant && !(m.st.stun > 0 || m.st.root > 0) && canFly(m) && !(W.salt.length && X.onSalt(W, m.x, m.y)))) return false;
           m.fly = 1; m.vz = 0; m._flT0 = W.t;   // 이륙
         }
-        if (m.roll > 0) m.roll -= DT;
+        if (m.roll > 0) m.roll -= W.dt;
         if (m.fly === 2 && W.rules.flightCut && !(m.st.stun > 0) && m.cut.z >= 0) { m.fly = 3; m.cut.k = 4; m.cut.z0 = m.fallZ; m.cut.on = false; }   // 굳음이 풀렸다: 쿠션을 뿜을 수 있다 (v2.3)
-        if (m.fly === 3) { dropStep(W, m, hurt, DT); return true; }   // 끊었다 (v2.3)
+        if (m.fly === 3) { dropStep(W, m, hurt); return true; }   // 끊었다 (v2.3)
         if (m.fly === 2) {   // 떨어진다
-          m.vz -= G * DT; m.z += m.vz * DT; m.flog.dz -= m.vz * DT; const k = 1 - 0.5 * DT; m.vx *= k; m.vy *= k; edge(W, m);
+          m.vz -= G * W.dt; m.z += m.vz * W.dt; m.flog.dz -= m.vz * W.dt; const k = 1 - 0.5 * W.dt; m.vx *= k; m.vy *= k; edge(W, m);
           if (m.z <= 0) { m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.flog.falls++; hurt(W, m, m.fallZ * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun); m.cast = m.castB = m.chan = null; }
           return true;
         }
         const P = outP(m), want = m.flyWant && P >= F.minP && !(W.salt.length && X.onSalt(W, m.x, m.y)), fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
         let v = hyp(m.vx, m.vy);
         // 오르내림 (목표 높이로). 튀어오르기는 위로 3 g (v2.3)
-        if (m.cut.k === 3) m.vz += CU.hop * G * DT;
-        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax), va = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.vzAcc, aOf(W, m)) : F.vzAcc; m.vz += clamp(vzT - m.vz, -va * DT, va * DT); }
+        if (m.cut.k === 3) m.vz += CU.hop * G * W.dt;
+        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax), va = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.vzAcc, aF(W, m)) : F.vzAcc; m.vz += clamp(vzT - m.vz, -va * W.dt, va * W.dt); }
         const r = v / F.liftV, lift = F.lift / (1 + r * r) * clamp(1 + m.vz / F.glideVz, 0, 1), drag = F.drag * v * v * v;
         let spare = P - lift - drag, climb = 0;
         if (m.vz > 0) {   // 오르기: 남는 힘으로, 모자라는 몫은 속도에서 (높이는 속도의 저금통)
           climb = M * G * m.vz; const have = spare > 0 ? spare : 0;
           if (climb > have) {
-            const dv2 = 2 * (climb - have) * DT / M;
+            const dv2 = 2 * (climb - have) * W.dt / M;
             if (v * v > dv2) { const nv = Math.sqrt(v * v - dv2); m.vx *= nv / v; m.vy *= nv / v; v = nv; }
-            else { m.vz = (have + v * v * M / (2 * DT)) / (M * G); m.vx = m.vy = 0; v = 0; climb = M * G * m.vz; }
+            else { m.vz = (have + v * v * M / (2 * W.dt)) / (M * G); m.vx = m.vy = 0; v = 0; climb = M * G * m.vz; }
             spare = spare < 0 ? spare : 0;
           } else spare -= climb;
-        } else if (m.vz < 0 && v > 1) { const nv = Math.sqrt(v * v - 2 * G * m.vz * DT); m.vx *= nv / v; m.vy *= nv / v; v = nv; }   // 내리꽂으면 힘 없이 속도가 붙는다
+        } else if (m.vz < 0 && v > 1) { const nv = Math.sqrt(v * v - 2 * G * m.vz * W.dt); m.vx *= nv / v; m.vy *= nv / v; v = nv; }   // 내리꽂으면 힘 없이 속도가 붙는다
         // 앞·옆 가속
         const mx = m.mv.x, my = m.mv.y, ml = hyp(mx, my), fv = m.st.root > 0 || !ml ? 0 : clamp(m.fv, 0, F.vMax);
         const tx = ml ? mx / ml * fv : 0, ty = ml ? my / ml * fv : 0, dx = tx - m.vx, dy = ty - m.vy;
         let ux = 1, uy = 0; if (v >= 1) { ux = m.vx / v; uy = m.vy / v; } else if (ml) { ux = mx / ml; uy = my / ml; }
-        const vv = M * (v > 5 ? v : 5), gF = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.fwdG * G, aOf(W, m)) : F.fwdG * G, fwd = spare >= 0 ? Math.min(gF, spare / vv) : Math.max(-gF, spare / vv);   // 끊는 움직임: 앞뒤 가속의 한계도 a (앞으로는 여전히 남는 힘에 묶인다, v2.4)
+        const vv = M * (v > 5 ? v : 5), gF = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.fwdG * G, aF(W, m)) : F.fwdG * G, fwd = spare >= 0 ? Math.min(gF, spare / vv) : Math.max(-gF, spare / vv);   // 끊는 움직임: 앞뒤 가속의 한계도 a (앞으로는 여전히 남는 힘에 묶인다, v2.4)
         const al = dx * ux + dy * uy, at = -dx * uy + dy * ux;
-        const aL = Math.min(clamp(al / DT, -gF, gF), fwd);   // 힘이 모자라면(fwd < 0) 늦춰진다
-        const k = F.latK * clamp(spare / F.latP, 0.1, 1), latMax = Math.max(Math.min(F.latG * G, Math.max(k * v * v, v < 5 && fwd > 0 ? fwd : 0)), W.rules.snap && m.tac.footwork >= 2 ? aOf(W, m) : 0);   // 끊는 움직임: 느려도 a로 꺾는다 (v2.4)
-        const aT = clamp(at / DT, -latMax, latMax);
-        if (m.cut.k === 1) { const a = CU.brake * G * DT; if (v > a) { m.vx -= ux * a; m.vy -= uy * a; } else m.vx = m.vy = 0; }   // 급정지: 거꾸로 5 g (v2.3)
-        else if (m.cut.k === 2) { const a = CU.side * G * DT; m.vx += m.cut.x * a; m.vy += m.cut.y * a; }                             // 옆 튀기: 옆으로 5 g
-        else { m.vx += (aL * ux - aT * uy) * DT; m.vy += (aL * uy + aT * ux) * DT; }
-        if (m.cut.k && m.cut.k < 4 && (m.cut.t -= DT) <= 0) m.cut.k = 0;
+        const aL = Math.min(clamp(al / W.dt, -gF, gF), fwd);   // 힘이 모자라면(fwd < 0) 늦춰진다
+        const k = F.latK * clamp(spare / F.latP, 0.1, 1), latMax = Math.max(Math.min(F.latG * G, Math.max(k * v * v, v < 5 && fwd > 0 ? fwd : 0)), W.rules.snap && m.tac.footwork >= 2 ? aF(W, m) : 0);   // 끊는 움직임: 느려도 a로 꺾는다 (v2.4)
+        const aT = clamp(at / W.dt, -latMax, latMax);
+        if (m.cut.k === 1) { const a = CU.brake * G * W.dt; if (v > a) { m.vx -= ux * a; m.vy -= uy * a; } else m.vx = m.vy = 0; }   // 급정지: 거꾸로 5 g (v2.3)
+        else if (m.cut.k === 2) { const a = CU.side * G * W.dt; m.vx += m.cut.x * a; m.vy += m.cut.y * a; }                             // 옆 튀기: 옆으로 5 g
+        else { m.vx += (aL * ux - aT * uy) * W.dt; m.vy += (aL * uy + aT * ux) * W.dt; }
+        if (m.cut.k && m.cut.k < 4 && (m.cut.t -= W.dt) <= 0) m.cut.k = 0;
         const nv = hyp(m.vx, m.vy); if (nv > F.vMax) { m.vx *= F.vMax / nv; m.vy *= F.vMax / nv; }
         edge(W, m);
-        m.z += m.vz * DT; m.flog.dz += Math.abs(m.vz) * DT; if (m.z > F.zMax) { m.z = F.zMax; m.vz = 0; }
+        m.z += m.vz * W.dt; m.flog.dz += Math.abs(m.vz) * W.dt; if (m.z > F.zMax) { m.z = F.zMax; m.vz = 0; }
         m.load = (lift + drag + climb) / P;
         if (m.z <= 0) { m.z = 0; m.vz = 0; if (!want) { m.fly = 0; m.load = 0; } }   // 내려앉아 걷는다
         return true;
@@ -280,7 +282,7 @@ module.exports = {
   },
 };
 function edge(W, m) {   // 싸움터 끝에선 그 방향의 속도가 0
-  const DT = 1 / 30, x = m.x + m.vx * DT, y = m.y + m.vy * DT;
+  const x = m.x + m.vx * W.dt, y = m.y + m.vy * W.dt;
   if ((x < 0.4 && m.vx < 0) || (x > W.width - 0.4 && m.vx > 0)) m.vx = 0;
   if ((y < 0.4 && m.vy < 0) || (y > W.height - 0.4 && m.vy > 0)) m.vy = 0;
 }

@@ -26,12 +26,18 @@ function wallOf(W, m, vx, vy) {
 function wall(W, m) { const o = wallOf(W, m, m.mv.x, m.mv.y); if (o) { m.mv.x = o[0]; m.mv.y = o[1]; } if (m.fly === 1 && m.fv > SAFE.smallV && saltRAt(W, W.t + SAFE.land) < SAFE.landR) m.fv = SAFE.smallV; }
 // (x, y)가 안전 반경 안인가 (옆 튀기의 끝 자리)
 function safeAt(W, x, y) { const Rf = saltRAt(W, W.t + SAFE.look); return hyp(x - W.width / 2, y - W.height / 2) < Rf - Math.min(SAFE.pad, SAFE.padK * Rf); }
+// 단단한 벽 (v2.6): 안전 반경 밖으로 나가는 걸음을 지운다. 빠른 판(rules/pace)이 걸음을 바꾼 뒤에도 다시 부른다 (v2.14)
+function bound(W, m, K, B) {
+  if (!safeOn(m)) return;
+  if (saltRAt(W, W.t + SAFE.land) < SAFE.landR) { if (B.groundSafe(W, m)) m.flyWant = false; else if (m.fv > SAFE.smallV) m.fv = SAFE.smallV; }   // 좁은 원: 땅이 안전하면 내려앉아 걷고, 아니면 떠서 천천히
+  const o = wallOf(W, m, K.vx, K.vy); if (o) { K.vx = o[0]; K.vy = o[1]; }
+}
 const outSalt = (W, x, y) => W.rules.saltRing && hyp(x - W.width / 2, y - W.height / 2) > saltR(W);
 module.exports = {
-  name: 'saltRing', on: W => W.rules.saltRing, api: { SALT, SAFE, saltR, saltRAt, outSalt, wall, safeAt, safeOn },
+  name: 'saltRing', on: W => W.rules.saltRing, api: { SALT, SAFE, saltR, saltRAt, outSalt, wall, safeAt, safeOn, bound },
   engine: X => ({
     gate(W, m, s, tx, ty) { if (s.mundane) return false; const p = X.formPoint(m, s, tx, ty) || [m.x, m.y]; return outSalt(W, p[0], p[1]); },   // 선 밖에선 마법이 서지 않는다
-    mageStep(W, m) { if (outSalt(W, m.x, m.y)) X.hurt(W, m, SALT.dps * X.DT, null, '소금', 'salt'); },   // 선 밖에선 몸이 마른다
+    mageStep(W, m) { if (outSalt(W, m.x, m.y)) X.hurt(W, m, SALT.dps * W.dt, null, '소금', 'salt'); },   // 선 밖에선 몸이 마른다
     // 선 밖으로 구르지 않는다 (v2.6): 끝 자리(구르는 속도 × 0.3 s)가 선 0.5 m 안쪽이 아니면 반대로, 그쪽도 밖이면 구르지 않는다
     roll(W, m, o) {
       if (!safeOn(m)) return; const l = hyp(o.dx, o.dy) || 1, k = o.v * SAFE.roll / l, cx = W.width / 2, cy = W.height / 2, R = saltR(W) - 0.5;
@@ -45,11 +51,6 @@ module.exports = {
       if (s.lock) { if (hyp(m.x - W.width / 2, m.y - W.height / 2) > saltR(W) - 2.5) o.v = 0; return; }   // 제자리에 묶이는 시전(저격)은 선 2.5 m 안쪽에서만
       if (s.t !== 'move') return; const dx = o.tx - m.x, dy = o.ty - m.y, l = hyp(dx, dy) || 1, x = m.x + dx / l * s.dist, y = m.y + dy / l * s.dist; if (hyp(x - W.width / 2, y - W.height / 2) > saltR(W) - 1) o.v = 0; },
     steer(W, m, K) { const cx = W.width / 2 - m.x, cy = W.height / 2 - m.y, dc = hyp(cx, cy) || 1; if (dc > saltR(W) - 1.5) { K.vx = cx / dc * 2.5; K.vy = cy / dc * 2.5; } },
-    // 단단한 벽 (v2.6): 안전 반경 밖으로 나가는 걸음을 지운다
-    bound(W, m, K) {
-      if (!safeOn(m)) return;
-      if (saltRAt(W, W.t + SAFE.land) < SAFE.landR) { if (B.groundSafe(W, m)) m.flyWant = false; else if (m.fv > SAFE.smallV) m.fv = SAFE.smallV; }   // 좁은 원: 땅이 안전하면 내려앉아 걷고, 아니면 떠서 천천히
-      const o = wallOf(W, m, K.vx, K.vy); if (o) { K.vx = o[0]; K.vy = o[1]; }
-    },
+    bound: (W, m, K) => bound(W, m, K, B),   // 단단한 벽 (v2.6)
   }),
 };

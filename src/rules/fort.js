@@ -23,7 +23,7 @@ const FIRE = s => (s.t === 'area' && s.kind === 'fire') || (s.t === 'zone' && s.
 module.exports = {
   name: 'fort', switch: 'fort', on: W => W.rules.fort,
   engine: X => {
-    const { DT, hurt, eff, hit, addZone, rangeOf, sizeOf } = X;
+    const { hurt, eff, hit, addZone, rangeOf, sizeOf } = X;
     // 연쇄: t가 터졌다. 같은 사람의 옆 함정에 불을 붙인다
     function chain(W, t) { if (!W.rules.trapChain) return; for (const u of W.traps) if (u !== t && !u.done && u.src === t.src && !(u.chain > 0) && u.arm <= 0 && hyp(u.x - t.x, u.y - t.y) < F.chainR) u.chain = F.chainDelay; }
     function blast(W, t) {
@@ -38,14 +38,14 @@ module.exports = {
       trapCap(W, m, n) { const k = Math.round(F.trapK * m.circles); return k > n ? k : n; },
       trapFire(W, t) { chain(W, t); },
       world(W) {
-        if (W.rules.trapChain) for (const t of W.traps) if (t.chain > 0 && !t.done && (t.chain -= DT) <= 0) blast(W, t);
+        if (W.rules.trapChain) for (const t of W.traps) if (t.chain > 0 && !t.done && (t.chain -= W.dt) <= 0) blast(W, t);
         // 하늘 덮개: 0.5 s마다 덮개 안에 떠 있는 적을 굳힌다
-        if (W.step % F.sky.every === 0) for (const z of W.zones) {
+        if (W.step % (F.sky.every * W.sk) === 0) for (const z of W.zones) {
           if (z.k !== 'sky') continue;
           for (const q of W.foes[z.src.side]) if (q.z >= 1 && q.hp > 0 && hyp(q.x - z.x, q.y - z.y) < z.r) { hurt(W, q, F.sky.dmg, z.src, z.n, 'elec'); eff(W, q, { stun: F.sky.stun, kind: 'elec' }, 1); z.src.fort.skyZap++; }
         }
         // 몰이길로 든 적 (지표): 틈 2.5 m 안의 땅에 선 적, 진지마다 3 s에 한 번
-        if (W.step % 3 === 0) for (const m of W.ms) {
+        if (W.step % (3 * W.sk) === 0) for (const m of W.ms) {
           const P = m.fort.plan; if (!P || !P.gap || m.hp <= 0 || W.t - m.fort.gT < 3) continue;
           const gx = m.fort.x + m.fort.ux * BR.line, gy = m.fort.y + m.fort.uy * BR.line;
           for (const q of W.foes[m.side]) if (q.z < 1 && hyp(q.x - gx, q.y - gy) < BR.gapR) { m.fort.funnel++; m.fort.gT = W.t; break; }

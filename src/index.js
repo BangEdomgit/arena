@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.13.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v2.14.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (sandbox/arena.js 묶음, node cli.js pack)
  * 데이터(마법·마법책·덱·등급·판단 수준·장비)는 data/에 JSON으로 있다. 판단 수준은 brain/skills.js, 행동 지표는 metrics/look.js */
 const core = require('./core'), brain = require('./brain'), makeRegistry = require('./registry');
@@ -86,7 +86,7 @@ const runScene = (sc, opt) => core.run(sceneWorld(sc, opt));
 // viewer.html이 읽는 녹화 형식 (cli.js replay와 같다)
 function recording(W) {
   const r = core.result(W), done = core.over(W);
-  return { v: core.VERSION, dt: W._recN * core.DT, names: W.ms.map(m => m.name), sides: W.ms.map(m => m.side), hpMax: W.ms.map(m => m.hpMax), winner: done ? r.winner : -1, t: r.t, obs: W.obs, frames: W.rec || [] };
+  return { v: core.VERSION, dt: W._recN * W.dt, names: W.ms.map(m => m.name), sides: W.ms.map(m => m.side), hpMax: W.ms.map(m => m.hpMax), winner: done ? r.winner : -1, t: r.t, obs: W.obs, frames: W.rec || [] };
 }
 
 // 판이 끝난 뒤 맞힘 기록을 사람 규격에 되먹인다 (결투자가 배우는 몫)

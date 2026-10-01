@@ -11,10 +11,11 @@
  *   막힌 직사: 투사체·실이 풀릴 때 과녁과 사이가 막혀 있던 몫 (시작할 때 막혀 있던 몫도)
  *   벽에 의지한 싸움 (v2.9): 제 벽 곁(벽이 6 m 안, 적 쪽 45° 안이거나 적과의 선을 가름, 둘 다 2 m 아래)에 있는 시간의 몫, 그동안 풀린 공격의 몫(벽 뒤에서 쏜 몫), 제 벽이 막은 적 공격(풀린 실·투사체의 선을 가렸다, 투사체에 깎였다)의 수와 막은 실·투사체의 피해(그 판의 그 마법 한 방 평균)
  *   당 몫 평균·당 바닥(15 g 아래) 시간 몫·머리 75 넘은 시간 몫, 숨 쓴 수·마시다 맞은 수·숨 뒤 5 s 안의 공격과 명중률 (v2.11)
- *   리듬 단계·작전의 시간 몫(m.mlog.phase, m.op.log.time), 속임수(상대가 반응해 끊은 수) (v2.9) */
+ *   리듬 단계·작전의 시간 몫(m.mlog.phase, m.op.log.time), 속임수(상대가 반응해 끊은 수) (v2.9)
+ *   박자 (v2.14): 평균 속도(높이까지)·초당 방향 전환(45°)·초당 하는 일·초당 맞힘·초당 교환(판 전체), 막기(rules/pace) 켠 시간 몫·켜고 끈 수·감각 조준 수. 걸음 간격은 W.dt */
 const C = require('../src/core'), { hyp } = require('../src/math');
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1, topple: 1 }, DIRECT = { proj: 1, thread: 1 };
-const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, eR: -1, openT: 0, cutT: 0, thrX: 0, thrXHit: 0, hd0: 0, hpR: null, hpI: 0, burst: 0, trapN: 0, trapHit: 0, gluS: 0, gluLow: 0, hot75: 0, h0: new Map(), pend: [], md: {}, mh: {}, mdmg: {}, lastMode: 'none', dm0: -1, covS: 0, bait: 0, baitHit: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0 } });
+const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, eR: -1, openT: 0, cutT: 0, thrX: 0, thrXHit: 0, hd0: 0, hpR: null, hpI: 0, spd: 0, hx: 0, hy: 0, turn: 0, act: 0, roll0: 0, rx0: 0, cut0: 0, gd0: 0, hit0: -1, hitT: -1, hitN: 0, tc: null, tb: null, tch: null, burst: 0, trapN: 0, trapHit: 0, gluS: 0, gluLow: 0, hot75: 0, h0: new Map(), pend: [], md: {}, mh: {}, mdmg: {}, lastMode: 'none', dm0: -1, covS: 0, bait: 0, baitHit: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0 } });
 const foeDealt = (W, m) => { let x = 0; for (const q of W.ms) if (q.side !== m.side) for (const k in q.log.dealt) x += q.log.dealt[k]; return x; };
 // 받은 피해 (걸음마다, 남은 체력까지만: 마지막 한 방의 넘친 몫은 세지 않는다). 그 걸음의 기록 증가를 종류·적으로 나눠 체력이 준 만큼 줄여 담는다
 function hurtStep(W, m, a) {
@@ -41,6 +42,18 @@ function wallKind(m, e, w) {
   if (e.z < 2 && t > 1 && hyp(w.x - e.x, w.y - e.y) < 10 && lat < 5) k |= 4;
   return k;
 }
+// 박자 (v2.14, SPEC 38장): 빠르기(높이까지), 방향 전환(0.1 s마다 3 m/s 넘게 움직이는 쪽이 지난 방향에서 45° 넘게 돌았다), 하는 일(스스로 시작한 칸·뿜기, 구르기, 공중 피하기, 날기 끊기, 막기 켜고 끄기),
+// 맞힌 수(마법의 명중이 는 걸음, 같은 사람의 0.2 s 안은 하나로: 판 전체의 합이 교환)
+function tempo(W, m, a) {
+  const v = C.hyp3(m.vx, m.vy, m.vz || 0); a.spd += v * W.dt;
+  if (W.step % (3 * W.sk) === 0) { const h = hyp(m.vx, m.vy); if (h > 3) { const ux = m.vx / h, uy = m.vy / h; if (a.hx === 0 && a.hy === 0) { a.hx = ux; a.hy = uy; } else if (ux * a.hx + uy * a.hy < 0.707) { a.turn++; a.hx = ux; a.hy = uy; } } }
+  let n = 0; if (m.cast && m.cast !== a.tc && !m.cast.auto) n++; if (m.castB && m.castB !== a.tb && !m.castB.auto) n++; if (m.chan && m.chan !== a.tch) n++; a.tc = m.cast; a.tb = m.castB; a.tch = m.chan;
+  if (m.roll > a.roll0 + 0.1 && !(m.cast && m.cast.s.t === 'move')) n++; a.roll0 = m.roll;
+  if (m.rx) { if (m.z >= 1 && m.rx.dodge > a.rx0) n += m.rx.dodge - a.rx0; a.rx0 = m.rx.dodge; }
+  if (m.flog) { if (m.flog.cut > a.cut0) n += m.flog.cut - a.cut0; a.cut0 = m.flog.cut; }
+  const gd = m.mlog.guardN || 0; if (gd > a.gd0) n += gd - a.gd0; a.gd0 = gd; a.act += n;
+  let hs = 0; for (const k in m.log.hits) hs += m.log.hits[k]; if (a.hit0 >= 0 && hs > a.hit0 && W.t - a.hitT >= 0.2) { a.hitN++; a.hitT = W.t; } a.hit0 = hs;
+}
 function watch(W) {
   const A = W._wt || (W._wt = { by: new Map(), wall: new Map(), lastAct: 0, sil: 0, silMax: 0, low: -1, trap: new Map() });
   // 침묵 (v2.13): 아무도 짓지(칸·뿜기) 않는 동안. 2 s 넘는 침묵의 길이를 더하고 가장 긴 것을 적는다. 체력 30% 아래로 처음 떨어진 때
@@ -48,33 +61,34 @@ function watch(W) {
     if (A.low < 0) for (const m of W.ms) if (m.hp > 0 && m.hp < 0.3 * m.hpMax) { A.low = W.t; break; } }
   // 덫 (v2.13): 놓인 덫이 밟혀 터졌나(t.done) 걷혔나
   for (const t of W.traps) if (!A.trap.has(t)) A.trap.set(t, t);
-  if (W.step % 15 === 0) for (const [t] of A.trap) if (!W.traps.includes(t)) { const a = A.by.get(t.src); if (a) { a.trapN++; if (t.done) a.trapHit++; } A.trap.delete(t); }
+  if (W.step % (15 * W.sk) === 0) for (const [t] of A.trap) if (!W.traps.includes(t)) { const a = A.by.get(t.src); if (a) { a.trapN++; if (t.done) a.trapHit++; } A.trap.delete(t); }
   for (const m of W.ms) {
     let a = A.by.get(m); if (!a) { a = newA(); A.by.set(m, a); }
     if (a.hp !== 0) hurtStep(W, m, a);
-    { const r = a.hpR || (a.hpR = new Array(30).fill(m.hpMax)), h = m.hp > 0 ? m.hp : 0, old = r[a.hpI]; if (old - h > a.burst) a.burst = old - h; r[a.hpI] = h; a.hpI = (a.hpI + 1) % 30; }   // 1 s 안에 잃은 가장 큰 체력 (v2.13)
+    { const r = a.hpR || (a.hpR = new Array(Math.round(1 / W.dt)).fill(m.hpMax)), h = m.hp > 0 ? m.hp : 0, old = r[a.hpI]; if (old - h > a.burst) a.burst = old - h; r[a.hpI] = h; a.hpI = (a.hpI + 1) % r.length; }   // 1 s 안에 잃은 가장 큰 체력 (v2.13)
     if (m.hp <= 0) continue;
     const e = foeOf(W, m); if (!e) continue;
     if (a.R < 0) a.R = maxR(W, m);
-    a.t += C.DT; if (m.z >= 1) a.air += C.DT; a.gluS += m.glu / m.gluMax * C.DT; if (m.glu < 15) a.gluLow += C.DT; if (m.fat > 75) a.hot75 += C.DT;   // 당·머리 (v2.11)
+    a.t += W.dt; if (m.z >= 1) a.air += W.dt; a.gluS += m.glu / m.gluMax * W.dt; if (m.glu < 15) a.gluLow += W.dt; if (m.fat > 75) a.hot75 += W.dt;   // 당·머리 (v2.11)
+    tempo(W, m, a);
     const d = hyp(e.x - m.x, e.y - m.y);
     // 칸: 첫 칸·두 번째 칸·뿜기·청사진 갈래
     let n = (m.cast ? 1 : 0) + (m.castB ? 1 : 0) + (m.chan ? 1 : 0); const bp = m.cast && m.cast.bp; if (bp && bp.lanes > 1) n += Math.max(0, Math.min(bp.lanes, bp.items.length - bp.built) - 1);   // 청사진은 첫 칸 하나에 갈래 여럿
-    if (d < a.R) { a.inR += C.DT; if (n >= 1) a.busy += C.DT; if (n >= 2) a.two += C.DT; if (n >= 3) a.three += C.DT; }
+    if (d < a.R) { a.inR += W.dt; if (n >= 1) a.busy += W.dt; if (n >= 2) a.two += W.dt; if (n >= 3) a.three += W.dt; }
     // 새로 시작한 수 (첫 칸·두 번째 칸)와 풀린 수
     let started = false, released = false;
     for (let j = 0; j < 2; j++) {
       const c = j ? m.castB : m.cast, p = j ? a.pb : a.pc;
       if (c && c !== p && OFF[c.s.t]) a.h0.set(c, m.log.hits[c.s.n] || 0);   // 시작할 때의 명중 수 (방식별 명중, v2.12)
       if (c && c !== p && OFF[c.s.t] && !c.auto) { started = true; if (DIRECT[c.s.t]) { a.dirN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) a.dirBlk++; } }
-      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) if (w.mk === e.id && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { const o = A.by.get(e); if (o) { o.thrX++; if (dirHits(W, m) > a.hd0) o.thrXHit++; } break; } if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) { a.relBlk++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) { const r = A.wall.get(w); if (r && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { r.hit = true; if (r.m.side !== m.side) { const o = A.by.get(r.m), n = p.s.n, h = m.log.hits[n] || 0; o.blkN++; o.blk += h ? (m.log.dealt[n] || 0) / h : 0; } break; } } } } }   // 벽이 풀린 직사를 막았다
-      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { a.lastMode = p.mode || (p.auto ? 'auto' : 'none'); if (p.mode) a.pend.push({ md: p.mode, n: p.s.n, h0: a.h0.get(p) || 0, t: W.t + 1.5, cov: p.cov, bait: !!p.bait }); }   // 풀린 수: 1.5 s 뒤 맞았나
+      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - W.dt * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) if (w.mk === e.id && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { const o = A.by.get(e); if (o) { o.thrX++; if (dirHits(W, m) > a.hd0) o.thrXHit++; } break; } if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) { a.relBlk++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) { const r = A.wall.get(w); if (r && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { r.hit = true; if (r.m.side !== m.side) { const o = A.by.get(r.m), n = p.s.n, h = m.log.hits[n] || 0; o.blkN++; o.blk += h ? (m.log.dealt[n] || 0) / h : 0; } break; } } } } }   // 벽이 풀린 직사를 막았다
+      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - W.dt * 1.5) { a.lastMode = p.mode || (p.auto ? 'auto' : 'none'); if (p.mode) a.pend.push({ md: p.mode, n: p.s.n, h0: a.h0.get(p) || 0, t: W.t + 1.5, cov: p.cov, bait: !!p.bait }); }   // 풀린 수: 1.5 s 뒤 맞았나
       if (j) a.pb = c; else a.pc = c;
     }
     a.hd0 = dirHits(W, m);
     { const dm = dealtOf(m); if (a.dm0 >= 0 && dm > a.dm0) a.mdmg[a.lastMode] = (a.mdmg[a.lastMode] || 0) + dm - a.dm0; a.dm0 = dm; }   // 피해는 가장 최근에 풀린 수의 방식으로 (v2.12)
     while (a.pend.length && a.pend[0].t <= W.t) { const q = a.pend.shift(), hit = (m.log.hits[q.n] || 0) > q.h0; a.md[q.md] = (a.md[q.md] || 0) + 1; if (hit) a.mh[q.md] = (a.mh[q.md] || 0) + 1; if (q.md === 'cover') { a.covS += q.cov || 0; if (q.bait) { a.bait++; if (hit) a.baitHit++; } } }
-    a.rel = released; a.cov = false; if (m.z < 2 && e.z <= 2) a.lowT += C.DT; if (released) a.atkN++;
+    a.rel = released; a.cov = false; if (m.z < 2 && e.z <= 2) a.lowT += W.dt; if (released) a.atkN++;
     // 빈틈 찌르기
     const wk = weak(W, e);
     if (wk && !a.opOn) { a.opOn = true; a.opHit = false; a.opL = false; a.opDm = dealtOf(m); a.opN++; }
@@ -83,7 +97,7 @@ function watch(W) {
     if (!wk) a.opOn = false;
   }
   // 새 벽 (세운 사람이 적힌 것), 서 있는 벽이 두 사람 사이를 가르는 시간 (0.1 s마다, 높이를 넣어: 2 m 넘게 떠 있으면 벽은 가리지 않는다)
-  const chk = W.step % 3 === 0;
+  const chk = W.step % (3 * W.sk) === 0;
   for (const w of W.walls) {
     let r = A.wall.get(w);
     if (r === undefined) {
@@ -96,7 +110,7 @@ function watch(W) {
     if (!r || !chk || r.m.hp <= 0) continue;
     const e = foeOf(W, r.m); if (e && (r.m.z > e.z ? r.m.z : e.z) <= 2 && segCircle(r.m.x, r.m.y, e.x, e.y, w.x, w.y, w.r + 0.2)) r.cut += 0.1;
   }
-  for (const [m, a] of A.by) if (a.cov && m.hp > 0) { a.covT += C.DT; if (a.rel) a.atkCov++; }   // 제 벽 곁의 시간·쏜 수 (v2.9)
+  for (const [m, a] of A.by) if (a.cov && m.hp > 0) { a.covT += W.dt; if (a.rel) a.atkCov++; }   // 제 벽 곁의 시간·쏜 수 (v2.9)
   // 벽이 없었다면 맞았을 피해 (v2.10): 0.1 s마다, 적의 직사(실·투사체) 사거리 안에서 선이 트인 시간과 제 벽이 선을 가른(바위는 아니고) 시간을 잰다
   if (chk) for (const [m, a] of A.by) {
     if (m.hp <= 0) continue; const e = foeOf(W, m); if (!e) continue; if (a.eR < 0) a.eR = dirR(W, e); const d = hyp(e.x - m.x, e.y - m.y); if (d > a.eR) continue;
@@ -127,6 +141,8 @@ function silence(W, m, a) {
   const A = W._wt; if (!A) return {}; const g = W.t - A.lastAct, sil = A.sil + (g > 2 ? g : 0), mx = Math.max(A.silMax, g); let left = 0; for (const [t] of A.trap) if (t.src === m) left++;
   return { '1 s에 잃은 가장 큰 체력 몫': a.burst / m.hpMax, '2 s 넘는 침묵 몫': W.t ? sil / W.t : 0, '가장 긴 침묵 (s)': mx, '30% 아래 뒤 끝까지 (s)': A.low >= 0 && W.ms.some(q => q.hp <= 0) ? W.t - A.low : 0, '30% 아래로 떨어진 판': A.low >= 0 ? 1 : 0, '놓은 덫': a.trapN + left, '덫이 밟힌 몫': a.trapN + left ? a.trapHit / (a.trapN + left) : 0 };
 }
+// 교환 (v2.14): 판 전체에서 맞힌 수의 합 (두 사람이 같다)
+function exch(W) { let x = 0; if (W._wt) for (const [, a] of W._wt.by) x += a.hitN; return x; }
 // 판이 끝난 뒤: 그 사람의 지표
 function seen(W, m) {
   const a = (W._wt && W._wt.by.get(m)) || newA(), L = m.log, took = a.took, foe = a.foe;
@@ -142,7 +158,7 @@ function seen(W, m) {
     '빈틈': a.opN, '빈틈 찌른 몫': a.opN ? a.opDid / a.opN : 0, '빈틈에 맞힌 몫': a.opN ? a.opLand / a.opN : 0, '폭주': L.over, '막힌 직사 몫': a.relN ? a.relBlk / a.relN : 0, '막힌 채 시작한 직사 몫': a.dirN ? a.dirBlk / a.dirN : 0,
     '짓지 않는 몫': a.inR ? 1 - a.busy / a.inR : 0, '떠보기 몫': pt ? (ph.probe || 0) / pt : 0, '들어가기 몫': pt ? (ph.in || 0) / pt : 0, '빠지기 몫': pt ? (ph.out || 0) / pt : 0,
     '압박 몫': ot ? (op.press || 0) / ot : 0, '끝내기 몫': ot ? (op.finish || 0) / ot : 0, '소모 몫': ot ? (op.attrit || 0) / ot : 0, '몰이 몫': ot ? (op.herd || 0) / ot : 0, '진지 몫': ot ? (op.fort || 0) / ot : 0, '속임수': L.dec.feint || 0,
-    '제 벽 곁 몫': a.lowT ? a.covT / a.lowT : 0, '벽 뒤에서 쏜 몫': a.atkN ? a.atkCov / a.atkN : 0, '벽이 막은 적 공격': a.blkN, '벽이 막은 피해': a.blk, '벽이 없었다면 맞았을 피해': cf(W, m, a), '당 몫 평균': a.t ? a.gluS / a.t : 0, '당 바닥 시간 몫': a.t ? a.gluLow / a.t : 0, '머리 75 넘은 시간 몫': a.t ? a.hot75 / a.t : 0, '숨': m.mlog.breath || 0, '숨 마시다 맞은 수': m.mlog.breathHit || 0, '숨 뒤 공격': m.mlog.breathAtk || 0, '숨 뒤 명중률': m.mlog.breathAtk ? m.mlog.breathAtkHit / m.mlog.breathAtk : 0, ...modeLook(m, a), ...silence(W, m, a), '벽을 가로지른 적 직사': a.thrX, '그중 맞은 몫': a.thrX ? a.thrXHit / a.thrX : 0,
+    '제 벽 곁 몫': a.lowT ? a.covT / a.lowT : 0, '벽 뒤에서 쏜 몫': a.atkN ? a.atkCov / a.atkN : 0, '벽이 막은 적 공격': a.blkN, '벽이 막은 피해': a.blk, '벽이 없었다면 맞았을 피해': cf(W, m, a), '당 몫 평균': a.t ? a.gluS / a.t : 0, '당 바닥 시간 몫': a.t ? a.gluLow / a.t : 0, '머리 75 넘은 시간 몫': a.t ? a.hot75 / a.t : 0, '숨': m.mlog.breath || 0, '숨 마시다 맞은 수': m.mlog.breathHit || 0, '숨 뒤 공격': m.mlog.breathAtk || 0, '숨 뒤 명중률': m.mlog.breathAtk ? m.mlog.breathAtkHit / m.mlog.breathAtk : 0, ...modeLook(m, a), ...silence(W, m, a), '평균 속도 (m/s)': a.t ? a.spd / a.t : 0, '초당 방향 전환': a.t ? a.turn / a.t : 0, '초당 하는 일': a.t ? a.act / a.t : 0, '초당 맞힘': a.t ? a.hitN / a.t : 0, '초당 교환': W.t ? exch(W) / W.t : 0, '막기 켠 시간 몫': a.t ? (m.mlog.guardT || 0) / a.t : 0, '막기': m.mlog.guardN || 0, '감각 조준': m.mlog.trackN || 0, '벽을 가로지른 적 직사': a.thrX, '그중 맞은 몫': a.thrX ? a.thrXHit / a.thrX : 0,
   };
   return o;
 }
