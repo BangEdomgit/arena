@@ -1,0 +1,8 @@
+{
+ "baseG": 2.5, "maxG": 5, "brake": 2,
+ "chop": 0.12,
+ "flip": [0.35, 0.75], "flipK": 1.6,
+ "saw": [4, -4, 2], "sawK": 2,
+ "bounce": [0.45, 0.7], "bounceZ": [3.5, 8],
+ "strafeV": 6, "strafeD": 10
+}

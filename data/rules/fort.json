@@ -1,0 +1,6 @@
+{
+ "trapK": 1,
+ "chainR": 3.5, "chainDelay": 0.2, "chainPad": 0.4,
+ "sky": { "every": 15, "stun": 0.4, "dmg": 4 },
+ "brain": { "R": 10, "near": 60, "buildD": 30, "backD": 16, "relocate": 35, "home": 14, "skyAt": 2, "gapR": 2.5, "budget": 12, "again": 20, "stand": 0.8, "wallAt": 1.35, "line": 8, "seg": 2.6, "end": 6.8, "kill": 5, "breachR": 14, "ring": 20 }
+}

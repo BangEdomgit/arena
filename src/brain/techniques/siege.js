@@ -3,7 +3,7 @@
  * 총(머스킷 등 총이 든 적, 110 m 안)이 있으면:
  *   날고 있으면 가장 가까운 총에서 62 m 쯤(총은 50 m 넘게 멀리 뜬 과녁을 쏘지 않는다, rules/army)에서 구름·곡사로 깎는다
  *   땅이면 먼저 벽(흙벽 3 s, 총 쪽으로)을 세우고, 총 대부분이 장전 중일 때 벽 옆으로 나와 치고, 장전이 끝나 가면 벽 뒤로
- * 벽 밀기: 벽 너머에 적이 있으면(깔리는 적 × 0.6)
+ * 벽 밀기의 값은 rules/bulwark의 두뇌 훅이 매긴다(누구나)
  * 벽 자리(상급부터, tac.wallSite): 세울 자리 5 m 안에 적이 있으면 세우지 않는다(적의 엄폐가 된다)
  * 벽 없애기(대가부터, tac.wallBreak): 적이 벽 뒤에 숨었으면 그 벽을 미는 값 × 2, 물·산·큰 바위 × 2
  * 머리: 적이 다섯 넘으면 피로 88 넘어서는 공격하지 않는다(무리 앞에서 파도를 타면 제 몸을 태운다)
@@ -42,17 +42,6 @@ function value(W, m, K, o) {
     o.tx = c[0]; o.ty = c[1];
     if (T.wallSite) { const d = hyp(c[0] - m.x, c[1] - m.y) || 1, wx = m.x + (c[0] - m.x) / d * 1.3, wy = m.y + (c[1] - m.y) / d * 1.3; for (const q of K.foes) if (hyp(q.x - wx, q.y - wy) < 5) return; }
     o.v = s.shape === 'ring' ? 15 : 20;   // 총 앞 땅에선 먼저 벽 (어떤 공격보다 먼저)
-  }
-  if (s.t === 'topple') {
-    const B = W.mods.find(r => r.name === 'bulwark'); if (!B) return;
-    const R = C.rangeOf(m, s) || s.R; let best = 0, bx = 0, by = 0; const seen = {}, near = W.walls.length ? C.wallsIn(W, m.x - R, m.y - R, m.x + R, m.y + R).slice() : [];
-    for (let i = 0; i < near.length; i++) {
-      const w = W.walls[near[i]]; if (w.cage || seen[w.grp] || hyp(w.x - m.x, w.y - m.y) > R) continue; if (w.grp >= 0) seen[w.grp] = 1;
-      const blocks = w.grp >= 0 ? W.walls.filter(x => x.grp === w.grp) : [w], dx = w.x - m.x, dy = w.y - m.y, l = hyp(dx, dy) || 1;
-      let foes = 0, mine = 0; for (const q of B.api.crushed(W, blocks, dx / l, dy / l)) { if (q.side === m.side) mine++; else foes++; }
-      if (mine) continue; const v = foes * 0.6 * (T.wallBreak ? 2 : 1); if (v > best) { best = v; bx = w.x; by = w.y; }
-    }
-    if (best > 0) { o.v = best; o.tx = bx; o.ty = by; }
   }
   if (T.wallBreak && !K.los && W.walls.some(w => hyp(w.x - K.e.x, w.y - K.e.y) < 3) && (s.el === '물' || (s.hit && s.hit.flat >= 60) || (s.t === 'zone' && s.z.k === 'acid'))) o.v *= 2;
 }

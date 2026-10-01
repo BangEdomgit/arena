@@ -26,7 +26,7 @@ module.exports = {
       // 걸음의 가속: 남의 빙판 위에선 1.5 (보통 9)
       accel(W, m, acc) { if (m.z >= 1) return acc; for (const z of W.zones) if (z.k === 'ice' && z.src !== m && inZone(z, m.x, m.y)) return 1.5; return acc; },
       // 지대의 시간, 산이 벽을 녹인다
-      zoneTick(W) { for (const z of W.zones) { z.t -= DT; if (z.k === 'acid') for (const w of W.walls) if (hyp(w.x - z.x, w.y - z.y) < (z.r || 2) + w.r) w.hp -= 25 * DT; } },
+      zoneTick(W) { for (const z of W.zones) { z.t -= DT; if (z.k === 'acid') for (const w of W.walls) if (hyp(w.x - z.x, w.y - z.y) < (z.r || 2) + w.r) { if (w.hp > 0 && w.hp <= 25 * DT && z.src.mlog) z.src.mlog.razed++; w.hp -= 25 * DT; } } },   // 녹여 없앤 벽은 지형 지표에 (v2.2)
     };
   },
 };

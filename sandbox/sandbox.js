@@ -7,7 +7,7 @@
 'use strict';
 const A = window.Arena, D = window.ArenaData;
 const COL = ['#6fb7ff', '#ff7a6b', '#9ad07a', '#f0c35a', '#c79bf2', '#6fd6c9', '#f29bd0', '#b8b0a2'];
-const ZC = { fire: 'rgba(255,120,50,.35)', h2s: 'rgba(200,190,80,.3)', nh3: 'rgba(200,170,230,.3)', acid: 'rgba(190,220,80,.3)', spore: 'rgba(150,200,100,.3)', ice: 'rgba(215,235,255,.4)', chill: 'rgba(215,235,255,.2)', smoke: 'rgba(200,200,200,.45)', mist: 'rgba(170,210,240,.25)', absorb: 'rgba(120,180,230,.2)', pit: 'rgba(15,12,8,.55)' };
+const ZC = { fire: 'rgba(255,120,50,.35)', h2s: 'rgba(200,190,80,.3)', nh3: 'rgba(200,170,230,.3)', acid: 'rgba(190,220,80,.3)', spore: 'rgba(150,200,100,.3)', ice: 'rgba(215,235,255,.4)', chill: 'rgba(215,235,255,.2)', smoke: 'rgba(200,200,200,.45)', mist: 'rgba(170,210,240,.25)', absorb: 'rgba(120,180,230,.2)', pit: 'rgba(15,12,8,.55)', sky: 'rgba(160,140,255,.16)' };
 // 벽의 재료 (v2.0 둘째, rules/bulwark): 흙·석회·얼음
 const WC = { earth: '#8a6a45', lime: '#c9c2b0', ice: '#a8d8ef' };
 const RULE_TXT = {
@@ -19,8 +19,17 @@ const RULE_TXT = {
   domainR: ['장악권 반경', '적의 신호는 제 자리에서 이것 × C m 안에서만 몫을 다툰다(대마법사 50 m). 0이면 끝없음', 0, 10, 0.5], domainPath: ['실은 길 전체', '실은 길의 네 점 가운데 가장 낮은 몫으로 선다'],
   light: ['빛', '번쩍임(시야 안의 적 눈멂 1.5 s)·열선(거울이 있어야)'], bulwark: ['벽', '세울 때만 힘이 든다. 흙·석회는 무너질 때까지, 0.5 m 흙벽은 총알을 막는다, 벽 밀기, 벽 뒤는 안 보인다'],
   army: ['군대', '머스킷 장전 15~20 s·화승·사거리 100 m, 박격포, 돌아가며 쏘기'], morale: ['사기', '셋 넘는 편은 사상자·큰 수의 충격에 도망친다'], evade: ['회피', '걸음·구르기 × (1 + 0.25·log₂ C), 구르기 간격 ÷ (1 + 0.2·log₂ C)'], flight: ['비행', '출력 75 kW 이상(상위부터)이 뜬다. 대마법사는 계속 날고, 굳으면 떨어진다. 대마법사가 끼면 200 × 150 m'],
+  flightCut: ['날기 끊기', '급정지 5 g·떨어지기·내리꽂기·튀어오르기·옆 튀기, 땅 앞 공기 쿠션(못 뿜으면 닿는 속도의 높이 × 4). 끊는 동안 서클·출력이 풀린다'],
+  tactics: ['작전 겹', '강자(대가부터)가 1~2 s마다 작전(진지·소모·압박·몰이·사냥·끝내기)과 상대 둘레 자리 24개를 고른다. 전설은 강요하는 수·상대 작전 읽기'],
+  reflex: ['반사 겹', '강자(대가부터)는 매 걸음 위협을 보고 몸이 먼저: 피하기·멈칫·옆 뒤집기·내려앉기-구르기 (반응 지연 대가 0.1 s, 전설 0.05 s)'],
+  snap: ['끊는 움직임', '걸음 속도가 목표를 가속 한계(대마법사 4.6 g) 안에서 곧장 따라간다. 끊어 걷기·옆 뒤집기·거리 톱질·높이 튕기기'],
+  blueprint: ['청사진', "'청사진' 마법으로 반원 보루·몰이길·함정 격자·하늘 막기·엄폐 사다리를 여러 칸으로 한꺼번에 (대마법사 1~3 s)"],
+  fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
 };
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
+const PHASE = { probe: '떠보기', in: '들어가기', out: '빠지기', build: '짓기', home: '진지' };
+const OPN = { fort: '진지', attrit: '소모', press: '압박', herd: '몰이', hunt: '사냥', finish: '끝내기' };   // 작전 겹 (v2.5, rules/tactics)
+const CUTN = { 1: '급정지', 2: '옆 튀기', 3: '튀어오르기', 4: '떨어지기', 5: '내리꽂기' };   // 날기 끊기 (v2.3, rules/flight)
 const $ = id => document.getElementById(id), el = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) { if (k === 'on') for (const [ev, f] of Object.entries(v)) e.addEventListener(ev, f); else if (k in e && k !== 'list') e[k] = v; else e.setAttribute(k, v); } for (const k of kids) if (k != null) e.append(k); return e; };
 const clone = o => JSON.parse(JSON.stringify(o)), r2 = v => Math.round(v * 100) / 100;
 
@@ -61,9 +70,10 @@ function fixLayout() {
 function start() { if (!S.W) { S.W = A.sceneWorld(S.scene, { record: true }); S.P = null; } }
 function step() {
   start(); if (A.over(S.W)) { S.play = false; return false; }
+  if (!S.fast) { S.prev = S.W.ms.map(m => [m.x, m.y, m.z]); S.pp = new Map(S.W.proj.map(p => [p, [p.x, p.y]])); }   // 사이를 이어 그리려고 지난 걸음의 자리를 둔다 (v2.4)
   A.stepWorld(S.W); if (A.over(S.W)) S.play = false; return true;
 }
-function runToEnd() { start(); while (step()); renderStats(); syncButtons(); return A.result(S.W); }
+function runToEnd() { start(); S.fast = true; while (step()); S.fast = false; S.prev = null; renderStats(); syncButtons(); return A.result(S.W); }
 let last = performance.now(), frame = 0;
 function loop(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -78,7 +88,17 @@ function loop(now) {
 }
 
 /* ---------------- 그리기 ---------------- */
+// 사이를 부드럽게 (v2.4): 걸음(1/30 s)보다 화면이 잦으면 지난 걸음과 이번 걸음 사이를 남은 시간 몫(α)만큼 이어 그린다.
+// 그리는 동안만 자리를 바꿔 두고 그린 뒤 그대로 돌려놓는다 (판에는 닿지 않는다)
 function draw() {
+  const W = S.W, a = W && S.prev && S.play && S.speed > 0 && S.prev.length === W.ms.length ? Math.min(1, S.acc / A.DT) : 1;
+  if (a >= 1) return draw0();
+  const keep = W.ms.map(m => [m.x, m.y, m.z]), kp = W.proj.map(p => [p.x, p.y]);
+  W.ms.forEach((m, i) => { const q = S.prev[i]; m.x = q[0] + (m.x - q[0]) * a; m.y = q[1] + (m.y - q[1]) * a; m.z = q[2] + (m.z - q[2]) * a; });
+  W.proj.forEach(p => { const q = S.pp.get(p); if (q) { p.x = q[0] + (p.x - q[0]) * a; p.y = q[1] + (p.y - q[1]) * a; } });
+  try { draw0(); } finally { W.ms.forEach((m, i) => { m.x = keep[i][0]; m.y = keep[i][1]; m.z = keep[i][2]; }); W.proj.forEach((p, i) => { p.x = kp[i][0]; p.y = kp[i][1]; }); }
+}
+function draw0() {
   const W = world(); S.sc = Math.min(800 / W.width, 600 / W.height); const sc = S.sc, X = v => v * sc;
   ctx.fillStyle = '#121317'; ctx.fillRect(0, 0, 800, 600);
   ctx.fillStyle = '#34322d'; ctx.fillRect(0, 0, X(W.width), X(W.height));
@@ -92,6 +112,8 @@ function draw() {
   for (const w of W.walls) { ctx.fillStyle = WC[w.mat] || '#9a938a'; ctx.globalAlpha = w.hp0 ? Math.max(0.35, Math.min(1, w.hp / w.hp0)) : 1; ctx.beginPath(); ctx.arc(X(w.x), X(w.y), Math.max(2, X(w.r)), 0, 7); ctx.fill(); } ctx.globalAlpha = 1;   // 흐려질수록 깎였다
   for (const a of W.areas) { ctx.strokeStyle = 'rgba(230,240,255,.7)'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(X(a.x), X(a.y), X(a.r), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const l of W.lobs) { ctx.strokeStyle = 'rgba(255,220,160,.6)'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(X(l.x), X(l.y), X(l.r), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+  for (const m of W.ms) if (m.op.cur && m.hp > 0 && m.op.tx === m.op.tx) { const x = X(m.op.tx), y = X(m.op.ty); ctx.strokeStyle = COL[m.side % COL.length]; ctx.globalAlpha = 0.6; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke(); ctx.globalAlpha = 1; }   // 작전 겹이 고른 자리 (v2.5)
+  for (const m of W.ms) if (m.fort.x === m.fort.x && m.hp > 0) { ctx.strokeStyle = COL[m.side % COL.length]; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.setLineDash([1, 5]); ctx.beginPath(); ctx.arc(X(m.fort.x), X(m.fort.y), X(10), 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }   // 진지 (v2.3, rules/fort)
   for (const t of W.traps) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.moveTo(X(t.x), X(t.y) - 6); ctx.lineTo(X(t.x) + 5, X(t.y) + 4); ctx.lineTo(X(t.x) - 5, X(t.y) + 4); ctx.fill(); }
   for (const p of W.proj) { ctx.fillStyle = p.s.mundane ? '#ffd27a' : '#e9e4d8'; ctx.beginPath(); ctx.arc(X(p.x), X(p.y), 3, 0, 7); ctx.fill(); }
   for (const x of W.fx) if (x[0] === 'z') { ctx.strokeStyle = 'rgba(230,243,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X(x[1]), X(x[2])); ctx.lineTo(X(x[3]), X(x[4])); ctx.stroke(); }
@@ -118,8 +140,10 @@ function draw() {
     if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
     ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 14, y - 16, 28, 3); ctx.fillStyle = c; ctx.fillRect(x - 14, y - 16, 28 * Math.max(0, m.hp) / m.hpMax, 3);
     ctx.fillStyle = '#ff8a7a'; ctx.fillRect(x - 14, y - 12, 28 * Math.min(1, m.fat / 100), 1.5);
-    if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0], x, y - 20); }
-    if (zy) { ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s', x + 12, y + 4); }
+    if (W.ms.length <= 12) { ctx.font = '600 10px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(m.name + ' ' + m.stance[0] + (m.tac.rhythm && m.C >= 5 && !dead ? ' · ' + PHASE[m.phase] : '') + (m.op.cur && !dead ? ' · ' + OPN[m.op.cur] : ''), x, y - 20); }   // 리듬 단계 (v2.2)
+    if (zy) { ctx.font = '10px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(m.z.toFixed(1) + ' m · ' + Math.round(Math.hypot(m.vx, m.vy)) + ' m/s' + (m.cut.k ? ' · ' + CUTN[m.cut.k] : '') + (m.cut.on ? ' · 쿠션' : ''), x + 12, y + 4); }
+    if (!dead && W.t < m.rx.until) { ctx.font = '600 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe28a'; ctx.fillText(m.rx.vx || m.rx.vy ? '반사' : '멈칫', x, y + 32); }   // 반사 겹이 걸음을 덮는 중 (v2.4)
+    if (!dead && m.cast && m.cast.bp) { ctx.font = '600 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#c9b08a'; ctx.fillText('청사진 ' + m.cast.bp.name + ' ' + m.cast.bp.built + '/' + m.cast.bp.items.length, x, y + 42); }
   }
   if (S.sel && S.sel.k !== 'mage') { const it = itemOf(S.sel); if (it) { ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(X(it.x), X(it.y), X(it.r || 0.4) + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); } }
   if (S.W && A.over(S.W)) { const r = A.result(S.W); ctx.font = '600 22px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = r.winner >= 0 ? COL[r.winner % COL.length] : '#e9e4d8'; ctx.fillText(winText(r), X(W.width) / 2, 34); }
@@ -267,7 +291,7 @@ function renderSceneTab() {
   const auto = sc.layout || !Array.isArray(sc.obstacles) || sc.sides.some(s => s.mages.some(m => m.x == null));
   box.append(el('div', { className: 'grid' },
     el('label', {}, '이름'), el('input', { type: 'text', value: sc.name || '', on: { change: e => edit(s => { s.name = e.target.value; }) } }),
-    ...numField('씨앗', sc, 'seed', 1), ...numField('넓이 (m)', sc, 'width', 40), ...numField('높이 (m)', sc, 'height', 30), ...numField('시간 제한 (s)', sc, 'maxT', 120),
+    ...numField('씨앗', sc, 'seed', 1), ...numField('넓이 (m)', sc, 'width', 40), ...numField('높이 (m)', sc, 'height', 30), ...numField('시간 제한 (s)', sc, 'maxT', 120), ...numField('녹화 간격 (걸음)', sc, 'recEvery', 2),   // 1이면 매 걸음 (v2.4)
     el('label', {}, '배치'), el('span', { className: 'sub' }, auto ? (sc.layout === 'ring' ? '둘러싸기, 씨앗 따라' : '씨앗 따라') : '직접 적음')),
     el('div', { className: 'row' },
       el('button', { type: 'button', disabled: !auto, title: '지금 보이는 자리를 장면에 적어 넣는다', on: { click: () => edit(() => fixLayout()) } }, '자리 적어 넣기'),
@@ -280,11 +304,11 @@ function renderSceneTab() {
 function renderStats() {
   const W = world(), tb = $('stats'), sum = o => Object.values(o).reduce((a, b) => a + b, 0);
   tb.textContent = '';
-  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '파도', '입장'].map(h => el('th', {}, h))));
+  tb.append(el('tr', {}, ...['이름', '편', '체력', '준 피해', '맞힘/시전', '헛시전', '폭주', '파도', '입장', '작전'].map(h => el('th', {}, h))));
   const rows = W.ms.length > 40 ? W.ms.filter((m, i) => i < 20 || m.hp > 0).slice(0, 40) : W.ms;
   for (const m of rows) tb.append(el('tr', {}, el('td', { style: 'color:' + COL[m.side % COL.length] }, m.name), el('td', {}, S.scene.sides[m.side] ? S.scene.sides[m.side].name : m.side), el('td', {}, (m.hp > 0 ? Math.max(1, Math.round(m.hp)) : 0) + '/' + Math.round(m.hpMax)),
-    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, m.log.waves + (m.wave ? ' 탐' : '')), el('td', {}, STANCE[m.stance] || m.stance)));
-  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 9, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
+    el('td', {}, Math.round(sum(m.log.dealt))), el('td', {}, sum(m.log.hits) + '/' + sum(m.log.casts)), el('td', {}, m.log.fizz), el('td', {}, m.log.over), el('td', {}, m.log.waves + (m.wave ? ' 탐' : '')), el('td', {}, STANCE[m.stance] || m.stance), el('td', {}, m.op.cur ? OPN[m.op.cur] + (m.op.eOp ? ' (상대 ' + OPN[m.op.eOp] + ')' : '') : '')));
+  if (rows.length < W.ms.length) tb.append(el('tr', {}, el('td', { colSpan: 10, className: 'sub' }, '… ' + (W.ms.length - rows.length) + '명 줄임')));
   $('result').textContent = S.W && A.over(S.W) ? winText(A.result(S.W)) : '';
 }
 

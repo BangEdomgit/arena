@@ -1,0 +1,20 @@
+{
+ "every": [2, 1],
+ "stick": 0.25, "stall": [8, 0.6], "learn": [3, 2, 1],
+ "score": {
+  "finish": { "eLow": 2.5, "finishable": 1.2, "lead": 1 },
+  "press": { "base": 0.6, "lead": 1, "eWeak": 0.8, "stronger": 0.4, "tired": -0.8 },
+  "attrit": { "base": 0.5, "rangeAdv": 1, "behind": 0.8, "eTired": 0.3 },
+  "hunt": { "base": 0.2, "covered": 2 },
+  "herd": { "terrain": 0.3, "eGround": 0.2, "eBack": 0.5 },
+  "fort": { "build": 0.3, "hurt": 0.8 }
+ },
+ "counter": { "press": { "attrit": 0.5, "fort": 0.3 }, "attrit": { "press": 0.6, "hunt": 0.3 }, "fort": { "press": 0.4, "herd": 0.4 } },
+ "readVt": [2, -1],
+ "aggr": { "finish": 1.6, "press": 1.25, "fort": 0.8 },
+ "value": { "attritInd": 1.4, "attritDir": 0.7, "pressDir": 1.2, "finishOff": 1.5, "finishDef": 0.7, "huntInd": 1.3, "herd": 1.6, "fortOff": 0.8, "shapeAfter": 1.5 },
+ "angle": { "orbit": 0.5, "travel": 0.02, "los": 1, "losSoft": 0.3, "oneSide": 1, "exposed": 0.5, "peek": 0.6, "strip": 1.5, "cut": 1, "barrel": 0.5, "height": 0.4, "danger": 1, "edge": 0.5 },
+ "radial": 0.4, "keep": 0.3, "spiral": 1, "spiralEdge": 18, "circleLv": 2,
+ "force": { "hidden": 2, "sky": 1.6, "gate": 2, "path": 1.8 },
+ "shapeAfter": 1.5, "forceWin": 1.2, "forceMove": 2
+}

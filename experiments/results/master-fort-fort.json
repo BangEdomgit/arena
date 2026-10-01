@@ -1,0 +1,675 @@
+{
+ "v": "2.3.0",
+ "date": "2026-09-30",
+ "deck": "대마법사 진지",
+ "tac": null,
+ "N": 200,
+ "result": {
+  "전설-대가": {
+   "games": 200,
+   "score": 0.62,
+   "len": 55.2,
+   "dist": 31.5,
+   "distSD": 14.8,
+   "distJitter": 0.483,
+   "castsPerS": 0.723,
+   "slotBPerGame": 7,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.224,
+    "build": 0.237,
+    "out": 0.481,
+    "home": 0.022,
+    "in": 0.035
+   },
+   "roles": {
+    "A": {
+     "n": 32,
+     "지형": 0.315,
+     "방어": 0.163,
+     "공격": 0.522
+    },
+    "B": {
+     "n": 7,
+     "지형": 0.777,
+     "방어": 0.179,
+     "공격": 0.044
+    },
+    "auto": {
+     "n": 5.2,
+     "방어": 0.517,
+     "지형": 0.483
+    }
+   },
+   "gap": 15.7,
+   "boundaryMove": 8.478,
+   "built": 18,
+   "razed": 3.3,
+   "offMiss": 0.831,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 3.9
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.2
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 8.1,
+     "traps": 8.7,
+     "sky": 2,
+     "skyZap": 0.2,
+     "chain": 0,
+     "clear": 1.4,
+     "funnel": 0.1,
+     "inDmg": 19.7,
+     "outDmg": 22.9,
+     "founded": 2.1,
+     "earthWalls": 0.1
+    },
+    "B": {
+     "walls": 10,
+     "traps": 3.4,
+     "sky": 1.1,
+     "skyZap": 0.1,
+     "chain": 0,
+     "clear": 4.8,
+     "funnel": 0,
+     "inDmg": 31.7,
+     "outDmg": 14.1,
+     "founded": 1.1,
+     "earthWalls": 0.3
+    }
+   },
+   "dealt": {
+    "A": 128.9,
+    "B": 117.6
+   },
+   "spells": [
+    {
+     "spell": "석회 기둥",
+     "share": 0.221,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.128,
+     "hit": 0.084,
+     "miss": 0.916
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.108,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.092,
+     "hit": 0.162,
+     "miss": 0.838
+    },
+    {
+     "spell": "걸어둔 구름",
+     "share": 0.091,
+     "hit": 0.06,
+     "miss": 0.94
+    },
+    {
+     "spell": "번개 지뢰",
+     "share": 0.083,
+     "hit": 0.018,
+     "miss": 0.982
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.069,
+     "hit": 0.261,
+     "miss": 0.739
+    },
+    {
+     "spell": "숨 덫",
+     "share": 0.054,
+     "hit": 0.015,
+     "miss": 0.985
+    },
+    {
+     "spell": "체인",
+     "share": 0.052,
+     "hit": 0.104,
+     "miss": 0.896
+    },
+    {
+     "spell": "하늘 덮개",
+     "share": 0.038,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "전설-전설": {
+   "games": 200,
+   "score": 0.42,
+   "len": 57.1,
+   "dist": 28.3,
+   "distSD": 16.5,
+   "distJitter": 0.595,
+   "castsPerS": 0.748,
+   "slotBPerGame": 8.5,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.339,
+    "build": 0.21,
+    "out": 0.296,
+    "home": 0.04,
+    "in": 0.116
+   },
+   "roles": {
+    "A": {
+     "n": 32.2,
+     "지형": 0.247,
+     "공격": 0.592,
+     "방어": 0.161
+    },
+    "B": {
+     "n": 8.5,
+     "지형": 0.587,
+     "방어": 0.202,
+     "공격": 0.212
+    },
+    "auto": {
+     "n": 7.8,
+     "지형": 0.399,
+     "방어": 0.601
+    }
+   },
+   "gap": 14.1,
+   "boundaryMove": 8.416,
+   "built": 16,
+   "razed": 3.9,
+   "offMiss": 0.798,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 4
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 3.8
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 7.1,
+     "traps": 6.7,
+     "sky": 1.5,
+     "skyZap": 0.4,
+     "chain": 0,
+     "clear": 3.9,
+     "funnel": 0.1,
+     "inDmg": 16.5,
+     "outDmg": 35.2,
+     "founded": 1.8,
+     "earthWalls": 0.1
+    },
+    "B": {
+     "walls": 6.9,
+     "traps": 7,
+     "sky": 1.5,
+     "skyZap": 0.4,
+     "chain": 0,
+     "clear": 3.7,
+     "funnel": 0.1,
+     "inDmg": 23.4,
+     "outDmg": 33.2,
+     "founded": 1.7,
+     "earthWalls": 0.1
+    }
+   },
+   "dealt": {
+    "A": 121.3,
+    "B": 130.1
+   },
+   "spells": [
+    {
+     "spell": "석회 방패",
+     "share": 0.169,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.162,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.123,
+     "hit": 0.214,
+     "miss": 0.786
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.103,
+     "hit": 0.136,
+     "miss": 0.864
+    },
+    {
+     "spell": "번개 지뢰",
+     "share": 0.089,
+     "hit": 0.012,
+     "miss": 0.988
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.082,
+     "hit": 0.259,
+     "miss": 0.741
+    },
+    {
+     "spell": "숨 덫",
+     "share": 0.066,
+     "hit": 0.011,
+     "miss": 0.989
+    },
+    {
+     "spell": "체인",
+     "share": 0.065,
+     "hit": 0.105,
+     "miss": 0.895
+    },
+    {
+     "spell": "걸어둔 구름",
+     "share": 0.063,
+     "hit": 0.049,
+     "miss": 0.951
+    },
+    {
+     "spell": "하늘 덮개",
+     "share": 0.035,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "대가-상급": {
+   "games": 200,
+   "score": 0.445,
+   "len": 50.9,
+   "dist": 34.3,
+   "distSD": 14.6,
+   "distJitter": 0.447,
+   "castsPerS": 0.681,
+   "slotBPerGame": 2.1,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.168,
+    "build": 0.161,
+    "out": 0.622,
+    "in": 0.035,
+    "home": 0.014
+   },
+   "roles": {
+    "A": {
+     "n": 34.5,
+     "지형": 0.292,
+     "공격": 0.559,
+     "방어": 0.149
+    },
+    "B": {
+     "n": 2.1,
+     "지형": 0.887,
+     "방어": 0.087,
+     "공격": 0.026
+    },
+    "auto": {
+     "n": 1.5,
+     "지형": 0.719,
+     "방어": 0.281
+    }
+   },
+   "gap": 17.2,
+   "boundaryMove": 8.498,
+   "built": 13,
+   "razed": 1.3,
+   "offMiss": 0.845,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.3
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.8
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 10.9,
+     "traps": 3,
+     "sky": 1.1,
+     "skyZap": 1,
+     "chain": 0,
+     "clear": 0.8,
+     "funnel": 0.2,
+     "inDmg": 25.1,
+     "outDmg": 9.2,
+     "founded": 1.1,
+     "earthWalls": 0.4
+    },
+    "B": {
+     "walls": 5.7,
+     "traps": 3.2,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 1.6,
+     "funnel": 0,
+     "inDmg": 7.7,
+     "outDmg": 57.2,
+     "founded": 1.5,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 122.6,
+    "B": 129.7
+   },
+   "spells": [
+    {
+     "spell": "석회 기둥",
+     "share": 0.232,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "낙뢰",
+     "share": 0.196,
+     "hit": 0.055,
+     "miss": 0.945
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.128,
+     "hit": 0.134,
+     "miss": 0.866
+    },
+    {
+     "spell": "걸어둔 구름",
+     "share": 0.128,
+     "hit": 0.059,
+     "miss": 0.941
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.068,
+     "hit": 0.296,
+     "miss": 0.704
+    },
+    {
+     "spell": "체인",
+     "share": 0.065,
+     "hit": 0.104,
+     "miss": 0.896
+    },
+    {
+     "spell": "번개 지뢰",
+     "share": 0.054,
+     "hit": 0.028,
+     "miss": 0.972
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.04,
+     "hit": 0.545,
+     "miss": 0.455
+    },
+    {
+     "spell": "숨 덫",
+     "share": 0.029,
+     "hit": 0.025,
+     "miss": 0.975
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.017,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  },
+  "상급-중급": {
+   "games": 200,
+   "score": 0.43,
+   "len": 36.8,
+   "dist": 19.5,
+   "distSD": 9,
+   "distJitter": 0.481,
+   "castsPerS": 0.843,
+   "slotBPerGame": 0,
+   "stance": {
+    "normal": 1
+   },
+   "phase": {
+    "probe": 0.315,
+    "build": 0.099,
+    "out": 0.517,
+    "in": 0.057,
+    "home": 0.011
+   },
+   "roles": {
+    "A": {
+     "n": 29.9,
+     "지형": 0.095,
+     "공격": 0.771,
+     "방어": 0.134
+    },
+    "auto": {
+     "n": 2.7,
+     "지형": 0.696,
+     "방어": 0.304
+    }
+   },
+   "gap": 9.7,
+   "boundaryMove": 11.399,
+   "built": 4.7,
+   "razed": 0.1,
+   "offMiss": 0.824,
+   "cut": {
+    "A": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.7
+    },
+    "B": {
+     "cut": 0,
+     "brake": 0,
+     "side": 0,
+     "hop": 0,
+     "drop": 0,
+     "dive": 0,
+     "cush": 0,
+     "crash": 0,
+     "dropTry": 0,
+     "dropHit": 0,
+     "hfeint": 0,
+     "falls": 1.3
+    }
+   },
+   "fort": {
+    "A": {
+     "walls": 3.8,
+     "traps": 1,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 31.1,
+     "outDmg": 29,
+     "founded": 1.1,
+     "earthWalls": 0
+    },
+    "B": {
+     "walls": 4.1,
+     "traps": 0.3,
+     "sky": 0,
+     "skyZap": 0,
+     "chain": 0,
+     "clear": 0,
+     "funnel": 0,
+     "inDmg": 0,
+     "outDmg": 0,
+     "founded": 0,
+     "earthWalls": 0
+    }
+   },
+   "dealt": {
+    "A": 115.6,
+    "B": 126.8
+   },
+   "spells": [
+    {
+     "spell": "낙뢰",
+     "share": 0.232,
+     "hit": 0.074,
+     "miss": 0.926
+    },
+    {
+     "spell": "번개 그물",
+     "share": 0.169,
+     "hit": 0.147,
+     "miss": 0.853
+    },
+    {
+     "spell": "체인",
+     "share": 0.135,
+     "hit": 0.118,
+     "miss": 0.882
+    },
+    {
+     "spell": "석회 기둥",
+     "share": 0.128,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "짧은 실",
+     "share": 0.123,
+     "hit": 0.351,
+     "miss": 0.649
+    },
+    {
+     "spell": "걸어둔 구름",
+     "share": 0.115,
+     "hit": 0.047,
+     "miss": 0.953
+    },
+    {
+     "spell": "불기둥",
+     "share": 0.038,
+     "hit": 0.547,
+     "miss": 0.453
+    },
+    {
+     "spell": "석회 방패",
+     "share": 0.031,
+     "hit": 0,
+     "miss": 1
+    },
+    {
+     "spell": "번개 지뢰",
+     "share": 0.017,
+     "hit": 0.023,
+     "miss": 0.977
+    },
+    {
+     "spell": "비 뿌리기",
+     "share": 0.005,
+     "hit": 0,
+     "miss": 1
+    }
+   ]
+  }
+ }
+}

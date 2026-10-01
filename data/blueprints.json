@@ -1,0 +1,39 @@
+{
+ "desc": "청사진 = 구조물 배치 묶음 (rules/blueprint, SPEC 28장). 자리는 [a, b, 돌림°]: 진지 자리 A에서 상대 쪽 u로 a m, 옆 p로 b m. 벽은 u를 돌림°만큼 돌린 쪽을 바라보고 그 옆으로 블록을 잇는다. score는 고를 때의 무게(대가부터): 특징(0~1)마다 곱해 더한다. need의 것이 책에 없으면 그 청사진은 고르지 않는다",
+ "items": {
+  "wall": { "build": "earth", "blocks": 2, "th": 0.4, "cost": 4 },
+  "pillar": { "build": "lime", "r": 0.7, "hp": 60, "time": 0.4, "cost": 3 },
+  "trap": { "cast": "trap" },
+  "hidden": { "cast": "trap", "hidden": true },
+  "sky": { "cast": "zone", "zone": "sky" },
+  "ice": { "cast": "zone", "zone": "ice" }
+ },
+ "features": ["base", "eFly", "eGround", "approach", "far", "tired", "hurt"],
+ "blueprints": {
+  "반원 보루": {
+   "desc": "내 둘레 반원(반지름 3.5 m)에 흙벽 다섯: 물러나 버틸 때",
+   "items": [["wall", 3.5, 0, 0], ["wall", 2.5, 2.5, 45], ["wall", 2.5, -2.5, -45], ["wall", 0, 3.5, 90], ["wall", 0, -3.5, -90]],
+   "need": ["wall"], "score": { "base": 0.2, "tired": 1, "hurt": 1.2, "eGround": 0.3 }
+  },
+  "몰이길": {
+   "desc": "8 m 앞 흙벽 넷에 가운데 틈 하나, 벽 끝에 함정 둘, 틈 안쪽에 안 보이는 함정: 땅으로 다가오는 상대",
+   "items": [["wall", 8, 1.6, 0], ["wall", 8, -1.6, 0], ["wall", 8, 3.8, 0], ["wall", 8, -3.8, 0], ["trap", 8, 5.6, 0], ["trap", 8, -5.6, 0], ["hidden", 6.5, 0, 0]],
+   "need": ["wall", "trap"], "score": { "base": 0.1, "eGround": 1, "approach": 1 }
+  },
+  "함정 격자": {
+   "desc": "5~10 m 앞에 2.4 m 간격 함정 3 × 3 (연쇄 거리 안), 가운데 줄은 안 보이게",
+   "items": [["trap", 5, -2.4, 0], ["trap", 5, 0, 0], ["trap", 5, 2.4, 0], ["hidden", 7.4, -2.4, 0], ["hidden", 7.4, 0, 0], ["hidden", 7.4, 2.4, 0], ["trap", 9.8, -2.4, 0], ["trap", 9.8, 0, 0], ["trap", 9.8, 2.4, 0]],
+   "need": ["trap"], "score": { "eGround": 1.2, "approach": 0.6 }
+  },
+  "하늘 막기": {
+   "desc": "하늘 덮개 하나와 석회 기둥 넷(앞 둘·옆 둘): 날아드는 상대",
+   "items": [["sky", 2, 0, 0], ["pillar", 3, 1.8, 0], ["pillar", 3, -1.8, 0], ["pillar", 0, 3, 0], ["pillar", 0, -3, 0]],
+   "need": ["sky"], "score": { "eFly": 1.5, "approach": 0.5 }
+  },
+  "엄폐 사다리": {
+   "desc": "상대 쪽으로 4 m마다 좌우 번갈아 석회 기둥 넷: 멀리서 다가가며 기둥에서 기둥으로",
+   "items": [["pillar", 4, 1.5, 0], ["pillar", 8, -1.5, 0], ["pillar", 12, 1.5, 0], ["pillar", 16, -1.5, 0]],
+   "need": ["pillar"], "score": { "far": 0.3, "eGround": 0.2 }
+  }
+ }
+}
