@@ -14,7 +14,7 @@ const R2 = Math.SQRT1_2, OX = [0, 0, 0, R2, R2, -R2, -R2, 1, -1], OY = [0, 1, -1
 const G = 9.8;
 let RA = null;   // 규칙의 api (처음 부를 때 읽는다: 엔진이 규칙을 읽을 때 두뇌는 아직 없다)
 function ra() { if (!RA) { const f = n => { const r = C.RULES.find(x => x.name === n); return r ? r.api : null; }; RA = { fl: f('flight'), pace: f('pace'), resp: f('response'), sr: f('saltRing') }; } return RA; }
-function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
+function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), why: new Uint8Array(9), a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
 const paceOn = (W, q) => { const p = ra().pace; return !!(W.rules.pace && p && q.C >= p.P.cMin); };
 // 앞 방패·벽 마법 (책마다 한 번)
 function bookOf(W, d, S) {
@@ -51,17 +51,17 @@ function build(W, d, a, S, h) {
   const blk = S.blk, geo = S.geo, low = d.z < 2;
   for (let j = 0; j < 9; j++) {
     const x = cx + (ux * OX[j] - uy * OY[j]) * D * (j ? 1 : 0), y = cy + (uy * OX[j] + ux * OY[j]) * D * (j ? 1 : 0); S.bx[j] = x; S.by[j] = y;
-    let g = 0;
-    if (x < 1 || y < 1 || x > W.width - 1 || y > W.height - 1) g = Infinity;
-    else if (W.rules.saltRing && A.sr && A.sr.outSalt(W, x, y)) g = Infinity;
+    let g = 0, why = 0;
+    if (x < 1 || y < 1 || x > W.width - 1 || y > W.height - 1) { g = Infinity; why = 1; }
+    else if (W.rules.saltRing && A.sr && A.sr.outSalt(W, x, y)) { g = Infinity; why = 1; }
     else if (low) {
-      for (const o of W.obs) if (hyp(o.x - x, o.y - y) < o.r + 0.6) { g = Infinity; break; }
-      if (g === 0 && W.walls.length) { const q = C.wallsIn(W, x - 1.5, y - 1.5, x + 1.5, y + 1.5); for (let i = 0; i < q.length; i++) { const w = W.walls[q[i]]; if (hyp(w.x - x, w.y - y) < w.r + 0.6) { g = Infinity; break; } } }
-      if (g === 0 && !fly) for (const t of W.traps) if (t.src.side === a.side && !t.done && t.seen.has(d.id) && hyp(t.x - x, t.y - y) < (t.r || 1) + 0.6) { g = Infinity; break; }
+      for (const o of W.obs) if (hyp(o.x - x, o.y - y) < o.r + 0.6) { g = Infinity; why = 2; break; }
+      if (g === 0 && W.walls.length) { const q = C.wallsIn(W, x - 1.5, y - 1.5, x + 1.5, y + 1.5); for (let i = 0; i < q.length; i++) { const w = W.walls[q[i]]; if (hyp(w.x - x, w.y - y) < w.r + 0.6) { g = Infinity; why = 3; break; } } }
+      if (g === 0 && !fly) for (const t of W.traps) if (t.src.side === a.side && !t.done && t.seen.has(d.id) && hyp(t.x - x, t.y - y) < (t.r || 1) + 0.6) { g = Infinity; why = 4; break; }
     }
     geo[j] = g; let b = g;
-    if (!fly) for (const ar of W.areas) if (ar.src.side === a.side && ar.t > b && hyp(ar.x - x, ar.y - y) < ar.r + 0.3) b = ar.t;   // 터질 때까지
-    blk[j] = b;
+    if (!fly) for (const ar of W.areas) if (ar.src.side === a.side && ar.t > b && hyp(ar.x - x, ar.y - y) < ar.r + 0.3) { b = ar.t; if (!why) why = 5; }   // 터질 때까지
+    blk[j] = b; S.why[j] = why;   // 막은 까닭: 1 끝·소금 2 바위 3 벽 4 덫 5 지연 폭발
   }
   return S;
 }

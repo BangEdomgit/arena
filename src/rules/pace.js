@@ -33,7 +33,7 @@ module.exports = {
     hurtMod(W, m, v, kind) {
       if (!on(W, m) || SKIP[kind]) return v;
       v *= P.bulk;
-      if (m.st.guard > 0) { m.mlog.guardBlk += v * (1 - G.k); v *= G.k; }
+      if (m.st.guard > 0) { m.mlog.guardBlk += v * (1 - G.k); v *= G.k; if (m.st.guard < G.okT && m.mlog.gdOkC !== m.mlog.gdOn) { m.mlog.gdOk++; m.mlog.gdOkC = m.mlog.gdOn; } }   // 순간 켜기 성공: 켠 지 okT s 안에 맞았다 (v2.16 지표)
       return v;
     },
     fatRecover(W, m, k) { return on(W, m) ? k * P.cool : k; },   // 빨리 식는다 (짧은 수를 잇달아 지으니)
@@ -77,7 +77,7 @@ module.exports = {
         K.hurry = MV.hurry[L - 1] || 0;   // 서두름: 날카롭게의 명중 문턱 × (1 − hurry) (techniques/sharp, 이 판단의 고르기에)
         // 막기
         const th = soon(W, m, K), g = m.st.guard > 0;
-        if (th && !g && m.glu > G.gluMin + 3 && !(m.st.stun > 0) && W.t - m.mlog.gdOff >= G.cd && !(K.keep & 4 && W.t < K.keepT)) { m.st.guard = 1e-6; m.mlog.guardN++; m.mlog.gdT = W.t; }
+        if (th && !g && m.glu > G.gluMin + 3 && !(m.st.stun > 0) && W.t - m.mlog.gdOff >= G.cd && !(K.keep & 4 && W.t < K.keepT)) { m.st.guard = 1e-6; m.mlog.guardN++; m.mlog.gdT = W.t; m.mlog.gdOn = W.t; }
         else if (g) { if (th) m.mlog.gdT = W.t; else if (W.t - m.mlog.gdT >= G.min) { m.st.guard = 0; m.mlog.guardN++; m.mlog.gdOff = W.t; } }
         // 늘 움직이기 (결투에서만)
         if (K.foes.length !== 1 || m.st.breath > 0 || m.retreat) return;

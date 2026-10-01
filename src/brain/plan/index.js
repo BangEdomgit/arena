@@ -12,7 +12,7 @@ const { C, hyp, OFF, landDelay } = require('../util');
 const on = (m, K) => m.tac.read > 0 && m.C >= 5 && K.foes && K.foes.length === 1;
 const SD = new WeakMap(), TMP = ST.newSide();
 function sides(m) { let o = SD.get(m); if (!o) { o = { e: ST.newSide(), me: ST.newSide() }; SD.set(m, o); } return o; }
-const newPl = () => ({ n: '', j: 0, tx: 0, ty: 0, mate: false, line: false, check: false, ans: 0, t: -9, S: null, lt: null, qN: 0, qName: new Array(16).fill(''), qCell: new Int32Array(16), qH: new Int32Array(16), qT: new Float64Array(16) });
+const newPl = () => ({ n: '', j: 0, tx: 0, ty: 0, mate: false, line: false, check: false, pred: -1, ans: 0, t: -9, S: null, lt: null, qN: 0, qName: new Array(16).fill(''), qCell: new Int32Array(16), qH: new Int32Array(16), qT: new Float64Array(16) });
 const FI = { thread: 0, proj: 0, area: 4, lob: 4 };
 // 배운 맞을 가망: 칸 = 틀(실·투사체 0, 지연 폭발·곡사 4) + 응수 수(0~3). [0..7] 수, [8..15] 맞힌 수. 앞선 값 × 무게 w에서 시작
 function table(pl) {
@@ -33,7 +33,7 @@ function read(W, m, K) {
   if (W.t - K.plT < P.every) return;
   learn(W, m, pl);
   const e = K.e, S = ST.build(W, e, m, sides(m).e, 0.5), o = SE.read(W, m, e, S, m.tac.read, table(pl));
-  K.plT = W.t; pl.t = W.t; pl.S = S; pl.n = o.k >= 0 ? SE.CN[o.k] : ''; pl.j = o.j; pl.tx = o.j ? S.bx[o.j] : 0; pl.ty = o.j ? S.by[o.j] : 0; pl.mate = o.mate; pl.line = o.line; pl.check = o.check; pl.ans = o.ans;
+  K.plT = W.t; pl.t = W.t; pl.S = S; pl.n = o.k >= 0 ? SE.CN[o.k] : ''; pl.j = o.j; pl.tx = o.j ? S.bx[o.j] : 0; pl.ty = o.j ? S.by[o.j] : 0; pl.mate = o.mate; pl.line = o.line; pl.check = o.check; pl.ans = o.ans; pl.pred = o.pred;
   m.mlog.plN++; m.mlog.plNodes += o.nodes;
 }
 // 막는 쪽 (걸음 앞, 판단마다)
@@ -65,7 +65,7 @@ function value(W, m, K, o) {
 // 둔 수
 function commit(W, m, K, best, cast) {
   if (!on(m, K)) return;
-  const pl = K.pl; if (pl && pl.n === best.n) { cast.chk = pl.check; cast.mate = pl.mate; if (pl.check) m.mlog.chk++; if (pl.mate) m.mlog.mate++; }
+  const pl = K.pl; if (pl && pl.n === best.n) { cast.chk = pl.check; cast.mate = pl.mate; cast.pred = pl.pred; if (pl.check) m.mlog.chk++; if (pl.mate) m.mlog.mate++; }
   const f = FI[best.s.t]; if (pl && f !== undefined && pl.qN < 16 && K.e) { const i = pl.qN++, n = ansOf(W, K.e, m, cast); pl.qName[i] = best.n; pl.qCell[i] = f + (n > 3 ? 3 : n); pl.qH[i] = m.log.hits[best.n] || 0; pl.qT[i] = W.t + cast.T + P.hit.wait; }   // 배울 것
   JO.commit(W, m, K, best.n); K.plT = -9;   // 다음 칸에서 다시 읽는다
 }

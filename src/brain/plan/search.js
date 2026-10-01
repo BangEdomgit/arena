@@ -14,8 +14,8 @@ const NK = 12, MAXD = 6, W_ = P.w, WR = new Float64Array([W_.roll, W_.cut, W_.gu
 const CN = new Array(NK).fill(''), CT = new Float64Array(NK), TAU = new Float64Array(NK), CR = new Float64Array(NK), CDM = new Float64Array(NK), CBIG = new Uint8Array(NK), CMASK = new Int32Array(NK),
   CCOST = new Float64Array(NK), CCD = new Float64Array(NK), CCOV = new Uint8Array(NK), CSH = new Uint8Array(NK), CH = new Float64Array(NK), ORD = new Int32Array(NK), MYCD = new Float64Array(NK);
 const PH = new Float64Array(8), AV = new Float64Array(6), CDR = new Float64Array(6), BLK = new Float64Array(9), GEO = new Float64Array(9), SBLK = new Float64Array(9 * MAXD);
-let EXP = 0, NC = 0, HAS = 0, SH = 0, GLU = 0, DMG = 0, GK = 0.45, MM = false, SS = null, nodes = 0, CHK0 = false, ANS0 = 0, MATE0 = false;
-const OUT = { k: -1, j: 0, v: 0, mate: false, line: false, check: false, ans: 0, nodes: 0 };   // mate: 첫 수가 메이트, line: 읽은 수순 끝에 메이트
+let EXP = 0, NC = 0, HAS = 0, SH = 0, GLU = 0, DMG = 0, GK = 0.45, MM = false, SS = null, nodes = 0, CHK0 = false, ANS0 = 0, MATE0 = false, PRED0 = -1;
+const OUT = { k: -1, j: 0, v: 0, mate: false, line: false, check: false, ans: 0, pred: -1, nodes: 0 };   // pred: 첫 수에 상대가 쓸 응수 (0~5 자원, 6 움직임, -1 없음)   // mate: 첫 수가 메이트, line: 읽은 수순 끝에 메이트
 function leaf(t) {
   let v = 0; for (let i = 0; i < 6; i++) if (HAS & (1 << i)) { const x = AV[i] - t; v += WR[i] * (x <= 0 ? 0 : x > W_.lockCap ? W_.lockCap : x); }
   for (let j = 0; j < 9; j++) if (BLK[j] > t && GEO[j] === 0) v += W_.slot;
@@ -46,7 +46,7 @@ function answer(i, k, t1, T, depth, ply) {
 }
 // 체크: 과녁에 바로. 상대의 응수를 고르고 잇는다
 function direct(k, t1, T, depth, ply) {
-  if (CSH[k] && SH >= T) return me(depth - 1, t1, ply + 1) - 0.1;   // 세운 방패가 거저 막는다
+  if (CSH[k] && SH >= T) { if (ply === 0) { PRED0 = 3; MATE0 = false; CHK0 = false; ANS0 = 1; } return me(depth - 1, t1, ply + 1) - 0.1; }   // 세운 방패가 거저 막는다
   const mask = CMASK[k]; let n = 0, bi = -1, bc = 1e9;
   for (let i = 0; i < 7; i++) { if (!(mask & (1 << i)) || !can(i, k, T)) continue; n++; const c = cost(i, k); if (c < bc) { bc = c; bi = i; } }
   if (ply === 0) ANS0 = n;
@@ -60,7 +60,7 @@ function direct(k, t1, T, depth, ply) {
     v = 1e9; let tried = 0, bm = P.beam.them[ply] || 2;
     for (let i = 0; i < 7 && tried < bm; i++) { if (!(mask & (1 << i)) || !can(i, k, T)) continue; tried++; EXP = ph; const x = answer(i, k, t1, T, depth, ply); if (x < v) { v = x; bi = i; } }
   }
-  if (ply === 0) CHK0 = bi !== 6;
+  if (ply === 0) { CHK0 = bi !== 6; PRED0 = bi; }
   return v;
 }
 function me(depth, t, ply) {
@@ -71,9 +71,9 @@ function me(depth, t, ply) {
     const k = ORD[q]; if (MYCD[k] > t + 0.05 || GLU < CCOST[k]) continue; tried++;
     const t1 = t + (CT[k] > P.minGap ? CT[k] : P.minGap), T = t + TAU[k], cd0 = MYCD[k], g0 = GLU;
     MYCD[k] = t + CT[k] + CCD[k]; GLU -= CCOST[k];
-    const v = direct(k, t1, T, depth, ply), c0 = CHK0, a0 = ANS0, m0 = MATE0;
-    if (v > best) { best = v; if (ply === 0) { OUT.k = k; OUT.j = 0; OUT.v = v; OUT.check = c0; OUT.ans = a0; OUT.mate = m0; OUT.line = v >= MATE - 10; } }
-    if (CCOV[k]) { const j = freeSlot(t); if (j > 0) { const b0 = BLK[j]; if (BLK[j] < T + 0.05) BLK[j] = T + 0.05; const v2 = me(depth - 1, t1, ply + 1); BLK[j] = b0; if (v2 > best) { best = v2; if (ply === 0) { OUT.k = k; OUT.j = j; OUT.v = v2; OUT.check = false; OUT.ans = 9; OUT.mate = false; OUT.line = v2 >= MATE - 10; } } } }   // 덮기: 피해 갈 곳을 막는다
+    PRED0 = -1; const v = direct(k, t1, T, depth, ply), c0 = CHK0, a0 = ANS0, m0 = MATE0, p0 = PRED0;
+    if (v > best) { best = v; if (ply === 0) { OUT.k = k; OUT.j = 0; OUT.v = v; OUT.check = c0; OUT.ans = a0; OUT.mate = m0; OUT.pred = p0; OUT.line = v >= MATE - 10; } }
+    if (CCOV[k]) { const j = freeSlot(t); if (j > 0) { const b0 = BLK[j]; if (BLK[j] < T + 0.05) BLK[j] = T + 0.05; const v2 = me(depth - 1, t1, ply + 1); BLK[j] = b0; if (v2 > best) { best = v2; if (ply === 0) { OUT.k = k; OUT.j = j; OUT.v = v2; OUT.check = false; OUT.ans = 9; OUT.pred = -1; OUT.mate = false; OUT.line = v2 >= MATE - 10; } } } }   // 덮기: 피해 갈 곳을 막는다
     MYCD[k] = cd0; GLU = g0;
   }
   return tried ? best : leaf(t);
