@@ -40,7 +40,8 @@
   "autoDodge": true,
   "mast": 0.8,
   "tac": {
-   "dodge": 0.8
+   "dodge": 0.8,
+   "swarmR": 1.8
   }
  },
  "대마법사": {

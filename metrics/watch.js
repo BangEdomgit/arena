@@ -13,7 +13,7 @@
  *   리듬 단계·작전의 시간 몫(m.mlog.phase, m.op.log.time), 속임수(상대가 반응해 끊은 수) (v2.9) */
 const C = require('../src/core'), { hyp } = require('../src/math');
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1, topple: 1 }, DIRECT = { proj: 1, thread: 1 };
-const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0 } });
+const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, eR: -1, openT: 0, cutT: 0, thrX: 0, thrXHit: 0, hd0: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0 } });
 const foeDealt = (W, m) => { let x = 0; for (const q of W.ms) if (q.side !== m.side) for (const k in q.log.dealt) x += q.log.dealt[k]; return x; };
 // 받은 피해 (걸음마다, 남은 체력까지만: 마지막 한 방의 넘친 몫은 세지 않는다). 그 걸음의 기록 증가를 종류·적으로 나눠 체력이 준 만큼 줄여 담는다
 function hurtStep(W, m, a) {
@@ -27,6 +27,10 @@ const dealtOf = m => { let x = 0; for (const k in m.log.dealt) x += m.log.dealt[
 function segCircle(x1, y1, x2, y2, cx, cy, r) { const dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy || 1; let t = ((cx - x1) * dx + (cy - y1) * dy) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t; return hyp(x1 + dx * t - cx, y1 + dy * t - cy) < r; }
 const weak = (W, e) => e.st.stun > 0 || e.st.root > 0 || e.crash > 0 || e.emptyT > W.t || (e.fat > 92 && !e.wave);
 function foeOf(W, m) { let e = null, bd = 1e9; for (const q of W.ms) { if (q.side === m.side || q.hp <= 0) continue; const d = hyp(q.x - m.x, q.y - m.y); if (d < bd) { bd = d; e = q; } } return e; }
+// 직사가 맞힌 수 (벽을 가로지른 실이 맞았나를 보려고)
+const dirHits = (W, m) => { let h = 0; for (const n in m.log.hits) { const s = W.spells[n]; if (s && DIRECT[s.t]) h += m.log.hits[n]; } return h; };
+// 직사(실·곧게 나는 투사체)의 가장 긴 사거리
+function dirR(W, m) { let r = 0; for (const n of m.book) { const s = W.spells[n]; if (!s || !DIRECT[s.t] || s.home) continue; const R = C.rangeOf(m, s); if (R > r) r = R; } return r; }
 function maxR(W, m) { let r = 0; for (const n of m.book) { const s = W.spells[n]; if (!s || !OFF[s.t]) continue; const R = s.t === 'touch' ? 1.3 : s.t === 'cone' ? s.L * C.sizeOf(m, s) : s.home ? 12 : C.rangeOf(m, s); if (R > r) r = R; } return r; }
 // 벽 하나를 세운 순간의 자리: 2 엄폐 각(내 6 m 안, 적 쪽 35° 안, 내가 땅에) · 4 퇴로(적 뒤 10 m 안, 선에서 5 m 안, 적이 땅에). 1 두 사람 사이는 선 뒤 걸음마다 본다
 function wallKind(m, e, w) {
@@ -54,9 +58,10 @@ function watch(W) {
     for (let j = 0; j < 2; j++) {
       const c = j ? m.castB : m.cast, p = j ? a.pb : a.pc;
       if (c && c !== p && OFF[c.s.t] && !c.auto) { started = true; if (DIRECT[c.s.t]) { a.dirN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) a.dirBlk++; } }
-      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) { a.relBlk++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) { const r = A.wall.get(w); if (r && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { r.hit = true; if (r.m.side !== m.side) { const o = A.by.get(r.m), n = p.s.n, h = m.log.hits[n] || 0; o.blkN++; o.blk += h ? (m.log.dealt[n] || 0) / h : 0; } break; } } } } }   // 벽이 풀린 직사를 막았다
+      if (p && p !== c && OFF[p.s.t] && p.t >= p.T - C.DT * 1.5) { released = true; if (DIRECT[p.s.t] && !p.auto) { a.relN++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) if (w.mk === e.id && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { const o = A.by.get(e); if (o) { o.thrX++; if (dirHits(W, m) > a.hd0) o.thrXHit++; } break; } if (C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z)) { a.relBlk++; if ((m.z > e.z ? m.z : e.z) <= 2) for (const w of W.walls) { const r = A.wall.get(w); if (r && segCircle(m.x, m.y, e.x, e.y, w.x, w.y, w.r)) { r.hit = true; if (r.m.side !== m.side) { const o = A.by.get(r.m), n = p.s.n, h = m.log.hits[n] || 0; o.blkN++; o.blk += h ? (m.log.dealt[n] || 0) / h : 0; } break; } } } } }   // 벽이 풀린 직사를 막았다
       if (j) a.pb = c; else a.pc = c;
     }
+    a.hd0 = dirHits(W, m);
     a.rel = released; a.cov = false; if (m.z < 2 && e.z <= 2) a.lowT += C.DT; if (released) a.atkN++;
     // 빈틈 찌르기
     const wk = weak(W, e);
@@ -80,11 +85,20 @@ function watch(W) {
     const e = foeOf(W, r.m); if (e && (r.m.z > e.z ? r.m.z : e.z) <= 2 && segCircle(r.m.x, r.m.y, e.x, e.y, w.x, w.y, w.r + 0.2)) r.cut += 0.1;
   }
   for (const [m, a] of A.by) if (a.cov && m.hp > 0) { a.covT += C.DT; if (a.rel) a.atkCov++; }   // 제 벽 곁의 시간·쏜 수 (v2.9)
+  // 벽이 없었다면 맞았을 피해 (v2.10): 0.1 s마다, 적의 직사(실·투사체) 사거리 안에서 선이 트인 시간과 제 벽이 선을 가른(바위는 아니고) 시간을 잰다
+  if (chk) for (const [m, a] of A.by) {
+    if (m.hp <= 0) continue; const e = foeOf(W, m); if (!e) continue; if (a.eR < 0) a.eR = dirR(W, e); const d = hyp(e.x - m.x, e.y - m.y); if (d > a.eR) continue;
+    const z = m.z > e.z ? m.z : e.z; if (!C.blocked(W, e.x, e.y, m.x, m.y, z)) { a.openT += 0.1; continue; }
+    if (z > 2) continue; let rock = false; for (const o of W.obs) if (segCircle(e.x, e.y, m.x, m.y, o.x, o.y, o.r)) { rock = true; break; } if (rock) continue;
+    for (const w of W.walls) if (w.mk === m.id && segCircle(e.x, e.y, m.x, m.y, w.x, w.y, w.r)) { a.cutT += 0.1; break; }
+  }
 }
 // 공격(투사체·실·구름·곡사·몸·뿜기, 함정·벽 밀기 빼고)의 명중률: 맞힌 수 / 쏜 수 (여럿으로 갈리는 마법도 한 번에 하나까지)
 function atkHit(W, m) { const L = m.log; let c = 0, h = 0; for (const n in L.casts) { const s = W.spells[n]; if (!s || !OFF[s.t] || s.t === 'topple') continue; c += L.casts[n]; h += Math.min(L.casts[n], L.hits[n] || 0); } return c ? h / c : 0; }
 // 시전 가운데 앞 방패(석회 방패 같은 몸의 막기)의 몫
 function shieldShare(W, m) { const L = m.log; let c = 0, b = 0; for (const n in L.casts) { c += L.casts[n]; const s = W.spells[n]; if (s && s.t === 'buff' && s.b && s.b.front) b += L.casts[n]; } return c ? b / c : 0; }
+// 벽이 없었다면 맞았을 피해 (v2.10): 적의 직사가 나에게 준 피해 / 선이 트인 시간 × 제 벽이 선을 가른 시간
+function cf(W, m, a) { let dd = 0; for (const q of W.ms) if (q.side !== m.side) for (const n in q.log.dealt) { const s = W.spells[n]; if (s && DIRECT[s.t] && !s.home) dd += q.log.dealt[n]; } return a.openT > 0.5 ? dd / a.openT * a.cutT : 0; }
 // 판이 끝난 뒤: 그 사람의 지표
 function seen(W, m) {
   const a = (W._wt && W._wt.by.get(m)) || newA(), L = m.log, took = a.took, foe = a.foe;
@@ -100,7 +114,7 @@ function seen(W, m) {
     '빈틈': a.opN, '빈틈 찌른 몫': a.opN ? a.opDid / a.opN : 0, '빈틈에 맞힌 몫': a.opN ? a.opLand / a.opN : 0, '폭주': L.over, '막힌 직사 몫': a.relN ? a.relBlk / a.relN : 0, '막힌 채 시작한 직사 몫': a.dirN ? a.dirBlk / a.dirN : 0,
     '짓지 않는 몫': a.inR ? 1 - a.busy / a.inR : 0, '떠보기 몫': pt ? (ph.probe || 0) / pt : 0, '들어가기 몫': pt ? (ph.in || 0) / pt : 0, '빠지기 몫': pt ? (ph.out || 0) / pt : 0,
     '압박 몫': ot ? (op.press || 0) / ot : 0, '끝내기 몫': ot ? (op.finish || 0) / ot : 0, '소모 몫': ot ? (op.attrit || 0) / ot : 0, '몰이 몫': ot ? (op.herd || 0) / ot : 0, '진지 몫': ot ? (op.fort || 0) / ot : 0, '속임수': L.dec.feint || 0,
-    '제 벽 곁 몫': a.lowT ? a.covT / a.lowT : 0, '벽 뒤에서 쏜 몫': a.atkN ? a.atkCov / a.atkN : 0, '벽이 막은 적 공격': a.blkN, '벽이 막은 피해': a.blk,
+    '제 벽 곁 몫': a.lowT ? a.covT / a.lowT : 0, '벽 뒤에서 쏜 몫': a.atkN ? a.atkCov / a.atkN : 0, '벽이 막은 적 공격': a.blkN, '벽이 막은 피해': a.blk, '벽이 없었다면 맞았을 피해': cf(W, m, a), '벽을 가로지른 적 직사': a.thrX, '그중 맞은 몫': a.thrX ? a.thrXHit / a.thrX : 0,
   };
   return o;
 }
