@@ -23,6 +23,13 @@ function foeOf(W, m) { let e = null, bd = 1e9; for (const q of W.ms) { if (q.sid
 function useOf(W, q, j) { let sh = 0, wl = 0; for (const n in q.log.casts) { const s = W.spells[n]; if (!s) continue; if (s.t === 'buff' && s.b && s.b.front) sh += q.log.casts[n]; else if (s.t === 'wall' || s.t === 'build') wl += q.log.casts[n]; } return [j ? j.rollN : 0, q.flog ? q.flog.cut : 0, q.mlog.gdOn || 0, sh, wl]; }
 const hitsOf = (m, n) => m.log.hits[n] || 0;
 const ORD = [3, 2, 1, 0, 4];   // 먼저 본 응수의 차례 (방패·막기·옆 튀기·구르기·벽)
+// 수 = 마법 × 손잡이 (v2.18): 손잡이를 돌린 시전은 m.mlog.tune['이름#단계']에 센다(손잡이 규칙이 있을 때). 나머지는 마법 이름 그대로
+function movesLook(m) {
+  const mv = {}; for (const n in m.log.casts) if (m.log.casts[n] > 0) mv[n] = m.log.casts[n];
+  const tu = m.mlog.tune; if (tu) for (const k in tu) { const n = k.slice(0, k.indexOf('#')); if (mv[n]) mv[n] -= tu[k]; mv[k] = tu[k]; }
+  const v = Object.keys(mv).map(k => mv[k]).filter(x => x > 0).sort((a, b) => b - a), t = v.reduce((a, b) => a + b, 0);
+  return { '판당 수의 종류': v.length, '가장 많이 쓴 세 수의 몫': t ? (v[0] + (v[1] || 0) + (v[2] || 0)) / t : 0 };
+}
 function step(W) {
   const A = W._wj || (W._wj = { by: new Map(), side: null });
   const chk = W.step % (3 * W.sk) === 0;
@@ -110,7 +117,7 @@ function seen(W, m) {
     '작전 완수 몫': m.op ? (() => { let n = 0, k = 0; for (const x in m.op.log.n) n += m.op.log.n[x]; for (const x in m.op.log.ok) k += m.op.log.ok[x]; return r(k, n); })() : 0,
     '분당 지은 것': (() => { let x = 0; for (const n in m.log.casts) { const s = W.spells[n]; if (s && BUILD[s.t]) x += m.log.casts[n]; } return r(x, min); })(),
     '지어둔 것이 낸 피해 몫': (() => { let x = 0, t = 0; for (const n in m.log.dealt) { const s = W.spells[n], d = m.log.dealt[n]; t += d; if (s && (s.t === 'trap' || s.t === 'zone' || s.t === 'topple' || n.indexOf('걸어둔') >= 0)) x += d; } return r(x, t); })(),
-    '판당 쓴 마법 종류': Object.keys(m.log.casts).filter(n => m.log.casts[n] > 0).length,
+    '판당 쓴 마법 종류': Object.keys(m.log.casts).filter(n => m.log.casts[n] > 0).length, ...movesLook(m),
     '가장 많이 쓴 세 마법의 몫': (() => { const v = Object.keys(m.log.casts).map(n => m.log.casts[n]).sort((a, b) => b - a), t = v.reduce((a, b) => a + b, 0); return t ? (v[0] + (v[1] || 0) + (v[2] || 0)) / t : 0; })(),
   };
 }

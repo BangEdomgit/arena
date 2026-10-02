@@ -14,14 +14,15 @@
 const fs = require('fs'), path = require('path'), A = require('../src');
 const ROOT = path.join(__dirname, '..'), ARENA = path.join(ROOT, 'sandbox', 'scenes', 'v2-tactics-legend.json'), Z = 2.576;
 const SK = ['초보', '중급', '상급', '대가', '전설'], ELEMS = ['불', '번개', '흙', '물', '얼음', '독'], TYPES = ['서퍼', '메타', '이단'], BASE = ['합법 최강', '광역', '기본기', '기술', '큰 수'];
+const OLD = '대마법사 청사진';   // 옛 덱 줄: v2.17에 결투장 덱이 바뀌어 두세 버전은 옛 덱으로도 잰다. 그만 잴 때 ''로
 const arena = () => JSON.parse(fs.readFileSync(ARENA, 'utf8'));
 
 /* ---------------- 일감 (일꾼이 부른다) ---------------- */
 // 결투장: 두 단계(a, b)로 씨앗 s0..s0+n−1, 판마다 자리를 번갈아. 지표가 필요하면 look
-function arenaGames(a, b, s0, n, look) {
+function arenaGames(a, b, s0, n, look, deck) {
   const Wt = require('../metrics/watch'), sc = arena(), out = [];
   for (let s = s0; s < s0 + n; s++) {
-    const sw = s % 2, c = JSON.parse(JSON.stringify(sc)); c.seed = s; c.sides[0].mages[0].skill = sw ? b : a; c.sides[1].mages[0].skill = sw ? a : b;
+    const sw = s % 2, c = JSON.parse(JSON.stringify(sc)); c.seed = s; c.sides[0].mages[0].skill = sw ? b : a; c.sides[1].mages[0].skill = sw ? a : b; if (deck) for (const sd of c.sides) sd.mages[0].deck = deck;
     const W = A.sceneWorld(c); while (!A.over(W)) { A.stepWorld(W); if (look) Wt.watch(W); }
     const r = A.result(W), me = sw ? 1 : 0;
     out.push({ x: r.winner === me ? 1 : r.winner < 0 ? 0.5 : 0, bt: r.byTime ? 1 : 0, t: W.t, ko: W.ms.some(q => q.hp <= 0) ? 1 : 0, ms: look ? W.ms.map(q => ({ skill: q.skill, look: Wt.seen(W, q) })) : null });
@@ -42,6 +43,7 @@ const X = (v, note) => ({ v, se: 0, n: 1, note });
 const NA = note => ({ v: null, se: 0, n: 0, note });
 const eloOf = p => 400 * Math.log10(Math.min(0.999, Math.max(0.001, p)) / (1 - Math.min(0.999, Math.max(0.001, p))));
 function judge(x, g) {
+  if (g.info) return '·';
   if (!x || x.v == null) return '—';
   if (g.bool) return x.v ? '✓' : '✗';
   let lo = x.v - Z * x.se, hi = x.v + Z * x.se; if (x.p) { lo = Math.max(0, lo); hi = Math.min(1, hi); }   // 몫은 0~1 밖으로 넘지 않는다
@@ -52,12 +54,12 @@ function judge(x, g) {
 
 /* ---------------- 줄 (1장) ---------------- */
 // [묶음, 열쇠, 이름, 목표 {lo, hi} 또는 {bool}, 꼴]
-const INF = 1e9, G = (lo, hi) => ({ lo, hi }), B = { bool: true };
+const INF = 1e9, G = (lo, hi) => ({ lo, hi }), B = { bool: true }, I = { info: true };   // I: 보기만 (판정하지 않는다)
 const ROWS = [
   ['A. 바닥'], ['A1', '시험', B, 'b'], ['A2', '결정론 (같은 씨앗 = 같은 결과)', B, 'b'], ['A3', '브라우저 = Node', B, 'b'], ['A4', '대마법사 결투 한 판 계산 (데운 뒤, s)', G(0, 1), 's2'], ['A5', '대마법사 1 대 평범 100, 30 s 계산 (s)', G(0, 0.5), 's2'],
   ['B. 판의 박자 (결투장 전설 대 전설)'], ['B1', '쓰러뜨림으로 끝남', G(0.9, 1), '%'], ['B2', '판 길이 (s)', G(30, 60), 's'], ['B3', '평균 속도 (m/s)', G(20, 40), 'n'], ['B4', '초당 방향 전환', G(2, 5), 'n'], ['B5', '사람당 초당 행동', G(5, 10), 'n'], ['B6', '초당 교환', G(1, 2), 'n'],
-  ['B7', '2 s 넘는 침묵', G(0, 0.02), '%'], ['B8', '0.5 s 넘게 서 있는 순간 (사람당 판당)', G(0, 0), 'n'], ['B9', '1 s에 잃은 최대 체력', G(0, 0.25), '%'], ['B10', '30% 아래로 떨어진 뒤 끝까지 (s)', G(7, 13), 's'], ['B11', '스스로 입은 피해', G(0, 0.10), '%'], ['B12', '폭주 (판당)', G(0, 0.2), 'n'],
-  ['C. 수와 어휘'], ['C1', '가장 많이 쓴 세 마법의 몫', G(0, 0.5), '%'], ['C2', '판당 쓴 마법 종류', G(8, INF), 'n'], ['C3', '큰 한 방 (사람당 판당)', G(1, 3), 'n'], ['C4', '큰 한 방 중 메이트 순간', G(0.7, 1), '%'], ['C5', '분당 체크', G(15, INF), 'n'], ['C6', '체크에 상대가 방어 자원을 쓴 몫', G(0.5, 1), '%'],
+  ['B7', '2 s 넘는 침묵', G(0, 0.02), '%'], ['B8', '0.5 s 넘게 서 있는 순간 (사람당 판당)', G(0, 0), 'n'], ['B9', '1 s에 잃은 최대 체력', G(0, 0.25), '%'], ['B10', '30% 아래로 떨어진 뒤 끝까지 (s)', G(7, 13), 's'], ['B11m', '실수로 입은 피해 (내 폭주·숨·적의 굳힘 없는 추락·소금 원·내 덫·역류)', G(0, 0.10), '%'], ['B11f', '떨어뜨려 준 피해 (적의 맞힘·굳힘 뒤 2 s 안에 시작된 추락, 적이 준 것으로 셈)', I, '%'], ['B11k', '추락 결정타 몫 (쓰러진 판 중)', I, '%'], ['B11', '스스로 입은 피해 (v2.17까지의 줄: 추락 모두 포함)', I, '%'], ['B12', '폭주 (판당)', G(0, 0.2), 'n'],
+  ['C. 수와 어휘'], ['C1m', '가장 많이 쓴 세 수(마법 × 손잡이)의 몫', G(0, 0.4), '%'], ['C2m', '판당 수(마법 × 손잡이)의 종류', G(12, INF), 'n'], ['C1', '가장 많이 쓴 세 마법의 몫 (v2.17까지의 줄)', I, '%'], ['C2', '판당 쓴 마법 종류 (v2.17까지의 줄)', I, 'n'], ['C3', '큰 한 방 (사람당 판당)', G(1, 3), 'n'], ['C4', '큰 한 방 중 메이트 순간', G(0.7, 1), '%'], ['C5', '분당 체크', G(15, INF), 'n'], ['C6', '체크에 상대가 방어 자원을 쓴 몫', G(0.5, 1), '%'],
   ['C7', '메이트로 끝난 판', G(0.5, 1), '%'], ['C8', '그물에서 빠져나감 (판당)', G(0.3, INF), 'n'], ['C9', '속임수 (판당)', G(3, INF), 'n'], ['C10', '속임수 중 상대가 응수한 몫', G(0.3, 1), '%'], ['C11', '정석을 아는 쪽이 첫 수에서 받은 몫', G(0.6, 1), '%'],
   ['D. 공격 방식'], ['D1', '공격 명중률', G(0.3, 0.45), '%'], ['D2', '확정타 명중률', G(0.5, 1), '%'], ['D3', '덮기: 갈 곳을 덮은 몫', G(0.5, 1), '%'], ['D4', '덮기 명중률', G(0.4, 1), '%'], ['D5', '빈틈에 맞히기', G(0.4, 1), '%'], ['D6', '피하기 빼낸 뒤 덮기 (판당)', G(2, INF), 'n'],
   ['E. 몸과 감각'], ['E1', '순간 켜기 성공 (판당, 전설)', G(5, INF), 'n'], ['E2', '패시브가 막은 피해 몫', G(0.15, 1), '%'], ['E3', '숨은 시간', G(0.1, 0.3), '%'], ['E4', '숨은 자리 첫 수(기습) 명중', G(0.4, 1), '%'], ['E5', '숨었을 때 상대의 짐작 오차 (m)', G(5, INF), 'n'], ['E6', '숨 마시다 맞음 (판당)', G(0, 0.3), 'n'],
@@ -65,7 +67,7 @@ const ROWS = [
   ['G. 단계 사다리'],
   ...['평범', '중간', '대마법사'].flatMap(t => [1, 2, 3, 4].map(i => [`G-${t}-${i}`, `${t} ${SK[i]} / ${SK[i - 1]}`, G(0.65, 0.8), 'x'])),
   ['G2', '전설 / 대가 (결투장)', G(0.7, 1), 'x'], ...['평범', '중간', '대마법사'].map(t => [`Gelo-${t}`, `${t} 단계 사이 Elo 간격 (평균)`, G(90, 210), 'n']), ['G4', '시간 판정 (사다리 전체)', G(0, 0.1), '%'],
-  ...['읽는 깊이', '분당 체크', '속임수 시도', '판당 쓴 마법 종류', '순간 켜기 성공'].map(k => [`Gs-${k}`, `계단: ${k} (초보→전설)`, B, 'b']),
+  ...['읽는 깊이', '분당 체크', '속임수 시도', '판당 수의 종류', '순간 켜기 성공'].map(k => [`Gs-${k}`, `계단: ${k} (초보→전설)`, B, 'b']),
   ['H. 힘과 무리'], ['H1-중간', '한 등급 위 1대1: 중간 / 평범', G(0.95, 1), '%'], ['H1-상위', '한 등급 위 1대1: 상위 / 중간', G(0.95, 1), '%'], ['H2', '대마법사 1 대 상위 1', G(0.95, 1), '%'], ['H3', '상위 1 대 평범 30', G(0.9, 1), '%'],
   ['H4', '대마법사 1 대 흩어진 상위 20', G(0.8, 1), '%'], ['H5', '대마법사 1 대 흩어진 상위 30', G(0.4, 0.6), '%'], ['H6', '대마법사 1 대 상위 전투단 10', G(0.4, 0.6), '%'], ['H7', '대마법사 1 대 평범 100 둘러싸기', G(0.95, 1), '%'],
   ['H8', '머스킷 기습 (대마법사 승률)', G(0, 0.7), '%'], ['H9', '군대 들판 (대마법사 승률)', G(0.9, 1), '%'], ['H10', '장악권 밖 조약돌 (대마법사)', G(0.9, 1), '%'], ['H11', '장악권 밖 번쩍임 + 무거운 돌 (대마법사)', G(0.6, 0.9), '%'],
@@ -91,11 +93,29 @@ const JUDGE = [
   ['무리', '둘러싸이면 버티기·뚫기를 고른다', '상급', null], ['무리', '장악권 밖 무리를 깎거나 가둔다', '대가', null], ['무리', '전투단', '(전투단)', null],
 ];
 
+// B~F: 결투장 판들(games)의 박자·어휘·공격 방식·몸·판을 o의 열쇠 p + 줄에 (p: '' 결투장, 'old:' 옛 덱)
+function bf(games, o, p) {
+  const ms = games.flatMap(g => g.ms), lk = k => ms.map(x => x.look[k]).filter(v => typeof v === 'number' && isFinite(v)), g0 = k => games.map(g => g.ms[0].look[k]);
+  const pool = (kr, kn) => { let a = 0, b = 0; for (const x of ms) { const n = x.look[kn] || 0; a += (x.look[kr] || 0) * n; b += n; } return Pr(a, b); };
+  o[p + 'B1'] = Pr(games.filter(g => g.ko).length, games.length); o[p + 'B2'] = M(games.map(g => g.t)); o[p + 'B3'] = M(lk('평균 속도 (m/s)')); o[p + 'B4'] = M(lk('초당 방향 전환')); o[p + 'B5'] = M(lk('초당 하는 일')); o[p + 'B6'] = M(g0('초당 교환'));
+  o[p + 'B7'] = M(g0('2 s 넘는 침묵 몫')); o[p + 'B8'] = M(lk('0.5 s 넘게 서 있음')); o[p + 'B9'] = M(lk('1 s에 잃은 가장 큰 체력 몫')); o[p + 'B10'] = M(games.filter(g => g.ms[0].look['30% 아래로 떨어진 판'] && g.ko).map(g => g.ms[0].look['30% 아래 뒤 끝까지 (s)']));
+  { let s = 0, t = 0; for (const x of ms) { t += x.look['받은 피해']; s += x.look['받은 피해'] * x.look['스스로 입은 몫']; } o[p + 'B11'] = M(ms.map(x => x.look['스스로 입은 몫'])); if (o[p + 'B11']) o[p + 'B11'].pooled = t ? s / t : 0; } o[p + 'B12'] = M(lk('폭주'));
+  o[p + 'B11m'] = M(lk('실수로 입은 몫')); o[p + 'B11f'] = M(lk('떨어뜨려 준 몫')); { const d = ms.filter(x => x.look['쓰러짐']); o[p + 'B11k'] = Pr(d.filter(x => x.look['추락으로 쓰러짐']).length, d.length); }
+  o[p + 'C1m'] = M(lk('가장 많이 쓴 세 수의 몫')); o[p + 'C2m'] = M(lk('판당 수의 종류'));
+  o[p + 'C1'] = M(lk('가장 많이 쓴 세 마법의 몫')); o[p + 'C2'] = M(lk('판당 쓴 마법 종류')); o[p + 'C3'] = M(lk('큰 한 방')); o[p + 'C4'] = pool('큰 한 방 중 메이트 몫', '큰 한 방'); o[p + 'C5'] = M(lk('분당 체크')); o[p + 'C6'] = M(lk('체크에 자원을 쓴 몫'));
+  o[p + 'C7'] = Pr(games.filter(g => g.ko && g.ms[0].look['메이트로 끝난 판']).length, games.filter(g => g.ko).length); o[p + 'C8'] = M(lk('그물에서 빠져나감')); o[p + 'C9'] = M(lk('속임수 시도')); o[p + 'C10'] = pool('속임수에 상대가 응수한 몫', '속임수 시도');
+  { let a = 0, b = 0; for (const g of games) for (let i = 0; i < 2; i++) { const me = g.ms[i].look, foe = g.ms[1 - i].look; const n = me['정석 둠'] || 0; a += (foe['정석 첫 수를 상대가 받은 몫'] || 0) * n; b += n; } o[p + 'C11'] = Pr(a, b); }
+  o[p + 'D1'] = M(lk('공격 명중률')); o[p + 'D2'] = pool('확정타 명중률', '확정타'); o[p + 'D3'] = pool('덮기 갈 곳 덮은 비율', '덮기'); o[p + 'D4'] = pool('덮기 명중률', '덮기'); o[p + 'D5'] = M(lk('빈틈에 맞힌 몫')); o[p + 'D6'] = M(lk('구르기 빼낸 뒤 덮기'));
+  o[p + 'E1'] = M(lk('순간 켜기 성공')); o[p + 'E2'] = M(lk('패시브가 막은 피해 몫')); o[p + 'E3'] = M(lk('숨은 시간 몫')); o[p + 'E4'] = pool('기습 명중', '기습'); o[p + 'E5'] = NA('두뇌가 상대 자리를 정확히 본다 (앎이 없다, 2단계)'); o[p + 'E6'] = M(lk('숨 마시다 맞은 수'));
+  o[p + 'F1'] = M(lk('분당 지은 것')); o[p + 'F2'] = M(lk('지어둔 것이 낸 피해 몫')); o[p + 'F3'] = M(lk('벽이 막은 적 공격')); o[p + 'F4'] = pool('덫이 밟힌 몫', '놓은 덫'); o[p + 'F5'] = M(ms.filter(x => x.look['메이트 수 (읽음)'] > 0).map(x => x.look['메이트 순간 벽·덫이 지운 몫']));
+}
+
 /* ---------------- 재기 ---------------- */
 async function measure(q) {
   const { runJobs } = require('./par'), N = q ? 30 : 100, NL = q ? 100 : 400, NC = q ? 10 : 20, NI = q ? 40 : 100, jobs = [], tag = [], CH = 2;
   const add = (t, fn, args) => { jobs.push({ mod: __filename, fn, args }); tag.push(t); };
   for (let s = 1; s <= N; s += CH) add('arena', 'arenaGames', ['전설', '전설', s, Math.min(CH, N - s + 1), true]);
+  if (OLD) for (let s = 1; s <= N; s += CH) add('arenaOld', 'arenaGames', ['전설', '전설', s, Math.min(CH, N - s + 1), true, OLD]);   // 옛 덱 줄 (이음용)
   const NS = q ? 6 : 20; for (const sk of SK) for (let s = 1; s <= NS; s += CH) add('stair:' + sk, 'arenaGames', [sk, sk, s, Math.min(CH, NS - s + 1), true]);
   for (let i = 1; i <= 4; i++) { for (const t of ['평범', '중간']) for (let s = 0; s < NL; s += 50) add(`lad:${t}:${i}`, 'duels', [{ tier: t, skill: SK[i] }, { tier: t, skill: SK[i - 1] }, s, Math.min(50, NL - s)]); for (let s = 1; s <= NL; s += 4) add(`lad:대마법사:${i}`, 'arenaGames', [SK[i], SK[i - 1], s, Math.min(4, NL - s + 1), false]); }
   for (const [hi, lo] of [['중간', '평범'], ['상위', '중간'], ['대마법사', '상위']]) add('up:' + hi, 'duels', [{ tier: hi }, { tier: lo }, 0, N]);
@@ -110,18 +130,8 @@ async function measure(q) {
   const o = {}, flat = k => (R[k] || []).flat();
   // A
   o.A1 = tests(); o.A2 = determinism(); o.A3 = browser(); const [t1, t2] = timing(); o.A4 = X(t1); o.A5 = X(t2);
-  // B~F: 결투장 전설 대 전설
-  const games = flat('arena'), ms = games.flatMap(g => g.ms), lk = k => ms.map(x => x.look[k]).filter(v => typeof v === 'number' && isFinite(v)), g0 = k => games.map(g => g.ms[0].look[k]);
-  const pool = (kr, kn) => { let a = 0, b = 0; for (const x of ms) { const n = x.look[kn] || 0; a += (x.look[kr] || 0) * n; b += n; } return Pr(a, b); };
-  o.B1 = Pr(games.filter(g => g.ko).length, games.length); o.B2 = M(games.map(g => g.t)); o.B3 = M(lk('평균 속도 (m/s)')); o.B4 = M(lk('초당 방향 전환')); o.B5 = M(lk('초당 하는 일')); o.B6 = M(g0('초당 교환'));
-  o.B7 = M(g0('2 s 넘는 침묵 몫')); o.B8 = M(lk('0.5 s 넘게 서 있음')); o.B9 = M(lk('1 s에 잃은 가장 큰 체력 몫')); o.B10 = M(games.filter(g => g.ms[0].look['30% 아래로 떨어진 판'] && g.ko).map(g => g.ms[0].look['30% 아래 뒤 끝까지 (s)']));
-  { let s = 0, t = 0; for (const x of ms) { t += x.look['받은 피해']; s += x.look['받은 피해'] * x.look['스스로 입은 몫']; } o.B11 = M(ms.map(x => x.look['스스로 입은 몫'])); if (o.B11) o.B11.pooled = t ? s / t : 0; } o.B12 = M(lk('폭주'));
-  o.C1 = M(lk('가장 많이 쓴 세 마법의 몫')); o.C2 = M(lk('판당 쓴 마법 종류')); o.C3 = M(lk('큰 한 방')); o.C4 = pool('큰 한 방 중 메이트 몫', '큰 한 방'); o.C5 = M(lk('분당 체크')); o.C6 = M(lk('체크에 자원을 쓴 몫'));
-  o.C7 = Pr(games.filter(g => g.ko && g.ms[0].look['메이트로 끝난 판']).length, games.filter(g => g.ko).length); o.C8 = M(lk('그물에서 빠져나감')); o.C9 = M(lk('속임수 시도')); o.C10 = pool('속임수에 상대가 응수한 몫', '속임수 시도');
-  { let a = 0, b = 0; for (const g of games) for (let i = 0; i < 2; i++) { const me = g.ms[i].look, foe = g.ms[1 - i].look; const n = me['정석 둠'] || 0; a += (foe['정석 첫 수를 상대가 받은 몫'] || 0) * n; b += n; } o.C11 = Pr(a, b); }
-  o.D1 = M(lk('공격 명중률')); o.D2 = pool('확정타 명중률', '확정타'); o.D3 = pool('덮기 갈 곳 덮은 비율', '덮기'); o.D4 = pool('덮기 명중률', '덮기'); o.D5 = M(lk('빈틈에 맞힌 몫')); o.D6 = M(lk('구르기 빼낸 뒤 덮기'));
-  o.E1 = M(lk('순간 켜기 성공')); o.E2 = M(lk('패시브가 막은 피해 몫')); o.E3 = M(lk('숨은 시간 몫')); o.E4 = pool('기습 명중', '기습'); o.E5 = NA('두뇌가 상대 자리를 정확히 본다 (앎이 없다, 2단계)'); o.E6 = M(lk('숨 마시다 맞은 수'));
-  o.F1 = M(lk('분당 지은 것')); o.F2 = M(lk('지어둔 것이 낸 피해 몫')); o.F3 = M(lk('벽이 막은 적 공격')); o.F4 = pool('덫이 밟힌 몫', '놓은 덫'); o.F5 = M(ms.filter(x => x.look['메이트 수 (읽음)'] > 0).map(x => x.look['메이트 순간 벽·덫이 지운 몫']));
+  // B~F: 결투장 전설 대 전설 (옛 덱 줄도: v2.16까지의 결투장 덱 '대마법사 청사진', 이음용)
+  bf(flat('arena'), o, ''); if (R.arenaOld) bf(flat('arenaOld'), o, 'old:');
   // G
   let btN = 0, btK = 0;
   for (const t of ['평범', '중간', '대마법사']) { const el = []; for (let i = 1; i <= 4; i++) { const r = R[`lad:${t}:${i}`] || []; let x, n;
@@ -130,7 +140,7 @@ async function measure(q) {
     o[`Gelo-${t}`] = el.length ? M(el) : null; }
   o.G2 = o['G-대마법사-4']; o.G4 = Pr(btK, btN);
   const stair = SK.map(sk => flat('stair:' + sk).flatMap(g => g.ms)), sm = (i, k) => mean(stair[i].map(x => x.look[k] || 0));
-  const SKV = { '읽는 깊이': i => (A.SKILLS[SK[i]] && A.mage({ tier: '대마법사', skill: SK[i] }).tac.read) || 0, '분당 체크': i => sm(i, '분당 체크'), '속임수 시도': i => sm(i, '속임수 시도'), '판당 쓴 마법 종류': i => sm(i, '판당 쓴 마법 종류'), '순간 켜기 성공': i => sm(i, '순간 켜기 성공') };
+  const SKV = { '읽는 깊이': i => (A.SKILLS[SK[i]] && A.mage({ tier: '대마법사', skill: SK[i] }).tac.read) || 0, '분당 체크': i => sm(i, '분당 체크'), '속임수 시도': i => sm(i, '속임수 시도'), '판당 수의 종류': i => sm(i, '판당 수의 종류'), '순간 켜기 성공': i => sm(i, '순간 켜기 성공') };
   for (const k in SKV) { const v = SK.map((_, i) => SKV[k](i)); let ok = v[4] > v[0]; for (let i = 1; i < 5; i++) if (v[i] < v[i - 1] - 1e-9) ok = false; o[`Gs-${k}`] = X(ok ? 1 : 0, v.map(x => +x.toFixed(2)).join(' → ')); }
   // H
   const dsc = k => { const r = R[k] || []; const n = r.reduce((a, p) => a + p.n, 0); return Pr(r.reduce((a, p) => a + p.a + p.d / 2, 0), n); };
@@ -186,15 +196,21 @@ function fmt(x, f) {
   if (f === 'r') return x.note || '';
   return (f === '%' ? (v * 100).toFixed(0) + '%' : f === 'x' ? v.toFixed(2) : f === 's2' ? v.toFixed(2) : f === 's' ? v.toFixed(1) : (+v).toFixed(v >= 100 ? 0 : 2)) + e + (x.note && f !== 'b' ? ' (' + x.note + ')' : '');
 }
-function goal(g, f) { if (g.bool) return '예'; const s = v => f === '%' ? (v * 100).toFixed(0) + '%' : f === 'x' ? v.toFixed(2) : String(v); return g.hi >= INF ? s(g.lo) + ' 이상' : g.lo <= 0 && g.hi === 0 ? '0' : g.lo <= 0 ? s(g.hi) + ' 이하' : s(g.lo) + '~' + s(g.hi); }
+function goal(g, f) { if (g.info) return '봄'; if (g.bool) return '예'; const s = v => f === '%' ? (v * 100).toFixed(0) + '%' : f === 'x' ? v.toFixed(2) : String(v); return g.hi >= INF ? s(g.lo) + ' 이상' : g.lo <= 0 && g.hi === 0 ? '0' : g.lo <= 0 ? s(g.hi) + ' 이하' : s(g.lo) + '~' + s(g.hi); }
 function render(card) {
   const vs = Object.keys(card.versions).sort((a, b) => vkey(a) - vkey(b)), L = [];
   L.push('# v3.0 문턱 성적', '', '`GATE-v3.md` 1장의 목표 수치를 버전마다 같은 잣대로 잰 값 (`node cli.js gate`, 잣대는 `experiments/gate.js` 머리 주석, SPEC 40장). 원자료는 `reports/gate.json`.',
     '판정(99%): 값 ± 2.576 표준오차가 목표 안이면 ✓, 목표와 겹치지 않으면 ✗, 걸치면 △(통과로 치지 않음), 잴 수 없으면 —. 값 옆의 ±는 99% 구간의 반폭.', '');
-  for (const v of vs) { const c = card.versions[v], st = {}; for (const r of ROWS) if (r.length > 1) { const s = judge(c.o[r[0]], r[2]); st[s] = (st[s] || 0) + 1; } L.push(`- v${v}: ${c.date} 잼 (${c.sec} s, 결투 ${c.N} · 사다리 ${c.NL} · 무리 ${c.NC}판): ✓ ${st['✓'] || 0} · ✗ ${st['✗'] || 0} · △ ${st['△'] || 0} · — ${st['—'] || 0}`); }
+  for (const v of vs) { const c = card.versions[v], st = {}; for (const r of ROWS) if (r.length > 1 && !r[2].info) { const s = judge(c.o[r[0]], r[2]); st[s] = (st[s] || 0) + 1; } L.push(`- v${v}: ${c.date} 잼 (${c.sec} s, 결투 ${c.N} · 사다리 ${c.NL} · 무리 ${c.NC}판): ✓ ${st['✓'] || 0} · ✗ ${st['✗'] || 0} · △ ${st['△'] || 0} · — ${st['—'] || 0}`); }
   for (const r of ROWS) {
     if (r.length === 1) { L.push('', '## ' + r[0], '', '| 지표 | 목표 | ' + vs.map(v => 'v' + v).join(' | ') + ' |', '|---|---|' + vs.map(() => '---|').join('')); continue; }
     L.push(`| ${r[1]} | ${goal(r[2], r[3])} | ` + vs.map(v => { const x = card.versions[v].o[r[0]]; return judge(x, r[2]) + ' ' + fmt(x, r[3]); }).join(' | ') + ' |');
+  }
+  // 옛 덱 줄 (이음용): v2.17에 결투장 덱이 '대마법사 결투'로 바뀌었다. v2.16까지는 결투장 줄이 곧 옛 덱 줄
+  const ov = vs.filter(v => vkey(v) <= vkey('2.16.0') || Object.keys(card.versions[v].o).some(k => k.startsWith('old:')));
+  if (ov.length) {
+    L.push('', "## 옛 덱 줄 (결투장 전설 대 전설, '대마법사 청사진': v2.16까지의 결투장 덱, 이음용)", '', '| 지표 | 목표 | ' + ov.map(v => 'v' + v).join(' | ') + ' |', '|---|---|' + ov.map(() => '---|').join(''));
+    for (const r of ROWS) if (r.length > 1 && /^[B-F]/.test(r[0])) L.push(`| ${r[1]} | ${goal(r[2], r[3])} | ` + ov.map(v => { const o = card.versions[v].o, x = vkey(v) <= vkey('2.16.0') ? o[r[0]] : o['old:' + r[0]]; return judge(x, r[2]) + ' ' + fmt(x, r[3]); }).join(' | ') + ' |');
   }
   const last = card.versions[vs[vs.length - 1]];
   L.push('', `## 2장: 판단마다 확인 (v${vs[vs.length - 1]}, 결투장에서 같은 단계끼리, 단계마다 ${last.N >= 100 ? 20 : 6}판)`, '', '| 묶음 | 판단 | 단계 | 확인 | ' + SK.join(' | ') + ' |', '|---|---|---|---|' + SK.map(() => '---|').join(''));

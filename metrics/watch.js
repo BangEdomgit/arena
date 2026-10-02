@@ -15,14 +15,21 @@
  *   박자 (v2.14): 평균 속도(높이까지)·초당 방향 전환(45°)·초당 하는 일·초당 맞힘·초당 교환(판 전체), 막기(rules/pace) 켠 시간 몫·켜고 끈 수·감각 조준 수. 걸음 간격은 W.dt */
 const C = require('../src/core'), { hyp } = require('../src/math'), PL = require('../src/brain/plan'), JG = require('./judge');
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1, topple: 1 }, DIRECT = { proj: 1, thread: 1 };
-const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, eR: -1, openT: 0, cutT: 0, thrX: 0, thrXHit: 0, hd0: 0, hpR: null, hpI: 0, spd: 0, hx: 0, hy: 0, turn: 0, act: 0, roll0: 0, rx0: 0, cut0: 0, gd0: 0, hit0: -1, hitT: -1, hitN: 0, tc: null, tb: null, tch: null, rollN: 0, chkR: 0, chkS: 0, dry: 0, hadRes: false, resN: -1, inNet: false, esc: 0, lastAns: -1, lastAnsT: -9, burst: 0, trapN: 0, trapHit: 0, gluS: 0, gluLow: 0, hot75: 0, h0: new Map(), pend: [], md: {}, mh: {}, mdmg: {}, lastMode: 'none', dm0: -1, covS: 0, bait: 0, baitHit: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0 } });
+const newA = () => ({ t: 0, air: 0, inR: 0, busy: 0, two: 0, three: 0, opN: 0, opDid: 0, opLand: 0, opOn: false, opHit: false, opDm: 0, opL: false, dirN: 0, dirBlk: 0, relN: 0, relBlk: 0, rel: false, cov: false, atkN: 0, atkCov: 0, covT: 0, lowT: 0, blk: 0, blkN: 0, eR: -1, openT: 0, cutT: 0, thrX: 0, thrXHit: 0, hd0: 0, hpR: null, hpI: 0, spd: 0, hx: 0, hy: 0, turn: 0, act: 0, roll0: 0, rx0: 0, cut0: 0, gd0: 0, hit0: -1, hitT: -1, hitN: 0, tc: null, tb: null, tch: null, rollN: 0, chkR: 0, chkS: 0, dry: 0, hadRes: false, resN: -1, inNet: false, esc: 0, lastAns: -1, lastAnsT: -9, burst: 0, trapN: 0, trapHit: 0, gluS: 0, gluLow: 0, hot75: 0, h0: new Map(), pend: [], md: {}, mh: {}, mdmg: {}, lastMode: 'none', dm0: -1, covS: 0, bait: 0, baitHit: 0, pc: null, pb: null, R: -1, W: [], hp: -1, tk: {}, fd: 0, took: 0, foe: 0, by: { fall: 0, salt: 0, wave: 0, fallFoe: 0 }, foeT: -9, st0: 0, fly0: 0, fallBy: false, killBy: '', killFall: false });
 const foeDealt = (W, m) => { let x = 0; for (const q of W.ms) if (q.side !== m.side) for (const k in q.log.dealt) x += q.log.dealt[k]; return x; };
 // 받은 피해 (걸음마다, 남은 체력까지만: 마지막 한 방의 넘친 몫은 세지 않는다). 그 걸음의 기록 증가를 종류·적으로 나눠 체력이 준 만큼 줄여 담는다
+const DROP_T = 2;   // 떨어뜨려 준 피해: 적의 맞힘·굳힘 뒤 이만큼 안에 시작된 추락 (v2.18)
 function hurtStep(W, m, a) {
   const hp = m.hp > 0 ? m.hp : 0; if (a.hp < 0) { a.hp = hp; a.fd = foeDealt(W, m); for (const k in m.log.taken) a.tk[k] = m.log.taken[k]; return; }
   const dh = a.hp - hp; let tot = 0; const tk = m.log.taken; for (const k in tk) tot += tk[k] - (a.tk[k] || 0);
   const fd = foeDealt(W, m), foe = fd - a.fd;
-  if (dh > 1e-9 && tot > 1e-9) { const f = Math.min(1, dh / tot); a.took += tot * f; a.foe += Math.min(foe, tot) * f; for (const k of ['fall', 'salt', 'wave']) a.by[k] += (tk[k] || 0) - (a.tk[k] || 0) > 0 ? ((tk[k] || 0) - (a.tk[k] || 0)) * f : 0; a.by.wave += (tk.backfire || 0) - (a.tk.backfire || 0) > 0 ? ((tk.backfire || 0) - (a.tk.backfire || 0)) * f : 0; }
+  // 떨어뜨려 준 피해 (v2.18): 적의 맞힘(피해)·굳힘 뒤 dropT s 안에 시작된 추락은 적이 준 것으로. 추락의 시작 = 날던 사람이 떨어지기·끊어 내려오기로 바뀐 때
+  if (foe > 1e-9 || (m.st.stun > a.st0 + 1e-9 && m.fly !== 0)) a.foeT = W.t;
+  if (a.fly0 === 1 && (m.fly === 2 || m.fly === 3)) a.fallBy = a.foeT > -9 && W.t - a.foeT <= DROP_T;   // 추락이 시작될 때 정한다 (떨어지는 동안의 맞힘은 보지 않는다)
+  a.st0 = m.st.stun; a.fly0 = m.fly;
+  const byFoe = a.fallBy;
+  if (dh > 1e-9 && tot > 1e-9 && a.hp > 0 && hp <= 0) { let bk = '', bv = 0; for (const k in tk) { const d = tk[k] - (a.tk[k] || 0); if (d > bv) { bv = d; bk = k; } } a.killBy = bk; a.killFall = bk === 'fall' && byFoe; }   // 결정타의 종류
+  if (dh > 1e-9 && tot > 1e-9) { const f = Math.min(1, dh / tot); if (byFoe && (tk.fall || 0) > (a.tk.fall || 0)) a.by.fallFoe += ((tk.fall || 0) - (a.tk.fall || 0)) * f; a.took += tot * f; a.foe += Math.min(foe, tot) * f; for (const k of ['fall', 'salt', 'wave']) a.by[k] += (tk[k] || 0) - (a.tk[k] || 0) > 0 ? ((tk[k] || 0) - (a.tk[k] || 0)) * f : 0; a.by.wave += (tk.backfire || 0) - (a.tk.backfire || 0) > 0 ? ((tk.backfire || 0) - (a.tk.backfire || 0)) * f : 0; }
   a.hp = hp; a.fd = fd; for (const k in tk) a.tk[k] = tk[k];
 }
 const dealtOf = m => { let x = 0; for (const k in m.log.dealt) x += m.log.dealt[k]; return x; };
@@ -168,7 +175,7 @@ function seen(W, m) {
   const ph = m.mlog.phase, op = Object.assign({}, m.op && m.op.log && m.op.log.time); if (m.op && m.op.cur && m.op.st) op[m.op.cur] = (op[m.op.cur] || 0) + W.t - m.op.t0;   // 판이 끝날 때 하던 작전도 (끝내기는 대개 판 끝까지 간다)
   let pt = 0, ot = 0; for (const k in ph) pt += ph[k]; for (const k in op) ot += op[k];
   const o = {
-    '받은 피해': took, '스스로 입은 몫': took ? self / took : 0, '추락 몫': took ? fall / took : 0, '소금 몫': took ? salt / took : 0, '폭주 몫': took ? wave / took : 0, '제 폭발 몫': took ? other / took : 0,
+    '받은 피해': took, '스스로 입은 몫': took ? self / took : 0, '실수로 입은 몫': took ? Math.max(0, self - a.by.fallFoe) / took : 0, '떨어뜨려 준 몫': took ? a.by.fallFoe / took : 0, '쓰러짐': m.hp <= 0 ? 1 : 0, '추락으로 쓰러짐': m.hp <= 0 && a.killFall ? 1 : 0, '추락 몫': took ? fall / took : 0, '소금 몫': took ? salt / took : 0, '폭주 몫': took ? wave / took : 0, '제 폭발 몫': took ? other / took : 0,
     '나는 시간 몫': a.t ? a.air / a.t : 0, '사거리 안 짓는 몫': a.inR ? a.busy / a.inR : 0, '사거리 안 두 칸 몫': a.inR ? a.two / a.inR : 0, '사거리 안 세 칸 몫': a.inR ? a.three / a.inR : 0,
     '세운 벽': nw, '쓸모 있는 벽 몫': nw ? use / nw : 0, '두 사람 사이 벽': bt, '엄폐 각 벽': cv, '퇴로 벽': rt, '막아 낸 벽': hb,
     '쓰러뜨림으로 끝남': W.ms.some(q => q.hp <= 0) ? 1 : 0, '판 길이 (s)': W.t, '공격 시전': L.dec.atk, '공격 명중률': atkHit(W, m), '방패 몫': shieldShare(W, m),
