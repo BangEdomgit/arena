@@ -36,6 +36,7 @@ const OFFT = { proj: 1, thread: 1, area: 1, lob: 1, touch: 1, cone: 1 };   // �
 const MODEN = { poke: '견제', sure: '확정타', cover: '덮기', big: '큰 한 방', throw: '던지기', repeat: '반복' };   // 공격 방식 (v2.12)
 // 고리 장부 (v2.22, rules/rings): 가슴 둘레에 고리를 그린다. 짓는 동안 밝아지고 쏘면 튕겨 퍼진다, 잔기술은 몸 가까이, 날기는 발밑 넓고 하얗게,
 // 자동 진은 혼자 빠르게 돌다 막을 때 번쩍, 빈 고리는 희미한 점선, 숨긴 시전은 드러남만큼 희미하게. 빛깔·모습은 data/rules/rings.json
+const RING_PX = 6;   // 화면에서 1 m가 이만큼(px) 넘으면 고리를 다 그린다 (v0.3)
 const RGP = (() => { const r = A.RULES.find(x => x.name === 'rings'); return r ? r.api.P : null; })();
 function drawRings(W, m, x, y, footY) {
   const L = m.mlog.rings, P = RGP; if (!L || !P) return;
@@ -110,10 +111,12 @@ function fixLayout() {
 /* ---------------- 돌리기 ---------------- */
 // 나란히 보는 장면 (v0.2): beside는 장면 객체이거나 예시 장면의 이름
 function besideOf(sc) { const b = sc.beside; return !b ? null : typeof b === 'string' ? D.scenes[b] || null : b; }
+// 고리 장부는 어느 판에서나 그린다 (v0.3): rings는 판에 닿지 않는 규칙이라(결과 지문 그대로) 보기만을 위해 켠다
+const ringed = sc => Object.assign({}, sc, { rules: Object.assign({}, sc.rules, { rings: true }) });
 function start() {
   if (S.W) return;
-  S.W = A.sceneWorld(S.scene, { record: true }); S.P = null; S.ev = [];
-  const b = besideOf(S.scene); S.W2 = b ? A.sceneWorld(b) : null;
+  S.W = A.sceneWorld(ringed(S.scene), { record: true }); S.P = null; S.ev = [];
+  const b = besideOf(S.scene); S.W2 = b ? A.sceneWorld(ringed(b), { record: true }) : null;
   S.ah = { W: A.sceneWorld(S.scene), ev: [], i: 0, last: -9 };   // 앞서 보기: 같은 장면을 따로 돌린다
 }
 function step() {
@@ -381,7 +384,9 @@ function draw0(W, vp) {
     if (m.st.guard > 0 && !dead) { ctx.strokeStyle = 'rgba(159,224,255,.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10.5, 0, 7); ctx.stroke(); }   // 막기를 켰다 (v2.14, rules/pace): 몸에 붙은 얇은 고리
     if (m.st.breath > 0 && !dead) { ctx.strokeStyle = 'rgba(200,235,210,.35)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.stroke(); }   // 숨을 마시는 중 (v2.11): 옅은 고리
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
-    if (m.mlog.rings && !dead && W.ms.length <= 12) drawRings(W, m, x, y, X(m.y));   // 고리 장부 (v2.22)
+    if (m.mlog.rings && !dead) { const sel = selM && m._ref && m._ref[0] === selM.s && m._ref[1] === selM.i, big = m.C >= 8 || sel || sc * cz >= RING_PX;   // 고리 장부 (v2.22): 대마법사와 고른 사람은 늘, 나머지는 화면에서 충분히 클 때만 (v0.3)
+      if (big) drawRings(W, m, x, y, X(m.y)); else { const e = m.mlog.rings.r.filter(g => !g.id).length; ctx.strokeStyle = 'rgba(233,228,216,.35)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(x, y, 10.5, 0, 7); ctx.stroke();
+        if (e) { ctx.font = '' + F(8) + 'px system-ui'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(233,228,216,.6)'; ctx.fillText('○' + e, x + 9, y - 8); } } }   // 멀면 고리 대신 빈 고리 수만 얇게
     else if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     const cs = m.cast || m.chan;
     if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28);

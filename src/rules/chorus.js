@@ -12,7 +12,7 @@ const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const ST = new WeakMap(), BIG = new WeakMap();   // 마법 → [N마다 넓힌 사본] (앞소리꾼의 큰 마법)
 const bigOf = (s, n) => { let a = BIG.get(s); if (!a) BIG.set(s, a = []); return a[n] || (a[n] = Object.assign({}, s, { r: s.r * Math.sqrt(n) })); };
-function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { of: new Map(), cd: new Map(), groups: [], st: { formed: 0, broke: 0, onT: 0, leadCasts: 0, leadDmg: 0, maxN: 0 } }); return s; }
+function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { of: new Map(), cd: new Map(), groups: [], st: { formed: 0, broke: 0, onT: 0, leadCasts: 0, leadDmg: 0, maxN: 0, good: 0 } }); return s; }
 const limitOf = m => { for (const [c, n] of P.limit) if (m.C >= c) return n; return 0; };
 const able = (W, m, S) => m.hp > 0 && !m.flee && (m.tac.squad || m.tac.chorus) && limitOf(m) > 1 && !(m.st.stun > 0) && !((S.cd.get(m) || -9) > W.t);
 function update(X, W) {
@@ -33,10 +33,10 @@ function update(X, W) {
       const l2 = limitOf(q); if (l2 < lim) { if (ms.length >= l2) continue; lim = l2; } ms.push(q); }
     if (ms.length < 2) continue;
     let lead = ms[0]; for (const q of ms) if (q.C > lead.C) lead = q;
-    const g = { ms, n: ms.length, lead, t0: W.t, on: false }; for (const q of ms) used.add(q); now.push(g);
+    const g = { ms, n: ms.length, lead, t0: W.t, on: false, onT: 0, good: false }; for (const q of ms) used.add(q); now.push(g);
   }
   // 붙어 있던 무리에 사람이 더해지거나 빠지면 다시 맞춘다 (위에서 새 무리가 된다)
-  S.of.clear(); for (const g of now) { if (!g.on && W.t - g.t0 >= P.sync) { g.on = true; S.st.formed++; } if (g.n > S.st.maxN && g.on) S.st.maxN = g.n; for (const m of g.ms) S.of.set(m, g); if (g.on) S.st.onT += P.every * g.n; }
+  S.of.clear(); for (const g of now) { if (!g.on && W.t - g.t0 >= P.sync) { g.on = true; g.onT = W.t; S.st.formed++; } if (g.on && !g.good && g.n >= P.goodN && W.t - g.onT > P.goodT) { g.good = true; S.st.good++; } if (g.n > S.st.maxN && g.on) S.st.maxN = g.n; for (const m of g.ms) S.of.set(m, g); if (g.on) S.st.onT += P.every * g.n; }   // 오래 선 합창 (v2.29 지표: goodN 넘게 goodT s 넘게)
   S.groups = now;
 }
 const of = (W, m) => { const S = ST.get(W); if (!S) return null; const g = S.of.get(m); return g && g.on ? g : null; };

@@ -158,8 +158,8 @@ function run() {
   ok('합창·중간의 읽기 (v2.27, SPEC 50·51장): 평범은 합창 못 하고 중간 3·상위 6까지, 맞춘 무리는 선명도 × √N, 중간은 예비동작을 늦게 읽는다', () => {
     const CH = require('../../src/rules/chorus').api, SD = require('../../src/rules/steady').api;
     assert.strictEqual(CH.limitOf({ C: 1 }), 0); assert.strictEqual(CH.limitOf({ C: 2.5 }), 3); assert.strictEqual(CH.limitOf({ C: 5 }), 6);
-    const sc = { seed: 1, width: 300, height: 60, rules: { profile: '지금', chorus: true, saltRing: false }, sides: [{ mages: [{ tier: '대마법사', x: 290, y: 30 }] }, { mages: [0, 1, 2, 3].map(i => ({ tier: '상위', tac: { chorus: 1 }, x: 10 + i * 2, y: 30 })) }] };
-    const W = A.sceneWorld(sc), q = W.ms[1], st = n => { for (let i = 0; i < n; i++) { W.ms[0].st.stun = 1; for (const m of W.ms) m.x = m === W.ms[0] ? 290 : 10 + 2 * W.ms.indexOf(m); A.stepWorld(W); } };
+    const sc = { seed: 1, width: 300, height: 60, rules: { profile: '지금', chorus: true, saltRing: false }, sides: [{ mages: [{ tier: '대마법사', x: 290, y: 30 }] }, { mages: [0, 1, 2, 3].map(i => ({ tier: '상위', tac: { chorus: 1 }, x: 10 + i * 1.5, y: 30 })) }] };
+    const W = A.sceneWorld(sc), q = W.ms[1], st = n => { for (let i = 0; i < n; i++) { W.ms[0].st.stun = 1; for (const m of W.ms) { m.x = m === W.ms[0] ? 290 : 10 + 1.5 * W.ms.indexOf(m); m.y = 30; } A.stepWorld(W); } };
     st(20); assert.strictEqual(CH.of(W, q), null, '맞추는 데 시간이 든다');
     st(130); const g = CH.of(W, q); assert.ok(g && g.n === 4, '넷이 맞췄다 ' + (g && g.n));
     const C = require('../../src/core'); assert.ok(Math.abs(C.sigOf(W, q) / Math.pow(q.C * 2, 2.5) - 1) < 0.2 || q.fat > 0, '선명도 × √4');

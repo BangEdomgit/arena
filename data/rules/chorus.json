@@ -1,7 +1,9 @@
 {
  "desc": "합창 (rules.chorus, v2.27, SPEC 50장)",
  "every": 0.25,
- "R": 10,
+ "R": 6,
+ "goodN": 3,
+ "goodT": 3,
  "sync": 1.5,
  "cd": 2,
  "limit": [[4, 6], [2, 3]],
