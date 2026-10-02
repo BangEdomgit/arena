@@ -24,7 +24,8 @@ function notice(W, v, e, d) {
 function make(s, z, f, v, h) {
   const t = Object.assign({}, s), E = energy(s, z, f, v), d = f * (h ? P.hide.pow : 1);
   switch (s.t) {
-    case 'proj': t.m = (s.m || 0) * z * z * z * d; t.v = s.v * v; t.rad = (s.rad || 0.1) * z; if (s.hit && (s.hit.dmg || s.hit.flat)) { t.hit = Object.assign({}, s.hit); const k = pow(z * z * z * d * v * v, 0.75); if (t.hit.dmg) t.hit.dmg *= k; if (t.hit.flat) t.hit.flat *= k; } break;
+    case 'proj': t.m = (s.m || 0) * z * z * z * d; t.v = s.v * v; t.rad = (s.rad || 0.1) * z; if (s.hit && (s.hit.dmg || s.hit.flat)) { t.hit = Object.assign({}, s.hit);
+      const k = pow(z * z * z * d * v * v, 0.75); if (t.hit.dmg) t.hit.dmg *= k; if (t.hit.flat) t.hit.flat *= k; } break;
     case 'thread': t.tw = z; t.E = s.E * d; break;
     case 'area': t.r = s.r * z; t.dmg = s.dmg * d; t.delay = s.delay / v; break;
     case 'lob': t.r = s.r * z; t.dmg = s.dmg * d; t.flight = s.flight / v; break;
@@ -33,6 +34,19 @@ function make(s, z, f, v, h) {
   }
   t.cost = s.cost * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1);   // 숨기면 고리를 억누르느라 머리가 더 든다 (v2.20)   // 머리 피로는 풀 때 cost로 센다 (당은 짓기 시작할 때 이미 냈다)
   return t;
+}
+// 손잡이 조합 하나의 값 (판단, commit이 부른다). 고르는 동안 같은 값은 TV에 모아 두고 다시 쓴다 (v2.23.1: 판단마다 새 함수를 만들지 않는다)
+const TV = { s: null, m: null, best: null, T0: 0, ext: 0, sees: false, lock: 0, vl: 0, reach: 0, gR: 0, hR: 0, d: 0 };
+function valueOf(z, f, v, h) {
+  const s = TV.s, m = TV.m, best = TV.best, T0 = TV.T0, ext = TV.ext, sees = TV.sees, lock = TV.lock, vl = TV.vl, reach = TV.reach, gR = TV.gR, hR = TV.hR, d = TV.d;
+  const E = energy(s, z, f, v), Tc = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (h ? P.hide.cast : 1) + ext / v;
+  const glu = best.cost * f; if (glu - best.cost > m.glu) return -1e9;
+  const heat = s.cost * 1.6 * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1); if (m.fat + heat > P.heatMax && E > 1) return -1e9;
+  const land = s.t === 'area' ? s.delay / v : s.t === 'lob' ? s.flight / v : s.t === 'proj' ? d / (s.v * v) : 0, t = Tc + land;
+  const seen = h || !sees ? land : t, need = lock >= t ? 0.3 : vl * seen * 0.5 + 0.3;
+  const ph = s.t === 'wall' ? 1 : Math.min(1, reach * z / need), D = (s.t === 'thread' ? pow(f, 0.55) : s.t === 'proj' ? pow(E, 0.75) : s.t === 'wall' ? pow(z * f, 0.5) : f) * (h ? P.hide.pow : 1);
+  const tr = (glu - best.cost) / (gR > 0.1 ? gR : 0.1) + (heat - s.cost * 1.6) / (hR > 0.1 ? hR : 0.1);   // 더 쓴 당·머리가 돌아오기까지 (덜 쓰면 그만큼 번다)
+  return ph * D / Math.max(0.5 * (t + 0.25), t + 0.25 + tr) - P.heatW * Math.max(0, m.fat + heat - 60);
 }
 module.exports = {
   name: 'tune', switch: 'tune', api: { P, energy, make, keyOf, notice },
@@ -60,20 +74,13 @@ module.exports = {
         let hR = 4; const hf = W.H.fatRecover; for (let i = 0; i < hf.length; i++) hR = hf[i](W, m, hR);
         const sees = e && e.tac.readCast;   // 숨김은 상대가 예비동작을 읽을 때만 값이 있다
         let bv = -1e9, bz = 1, bf = 1, bvv = 1, bh = false;
-        const value = (z, f, v, h) => {
-          const E = energy(s, z, f, v), Tc = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (h ? P.hide.cast : 1) + ext / v;
-          const glu = best.cost * f; if (glu - best.cost > m.glu) return -1e9;
-          const heat = s.cost * 1.6 * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1); if (m.fat + heat > P.heatMax && E > 1) return -1e9;
-          const land = s.t === 'area' ? s.delay / v : s.t === 'lob' ? s.flight / v : s.t === 'proj' ? d / (s.v * v) : 0, t = Tc + land;
-          const seen = h || !sees ? land : t, need = lock >= t ? 0.3 : vl * seen * 0.5 + 0.3;
-          const ph = s.t === 'wall' ? 1 : Math.min(1, reach * z / need), D = (s.t === 'thread' ? pow(f, 0.55) : s.t === 'proj' ? pow(E, 0.75) : s.t === 'wall' ? pow(z * f, 0.5) : f) * (h ? P.hide.pow : 1);
-          const tr = (glu - best.cost) / (gR > 0.1 ? gR : 0.1) + (heat - s.cost * 1.6) / (hR > 0.1 ? hR : 0.1);   // 더 쓴 당·머리가 돌아오기까지 (덜 쓰면 그만큼 번다)
-          return ph * D / Math.max(0.5 * (t + 0.25), t + 0.25 + tr) - P.heatW * Math.max(0, m.fat + heat - 60);
-        };
+        TV.s = s; TV.m = m; TV.best = best; TV.T0 = T0; TV.ext = ext; TV.sees = sees; TV.lock = lock; TV.vl = vl; TV.reach = reach; TV.gR = gR; TV.hR = hR; TV.d = d; const value = valueOf;
         for (const iz of AL) { if (iz < lo || iz > hi) continue; for (const iff of AL) { if (iff < lo || iff > hi) continue; for (const iv of AL) { if (iv > 2) continue;
-          for (let h = 0; h < (L >= P.hideFrom ? 2 : 1); h++) { const x = value(Z[iz], F[iff], V[iv], h === 1); if (x > bv + 1e-9) { bv = x; bz = Z[iz]; bf = F[iff]; bvv = V[iv]; bh = h === 1; } } } } }
+          for (let h = 0; h < (L >= P.hideFrom ? 2 : 1); h++) { const x = value(Z[iz], F[iff], V[iv], h === 1); if (x > bv + 1e-9) { bv = x; bz = Z[iz]; bf = F[iff]; bvv = V[iv]; bh = h === 1;
+              } } } } }
         // 전설: 속도만 단계 사이를 잘라 쓴다 (확정 순간에 딱 맞게). 크기·화력은 단계로 (v2.20)
-        if (L >= 5 && s.t !== 'wall') { const q = P.q; for (let v = V[0]; v <= V[2] + 1e-9; v += q) { const vq = Math.round(v / q) * q, x = value(bz, bf, vq, bh); if (x > bv + 1e-9) { bv = x; bvv = vq; } } }
+        if (L >= 5 && s.t !== 'wall') { const q = P.q; for (let v = V[0]; v <= V[2] + 1e-9; v += q) { const vq = Math.round(v / q) * q, x = value(bz, bf, vq, bh); if (x > bv + 1e-9) { bv = x;
+              bvv = vq; } } }
         if (bz === 1 && bf === 1 && bvv === 1 && !bh) return;
         const E = energy(s, bz, bf, bvv);
         cast.T = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (bh ? P.hide.cast : 1) + ext / bvv;

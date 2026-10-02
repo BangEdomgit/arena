@@ -5,10 +5,13 @@
 const R = require('../rules'), U = require('./util');
 const BRN = new Map(), BT = {}; let btVer = -1;
 // 훅 모음: 이름마다 배열 하나 (리터럴이라 모양이 늘 같다). 이름은 rules/index.js의 BRAIN_HOOKS
-function emptyBH() { return { aim: [], read: [], hideCast: [], steer: [], avoid: [], empty: [], circles: [], react: [], cancel: [], rest: [], prep: [], value: [], valueRisk: [], valueMid: [], valueLate: [], commit: [], castTime: [], phase: [], bound: [] }; }
+function emptyBH() { return { aim: [], read: [], hideCast: [], steer: [], avoid: [], empty: [], circles: [], react: [], cancel: [], rest: [], prep: [], value: [], valueRisk: [], valueMid: [], valueLate: [], commit: [], castTime: [], phase: [], bound: [] };
+  }
+// 규칙의 두뇌 훅이 받는 것: 두뇌 도구(util) + 기술의 공용 도구 B.lib (v2.23.1: 규칙은 두뇌 파일을 require하지 않는다)
+let BL_ = null; const BL = () => BL_ || (BL_ = Object.assign({}, U, { lib: require('./lib') }));
 function brainOf(r) {
   let b = BRN.get(r); if (b) return b;
-  b = r.brain(U); const ok = emptyBH(); for (const k in b) if (!(k in ok)) throw new Error(r.name + ': 없는 두뇌 훅 ' + k + ' (' + R.BRAIN_HOOKS.join(', ') + ')');
+  b = r.brain(BL()); const ok = emptyBH(); for (const k in b) if (!(k in ok)) throw new Error(r.name + ': 없는 두뇌 훅 ' + k + ' (' + R.BRAIN_HOOKS.join(', ') + ')');
   BRN.set(r, b); return b;
 }
 function hooks(W) {

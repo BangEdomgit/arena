@@ -1,13 +1,11 @@
 {
- "v": "2.23.0",
+ "v": "2.23.1",
  "name": "대마법사 전설 대 대가: 날기 끊기와 진지 (진지 덱, 날기 끊기·진지·함정 연쇄, 200×150)",
  "seed": 3,
  "width": 200,
  "height": 150,
  "rules": {
-  "flightCut": true,
-  "fort": true,
-  "trapChain": true
+  "profile": "진지"
  },
  "sides": [
   {

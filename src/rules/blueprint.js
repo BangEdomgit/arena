@@ -14,7 +14,8 @@ const { hyp, sin, cos } = require('../math');
 const BPD = require('../../data/blueprints.json'), P = require('../../data/rules/blueprint.json');
 const BK = require('../../data/rules/bulwark.json').block;
 const { rateOf } = require('./bulwark').api, { saltR } = require('./saltRing').api;
-const NAMES = Object.keys(BPD.blueprints), D2R = Math.PI / 180; let TL = null;   // 덫길의 칸 (두뇌 기술, 처음 부를 때)
+const NAMES = Object.keys(BPD.blueprints), D2R = Math.PI / 180;
+const { crowded } = require('../brain/lib/traps');   // 덫길의 칸 (v2.23.1 공용: 수학·데이터만이라 순환이 없다)
 // 구조물에 쓸 마법 (책에서): 함정(안 보이는 것을 바라면 안 보이는 것), 지대
 function spellFor(W, m, it) {
   const S = W.spells; let any = null;
@@ -44,8 +45,10 @@ function plan(W, m, name, ax, ay, ux, uy) {
   }
   // 자리 맞추기: 싸움터 안(1.5 m 여유), 소금 원 안(2 m 여유)으로 민다
   let sx = 0, sy = 0; const lo = 1.5;
-  for (const o of out) { if (o.x + sx < lo) sx = lo - o.x; if (o.x + sx > W.width - lo) sx = W.width - lo - o.x; if (o.y + sy < lo) sy = lo - o.y; if (o.y + sy > W.height - lo) sy = W.height - lo - o.y; }
-  if (W.rules.saltRing) { const R = saltR(W) - 2, cx = W.width / 2, cy = W.height / 2; let worst = 0, wx = 0, wy = 0; for (const o of out) { const dx = o.x + sx - cx, dy = o.y + sy - cy, d = hyp(dx, dy); if (d - R > worst) { worst = d - R; wx = dx / d; wy = dy / d; } } sx -= wx * worst; sy -= wy * worst; }
+  for (const o of out) { if (o.x + sx < lo) sx = lo - o.x; if (o.x + sx > W.width - lo) sx = W.width - lo - o.x; if (o.y + sy < lo) sy = lo - o.y;
+    if (o.y + sy > W.height - lo) sy = W.height - lo - o.y; }
+  if (W.rules.saltRing) { const R = saltR(W) - 2, cx = W.width / 2, cy = W.height / 2; let worst = 0, wx = 0, wy = 0;
+    for (const o of out) { const dx = o.x + sx - cx, dy = o.y + sy - cy, d = hyp(dx, dy); if (d - R > worst) { worst = d - R; wx = dx / d; wy = dy / d; } } sx -= wx * worst; sy -= wy * worst; }
   for (const o of out) { o.x += sx; o.y += sy; }
   const L = lanesOf(m, out.length), free = new Array(L).fill(0); let T = 0;
   for (const o of out) { let j = 0; for (let i = 1; i < L; i++) if (free[i] < free[j]) j = i; o.s0 = free[j]; o.s1 = free[j] + durOf(W, m, o.it, o.s); free[j] = o.s1; if (o.s1 > T) T = o.s1; }
@@ -53,21 +56,23 @@ function plan(W, m, name, ax, ay, ux, uy) {
 }
 // 짓기: 청사진 시전의 준비(마법의 예비동작) 뒤 차례표대로. all이면 남은 것을 모두
 // 함정·지대도 풀 때 머리가 넘쳐 굳거나 고르지 않은 파도에 오를 것이면 건너뛴다 (v2.6, 스스로 죽지 않기: tac.survive, 선명도 5 이상, brain/util의 heatOver와 같은 문턱)
-function hot(W, m, cost) { if (!m.tac.survive || m.C < 5 || !W.rules.fatigue) return false; const f = m.fat + cost * 1.6; if (W.rules.wave) { if (m.type === '이단') return false; if (m.wave || (m.tac.waveChoose && m.waveWant)) return f > 165; } return f > 97; }
+function hot(W, m, cost) { if (!m.tac.survive || m.C < 5 || !W.rules.fatigue) return false; const f = m.fat + cost * 1.6; if (W.rules.wave) { if (m.type === '이단') return false;
+    if (m.wave || (m.tac.waveChoose && m.waveWant)) return f > 165; } return f > 97; }
 function step(W, m, c, all, X) {
   const b = c.bp, tc = c.t - c.s.cast, e = c.tgt;
   for (const o of b.items) {
     if (o.on === 2 || (!all && tc < o.s0)) continue;
     if (!o.on) {   // 시작: 당·머리 피로, 땅
       const cost = o.s ? o.s.cost : o.it.cost;
-      if (o.it.cast === 'trap' && m.tac.trapLine && (TL || (TL = require('../brain/techniques/trapline'))).crowded(W, m, o.x, o.y)) { o.on = 2; continue; }   // 꽉 찬 칸엔 덫을 놓지 않는다 (덫길, v2.13)
+      if (o.it.cast === 'trap' && m.tac.trapLine && crowded(W, m, o.x, o.y)) { o.on = 2; continue; }   // 꽉 찬 칸엔 덫을 놓지 않는다 (덫길, v2.13)
       if (m.glu < cost || (o.it.build && (m.z >= 1 || m.fat + cost * 1.6 > 100)) || (!o.it.build && hot(W, m, cost)) || (o.it.build && m.tac.sharp && m.C >= 5 && e && e.z > 2)) { o.on = 2; continue; }   // 날카롭게 (v2.7): 높이 뜬 과녁에겐 벽·기둥이 가리지 않는다
       m.glu -= cost; if (o.it.build && W.rules.fatigue) m.fat += cost * 1.6; o.on = 1;
     }
     const k = all || tc >= o.s1 ? 1 : (tc - o.s0) / ((o.s1 - o.s0) || 1);
     if (o.it.build === 'earth') {   // 블록을 하나씩
       const n = o.it.blocks, upto = Math.floor(k * n + 1e-9), qx = -o.fy, qy = o.fx, vol = BK.gap * BK.h * o.it.th; if (o.grp < 0) o.grp = W._grp++;
-      while (o.placed < upto) { const off = (o.placed - (n - 1) / 2) * BK.gap; X.addWall(W, { x: o.x + qx * off, y: o.y + qy * off, r: BK.r, hp: BK.hpM3 * vol, t: 1e9, own: -1, mat: 'earth', thick: o.it.th, grp: o.grp, mk: m.id }); o.placed++; }
+      while (o.placed < upto) { const off = (o.placed - (n - 1) / 2) * BK.gap;
+        X.addWall(W, { x: o.x + qx * off, y: o.y + qy * off, r: BK.r, hp: BK.hpM3 * vol, t: 1e9, own: -1, mat: 'earth', thick: o.it.th, grp: o.grp, mk: m.id }); o.placed++; }
       if (o.placed >= n) { o.on = 2; b.built++; }
     } else if (k >= 1) {
       if (o.it.build === 'lime') X.addWall(W, { x: o.x, y: o.y, r: o.it.r, hp: o.it.hp * (1 + (m.C - 1) * 0.5), t: 1e9, own: -1, mat: 'lime', thick: o.it.r * 2, grp: W._grp++, mk: m.id });
@@ -79,10 +84,13 @@ function step(W, m, c, all, X) {
 }
 // 두뇌 (생각 겹): 판단 수준, 특징(0~1), 고르기, 땅이 드는가
 const lvOf = m => (m.C >= 5 && m.tac.blueprint) || 0;
-function feats(m, K) { const e = K.e; return { base: 1, eFly: e.z >= 1 ? 1 : 0, eGround: e.z >= 1 ? 0 : 1, approach: Math.max(0, Math.min(1, K.vt / 5)), far: Math.max(0, Math.min(1, (K.d - 20) / 30)), tired: Math.max(0, Math.min(1, (m.fat - 60) / 40)), hurt: 1 - m.hp / m.hpMax }; }
+function feats(m, K) { const e = K.e;
+  return { base: 1, eFly: e.z >= 1 ? 1 : 0, eGround: e.z >= 1 ? 0 : 1, approach: Math.max(0, Math.min(1, K.vt / 5)), far: Math.max(0, Math.min(1, (K.d - 20) / 30)), tired: Math.max(0, Math.min(1, (m.fat - 60) / 40)), hurt: 1 - m.hp / m.hpMax };
+  }
 function pick(W, m, K) {
   const lv = lvOf(m); let best = null, bs = -1; const F = lv >= 2 ? feats(m, K) : null;
-  for (const n of NAMES) { const bp = BPD.blueprints[n]; if (!can(W, m, bp) || m.glu < costOf(W, m, bp)) continue; if (lv < 2) return n; let s = 0; for (const k in bp.score) s += bp.score[k] * F[k]; if (s > bs) { bs = s; best = n; } }   // 당이 모자라면 고르지 않는다
+  for (const n of NAMES) { const bp = BPD.blueprints[n]; if (!can(W, m, bp) || m.glu < costOf(W, m, bp)) continue; if (lv < 2) return n; let s = 0; for (const k in bp.score) s += bp.score[k] * F[k];
+    if (s > bs) { bs = s; best = n; } }   // 당이 모자라면 고르지 않는다
   return best;
 }
 const needGround = n => BPD.blueprints[n].items.some(([k]) => BPD.items[k].build);
@@ -98,7 +106,8 @@ module.exports = {
   engine: X => ({ mageStep(W, m) { const c = m.cast; if (c && c.bp && c.s.t === 'blueprint' && c.t >= c.s.cast) step(W, m, c, false, X); } }),
   types: X => ({
     // 다 지었다: 남은 반올림 몫까지 짓고 센다
-    blueprint(W, m, c) { const b = c.bp; if (!b) return; step(W, m, c, true, X); const f = m.fort; f.bpN++; f.bpItems += b.built; f.bpT += c.T; f.bpName[b.name] = (f.bpName[b.name] || 0) + 1; f.bpLast = W.t; },
+    blueprint(W, m, c) { const b = c.bp; if (!b) return; step(W, m, c, true, X); const f = m.fort; f.bpN++; f.bpItems += b.built; f.bpT += c.T; f.bpName[b.name] = (f.bpName[b.name] || 0) + 1;
+      f.bpLast = W.t; },
   }),
   brainTypes: B => ({ blueprint(W, m, K, o) { o.v = 0; } }),   // 값은 두뇌 훅이
   brain: B => {

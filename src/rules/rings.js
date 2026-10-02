@@ -6,6 +6,7 @@
  *   고리 n개(서클 규칙이 켜지면 m.circles, 아니면 1). 고리 하나 = { k 상태, n 마법 이름, el 원소, p 진행 0~1, v 드러남, f 쏜 때·막은 때 }
  *   상태: 짓기(첫 칸 'A'·두 번째 칸 'B') / 붙잡음(hold: 두 번째 칸을 다 짓고 쥐고 있음) / 잔기술(종류) / 날기 / 공기막 / 버팀 벽 / 자동 진 / 몸 / 빈
  *   차례: 엔진이 서클을 세는 일 먼저, 보이기만 하는 일(자동 진, 몸)은 남은 고리에. 앉은 고리는 그 일이 끝날 때까지 자리를 지킨다(안쪽부터 채운다)
+ *   녹화하거나(W.rec: 샌드박스) 지표를 재는(W._wt: metrics/watch) 판에서만 읽는다(v2.23.1). 지표는 watch가 처음 불린 걸음부터
  *   기록(지표, 보기만): 고리·초(tot), 빈 고리·초(emp), 꽉 찬 초(full), 상태별 고리·초(by), 넘친 초(over: 일이 고리보다 많았던 때) */
 const P = require('../../data/rules/rings.json');
 const KEYS = ['날기', '공기막', '잔기술', '버팀 벽', '짓기', '붙잡음', '자동 진', '몸', '빈'];
@@ -41,7 +42,8 @@ function read(W, m) {
   if (m.autoCd > L.au + 1e-9) for (const g of R) if (g.id === 'auto') { g.f = W.t; g.fk = 'flash'; }
   L.au = m.autoCd;
   // 끝난 일의 고리를 비운다
-  for (const g of R) { if (!g.id) continue; let keep = false; for (let i = 0; i < w.length; i += 6) if (w[i] === g.id) { keep = true; break; } if (!keep) { g.id = ''; g.k = '빈'; g.n = ''; g.p = 0; g.v = 1; } }
+  for (const g of R) { if (!g.id) continue; let keep = false; for (let i = 0; i < w.length; i += 6) if (w[i] === g.id) { keep = true; break; } if (!keep) { g.id = ''; g.k = '빈'; g.n = ''; g.p = 0;
+      g.v = 1; } }
   // 일을 고리에 (있던 자리 그대로, 새 일은 안쪽 빈 고리에). 버팀 벽은 여럿일 수 있어 같은 id를 차례로
   let over = 0;
   for (let i = 0; i < w.length; i += 6) {
@@ -65,5 +67,5 @@ function seen(m) {
 }
 module.exports = {
   name: 'rings', switch: 'rings', api: { P, KEYS, read, seen },
-  engine: X => ({ stepEnd(W) { for (const m of W.ms) if (m.hp > 0) read(W, m); } }),   // 걸음의 끝에서 (두뇌가 이 걸음에 시작한 시전까지)
+  engine: X => ({ stepEnd(W) { if (!W.rec && !W._wt) return; for (const m of W.ms) if (m.hp > 0) read(W, m); } }),   // 걸음의 끝에서 (두뇌가 이 걸음에 시작한 시전까지). 녹화(샌드박스)나 지표(metrics/watch)를 잴 때만 (v2.23.1: 매 걸음 3%)
 };

@@ -21,7 +21,6 @@
  * 기록 (m.op.log): 작전마다 고른 수·완수·시간, 강요하는 수와 그 뒤 상대가 길을 바꾼 수(대조: 다른 공격), 고른 자리의 성질(한쪽 사거리·엿보기·벗기기·퇴로) */
 const { hyp, atan2, sin, cos } = require('../math');
 const P = require('../../data/rules/tactics.json');
-let SH = null;   // 날카롭게의 벽 자리 (두뇌를 처음 부를 때 읽는다: 순환)
 const OPS = ['fort', 'attrit', 'press', 'herd', 'hunt', 'finish'];
 const DIRECT = { proj: 1, thread: 1, touch: 1, cone: 1 }, INDIRECT = { area: 1, lob: 1 }, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const TERR = { wall: 1, build: 1, trap: 1, cage: 1, blueprint: 1, topple: 1 };
@@ -38,11 +37,12 @@ module.exports = {
     },
   }),
   brain: B => {
-    const C = B.C, { inDist } = require('../brain/techniques/rhythm'), RC = new WeakMap(), BPA = () => { const r = C.RULES.find(x => x.name === 'blueprint'); return r && r.api; };
+    const C = B.C, inDist = B.lib.inDist, RC = new WeakMap(), BPA = () => { const r = C.RULES.find(x => x.name === 'blueprint'); return r && r.api; };
     // 사거리: 직사(투사체·실·몸·앞으로 뿜기)와 곡사·구름의 가장 긴 것 (덱마다 한 번)
     function ranges(m, D) {
       let r = RC.get(D); if (r) return r; r = { dir: 0, ind: 0 };
-      for (let i = 0; i < D.sp.length; i++) { const s = D.sp[i], R = s.t === 'cone' ? s.L * C.sizeOf(m, s) : s.t === 'touch' ? 1.3 : s.home ? 12 : D.R[i]; if (DIRECT[s.t] && R > r.dir) r.dir = R; if (INDIRECT[s.t] && R > r.ind) r.ind = R; }
+      for (let i = 0; i < D.sp.length; i++) { const s = D.sp[i], R = s.t === 'cone' ? s.L * C.sizeOf(m, s) : s.t === 'touch' ? 1.3 : s.home ? 12 : D.R[i]; if (DIRECT[s.t] && R > r.dir) r.dir = R;
+        if (INDIRECT[s.t] && R > r.ind) r.ind = R; }
       RC.set(D, r); return r;
     }
     const weak = (W, e) => e.st.stun > 0 || e.st.root > 0 || e.crash > 0 || (e.emptyT > W.t) || (e.fat > 92 && !e.wave);
@@ -109,7 +109,8 @@ module.exports = {
         if (op !== 'press' && op !== 'finish' && dq > Re.dir + 1 && dq < Rm.ind - 1) { s += G.oneSide * (op === 'attrit' ? 1.5 : 1); kind |= 1; }
         if (op === 'attrit' && dq < Re.dir) s -= G.exposed;
         // 엿보기 각: 반 걸음(1.5 m) 옆 바위 쪽으로 들어가면 숨는다
-        if (los) for (const o of W.obs) { const od = hyp(o.x - x, o.y - y); if (od < 3 && od > 0.1) { const sx = x + (o.x - x) / od * 1.5, sy = y + (o.y - y) / od * 1.5; if (C.blocked(W, sx, sy, e.x, e.y, 0)) { s += G.peek; kind |= 2; break; } } }
+        if (los) for (const o of W.obs) { const od = hyp(o.x - x, o.y - y); if (od < 3 && od > 0.1) { const sx = x + (o.x - x) / od * 1.5, sy = y + (o.y - y) / od * 1.5;
+            if (C.blocked(W, sx, sy, e.x, e.y, 0)) { s += G.peek; kind |= 2; break; } } }
         if (!losNow && los) { s += G.strip * (op === 'hunt' ? 1.5 : 1); kind |= 4; }
         // 퇴로 자르기: 상대에서 퇴로 쪽 30° 안, 퇴로보다 가깝게
         if ((op === 'herd' || op === 'press') && dq < rd && ((x - e.x) * (rx - e.x) + (y - e.y) * (ry - e.y)) / (dq * rd || 1) > 0.866) { s += G.cut; kind |= 8; }
@@ -129,7 +130,8 @@ module.exports = {
       if (s.t === 'area' && s.vis && e.z < 1 && !K.los && hyp(tx - e.x, ty - e.y) < 2) return P.force.hidden;          // 숨은 자리 위에 구름
       if (s.t === 'area' && s.kind === 'elec' && e.z >= 1 && hyp(tx - e.x, ty - e.y) < 3) return P.force.sky;            // 나는 상대 위에 번개 구름
       if (s.t === 'topple' && e.fort && e.fort.x === e.fort.x && hyp(tx - e.fort.x, ty - e.fort.y) < 12) return P.force.gate;   // 진지 입구에 벽 밀기
-      if (s.t === 'trap' && e.z < 1) { const [rx, ry] = retreatOf(W, e), l = hyp(rx - e.x, ry - e.y) || 1; if (hyp(tx - (e.x + (rx - e.x) / l * 3), ty - (e.y + (ry - e.y) / l * 3)) < 2) return P.force.path; }   // 퇴로에 함정
+      if (s.t === 'trap' && e.z < 1) { const [rx, ry] = retreatOf(W, e), l = hyp(rx - e.x, ry - e.y) || 1;
+        if (hyp(tx - (e.x + (rx - e.x) / l * 3), ty - (e.y + (ry - e.y) / l * 3)) < 2) return P.force.path; }   // 퇴로에 함정
       return 0;
     }
     return {
@@ -156,7 +158,7 @@ module.exports = {
       // 걸음: 고른 자리로, 상대 둘레를 돌아서 (둘레 방향 1, 반지름 방향 0.4)
       steer(W, m, K) {
         const O = m.op; if (!lvOf(m) || !O.cur || K.dodge || m.phase === 'build') return;
-        if ((SH || (SH = require('../brain/techniques/sharp'))).behind(W, m, K)) return;
+        if (B.lib.behind(W, m, K)) return;
         if (K.closeIn) return;   // 교전 유지(v2.13)가 다가가거나 쫓는 중: 둘레 자리로 돌지 않는다   // 세운 벽 뒤에 머문다 (날카롭게, v2.8)
         if (m.phase === 'out') {   // 빠지기: 곧장 물러나지 않고 상대 둘레로 돌며 벌린다 (나선)
           if (m.retreat || !P.spiral || lvOf(m) < P.circleLv) return;   // 무리 앞 물러나기는 그대로. 나선은 전설만

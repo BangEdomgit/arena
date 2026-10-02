@@ -14,7 +14,6 @@
 const { pow, hyp, clamp } = require('../math');
 const F = require('../../data/rules/flight.json');
 const { saltR } = require('./saltRing').api, SR = require('./saltRing').api;
-let SH = null;   // 날카롭게의 벽 자리 (두뇌를 처음 부를 때 읽는다: 순환)
 const { aOf } = require('./snap').api;   // 끊는 움직임 (v2.4): 옆·오르내림 가속의 바닥
 const G = F.g, M = F.mass, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, CU = F.cut;
 // 출력 (W). C^2.5는 선명도마다 한 번
@@ -25,7 +24,8 @@ function room(W, m, ux, uy) {
   let t = 1e9;
   if (ux > 0) t = Math.min(t, (W.width - m.x) / ux); else if (ux < 0) t = Math.min(t, m.x / -ux);
   if (uy > 0) t = Math.min(t, (W.height - m.y) / uy); else if (uy < 0) t = Math.min(t, m.y / -uy);
-  if (W.rules.saltRing) { const R = saltR(W), px = m.x - W.width / 2, py = m.y - W.height / 2, b = px * ux + py * uy, c = px * px + py * py - R * R, q = b * b - c; if (c < 0 && q >= 0) t = Math.min(t, -b + Math.sqrt(q)); }
+  if (W.rules.saltRing) { const R = saltR(W), px = m.x - W.width / 2, py = m.y - W.height / 2, b = px * ux + py * uy, c = px * px + py * py - R * R, q = b * b - c;
+    if (c < 0 && q >= 0) t = Math.min(t, -b + Math.sqrt(q)); }
   return t;
 }
 // 떨어지기 시작
@@ -67,17 +67,20 @@ const GROUND = s => s.t === 'trap' || (s.t === 'area' && !s.vis) || (s.t === 'zo
 function cushAt(z, vd, dive, lv) { const ad = (dive ? 1 + CU.dive : 1) * G, ac = (CU.cush - 1) * G; return (vd * vd + 2 * ad * z) / (2 * (ac + ad)) + CBR.margin[lv]; }
 const cushH = (m, lv) => cushAt(m.z, m.vz < 0 ? -m.vz : 0, m.cut.k === 5 && !m.cut.on, lv);
 // 적의 대공 지대(하늘 덮개, rules/fort)가 나나 과녁 위에 있나: 그 아래로는 내리꽂지 않는다 (굳으면 쿠션을 못 뿜는다)
-function antiAir(W, m, e) { for (const z of W.zones) if (z.k === 'sky' && z.src.side !== m.side && (hyp(z.x - e.x, z.y - e.y) < z.r + 2 || hyp(z.x - m.x, z.y - m.y) < z.r + 2)) return true; return false; }
+function antiAir(W, m, e) { for (const z of W.zones) if (z.k === 'sky' && z.src.side !== m.side && (hyp(z.x - e.x, z.y - e.y) < z.r + 2 || hyp(z.x - m.x, z.y - m.y) < z.r + 2)) return true;
+  return false; }
 function cutBrain(W, m, K, lv) {
   const T = m.tac, e = K.e;
   // 쿠션 높이: 떨어지는 중이면 판단 때마다 다시 잰다(대가부터). 회피로 떨어졌으면 3.5 m 아래에서 받아 잡는다
-  if (lv >= 2 && (m.fly === 3 || (m.fly === 2 && !(m.st.stun > 0)))) { let h = cushH(m, lv); if (m.fly === 3) { const c = m.cut.z0 - (m.cut.k === 4 ? CBR.catchS : CBR.catch); if (c > h) h = c; } m.cut.z = h; }
+  if (lv >= 2 && (m.fly === 3 || (m.fly === 2 && !(m.st.stun > 0)))) { let h = cushH(m, lv); if (m.fly === 3) { const c = m.cut.z0 - (m.cut.k === 4 ? CBR.catchS : CBR.catch); if (c > h) h = c;
+      } m.cut.z = h; }
   if (m.cut.cd > 0 || m.cut.k || m.fly > 1 || m.st.stun > 0 || m.st.root > 0) return;
   const read = T.readCast && !K.blindR;
   // 상급부터: 땅에서 발밑·함정·지대로 나를 노리는 수가 곧 풀리면 튀어오른다
   if (m.fly === 0) {
     if (!read) return;
-    for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && !c.unseen && c.tgt === m && GROUND(c.s) && c.T - c.t < CBR.hopRead) { m.cut.w = 3; CB.want = true; if (CB.fz < F.brain.zLow) CB.fz = F.brain.zLow; return; } }
+    for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && !c.unseen && c.tgt === m && GROUND(c.s) && c.T - c.t < CBR.hopRead) { m.cut.w = 3; CB.want = true;
+        if (CB.fz < F.brain.zLow) CB.fz = F.brain.zLow; return; } }
     return;
   }
   if (lv < 2) return;
@@ -91,15 +94,20 @@ function cutBrain(W, m, K, lv) {
     if (hyp(rx + rvx * t, ry + rvy * t) > CBR.miss || Math.abs(p.z + (p.vz || 0) * t - m.z) > 1.2) continue;
     tx = p.vx; ty = p.vy; how = 1; break;
   }
-  if (!how) for (const a of W.areas) { if (a.src.side === m.side || !a.vis || a.t > CBR.tca) continue; const px = m.x + m.vx * a.t - a.x, py = m.y + m.vy * a.t - a.y; if (hyp(px, py) < a.r + 0.5) { tx = -py; ty = px; how = 2; break; } }   // 구름: 가운데에서 먼 쪽으로
-  if (!how && lv >= 3 && T.flyFeint !== false && read) for (const q of K.foes) { const c = q.cast; if (c && c.tgt === m && (c.s.t === 'thread' || c.s.t === 'touch') && c.T - c.t < CBR.release) { tx = m.x - q.x; ty = m.y - q.y; how = 3; if (m._feC !== c) { m._feC = c; m.flog.hfeint++; } break; } }   // 실: 풀리기 직전 옆으로
+  if (!how) for (const a of W.areas) { if (a.src.side === m.side || !a.vis || a.t > CBR.tca) continue; const px = m.x + m.vx * a.t - a.x, py = m.y + m.vy * a.t - a.y;
+    if (hyp(px, py) < a.r + 0.5) { tx = -py; ty = px; how = 2; break; } }   // 구름: 가운데에서 먼 쪽으로
+  if (!how && lv >= 3 && T.flyFeint !== false && read) for (const q of K.foes) { const c = q.cast;
+    if (c && c.tgt === m && (c.s.t === 'thread' || c.s.t === 'touch') && c.T - c.t < CBR.release) { tx = m.x - q.x; ty = m.y - q.y; how = 3; if (m._feC !== c) { m._feC = c; m.flog.hfeint++; } break;
+      } }   // 실: 풀리기 직전 옆으로
   if (how) {
-    if (how === 1 && lv >= 3 && T.flyFeint !== false) { if (m.z >= 5) { m.cut.w = 5; const h = cushAt(m.z, 0, true, lv), c = m.z - CBR.catch; m.cut.z = h > c ? h : c; } else m.cut.w = 3; m.flog.hfeint++; }   // 높이 속이기: 겨눠진 높이에서 벗어난다
+    if (how === 1 && lv >= 3 && T.flyFeint !== false) { if (m.z >= 5) { m.cut.w = 5; const h = cushAt(m.z, 0, true, lv), c = m.z - CBR.catch; m.cut.z = h > c ? h : c; } else m.cut.w = 3;
+      m.flog.hfeint++; }   // 높이 속이기: 겨눠진 높이에서 벗어난다
     else if (how === 1 && m.z >= 5) { m.cut.w = 5; const h = cushAt(m.z, 0, true, lv), c = m.z - CBR.catch; m.cut.z = h > c ? h : c; }   // 높으면 내리꽂았다 받아 잡는다
     else if (how === 1 && v > 15) m.cut.w = 1;                                                        // 빠르면 급정지 (앞길 겨냥이 빗나간다)
     else {   // 옆 튀기 (가던 쪽에 가까운 옆)
       const l = hyp(tx, ty) || 1; let sx = -ty / l, sy = tx / l; if (how === 2) { sx = tx / l; sy = ty / l; } else if (sx * m.vx + sy * m.vy < 0) { sx = -sx; sy = -sy; }
-      if (W.rules.saltRing && SR.safeOn(m)) { const k = CU.side * G * CU.sideT * CU.sideT / 2 + 0.3; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) { sx = -sx; sy = -sy; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) return; } }   // 소금 원 밖으로 튀지 않는다 (v2.6)
+      if (W.rules.saltRing && SR.safeOn(m)) { const k = CU.side * G * CU.sideT * CU.sideT / 2 + 0.3; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) { sx = -sx;
+          sy = -sy; if (!SR.safeAt(W, m.x + sx * k + m.vx * CU.sideT, m.y + sy * k + m.vy * CU.sideT)) return; } }   // 소금 원 밖으로 튀지 않는다 (v2.6)
       m.cut.x = sx; m.cut.y = sy; m.cut.w = 2;
     }
     return;
@@ -144,14 +152,16 @@ module.exports = {
         if (m.fly === 3) { dropStep(W, m, hurt); return true; }   // 끊었다 (v2.3)
         if (m.fly === 2) {   // 떨어진다
           m.vz -= G * W.dt; m.z += m.vz * W.dt; m.flog.dz -= m.vz * W.dt; const k = 1 - 0.5 * W.dt; m.vx *= k; m.vy *= k; edge(W, m);
-          if (m.z <= 0) { m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.flog.falls++; hurt(W, m, m.fallZ * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun); m.cast = m.castB = m.chan = null; }
+          if (m.z <= 0) { m.z = 0; m.vz = 0; m.fly = 0; m.load = 0; m.flog.falls++; hurt(W, m, m.fallZ * F.fall, null, '추락', 'fall'); m.st.stun = Math.max(m.st.stun, F.fallStun);
+            m.cast = m.castB = m.chan = null; }
           return true;
         }
         const P = outP(m), want = m.flyWant && P >= F.minP && !(W.salt.length && X.onSalt(W, m.x, m.y)), fz = want ? clamp(m.fz, F.zMin, F.zMax) : 0;
         let v = hyp(m.vx, m.vy);
         // 오르내림 (목표 높이로). 튀어오르기는 위로 3 g (v2.3)
         if (m.cut.k === 3) m.vz += CU.hop * G * W.dt;
-        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax), va = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.vzAcc, aF(W, m)) : F.vzAcc; m.vz += clamp(vzT - m.vz, -va * W.dt, va * W.dt); }
+        else { const vzT = clamp((fz - m.z) * 2, -F.vzMax, F.vzMax), va = W.rules.snap && m.tac.footwork >= 2 ? Math.max(F.vzAcc, aF(W, m)) : F.vzAcc; m.vz += clamp(vzT - m.vz, -va * W.dt, va * W.dt);
+          }
         const r = v / F.liftV, lift = F.lift / (1 + r * r) * clamp(1 + m.vz / F.glideVz, 0, 1), drag = F.drag * v * v * v;
         let spare = P - lift - drag, climb = 0;
         if (m.vz > 0) {   // 오르기: 남는 힘으로, 모자라는 몫은 속도에서 (높이는 속도의 저금통)
@@ -215,8 +225,11 @@ module.exports = {
         for (const a of W.areas) if (a.src.side !== m.side && hyp(a.x - m.x, a.y - m.y) < a.r + Bn.danger) { if (!a.vis) ground++; else if (a.s.kind === 'elec') elec++; }
         for (const t of W.traps) if (t.src.side !== m.side && t.seen.has(m.id) && hyp(t.x - m.x, t.y - m.y) < Bn.danger) ground++;
         for (const z of W.zones) if (z.src.side !== m.side && z.dps && hyp(z.x - m.x, z.y - m.y) < (z.r || 2) + Bn.danger) ground++;
-        let near = 0, guns = 0, gunsFar = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++; if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++; if (q._gun && dq < Bn.gunFar) gunsFar++; } if (near >= 3) ground++;
-        if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && !c.unseen && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
+        let near = 0, guns = 0, gunsFar = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++;
+          if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++;
+          if (q._gun && dq < Bn.gunFar) gunsFar++; } if (near >= 3) ground++;
+        if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast;
+          if (c && !c.unseen && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
         const ec = T.readCast ? e.cast : null, eBig = !!(ec && ec.s.big), myBig = !!(m.cast && m.cast.s.big), far = K.stance === 'kite' || K.stance === 'breakout';
         let want = true, fv = F.corner, fz = Bn.z;
         if (L <= 1) { want = K.d > Bn.near; fv = F.vMax; }   // 초보: 걷거나 전속
@@ -240,7 +253,8 @@ module.exports = {
         // 브레이크를 잡을 거리가 모자라면 늦춘다 (끝·소금 선)
         const v = hyp(m.vx, m.vy); if (v > 1) { const d = room(W, m, m.vx / v, m.vy / v) - 2, cap = Math.sqrt(2 * F.fwdG * G * (d > 0 ? d : 0)); if (fv > cap) fv = cap < Bn.slow ? Bn.slow : cap; }
         // 제 구름이 터질 때 있을 자리를 미리 비킨다 (날면 관성이 커서 지금 자리만 보면 늦다, v2.0 둘째)
-        if (m.fly === 1) for (const a of W.areas) { if (a.src !== m) continue; const px = m.x + m.vx * a.t, py = m.y + m.vy * a.t, dx = px - a.x, dy = py - a.y, l = hyp(dx, dy); if (l < a.r + Bn.ownGap) { K.vx = (dx || 0.1) / (l || 1) * 3; K.vy = (dy || 0.1) / (l || 1) * 3; if (fv < F.corner) fv = F.corner; } }
+        if (m.fly === 1) for (const a of W.areas) { if (a.src !== m) continue; const px = m.x + m.vx * a.t, py = m.y + m.vy * a.t, dx = px - a.x, dy = py - a.y, l = hyp(dx, dy);
+          if (l < a.r + Bn.ownGap) { K.vx = (dx || 0.1) / (l || 1) * 3; K.vy = (dy || 0.1) / (l || 1) * 3; if (fv < F.corner) fv = F.corner; } }
         if (W.rules.flightCut && T.flyCut) { CB.want = want; CB.fz = fz; cutBrain(W, m, K, T.flyCut); want = CB.want; fz = CB.fz; }   // 날기 끊기 (v2.3)
         m.flyWant = want; m.fv = fv; m.fz = fz;
       },
@@ -255,9 +269,10 @@ module.exports = {
         const S = Bn.survive, c = m.cut;
         if (m.wave) c.cool = false; else if (m.fat > S.land) c.cool = true; else if (m.fat < S.up) c.cool = false;
         let risk = m.fat > S.low;
-        if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast; if (x && !x.unseen && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
+        if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast;
+          if (x && !x.unseen && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
         if (c.cool) risk = true;
-        if ((SH || (SH = require('../brain/techniques/sharp'))).behind(W, m, K)) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)
+        if (B.lib.behind(W, m, K)) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)
         if (c.cool && m.flyWant) {
           let bad = !B.groundSafe(W, m);
           for (const a of W.areas) if (a.src.side !== m.side && !a.vis && hyp(a.x - m.x, a.y - m.y) < a.r + S.danger) { bad = true; break; }
@@ -275,7 +290,8 @@ module.exports = {
         if (useless(s, e)) { o.v = 0; return; }
         if (binds(s)) o.v *= Bn.bind;
         const ev = hyp(e.vx, e.vy);
-        if (ev > Bn.leadV && (s.t === 'thread' || (s.t === 'area' && s.kind === 'elec'))) { const k = (s.t === 'area' ? s.delay * 0.5 : (o.Tw + K.d / (32 * (s.fast || 1))) * 0.6) * K.lead * (Bn.lead - 1); o.tx += e.vx * k; o.ty += e.vy * k; }
+        if (ev > Bn.leadV && (s.t === 'thread' || (s.t === 'area' && s.kind === 'elec'))) { const k = (s.t === 'area' ? s.delay * 0.5 : (o.Tw + K.d / (32 * (s.fast || 1))) * 0.6) * K.lead * (Bn.lead - 1);
+          o.tx += e.vx * k; o.ty += e.vy * k; }
         if ((m.tac.flySkill || 3) >= 5 && OFF[s.t] && ev > F.corner * Bn.strike) o.v *= 1.3;
       },
     };

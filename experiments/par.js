@@ -1,8 +1,9 @@
 'use strict';
-/* 숨 결투장 v2.23.0 — 실험용 병렬 실행기 (Node 전용, worker_threads)
+/* 숨 결투장 v2.23.1 — 실험용 병렬 실행기 (Node 전용, worker_threads)
  * 일감 = { mod: 모듈 경로, fn: 그 모듈이 내보낸 함수 이름, args: [인자…] }. 인자와 결과는 구조화 복제가 되는 값이어야 한다(함수 X).
  * 일꾼마다 모듈을 한 번 읽어 두고(데워진 채로) 큐에서 일감을 하나씩 가져간다. 결과는 일감 차례대로 돌려준다.
  * 판마다 씨앗이 정해져 있으니, 어느 일꾼이 어떤 차례로 돌려도 결과는 한 줄로 돌린 것과 같다(시험).
+ * opt.fresh면 일감마다 새 일꾼(모듈을 새로 읽는다: 등록·전역을 바꾸는 시험). opt.workers 일꾼 수, opt.onDone(끝난 수, 전체)
  * 주의: 부모 프로세스에서 register로 붙인 마법·덱·두뇌는 일꾼에 없다. 일꾼에서도 필요하면 setup 모듈에서 붙인다.
  *   const { runJobs } = require('./experiments/par');
  *   const res = await runJobs([{ mod: require.resolve('../test/suite'), fn: 'duels', args: [a, b, 100, rules] }], { workers: 4 });
@@ -34,18 +35,20 @@ function runJobs(jobs, opt = {}) {
     let next = 0, done = 0, failed = false; const ws = [];
     const stop = () => { for (const w of ws) w.terminate(); };
     const feed = w => { if (next < jobs.length) { const i = next++; w.postMessage(Object.assign({}, jobs[i], { i, mod: path.resolve(jobs[i].mod) })); } };
-    for (let k = 0; k < n; k++) {
+    // fresh: 일감마다 새 일꾼 (앞 일감이 남긴 등록·전역 상태가 다음 일감에 닿지 않게: 시험, v2.23.1)
+    const spawn = () => {
       const w = new Worker(__filename, { workerData: { __arenaPar: true, setup: opt.setup ? path.resolve(opt.setup) : null } });
       ws.push(w);
       w.on('message', r => {
         if (failed) return;
         if (!r.ok) { failed = true; stop(); reject(new Error('일감 ' + r.i + ' 실패:\n' + r.err)); return; }
         out[r.i] = r.v; done++; if (opt.onDone) opt.onDone(done, jobs.length);
-        if (done === jobs.length) { stop(); resolve(out); } else feed(w);
+        if (done === jobs.length) { stop(); resolve(out); } else if (opt.fresh) { w.terminate(); if (next < jobs.length) spawn(); } else feed(w);
       });
       w.on('error', e => { if (!failed) { failed = true; stop(); reject(e); } });
       feed(w);
-    }
+    };
+    for (let k = 0; k < n; k++) spawn();
   });
 }
 

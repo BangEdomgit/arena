@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* 숨 결투장 v2.23.0 명령줄
+/* 숨 결투장 v2.23.1 명령줄
  *   node cli.js bench               속도 측정
  *   node cli.js duel 평범 평범 20    같은 등급 결투 20판
  *   node cli.js ring 대마법사 평범 50 [기본기]   한 명을 가운데 두고 둘러쌈

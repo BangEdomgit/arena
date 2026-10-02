@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v2.23.0
+# 숨 결투장 규격 v2.23.1
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -13,6 +13,8 @@
 5. **규칙은 스위치로, 규칙 모듈로만**: 새 규칙은 `rules`의 스위치를 가진 규칙 모듈(22장) 하나로 넣고, 정해진 훅에만 끼어든다. 끄면 이전 동작이 나와야 한다(꺼진 규칙의 훅은 모이지 않는다)
 
 ## 1. 버전과 업데이트 절차
+
+**v2.23.1 (정리, 판은 그대로)**: 순환 require를 없앴다 — 규칙 파일은 두뇌 파일을 require하지 않고, 규칙의 두뇌 훅은 `brain: B => ({…})`로 두뇌 도구와 `B.lib`(`src/brain/lib/`, 기술의 공용 도구)을 받는다. 고리 장부는 녹화나 지표를 잴 때만 돈다. 뜨거운 곳의 할당 몇(벽 격자의 정렬, 벽 밀기의 값, 손잡이 고르기의 함수). 규칙 묶음 `rules.profile`(`data/profiles.json`: 진지·청사진·작전·빠른 판·결투장, `base`로 겹친다, `core.rulesOf`): 장면은 스위치를 나열하지 않고 묶음 이름을 줄 수 있다(스위치 하나하나도 그대로). 시험은 주제마다 `test/t/*.js`(공용 `test/lib.js`), `test/test.js`가 par.js로 나눠 돌린다. 버전마다의 구현 메모는 부록 A로. 결과 지문·장면 결과·표준 시험 묶음 그대로
 
 **v2.23.0 (몸 털기 거둠·위험 지대 단계, 45장 끝)**: 굳힘 내성 규칙의 몸 털기를 거둔다(굳음은 털 수 없다, 풀기는 붙잡는 것만). 수읽기: 굳은 채 닿는 수엔 응수가 없다(이미 켠 잔기술·세운 방패만). `hazard` 단계: 1 상급(길·소금 원 여유), 2 대가·전설(+ 지역 마법·붙잡은 수의 내 거리). 판을 끝낸 까닭에 '판이 끝을 강요함'(줄어드는 소금 원, 실수에서 뺀다). 감각 조준: 숨긴 수만 × `trackHid`(기본 1 = 끔, 0.6은 명중을 무너뜨렸다). 메이트의 응수는 풀 때 과녁이 굳어 있을 때만 다시 센다. 지표(보기만): 메이트 결정타가 시작될 때 과녁 체력, 응수가 있던 수에 받은 피해 몫, 큰 수를 쓸 수 있었는데 작은 수로 끝낸 메이트
 
@@ -773,6 +775,10 @@ module.exports = {
 | `track` | 방출 첫머리(겨냥을 읽기 앞): 풀 때 겨냥(`c.tx`·`c.ty`)을 고친다 | `(W, m, c)` | pace (v2.14, 감각 조준) |
 | `stunHold` | `eff`에서 굳음을 붙일 때: 굳는 시간 v(s)를 고쳐 돌려준다 | `(W, m, o, v)` | stunRes (v2.21, 굳힘 내성) |
 | `stepEnd` | 걸음의 맨 끝(함정 정리 뒤, 녹화 앞): 다 정해진 상태를 읽는다. 판의 값을 바꾸지 않는 데만 쓴다 | `(W)` | rings (v2.22, 고리 장부) |
+
+규칙의 두뇌 훅이 쓰는 두뇌 쪽 도구 (v2.23.1): 규칙 파일은 두뇌 파일을 require하지 않는다(엔진 → 규칙 → 두뇌 → 엔진의 순환). `brain: B => ({…})`의 B는 두뇌 도구(`brain/util`)에 기술의 공용 도구 `B.lib`(`src/brain/lib/index.js`: `behind`·`chance`·`openFor`·`inDist`·`dodgeAim`·`grabValue`·`grabCommit`·`undo`·`crowded`)를 더한 것이다. 엔진 쪽에서도 쓰는 순수한 도구(수학·데이터만 require)는 `src/brain/lib/`에 따로 두고 규칙이 바로 불러도 된다(`traps.crowded`).
+
+규칙 묶음 (v2.23.1): `rules.profile`에 묶음 이름을 주면 `data/profiles.json`의 그 묶음(그리고 `base`로 이어진 앞 묶음들)의 스위치를 기본값 위에 깔고, 그 위에 주어진 스위치를 덮는다(`core.rulesOf`). 묶음: 진지(flightCut·fort·trapChain) ⊂ 청사진(+ reflex·snap·blueprint) ⊂ 작전(+ tactics) ⊂ 빠른 판(+ fineStep·pace) ⊂ 결투장(+ passives·tune·stunRes·rings).
 | `flyAccel` | 나는 사람의 끊는 움직임 가속 a(오르내림·앞뒤·옆의 바닥, `rules/flight`) | `(W, m, a) → a` | pace (v2.14, 꺾기) |
 
 ### 두뇌 훅
@@ -2261,3 +2267,54 @@ v2.19의 숨김은 싸고 완벽해서 숨기·벽·순간 켜기를 모두 쓸�
 **보기 (샌드박스, 열두 사람 아래일 때)**: 가슴 둘레에 고리를 안쪽부터 그린다. 짓는 동안 진행만큼 밝아지고(원소 빛깔), 쏘면 0.3 s 튕겨 퍼진다. 붙잡음은 굵은 점선. 잔기술·몸은 몸 가까이. 날기는 발밑(땅)에 넓고 하얀 타원. 자동 진은 혼자 빠르게 도는 점선, 막으면 0.25 s 번쩍. 빈 고리는 희미한 점선. 숨긴 시전은 드러남만큼 희미하게. 고른 사람의 패널에 고리 글. 원소 빛깔과 모습은 `data/rules/rings.json`(WORLD에 표가 들어오면 그대로 바꾼다: 지금은 임시)
 
 **지표 (보기만, `metrics/watch`, 문턱 E9~E11)**: 빈 고리 몫(빈 고리·초 / 고리·초), 고리가 꽉 찬 시간 몫, 일이 고리보다 많았던 시간 몫, 상태별 고리 시간 몫(합 1)
+
+## 부록 A. 구현 메모 (v2.23.1에 CLAUDE.md에서 옮김)
+
+CLAUDE.md는 원칙과 어디를 볼지만 둔다. 버전마다 새로 생긴 상태·훅·기록의 자리와 실험 명령은 여기에 쌓는다(새 버전의 메모도 여기에).
+
+### A.1 실험 명령
+
+```
+node experiments/v2tune.js all    # v2.0 목표 측정: 이웃·부류·원소(원 안·밖)·무리 (약 50 s). ablate는 기술 떼기, sky는 대마법사끼리
+node experiments/army.js all 20   # v2.1 대마법사 대 무리: 들판·기습·준비·소금 도시·던지기·등급 무리 (약 60 s). scenes는 대표 장면
+node experiments/master.js all 200 --deck '대마법사 운영'   # v2.2 고수 싸움: 대마법사끼리 판단 단계별 모습 지표 (--tac로 새 기술 끄기, --tacA로 앞 사람 기술 떼기)
+node experiments/master.js all 200 --deck '대마법사 진지' --rules '{"flightCut":true,"fort":true,"trapChain":true}'   # v2.3 날기 끊기·진지 (사람마다 끊기·진지 수). scene fort는 대표 장면
+node experiments/master.js all 200 --deck '대마법사 청사진' --rules '{"flightCut":true,"fort":true,"trapChain":true,"reflex":true,"snap":true,"blueprint":true}'   # v2.4 반사 겹·끊는 움직임·청사진 (방향 전환·반응 시간·흔들기·청사진). scene agile은 매 걸음 녹화 장면
+node experiments/master.js all 400 --deck '대마법사 청사진' --rules '{"flightCut":true,"fort":true,"trapChain":true,"reflex":true,"snap":true,"blueprint":true,"tactics":true}'   # v2.5 작전 겹·각도 판단 (각도 …·작전 … 줄: 둘레 각속도·한쪽 사거리·강요한 수·작전별 완수). scene tactics는 전설 대 전설 장면
+node experiments/diag.js 100 [--tac '{"survive":false}'] [--skill 전설,대가] [--rules '{"pace":false}'] [--save 이름]   # v2.6 대마법사 결투장 진단: 걸음마다 지표(스스로 입은 피해·짓는 시간·동시 칸·쓸모 있는 벽·빈틈·막힌 직사·마법별 명중, v2.14 박자, metrics/watch)
+node experiments/versus.js '{"tier":"중간","skill":"대가"}' '{"tier":"중간","skill":"상급"}' 1000 '{"risk":true}' backfire   # 대결 N판 (병렬)
+node experiments/crowd.js 20 [--n 6,10,14,20] [--tac '{…}'] [--rules '{…}']   # v2.9 상위 무리 기준: 대마법사(전설) 하나 대 상위 N
+node experiments/ladder.js 전설-대가 800 [--abl] [--base] [--tacB '{…}'] [--rules '{…}']   # v2.10 단계 사다리 떼어 재기 (결투장, --abl은 전설의 기술을 하나씩)
+node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단계는 조합 이름을 준다, reports/v2.0-rules.md)
+# 수치를 맞출 땐 100판(±10%p)으로 가르지 말고 1000판 이상으로 잰다 (reports/v1.3.1.md, 13절)
+```
+
+### A.2 버전마다의 자리
+
+- **v2.23.1**: 순환 require 없음 — 규칙 파일은 두뇌 파일을 require하지 않는다. 규칙의 두뇌 훅은 `brain: B => ({…})`로 두뇌 도구를 받고, 기술의 공용 도구는 `B.lib`(`src/brain/lib/index.js`가 모은다: `behind`·`chance`·`openFor`·`inDist`·`dodgeAim`·`grabValue`·`grabCommit`·`undo`·`crowded`). 엔진 쪽에서도 쓰는 순수한 도구(수학·데이터만)는 `src/brain/lib/`에 따로(`traps.crowded`, 청사진이 부른다). 고리 장부는 녹화(`W.rec`)나 지표(`W._wt`)를 잴 때만. 규칙 묶음 `rules.profile`(`data/profiles.json`, `core.rulesOf`). 시험은 `test/t/*.js`(공용 `test/lib.js`), `test/test.js`가 par.js로 나눠 돌린다(`--jobs`, `--fresh`, 이름)
+- **v2.23 (SPEC 45장 끝)**: 굳음은 털 수 없다(stunRes는 내성만, 풀기는 붙잡는 것만). `tac.hazard` 숫자(상급 1 길·소금, 대가·전설 2 + 수). 판을 끝낸 까닭 '판이 끝을 강요함'(소금 원). 감각 조준의 숨김 몫 `pace.trackHid`(기본 1). `metrics/fight`의 결정타 체력·응수 있던 수의 피해·큰 수를 쓸 수 있던 메이트(문턱 B16·B17·C13)
+- **v2.22 (SPEC 46장)**: 고리 장부 `rules/rings`(스위치 `rings`, `data/rules/rings.json`): 판에 닿지 않는다. 장부는 `m.mlog.rings`(맨 위 칸이 꽉 차서), 엔진 훅 `stepEnd`(걸음의 끝)에서 읽는다. 서클을 깎는 새 규칙을 더하면 rings의 `wants`에도 그 일을 더한다. 빛깔·모습은 임시(WORLD에 표가 생기면 data만 고친다). 샌드박스 `drawRings`
+- **v2.21 (SPEC 45장)**: 굳힘 내성 `rules/stunRes`(스위치 `stunRes`, `data/rules/stunRes.json`): 엔진 훅 `stunHold`(굳는 시간), 상태 `st.stR`·`stE` (v2.21의 몸 털기·두뇌 훅 `stunned`·`st.shk`는 v2.23에 거뒀다). 수읽기의 줄인 상태 `build(…, sk)`는 sk면 굳음을 바로 센다(`S.sl`, 판단은 `!!W.rules.stunRes`, 지표는 늘). 두뇌 기술 `techniques/hazard`(`tac.hazard`, `data/hazard.json`, `K.saltPad`는 `rules/saltRing`이 읽는다). 감각 조준 × 드러남(`pace.trackVis`)은 v2.23에 거두고 숨긴 수의 몫 `pace.trackHid`로. 지표 `metrics/fight`는 덫 결정타(`A.tp`)와 쓰러진 피해 종류(글자 값)도
+- **v2.20.1 (SPEC 44장)**: 문턱 4판 `GATE-v4.md`. 판을 보는 새 지표는 `metrics/fight.js`(watch 맨 끝, 상태 `W._wf`): 메이트·1 s 손실·침묵의 4판 정의, 흐름·역전률·판을 끝낸 까닭(글자 값: suite는 숫자만 모은다)·하이 리스크·장악권·정보의 열매. 문턱 표의 옛 정의 줄은 '봄'으로 남는다
+- **v2.20 (SPEC 43장 끝)**: 숨김은 `c.hid`(걸었다: 비용), 못 알아챔은 `c.unseen`(짓기 시작할 때 과녁의 눈으로 한 번 굴린다, api `notice`). 적의 시전을 읽는 코드는 `c.unseen`만 건너뛴다. 상대가 숨긴 수를 쓰나는 `brain/util`의 `hidesOf`
+- **v2.19 (SPEC 43장)**: 손잡이 `rules/tune`(`data/rules/tune.json`). 시전에 `tz`·`tf`·`tv`·`hid`·`tk`(열쇠, 비면 2단계)·`vis`(choose의 cast 리터럴). 엔진 훅 `tune`이 방출 첫머리에서 손잡이가 박힌 마법 사본(`W._tuneC`)으로 바꾼다: 방출 뒤의 코드는 `c.s`가 사본일 수 있다(이름은 같다). 마법 필드 `tw`(실의 굵기), 함정 `tr.arm`. 숨긴 시전(`c.hid`)은 적의 시전을 읽는 새 코드도 건너뛴다(`hideCast` 훅, 반사 겹·잔기술·막기·수읽기). 판단 `tac.tune`(초보 1~전설 5)은 규칙의 `commit` 훅, 기록 `m.mlog.tune`
+- **v2.18 (SPEC 42장)**: 잔기술 `rules/passive`(스위치 `passives` — `rules.passive`는 장악권의 수라 이름이 다르다, `data/rules/passive.json`). 상태 `st.psv`·`st.psvT`, 기록은 막기의 `mlog.guard*`·`gdOn`·`gdOff`·`gdOk`. 켜진 판에서 빠른 판의 막기는 쉰다. 판단 수준 `tac.passive`(중급 1~전설 4). 수읽기의 막기 자원은 `S.pk`(막는 종류 비트)와 내 수의 `CKD`. 피해 종류는 api `kindOf`·`psvOf`(실은 전기)
+- **v2.17.1**: 문턱 줄 바꿈(판은 그대로). `metrics/watch`의 실수로 입은 몫·떨어뜨려 준 몫(추락이 시작될 때 2 s 안의 적의 맞힘·굳힘)·추락으로 쓰러짐, `metrics/judge`의 수(마법 × 손잡이: 손잡이 규칙은 `m.mlog.tune['이름#단계']`에 센다). `gate.js`의 '봄' 줄(`I`)과 옛 덱 줄(`OLD`)
+- **v2.17 (SPEC 41장)**: 수읽기의 끝내기. 줄인 상태 `fallLock`(떨어지는 사람의 잠김)·`aim`(몸을 못 쓰는 상대의 정해진 길), 큰 한 방은 메이트·상대 체력 `big.hpAt` 아래에서만, 마법마다 배운 명중(`search`의 `eff`), 세운 방패를 마주 본 실은 헛수(`shield.thru`), 끝내기(`plan.finHp`). 첫 수의 바닥 값은 날카롭게의 기다림(`o.wait`, `newO` 리터럴)만 덮는다. 결투장 장면의 덱은 '대마법사 결투'(성적표·문턱의 결투장 줄이 v2.17부터 이 덱). 상급 발놀림 2
+- **v2.16 (SPEC 40장)**: `GATE-v4.md`(v2.20.1까지는 3판 `GATE-v3.md`)가 v3.0의 문턱(사용자가 고친다). 재기는 `experiments/gate.js`(`node cli.js gate`, 버전마다 `reports/gate.json`·`.md`: 결과가 바뀌는 변경을 했으면 돌린다). 2장 판단 확인 지표는 `metrics/judge.js`(watch가 걸음마다 부른다, 상태는 `W._wj`, 판에 닿지 않는다). 수읽기의 피할 곳에 막은 까닭 `S.why`, 상대 응수 짐작 `cast.pred`, 순간 켜기 성공 `mlog.gdOk`
+- **v2.15 (SPEC 39장)**: 수읽기는 `src/brain/plan/`(`state` 줄인 상태 — 방어 자원 여섯의 비트·피할 곳 아홉, `search` 읽기 — 미리 만든 형 배열만, 새 객체 없음, `joseki`, `index` — read·net·value·commit과 지표용 `slackOf`·`ansOf`). 판단 수준 `tac.read`(깊이, 0이면 아무것도 안 함: 모두 0이면 v2.14 지문), 선명도 5 이상의 결투에서만. 두뇌 상태는 `K.pl`(첫 수·메이트·체크), `K.netN`·`K.brk`(그물 깨기: `brain/move`가 걸음을, 빠른 판이 늘 움직이기를 쉰다), `K.keep`·`K.keepT`(정석의 아낄 자원). 시전에 `cast.chk`·`cast.mate`, 기록 `mlog.chk`·`mate`·`brk`·`plN`·`plNodes`·`js*`. 수는 `data/plan.json`(맞을 가망 `hit`은 판 중에 배운다)·`data/joseki.json`. 샌드박스는 `ArenaBrain.plan`을 읽기만
+- **v2.14 (SPEC 38장)**: 엔진 시계: 걸음 간격은 세계마다 `W.dt`(`rules.fineStep`이면 1/60 s), 걸음 수로 잰 간격은 `W.sk`배. 엔진·규칙·지표의 새 코드는 `DT` 대신 `W.dt`(core 안은 `stepWorld`가 맞춰 둔 모듈 `DT`), `W.step % n`은 `n * W.sk`. 빠른 판 `rules/pace`(`pace`, 기본 꺼짐, 대마법사 결투 장면이 켠다, `data/rules/pace.json`): 선명도 8 이상의 떡대·막기(`st.guard`, 기록 `mlog.guard*`)·감각 조준(엔진 훅 `track`)·꺾기(엔진 훅 `flyAccel`), 두뇌 `tac.pace`(상급 1·대가 2·전설 3)의 서두름 `K.hurry`(날카롭게의 문턱)·막기·늘 움직이기(`bound` 맨 뒤, 소금 원의 벽을 다시 부른다). 박자 지표는 `metrics/watch`(평균 속도·초당 방향 전환·하는 일·교환). 샌드박스 v0.2: 앞서 보기(`S.ah`)·사건 직전 느리게·되감기(`seek`)·판단 그림·나란히(`beside`, `ArenaWatch`)
+- **v2.13 (SPEC 37장)**: 두뇌 기술 둘: 교전 유지 `techniques/engage`(`tac.engage`, `data/engage.json`, `brain/index`의 think에서 steer 앞에 `engage.adjust`: `K.closeIn`이면 작전의 둘레 걸음·거리 톱질이 쉰다, `K.low`면 숨, 결투에서만)와 덫길 `techniques/trapline`(`tac.trapLine`, `crowded`는 청사진도 부른다). 날카롭게의 기다림의 끝(`waitMax`·`waitFade`). 침묵·결판·덫 지표는 `metrics/watch`의 `silence`(판 전체 값). 샌드박스의 카메라는 그리기 변환만(`S.cam`, 마우스는 `mpos`가 거꾸로), 사건은 `events`가 읽기만
+- **v2.12 (SPEC 36장)**: 공격 방식은 두뇌 기술 `techniques/mode`(판단 수준 `tac.mode` 1~5, 수는 `data/mode.json`, 전설만의 것은 `l5`). `choose`에서 칸 고르기 뒤 `mode.pick`(→ `K.mode`, 확정 순간 `K.sureW`, 갈 곳 `K.covPts`·`K.covN`), 값 고치기 끝에 `mode.value`, 시전에 `mode.commit`(`cast.mode`·`cov`·`bait`). 기록은 `m.mlog.mode`, 명중·피해 몫은 `metrics/watch`가 시전의 mode로. 명중 가망의 문턱은 견제의 싼·빠른 수만 건너뛴다(다 건너뛰면 전설이 진다)
+- **v2.11 (SPEC 35장)**: 기본 규칙 둘. 당 회복 `gluRegen`(`DEFAULT_RULES`, 3 g/s, V1 1.2)과 숨(`rules/breath`, `breath` 기본 켬, 수는 `data/rules/breath.json`): 상태 `st.breath`(마시는 남은 시간), 기록 `m.mlog.breath*`·`brT`·`brA`·`brH`·`brV`(`mlog.bT`는 장악 경계의 것이라 쓰지 않는다). 마시기는 두뇌 훅 `rest`(쉬려던 참이어도 본다), 판단 수준 `breathAt`·`breathSafe`·`breathPre`. 둘 다 끄면 v2.10 지문
+- **v2.10 (SPEC 34장)**: 판단 수준 값 셋(`addMage`의 tac 리터럴): `aim`(명중 가망, 전설만), `wallLos`(상대 피해 가운데 시야 공격 몫이 이만큼일 때만 벽, 대가부터 0.5, `sharp.losShare`), `swarmR`(선명도 몇 배부터 무리 싸움인가, 상위 1.8 `data/tiers.json`: 협공은 `techniques/swarm`, 편의 첫 각은 세계마다 WeakMap). 사다리 떼어 재기는 `experiments/ladder.js`(`--abl`, `--tacA`·`--tacB`), 날카롭게의 기능 하나 끄기는 `tac.sharpOff`(실험). 무리의 경계를 정하는 것은 장악권 규칙이다(끄면 1 대 10 반반, reports/v2.10.0.md)
+- **v2.9 (SPEC 33장)**: 두뇌 기술만(날카롭게 `techniques/sharp`의 `P`, 모두 끄면 v2.8 지문): 몰아칠 틈(`storm`)엔 명중 문턱 `minOpen`, 붙잡아 둔 수가 있으면 리듬 들어가기(`inHeld`), 문턱에 막혀 기다리는 동안(`K.waitT`) 빈 칸을 벽·함정·지대에(`wait`, 빈틈이 열리면 끊는다), 세운 벽에 머물기(`behind`: 날기·작전 규칙도 이걸 부른다, 처음 부를 때 읽는다). 성적표는 `node cli.js report`(`experiments/report.js` → `reports/scorecard.json`·`.md`, 버전마다 쌓는다: 결과가 바뀌는 변경을 했으면 돌린다). 상위 무리 기준은 `experiments/crowd.js`(결투장 들판, 대가·상급 반반, 광역·기술·합법 최강)
+- **v2.8 (SPEC 32장)**: 붙잡아 둔 설계(`rules/hold`, `hold` 기본 켬, 수는 `data/rules/hold.json`): 두 번째 칸의 시전에 `hold`가 붙으면 엔진 훅 `castHold`가 풀지 않는다. 푸는 판단은 두뇌 훅 `cancel`(칸 고르기 앞). 규칙 모듈이 두뇌 기술을 쓸 땐 처음 부를 때 읽는다(엔진이 규칙을 읽을 때 두뇌는 아직 없다: 순환). 명중 가망·방패의 때는 `techniques/sharp`(`chance`·`threatSoon`), 세운 벽은 `K.wallT`. `endureK`는 0.8(대마법사 하나 대 상위 열이 반반: 장면 `v2-archmage-1v10`)
+- **v2.7 (SPEC 31장)**: 기본 규칙 둘. 버티기(`rules/endure`, `endureK`·`endureC`): 상위·대마법사의 머리·당 회복 × (C/2.5)^endureK(v2.8부터 0.8), 평범·중간은 그대로(중간의 판단 사다리가 머리 아끼기에 걸려 있다). 마법의 부딪힘 감쇠(`bluntK`, `rules/body`): 굳은 살 뒤 ÷ C^2.3, 총·화약통·벽 밀기 빼고. 둘 다 0이면 v2.6.0(V1_RULES도 0). 당 회복은 엔진 훅 `gluRegen`. 판단이 잦은 사람의 확률적 기술은 초당으로 맞춘다(박자 흔들기가 판단마다 20%라 전설이 35%를 쉬었다). 장면 `v2-archmage-2v6`(대마법사 둘 대 상위 여섯)은 크기를 적어 둔다(샌드박스의 기본 크기는 40 × 30)
+- **v2.6 (SPEC 30장)**: 판단 수준의 기술 `survive`(스스로 죽지 않기)·`sharp`(날카롭게)는 대가부터·선명도 5 이상. 머리 넘침은 `brain/util`의 `heatOver`로 본다(시전·자동 진·청사진 모두). 소금 원·비행의 단단한 벽은 두뇌 훅 `bound`(움직임의 맨 끝)에, 구르기 훅은 방향(`o.dx`·`o.dy`)도 고친다. 땅이 안전한가는 `groundSafe`(대마법사의 함정은 땅에 선 대마법사를 한 방에 죽인다: 내려앉히는 새 코드는 이걸 본다). 걸음마다 보는 지표는 `metrics/watch.js`(판에 닿지 않게 읽기만, 기록 칸을 `m.log`에 더하면 지문이 바뀌니 모습 기록은 `m.mlog`에). 머리 피로가 짓는 시간을 막는다(날면 남는 회복 1.2/s, reports/v2.6.0.md)
+- **v2.5 (SPEC 29장)**: 작전 겹(`rules/tactics`, 수·무게는 `data/rules/tactics.json`)은 기본 꺼짐, 판단 수준의 `tac.ops`(대가 1, 전설 2)가 켠다. 두뇌 훅 `phase`·`steer`·`value`·`commit`과 엔진 훅 `mageStep`만 쓴다. 상태·기록은 `m.op`(작전 `cur`, 고른 자리 `tx`·`ty`, 읽은 상대 작전 `eOp`, 기록 `log`). 청사진 짓기는 `blueprint`의 api `startBuild`로 건다. 원 돌기·나선 빠지기는 전설만(`circleLv`)
+- **v2.4 (SPEC 28장)**: 반사 겹(`rules/reflex`)·끊는 움직임(`rules/snap`)·청사진(`rules/blueprint`, 청사진은 `data/blueprints.json`)은 기본 꺼짐. 반사 겹은 엔진 쪽(몸)에서 매 걸음 돌고 선명도 5 이상·위협이 있을 때만 훑는다(무리전 속도). 상태·기록은 `m.rx`, 청사진 기록은 `m.fort.bp*`. 나는 사람의 가속 바닥은 발놀림 2부터(누구나 주면 대가의 끊기가 지워진다). 녹화 간격 `recEvery`
+- **v2.3 (SPEC 27장)**: 날기 끊기(`flightCut`, `rules/flight` 안)·진지(`rules/fort`, `fort`·`trapChain`)는 기본 꺼짐. 끊기 상태는 `m.cut`, 진지 자리·계획·기록은 `m.fort`. 끊은 동안은 `m.fly === 3`(떠 있어도 서클·출력 풀림: 새 코드에서 "떠 있다"를 볼 땐 `z ≥ 1`과 `fly !== 3`을 가른다). 함정 한도는 `core.trapCap`
+- **v2.2 (SPEC 26장)**: 강자(선명도 5 이상)의 두뇌 기술(`rhythm`·`efficacy`·`shape`)은 선명도 5 아래에선 아무것도 하지 않는다(평범·중간의 판이 그대로). 사람의 단계는 `m.phase`, 모습 기록은 `m.mlog`
+- **v2.1 (SPEC 25장)**: 장악권은 도달 반경(`domainR` × C) 안에서만 다투고 실은 길 전체로 선다. 부딪히는 피해는 굳은 살(`callus`)만큼 뺀다. 벽은 모두 `core.addWall`로 세운다(모양 고정, 재료 `mat`). 벽을 훑는 새 코드는 `wallsIn`(격자)을 쓴다. 무리·대마법사 두뇌는 `techniques/swarm.js`·`siege.js`(켜지는 때에만)
+- **v2.0 기본 (SPEC 24장)**: `risk`·`saltRing`·`wave`·`evade`·`flight`가 켜져 있고 `bodyK`는 2.3(`hpScale`은 끔). 비행은 높이 `z`를 더한다: 새 거리 계산은 높이를 넣어(`hyp3`), 땅에 서는 것(지대·함정·지연 폭발)은 `z ≥ 1`이면 건너뛴다. 1.x 동작을 볼 땐 `rules: A.V1_RULES`. 1.x를 전제로 한 시험은 `test/test.js`의 `legacy(true)` 구간에 둔다
