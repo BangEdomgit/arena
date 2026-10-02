@@ -1,0 +1,32 @@
+{
+ "v": "2.27.0",
+ "tier": "상위",
+ "S": 6,
+ "opt": {
+  "arch": {
+   "skill": "대가",
+   "circles": 8
+  },
+  "rules": null,
+  "squad": true,
+  "maxT": null
+ },
+ "out": {
+  "30": {
+   "n": 6,
+   "win": 0.667,
+   "dead": 0,
+   "byTime": 0.333,
+   "t": 147,
+   "kills": 27.5,
+   "hp": 0.729,
+   "fat": 7,
+   "glu": 0.75,
+   "stam": 6,
+   "breaths": 2,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 48.8
+  }
+ }
+}

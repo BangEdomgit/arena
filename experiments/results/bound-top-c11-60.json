@@ -1,0 +1,35 @@
+{
+ "v": "2.27.0",
+ "tier": "상위",
+ "S": 6,
+ "opt": {
+  "arch": null,
+  "rules": null,
+  "squad": true,
+  "maxT": null
+ },
+ "out": {
+  "60": {
+   "n": 6,
+   "win": 0,
+   "dead": 0.333,
+   "byTime": 0.667,
+   "t": 212.7,
+   "kills": 38.8,
+   "hp": 0.092,
+   "fat": 3,
+   "glu": 0.95,
+   "stam": 5.6,
+   "breaths": 0.2,
+   "over": 0,
+   "lostBy": {
+    "blunt": 0.17,
+    "tox": 0,
+    "elec": 0.76,
+    "fall": 0,
+    "fire": 0.07
+   },
+   "msPerS": 64.2
+  }
+ }
+}
