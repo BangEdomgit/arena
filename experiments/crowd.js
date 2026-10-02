@@ -7,10 +7,10 @@
 const fs = require('fs'), path = require('path'), A = require('../src');
 const RULES = { profile: '지금' };   // v2.24.1: 지금의 규칙 모두 (v2.23까지는 작전 묶음)
 const SKILLS = ['대가', '상급'], DECKS = ['광역', '기술', '합법 최강'];
-function scene(n, seed, tac) {
+function scene(n, seed, tac, arch) {
   const crowd = []; for (let i = 0; i < n; i++) crowd.push(Object.assign({ tier: '상위', skill: SKILLS[i % 2], deck: DECKS[i % 3] }, tac ? { tac } : null));
   return { v: A.VERSION, name: `대마법사 하나 대 상위 ${n} (상위 무리 기준: 대가·상급 반반, 광역·기술·합법 최강, 결투장 들판 200 × 150)`, seed, width: 200, height: 150, rules: RULES,
-    sides: [{ name: '대마법사', mages: [{ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }] }, { name: '상위', mages: crowd }] };
+    sides: [{ name: '대마법사', mages: [Object.assign({ tier: '대마법사', skill: '전설', deck: '대마법사 청사진' }, arch || {})] }, { name: '상위', mages: crowd }] };
 }
 function run(n, s0, cnt, tac, rules) { const o = []; for (let s = s0; s < s0 + cnt; s++) { const sc = scene(n, s, tac); if (rules) sc.rules = Object.assign({}, sc.rules, rules); const r = A.runScene(sc); o.push({ win: r.winner === 0 ? 1 : 0, hp: Math.max(0, r.ms[0].hp) / r.ms[0].hpMax, t: r.t, kills: r.ms.filter((m, i) => i > 0 && m.hp <= 0).length }); } return o; }
 // N마다 S판: 대마법사의 승률·남은 체력 몫·판 길이·쓰러뜨린 상위 수

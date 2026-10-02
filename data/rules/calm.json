@@ -4,6 +4,6 @@
  "enter": [999, 100],
  "edge": 150,
  "edgeM": 120,
- "finish": 0.25,
+ "finish": 0.7,
  "rest": 0
 }

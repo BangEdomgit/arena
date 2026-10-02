@@ -18,7 +18,7 @@
  *   총: gunR 안의 장전된 총이 gunN 넘게 나를 겨누면 공격 × gunHold(움직인다), 대부분 장전 중이면 × gunGo(일제 사격 직후의 틈)
  * 지표 (api.stats): 포위각, 동시 공격 몫(과녁에 닿는 공격 가운데 0.3 s 안에 다른 조의 공격이 같이 풀린 몫), 고립 처치 몫, 둘러싸인 시간(포위각 270° 넘게), 역할마다 시전·피해.
  *   사람·시전에 칸을 더하지 않는다: 상태는 세계마다 WeakMap */
-const P = require('../../data/rules/squad.json'), SO = P.solo;
+const P = require('../../data/rules/squad.json'), SO = P.solo, CH = require('./chorus').api;
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const isShield = s => !!((s.t === 'buff' && s.b && s.b.front) || s.t === 'wall' || s.t === 'build');
@@ -78,7 +78,7 @@ function board(X, W, side) {
   for (const m of mem) {
     const j = b.team.get(m); if (j === undefined) continue; const role = b.role.get(m);
     const R = role === 'eye' ? bestRange(X, W, m) : midRange(X, W, m), r0 = Math.min(D + P.out, R * 0.85) + (role === 'eye' ? 8 : role === 'reserve' ? 15 : role === 'shield' ? -2 : 0) + (b.threat === j && W.t < b.thrT ? 6 : 0);
-    const a = b.ang[j] + (j !== act ? P.rot * turn : P.rot * (turn - 1 > 0 ? turn - 1 : 0)), i = tm[j]++, off = (i - 1.5) * P.spread / (r0 > 1 ? r0 : 1);
+    const a = b.ang[j] + (j !== act ? P.rot * turn : P.rot * (turn - 1 > 0 ? turn - 1 : 0)), i = tm[j]++, off = (i - 1.5) * (W.rules.chorus ? CH.P.spread : P.spread) / (r0 > 1 ? r0 : 1);   // 합창하면 조원이 붙어 선다 (rules/chorus)
     const x = b.sx + X.cos(a + off) * r0, y = b.sy + X.sin(a + off) * r0;
     let p = b.pt.get(m); if (!p) b.pt.set(m, p = [0, 0]); p[0] = x; p[1] = y;
   }
@@ -116,7 +116,8 @@ module.exports = {
       if (!soloOn(W, m)) return;
       let e = null, bs = 1e9; for (const q of K.foes) { if (q.hp <= 0 || q.flee) continue; let sc = B.hyp(q.x - m.x, q.y - m.y), al = false;
         for (const o of W.ms) if (o !== q && o.side === q.side && o.hp > 0 && B.hyp(o.x - q.x, o.y - q.y) < SO.iso) { al = true; break; }
-        if (!al) sc -= SO.isoB; for (const n of q.book) { const s = W.spells[n]; if (s && isBind(s) && s.t !== 'thread') { sc -= SO.bindB; break; } }
+        if (!al) sc -= SO.isoB; if (W.rules.chorus && CH.of(W, q)) sc -= CH.P.aimB;   // 합창하는 무리를 먼저 (v2.27)
+        for (const n of q.book) { const s = W.spells[n]; if (s && isBind(s) && s.t !== 'thread') { sc -= SO.bindB; break; } }
         if (sc < bs) { bs = sc; e = q; } }
       if (e) K.e = e;
     },
