@@ -1,12 +1,14 @@
 {
- "v": "2.24.0",
- "name": "대마법사 대 평범 50명 (둘러싸기, node cli.js ring 씨앗 1과 같다)",
+ "v": "2.24.1",
+ "name": "대마법사 대 평범 50명 (둘러싸기, node cli.js ring 씨앗 1과 같다) [지금]",
  "seed": 1,
  "width": 40,
  "height": 30,
  "maxT": 90,
  "layout": "ring",
- "rules": {},
+ "rules": {
+  "profile": "지금"
+ },
  "sides": [
   {
    "name": "대마법사",

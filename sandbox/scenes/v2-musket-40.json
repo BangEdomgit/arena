@@ -1,16 +1,12 @@
 {
- "v": "2.24.0",
- "name": "머스킷 반원: 대마법사 대 병사 40명 [risk+saltRing+wave]",
+ "v": "2.24.1",
+ "name": "머스킷 반원: 대마법사 대 병사 40명 [지금]",
  "seed": 13,
  "width": 40,
  "height": 30,
  "maxT": 90,
  "rules": {
-  "risk": true,
-  "bodyBind": false,
-  "response": false,
-  "saltRing": true,
-  "wave": true
+  "profile": "지금"
  },
  "obstacles": [],
  "sides": [

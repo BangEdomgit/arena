@@ -5,7 +5,7 @@
  *   node experiments/crowd.js [S=20] [--n 6,10,14,20] [--tac '{…}'(상위 무리에 덧씌울 tac)] [--rules '{…}'(결투장 규칙에 덧씌움)] [--save 이름]
  * 결과는 일꾼 수와 상관없이 같다 (par.js) */
 const fs = require('fs'), path = require('path'), A = require('../src');
-const RULES = { flightCut: true, fort: true, trapChain: true, reflex: true, snap: true, blueprint: true, tactics: true };
+const RULES = { profile: '지금' };   // v2.24.1: 지금의 규칙 모두 (v2.23까지는 작전 묶음)
 const SKILLS = ['대가', '상급'], DECKS = ['광역', '기술', '합법 최강'];
 function scene(n, seed, tac) {
   const crowd = []; for (let i = 0; i < n; i++) crowd.push(Object.assign({ tier: '상위', skill: SKILLS[i % 2], deck: DECKS[i % 3] }, tac ? { tac } : null));

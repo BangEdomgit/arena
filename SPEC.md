@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v2.24.0
+# 숨 결투장 규격 v2.24.1
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -13,6 +13,8 @@
 5. **규칙은 스위치로, 규칙 모듈로만**: 새 규칙은 `rules`의 스위치를 가진 규칙 모듈(22장) 하나로 넣고, 정해진 훅에만 끼어든다. 끄면 이전 동작이 나와야 한다(꺼진 규칙의 훅은 모이지 않는다)
 
 ## 1. 버전과 업데이트 절차
+
+**v2.24.1 (규칙 묶음 '지금', 판은 장면·무리·문턱 H줄만)**: 규칙 묶음 `지금`(지금의 규칙 전부). 세계를 재는 장면(군대·무리·하늘·이웃 단계·1 대 10/20/100)과 문턱의 H줄을 이 묶음으로 잰다. 문턱에 설정 기준 줄 셋(H9m 들판의 사기로 무너진 판 몫, H12 소금 도시 50% 이하, H13 낮은 단계 결투의 폭주 몫 10% 이하). 설정과 어긋난 것의 원인을 쟀다(reports/v2.24.1.md, 고치지 않았다).
 
 **v2.24.0 (작은 수 막기 시험, 47장)**: 시험 규칙 `chipGuard`(기본 꺼짐, 어느 장면도 켜지 않는다): 응수가 있는 동안(몸을 쓸 수 있다) 떡대가 적의 한 방마다 `cut`을 뺀다. 엔진의 `hurt`가 걸음마다 드는 피해(지대·빔·불·소금)를 `tick`으로 알리고, `hurtMod` 훅이 쏜 사람(`src`)과 `tick`도 받는다. 끄면 그대로
 
@@ -780,7 +782,7 @@ module.exports = {
 
 규칙의 두뇌 훅이 쓰는 두뇌 쪽 도구 (v2.23.1): 규칙 파일은 두뇌 파일을 require하지 않는다(엔진 → 규칙 → 두뇌 → 엔진의 순환). `brain: B => ({…})`의 B는 두뇌 도구(`brain/util`)에 기술의 공용 도구 `B.lib`(`src/brain/lib/index.js`: `behind`·`chance`·`openFor`·`inDist`·`dodgeAim`·`grabValue`·`grabCommit`·`undo`·`crowded`)를 더한 것이다. 엔진 쪽에서도 쓰는 순수한 도구(수학·데이터만 require)는 `src/brain/lib/`에 따로 두고 규칙이 바로 불러도 된다(`traps.crowded`).
 
-규칙 묶음 (v2.23.1): `rules.profile`에 묶음 이름을 주면 `data/profiles.json`의 그 묶음(그리고 `base`로 이어진 앞 묶음들)의 스위치를 기본값 위에 깔고, 그 위에 주어진 스위치를 덮는다(`core.rulesOf`). 묶음: 진지(flightCut·fort·trapChain) ⊂ 청사진(+ reflex·snap·blueprint) ⊂ 작전(+ tactics) ⊂ 빠른 판(+ fineStep·pace) ⊂ 결투장(+ passives·tune·stunRes·rings).
+규칙 묶음 (v2.23.1): `rules.profile`에 묶음 이름을 주면 `data/profiles.json`의 그 묶음(그리고 `base`로 이어진 앞 묶음들)의 스위치를 기본값 위에 깔고, 그 위에 주어진 스위치를 덮는다(`core.rulesOf`). 묶음: 진지(flightCut·fort·trapChain) ⊂ 청사진(+ reflex·snap·blueprint) ⊂ 작전(+ tactics) ⊂ 빠른 판(+ fineStep·pace) ⊂ 결투장(+ passives·tune·stunRes·rings) = 지금(v2.24.1: 지금의 규칙 전부. 세계를 재는 장면 — 군대·무리·하늘·이웃 단계·1 대 10/20/100 — 과 문턱의 H줄은 이 묶음으로 잰다. 장면마다의 덮어쓰기는 그대로: 군대 장면은 소금 원을 끈다). 예전 규칙 묶음 그대로 남긴 장면은 이름 앞에 `[역사]`.
 | `flyAccel` | 나는 사람의 끊는 움직임 가속 a(오르내림·앞뒤·옆의 바닥, `rules/flight`) | `(W, m, a) → a` | pace (v2.14, 꺾기) |
 
 ### 두뇌 훅
@@ -2301,6 +2303,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 
 ### A.2 버전마다의 자리
 
+- **v2.24.1**: 규칙 묶음 `지금`(= 결투장). 세계를 재는 장면·`army.js`·`crowd.js`·문턱의 H줄(`gate.js`의 `NOW`)은 이 묶음으로. 낮은 단계 결투의 폭주 몫은 `gate.js`의 `lowJob`(파도 피해 ÷ 받은 피해), 들판의 사기로 무너진 판은 `army.js`의 `mb`(무리의 절반 넘게 달아남). 예전 규칙을 그대로 남긴 장면은 이름 앞에 `[역사]`
 - **v2.23.1**: 순환 require 없음 — 규칙 파일은 두뇌 파일을 require하지 않는다. 규칙의 두뇌 훅은 `brain: B => ({…})`로 두뇌 도구를 받고, 기술의 공용 도구는 `B.lib`(`src/brain/lib/index.js`가 모은다: `behind`·`chance`·`openFor`·`inDist`·`dodgeAim`·`grabValue`·`grabCommit`·`undo`·`crowded`). 엔진 쪽에서도 쓰는 순수한 도구(수학·데이터만)는 `src/brain/lib/`에 따로(`traps.crowded`, 청사진이 부른다). 고리 장부는 녹화(`W.rec`)나 지표(`W._wt`)를 잴 때만. 규칙 묶음 `rules.profile`(`data/profiles.json`, `core.rulesOf`). 시험은 `test/t/*.js`(공용 `test/lib.js`), `test/test.js`가 par.js로 나눠 돌린다(`--jobs`, `--fresh`, 이름)
 - **v2.23 (SPEC 45장 끝)**: 굳음은 털 수 없다(stunRes는 내성만, 풀기는 붙잡는 것만). `tac.hazard` 숫자(상급 1 길·소금, 대가·전설 2 + 수). 판을 끝낸 까닭 '판이 끝을 강요함'(소금 원). 감각 조준의 숨김 몫 `pace.trackHid`(기본 1). `metrics/fight`의 결정타 체력·응수 있던 수의 피해·큰 수를 쓸 수 있던 메이트(문턱 B16·B17·C13)
 - **v2.22 (SPEC 46장)**: 고리 장부 `rules/rings`(스위치 `rings`, `data/rules/rings.json`): 판에 닿지 않는다. 장부는 `m.mlog.rings`(맨 위 칸이 꽉 차서), 엔진 훅 `stepEnd`(걸음의 끝)에서 읽는다. 서클을 깎는 새 규칙을 더하면 rings의 `wants`에도 그 일을 더한다. 빛깔·모습은 임시(WORLD에 표가 생기면 data만 고친다). 샌드박스 `drawRings`

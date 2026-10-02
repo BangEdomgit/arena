@@ -1,15 +1,11 @@
 {
- "v": "2.24.0",
- "name": "대마법사 대가 대 상급, 좁은 곳 40×30 [risk+saltRing+wave]",
+ "v": "2.24.1",
+ "name": "대마법사 대가 대 상급, 좁은 곳 40×30 [지금]",
  "seed": 2,
  "width": 40,
  "height": 30,
  "rules": {
-  "risk": true,
-  "bodyBind": false,
-  "response": false,
-  "saltRing": true,
-  "wave": true
+  "profile": "지금"
  },
  "sides": [
   {

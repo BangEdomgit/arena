@@ -1,13 +1,9 @@
 {
- "v": "2.24.0",
- "name": "중간 대가 대 상급 [risk+saltRing+wave]",
+ "v": "2.24.1",
+ "name": "중간 대가 대 상급 [지금]",
  "seed": 15,
  "rules": {
-  "risk": true,
-  "bodyBind": false,
-  "response": false,
-  "saltRing": true,
-  "wave": true
+  "profile": "지금"
  },
  "sides": [
   {

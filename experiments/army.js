@@ -14,7 +14,7 @@
 const fs = require('fs'), path = require('path');
 const A = require('../src');
 const ARCH = { tier: '대마법사', skill: '대가', deck: '대마법사 성' };
-const NOSALT = { saltRing: false };
+const NOSALT = { profile: '지금', saltRing: false };   // v2.24.1: 지금의 규칙 모두 (data/profiles.json)
 const v = A.VERSION;
 // 반지름 R 반원 (대마법사 쪽을 향해 열린)
 function arc(n, cx, cy, R, mm) { const out = []; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + Math.PI * (i + 0.5) / n; out.push(Object.assign({ x: +(cx + Math.cos(a) * R).toFixed(2), y: +(cy + Math.sin(a) * R * 0.95).toFixed(2) }, mm)); } return out; }
@@ -49,7 +49,7 @@ for (const [t, ns] of [['상위', [3, 5, 8, 12]], ['중간', [10, 20, 40, 80]], 
 
 // 한 장면 N판의 지표 합 (씨앗 from+1 ..)
 function run(name, from, N, rules) {
-  const o = { n: 0, win: 0, byTime: 0, t: 0, hp: 0, breakT: 0, broke: 0, fled: 0, army: 0, walls: 0, wallT: 0, z: 0, blind: 0, heavyTry: 0, heavyHit: 0, flashHit: 0 };
+  const o = { n: 0, win: 0, byTime: 0, t: 0, hp: 0, breakT: 0, broke: 0, fled: 0, army: 0, walls: 0, wallT: 0, z: 0, blind: 0, heavyTry: 0, heavyHit: 0, flashHit: 0, mb: 0 };
   for (let k = from; k < from + N; k++) {
     const sc = SCENES[name](k + 1); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
     const W = A.sceneWorld(sc), c = W.ms[0]; let zs = 0, zn = 0;
@@ -57,7 +57,7 @@ function run(name, from, N, rules) {
     const r = A.result(W), army = W.ms.filter(m => m.side !== 0), gone = army.map(m => m.alog.fledT ?? m.deathT).filter(x => x != null).sort((a, b) => a - b), need = Math.ceil(army.length * 0.8);
     o.n++; if (r.winner === 0) o.win++; if (r.byTime) o.byTime++; o.t += r.t; o.hp += Math.max(0, c.hp) / c.hpMax;
     if (gone.length >= need) { o.broke++; o.breakT += gone[need - 1]; }
-    o.fled += army.filter(m => m.alog.fled).length; o.army += army.length;
+    const fl = army.filter(m => m.alog.fled).length; o.fled += fl; o.army += army.length; if (fl >= army.length * 0.5) o.mb++;   // 사기로 무너진 판: 무리의 반 넘게 도망쳤다 (v2.24.1)
     o.walls += c.alog.walls; o.wallT += c.alog.wallT; o.z += zn ? zs / zn : 0; o.blind += c.alog.blinded;
     for (const m of army) { o.heavyTry += m.log.casts['무거운 돌'] || 0; o.heavyHit += m.log.hits['무거운 돌'] || 0; o.flashHit += m.alog.flashHit; }
   }

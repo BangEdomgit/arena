@@ -1,13 +1,9 @@
 {
- "v": "2.24.0",
- "name": "평범 전설 1 대 초보 3 [risk+saltRing+wave]",
+ "v": "2.24.1",
+ "name": "평범 전설 1 대 초보 3 [지금]",
  "seed": 2,
  "rules": {
-  "risk": true,
-  "bodyBind": false,
-  "response": false,
-  "saltRing": true,
-  "wave": true
+  "profile": "지금"
  },
  "sides": [
   {

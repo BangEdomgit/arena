@@ -1,12 +1,13 @@
 {
- "v": "2.24.0",
- "name": "기습: 대마법사 대 머스킷 40 반원 (14 m, 벽 없이)",
+ "v": "2.24.1",
+ "name": "기습: 대마법사 대 머스킷 40 반원 (14 m, 벽 없이) [지금]",
  "seed": 5,
  "width": 40,
  "height": 30,
  "maxT": 90,
  "obstacles": [],
  "rules": {
+  "profile": "지금",
   "saltRing": false
  },
  "sides": [

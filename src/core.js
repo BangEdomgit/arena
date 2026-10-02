@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.24.0
+ * 숨 결투장 — 엔진 핵심 v2.24.1
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.24.0';
+const VERSION = '2.24.1';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다

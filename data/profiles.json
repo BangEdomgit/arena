@@ -4,5 +4,6 @@
  "청사진": { "base": "진지", "rules": { "reflex": true, "snap": true, "blueprint": true } },
  "작전": { "base": "청사진", "rules": { "tactics": true } },
  "빠른 판": { "base": "작전", "rules": { "fineStep": true, "pace": true } },
- "결투장": { "base": "빠른 판", "rules": { "passives": true, "tune": true, "stunRes": true, "rings": true } }
+ "결투장": { "base": "빠른 판", "rules": { "passives": true, "tune": true, "stunRes": true, "rings": true } },
+ "지금": { "base": "결투장", "rules": {}, "note": "지금의 규칙 모두 (v2.24.1): 세계를 재는 장면(군대·무리·하늘·이웃 단계·둘러싸기)과 문턱의 H줄이 쓴다. 새 규칙을 기본으로 들이면 여기에 더한다" }
 }

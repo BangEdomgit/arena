@@ -30,10 +30,13 @@ function arenaGames(a, b, s0, n, look, deck) {
   return out;
 }
 // 기본 결투 (점수·시간 판정 합)
+const NOW = { profile: '지금' };   // H줄은 지금의 규칙으로 (v2.24.1)
 function duels(a, b, s0, n, rules) { const { part } = require('./versus'); return part(a, b, s0, n, rules || {}); }
 function crowdJob(n, s0, cnt) { return require('./crowd').run(n, s0, cnt); }
-function ringJob(c, q, n, s0, cnt, maxT) { return require('./jobs').crowd(c, q, n, s0, cnt, {}, 'ring', maxT); }
+function ringJob(c, q, n, s0, cnt, maxT) { return require('./jobs').crowd(c, q, n, s0, cnt, NOW, 'ring', maxT); }
 function armyJob(name, s0, cnt) { return require('./army').run(name, s0, cnt); }
+// 낮은 단계 결투 (지금의 규칙): 받은 피해 가운데 파도(폭주)의 몫 (v2.24.1)
+function lowJob(tier, s0, cnt) { const o = { wave: 0, tot: 0, n: 0 }; for (let s = s0; s < s0 + cnt; s++) { const r = A.duel(A.mage({ tier, deck: '합법 최강' }), A.mage({ tier, deck: '기본기' }), { seed: s + 1, rules: NOW }); o.n++; for (const m of r.ms) for (const k in m.log.taken) { o.tot += m.log.taken[k]; if (k === 'wave') o.wave += m.log.taken[k]; } } return o; }
 
 /* ---------------- 통계 ---------------- */
 const mean = xs => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
@@ -70,7 +73,7 @@ const ROWS = [
   ...['읽는 깊이', '분당 체크', '속임수 시도', '판당 수의 종류', '순간 켜기 성공'].map(k => [`Gs-${k}`, `계단: ${k} (초보→전설)`, B, 'b']),
   ['H. 힘과 무리'], ['H1-중간', '한 등급 위 1대1: 중간 / 평범', G(0.95, 1), '%'], ['H1-상위', '한 등급 위 1대1: 상위 / 중간', G(0.95, 1), '%'], ['H2', '대마법사 1 대 상위 1', G(0.95, 1), '%'], ['H3', '상위 1 대 평범 30', G(0.9, 1), '%'],
   ['H4', '대마법사 1 대 흩어진 상위 20', G(0.8, 1), '%'], ['H5', '대마법사 1 대 흩어진 상위 30', G(0.4, 0.6), '%'], ['H6', '대마법사 1 대 상위 전투단 10', G(0.4, 0.6), '%'], ['H7', '대마법사 1 대 평범 100 둘러싸기', G(0.95, 1), '%'],
-  ['H8', '머스킷 기습 (대마법사 승률)', G(0, 0.7), '%'], ['H9', '군대 들판 (대마법사 승률)', G(0.9, 1), '%'], ['H10', '장악권 밖 조약돌 (대마법사)', G(0.9, 1), '%'], ['H11', '장악권 밖 번쩍임 + 무거운 돌 (대마법사)', G(0.6, 0.9), '%'],
+  ['H8', '머스킷 기습 (대마법사 승률)', G(0, 0.7), '%'], ['H9', '군대 들판 (대마법사 승률)', G(0.9, 1), '%'], ['H9m', '군대 들판: 사기로 무너진 판 몫 (무리의 반 넘게 도망)', I, '%'], ['H12', '소금 도시 머스킷 60 (대마법사 승률)', G(0, 0.5), '%'], ['H13', '낮은 단계 결투의 폭주(파도) 피해 몫 (평범·중간)', G(0, 0.1), '%'], ['H10', '장악권 밖 조약돌 (대마법사)', G(0.9, 1), '%'], ['H11', '장악권 밖 번쩍임 + 무거운 돌 (대마법사)', G(0.6, 0.9), '%'],
   ['I. 균형'], ['I1-안', '원소 전체 승률 (소금 원 안): 가장 낮은·높은', B, 'r'], ['I1-밖', '원소 전체 승률 (소금 원 밖): 가장 낮은·높은', B, 'r'], ['I2', '부류: 어느 하나가 모든 등급에서 둘을 다 이기지 않음', B, 'b'], ['I3', '부류: 이단이 한 칸 이상 이김', B, 'b'],
   ['I4-평범', '기본 덱 같은 등급 전체 (평범): 가장 높은', G(0, 0.7), '%'], ['I4-중간', '기본 덱 같은 등급 전체 (중간): 가장 높은', G(0, 0.7), '%'],
 ];
@@ -134,10 +137,11 @@ async function measure(q) {
   if (OLD) for (let s = 1; s <= N; s += CH) add('arenaOld', 'arenaGames', ['전설', '전설', s, Math.min(CH, N - s + 1), true, OLD]);   // 옛 덱 줄 (이음용)
   const NS = q ? 6 : 20; for (const sk of SK) for (let s = 1; s <= NS; s += CH) add('stair:' + sk, 'arenaGames', [sk, sk, s, Math.min(CH, NS - s + 1), true]);
   for (let i = 1; i <= 4; i++) { for (const t of ['평범', '중간']) for (let s = 0; s < NL; s += 50) add(`lad:${t}:${i}`, 'duels', [{ tier: t, skill: SK[i] }, { tier: t, skill: SK[i - 1] }, s, Math.min(50, NL - s)]); for (let s = 1; s <= NL; s += 4) add(`lad:대마법사:${i}`, 'arenaGames', [SK[i], SK[i - 1], s, Math.min(4, NL - s + 1), false]); }
-  for (const [hi, lo] of [['중간', '평범'], ['상위', '중간'], ['대마법사', '상위']]) add('up:' + hi, 'duels', [{ tier: hi }, { tier: lo }, 0, N]);
+  for (const [hi, lo] of [['중간', '평범'], ['상위', '중간'], ['대마법사', '상위']]) add('up:' + hi, 'duels', [{ tier: hi }, { tier: lo }, 0, N, NOW]);
   for (const n of [20, 30]) for (let s = 1; s <= NC; s += 2) add('crowd:' + n, 'crowdJob', [n, s, Math.min(2, NC - s + 1)]);
   for (let s = 0; s < NC; s += 5) { add('ring30', 'ringJob', [{ tier: '상위' }, { tier: '평범', deck: '기본기' }, 30, s, Math.min(5, NC - s), 120]); add('ring100', 'ringJob', [{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 100, s, Math.min(5, NC - s), 90]); }
-  for (const nm of ['ambush', 'field-musket', 'throw-조약돌-100', 'throw-번쩍 돌-100']) for (let s = 0; s < NC; s += 5) add('army:' + nm, 'armyJob', [nm, s, Math.min(5, NC - s)]);
+  for (const nm of ['ambush', 'field-musket', 'salt-city', 'throw-조약돌-100', 'throw-번쩍 돌-100']) for (let s = 0; s < NC; s += 5) add('army:' + nm, 'armyJob', [nm, s, Math.min(5, NC - s)]);
+  for (const t of ['평범', '중간']) for (let s = 0; s < N; s += 25) add('low:' + t, 'lowJob', [t, s, Math.min(25, N - s)]);   // 낮은 단계 결투의 폭주 (v2.24.1)
   for (const ring of [true, false]) for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) add(`el:${ring}:${i}:${j}`, 'duels', [{ tier: '평범', skill: '상급', deck: ELEMS[i] }, { tier: '평범', skill: '상급', deck: ELEMS[j] }, 0, NI, { saltRing: ring }]);
   for (const t of ['평범', '중간', '상위']) for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) add(`ty:${t}:${i}:${j}`, 'duels', [{ tier: t, skill: '상급', type: TYPES[i] }, { tier: t, skill: '상급', type: TYPES[j] }, 0, NI]);
   for (const t of ['평범', '중간']) for (let i = 0; i < BASE.length; i++) for (let j = i + 1; j < BASE.length; j++) add(`dk:${t}:${i}:${j}`, 'duels', [{ tier: t, deck: BASE[i] }, { tier: t, deck: BASE[j] }, 0, NI]);
@@ -165,6 +169,8 @@ async function measure(q) {
   const win = k => { const r = (R[k] || []); const n = r.reduce((a, p) => a + p.n, 0); return Pr(r.reduce((a, p) => a + p.win, 0), n); };
   o.H3 = win('ring30'); o.H4 = (() => { const g = flat('crowd:20'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })(); o.H5 = (() => { const g = flat('crowd:30'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })();
   o.H6 = NA('상위 전투단 두뇌가 아직 없다 (4단계)'); o.H7 = win('ring100'); o.H8 = win('army:ambush'); o.H9 = win('army:field-musket'); o.H10 = win('army:throw-조약돌-100'); o.H11 = win('army:throw-번쩍 돌-100');
+  { const f = R['army:field-musket'] || []; let mb = 0, n = 0; for (const p of f) { mb += p.mb || 0; n += p.n; } o.H9m = n ? Pr(mb, n) : null; o.H12 = win('army:salt-city');
+    let w = 0, t = 0; for (const k of ['low:평범', 'low:중간']) for (const p of R[k] || []) { w += p.wave; t += p.tot; } o.H13 = t ? X(w / t, '평범·중간 합법 최강 대 기본기') : null; }   // 설정 기준 줄 (v2.24.1)
   // I
   for (const ring of [true, false]) { const tot = ELEMS.map(() => [0, 0]); for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) for (const p of R[`el:${ring}:${i}:${j}`] || []) { const x = p.a + p.d / 2; tot[i][0] += x; tot[i][1] += p.n; tot[j][0] += p.n - x; tot[j][1] += p.n; }
     const ps = tot.map(([x, n]) => Pr(x, n)), ok = ps.every(p => p && judge(p, G(0.35, 0.65)) !== '✗'), lo = Math.min(...ps.map(p => p.v)), hi = Math.max(...ps.map(p => p.v));
@@ -240,5 +246,5 @@ async function main(args) {
   if (!args.includes('--show')) { const r = await measure(args.includes('--quick')); card.versions[A.VERSION] = Object.assign({ date: new Date().toISOString().slice(0, 10) }, r); fs.writeFileSync(file, JSON.stringify(card, null, 1) + '\n'); fs.writeFileSync(md, render(card)); console.log(`v${A.VERSION} 잼 (${r.sec} s) → ${path.relative(process.cwd(), md)}`); }
   console.log(render(card));
 }
-module.exports = { arenaGames, duels, crowdJob, ringJob, armyJob, measure, render, judge, ROWS, JUDGE, main };
+module.exports = { arenaGames, duels, crowdJob, ringJob, armyJob, lowJob, measure, render, judge, ROWS, JUDGE, main };
 if (require.main === module) main(process.argv.slice(2)).catch(e => { console.error(e); process.exitCode = 1; });

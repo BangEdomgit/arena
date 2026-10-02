@@ -62,7 +62,7 @@ function run() {
     m.phase = 'in'; assert.ok(!sharp.behind(W, m, K), '들어갈 땐 떠난다'); m.phase = 'probe'; K.wallT = W.t - 11; assert.ok(!sharp.behind(W, m, K), '10 s 뒤');
     // 상위 무리 기준: 대가·상급 반반, 덱 셋을 돌려, 결투장 들판
     const CR = require('../../experiments/crowd'), sc = CR.scene(6, 1), cm = sc.sides[1].mages;
-    assert.ok(sc.width === 200 && sc.height === 150 && sc.rules.tactics && cm.filter(x => x.skill === '대가').length === 3 && new Set(cm.map(x => x.deck)).size === 3);
+    assert.ok(sc.width === 200 && sc.height === 150 && A.rulesOf(sc.rules).tactics && cm.filter(x => x.skill === '대가').length === 3 && new Set(cm.map(x => x.deck)).size === 3);
     // 걸음마다 지표의 새 칸, 성적표
     const Wt = require('../../metrics/watch'), w = A.sceneWorld(Object.assign({}, SCENES['v2-tactics-legend'], { seed: 1, maxT: 20 })); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); }
     const lk = Wt.seen(w, w.ms[0]); for (const k of ['짓지 않는 몫', '들어가기 몫', '끝내기 몫', '제 벽 곁 몫', '벽 뒤에서 쏜 몫']) assert.ok(lk[k] >= 0 && lk[k] <= 1, k);
@@ -86,7 +86,8 @@ function run() {
     assert.strictEqual(shot(0), 0, '벽이 실을 끊는다'); assert.strictEqual(shot(3), 1, '떠 있으면 넘는다');
     // 협공: 상위는 대마법사(선명도 두 배)에게 무리 싸움, 둘레를 나눠 선다
     const spread1 = (tac, sd) => { const w = A.sceneWorld(require('../../experiments/crowd').scene(14, sd, tac)); let res = 0, rn = 0, on = null;
-      for (let i = 0; i < 600; i++) { A.stepWorld(w); if (i === 150) on = w.ms.slice(1).every(q => q.hp <= 0 || SW.on(w, q, w.ms[0])); if (i % 15) continue;
+      const N = Math.round(20 / w.dt), ev = Math.round(0.5 / w.dt), t5 = Math.round(5 / w.dt);   // 걸음이 아니라 초로 (잘게 걷기면 걸음이 두 배)
+      for (let i = 0; i < N; i++) { A.stepWorld(w); if (i === t5) on = w.ms.slice(1).every(q => q.hp <= 0 || SW.on(w, q, w.ms[0])); if (i % ev) continue;
         const a0 = w.ms[0], sp = w.ms.slice(1).filter(q => q.hp > 0); if (sp.length < 3) continue; let sx = 0, sy = 0; for (const q of sp) { const d = Math.hypot(q.x - a0.x, q.y - a0.y);
           sx += (q.x - a0.x) / d; sy += (q.y - a0.y) / d; } res += Math.hypot(sx, sy) / sp.length; rn++; }
       return [on, res / rn]; }, spread = tac => { const a = spread1(tac, 1), b = spread1(tac, 2); return [a[0] && b[0], (a[1] + b[1]) / 2]; };   // 두 판 평균 (한 판은 대마법사의 움직임에 흔들린다)

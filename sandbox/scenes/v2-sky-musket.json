@@ -1,16 +1,12 @@
 {
- "v": "2.24.0",
- "name": "날아다니는 대마법사(비행 판단 초보: 총 앞에서도 난다) 대 머스킷 20정, 200×150 [risk+saltRing+wave]",
+ "v": "2.24.1",
+ "name": "날아다니는 대마법사(비행 판단 초보: 총 앞에서도 난다) 대 머스킷 20정, 200×150 [지금]",
  "seed": 2,
  "width": 200,
  "height": 150,
  "maxT": 90,
  "rules": {
-  "risk": true,
-  "bodyBind": false,
-  "response": false,
-  "saltRing": true,
-  "wave": true
+  "profile": "지금"
  },
  "sides": [
   {
