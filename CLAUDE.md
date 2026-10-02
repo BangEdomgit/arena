@@ -75,7 +75,7 @@ node cli.js gate [--quick]        # v2.16 v3.0 문턱(GATE-v4.md 1장, v2.20.1�
 버전 자리: 큰 수는 규칙의 뜻이 바뀔 때, 가운데는 새 마법·스위치·두뇌 기능(끄면 예전과 같음), 끝 수는 버그 수정·수치 조정.
 
 버전 문자열은 여러 곳에 있다. 올릴 때 함께 고친다:
-`src/core.js`(`VERSION`, 머리 주석), `src/brain/index.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`experiments/par.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `REPORT.md`, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.2)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
+`src/core.js`(`VERSION`, 머리 주석), `src/brain/index.js`(`VERSION`, 머리 주석), `src/index.js`·`src/registry.js`·`experiments/par.js`·`cli.js`·`test/test.js` 머리 주석, `README.md`·`SPEC.md` 제목, `REPORT.md`, `CHANGELOG.md`. 예시 장면의 `"v"`와 `node cli.js pack`도. 샌드박스 자체의 버전(v0.3)은 `sandbox/index.html`·`sandbox.js`·`pack.js`·SPEC 19장에 따로 있다.
 
 시험이 실패하면 규격을 어긴 것이다. 규칙을 일부러 바꾼 거라면 시험도 고치고 CHANGELOG에 이유를 적는다.
 
