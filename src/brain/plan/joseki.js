@@ -28,7 +28,7 @@ function commit(W, m, K, n) {
 // 받는 쪽: 상대가 수순을 짓기 시작했나. 받는 법을 K에 건다 (돌려줌: 받는 수순 또는 null)
 function read(W, m, K) {
   const e = K.e; if (!e) return null;
-  for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.auto && c !== K.eC && c !== K.eC2) { K.eP = K.eN; K.ePT = K.eNT; K.eN = c.s.n; K.eNT = W.t; K.eC2 = K.eC; K.eC = c; } }   // 상대가 지은 수의 차례 (내가 본 것만)
+  for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.hid && !c.auto && c !== K.eC && c !== K.eC2) { K.eP = K.eN; K.ePT = K.eNT; K.eN = c.s.n; K.eNT = W.t; K.eC2 = K.eC; K.eC = c; } }   // 상대가 지은 수의 차례 (내가 본 것만)
   for (const L of LINES) {
     if (!knows(m, L) || (L.ground && m.z >= 1)) continue; const a = L.answer.at;
     if (K.eN !== L.seq[a] || W.t - K.eNT > 0.6) continue;

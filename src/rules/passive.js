@@ -34,20 +34,22 @@ module.exports = {
     // 가장 먼저 닿는 위협의 잔기술 (within s 안). 없으면 0
     function threat(W, m, K, within) {
       let best = within, p = 0;
-      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || !B.OFF[c.s.t]) continue; const t = c.T - c.t; if (t >= best) continue; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * t, c.ty - m.y - m.vy * t) < P.near + (c.s.r || 0)) { best = t; p = psvOf(c.s); } }
+      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || c.hid || !B.OFF[c.s.t]) continue; const t = c.T - c.t; if (t >= best) continue; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * t, c.ty - m.y - m.vy * t) < P.near + (c.s.r || 0)) { best = t; p = psvOf(c.s); } }
       for (const a of W.areas) if (a.src.side !== m.side && a.t < best && B.C.hyp(a.x - m.x - m.vx * a.t, a.y - m.y - m.vy * a.t) < a.r + 0.6) { best = a.t; p = psvOf(a.s); }
       for (const pr of W.proj) { if (pr.dead || !pr.src || pr.src.side === m.side) continue; const dx = m.x - pr.x, dy = m.y - pr.y, v2 = pr.vx * pr.vx + pr.vy * pr.vy; if (!v2) continue; const t = (dx * pr.vx + dy * pr.vy) / v2; if (t > 0 && t < best && B.C.hyp(pr.x + pr.vx * t - m.x, pr.y + pr.vy * t - m.y) < 1.2) { best = t; p = psvOf(pr.s); } }
       return p;
     }
+    // 상대가 푼 공격 가운데 숨긴 몫 (손잡이 규칙의 기록: 풀린 수는 보인다)
+    function hidShare(e) { const T = e.mlog.tune; if (!T) return 0; let h = 0, n = 0; for (const k in T) { n += T[k]; if (k.charCodeAt(k.length - 1) === 104) h += T[k]; } let c = 0; for (const k in e.log.casts) c += e.log.casts[k]; return c >= 5 ? h / c : 0; }
     // 상대 책의 공격 가운데 가장 많은 종류
     function main(W, e) { const n = [0, 0, 0, 0]; for (const x of e.book) { const s = W.spells[x]; if (s && B.OFF[s.t]) n[psvOf(s)]++; } let b = 1; for (let i = 2; i < 4; i++) if (n[i] > n[b]) b = i; return b; }
     return {
       circles(W, q, c) { return q.st.psv > 0 ? Math.max(1, c - 1) : c; },   // 켜 둔 잔기술이 서클 하나
       bound(W, m, K) {
         if (!on(W, m) || m.hp <= 0 || m.st.stun > 0) return; const L = m.tac.passive, e = K.e; if (!e) return;
-        let want = 0;
+        let want = 0; const blind = L >= 3 && hidShare(e) >= P.hidOn;   // 숨긴 수를 자주 쓰는 상대: 예비동작을 못 보니 늘 켜고 바꿔 낀다 (손잡이, v2.19)
         if (L === 1) want = main(W, e);
-        else if (L === 2) { want = threat(W, m, K, P.swap); if (!want) { const r = e.last && W.spells[e.last]; want = r && B.OFF[r.t] ? psvOf(r) : main(W, e); } }
+        else if (L === 2 || blind) { want = threat(W, m, K, P.swap); if (!want) { const r = e.last && W.spells[e.last]; want = r && B.OFF[r.t] ? psvOf(r) : main(W, e); } }
         else { want = threat(W, m, K, P.lead[L] || P.lead[4]); if (want) m.mlog.gdT = W.t; else if (m.st.psv > 0 && W.t - m.mlog.gdT < P.min) want = m.st.psv; }
         if (K.keep & 4 && W.t < K.keepT && !(m.st.psv > 0)) want = 0;   // 정석의 아낄 자원 (수읽기)
         if (want) turnOn(W, m, want); else off(W, m);

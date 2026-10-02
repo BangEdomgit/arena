@@ -60,7 +60,7 @@ module.exports = {
   brain: B => {
     // 나를 노린 수가 lead s 안에 닿는가
     function soon(W, m, K) {
-      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || c.s.t === 'buff' || c.s.t === 'wall' || c.s.t === 'move' || c.T - c.t >= G.lead) continue; const k = c.T - c.t; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * k, c.ty - m.y - m.vy * k) < G.near + (c.s.r || 0)) return true; }
+      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || c.hid || c.s.t === 'buff' || c.s.t === 'wall' || c.s.t === 'move' || c.T - c.t >= G.lead) continue; const k = c.T - c.t; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * k, c.ty - m.y - m.vy * k) < G.near + (c.s.r || 0)) return true; }
       for (const a of W.areas) if (a.src.side !== m.side && a.t < G.lead && B.C.hyp(a.x - m.x - m.vx * a.t, a.y - m.y - m.vy * a.t) < a.r + 0.6) return true;
       for (const t of W.traps) if (t.src.side !== m.side && !t.done && m.z < 1.5 && t.seen.has(m.id) && B.C.hyp(t.x - m.x - m.vx * G.lead, t.y - m.y - m.vy * G.lead) < 2) return true;
       for (const p of W.proj) { if (p.dead || !p.src || p.src.side === m.side) continue; const dx = m.x - p.x, dy = m.y - p.y, v2 = p.vx * p.vx + p.vy * p.vy; if (!v2) continue; const t = (dx * p.vx + dy * p.vy) / v2; if (t > 0 && t < G.lead && B.C.hyp(p.x + p.vx * t - m.x, p.y + p.vy * t - m.y) < 1.2) return true; }

@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.18.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.19.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -540,7 +540,7 @@ ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막�
   [W, m, e] = mk('대가', '대가', '대마법사 청사진', [{ x: 100, y: 75, r: 2 }]); m.z = e.z = 0; const g0 = m.glu;
   m.cast = { s: W.spells['체인'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.4, cost: 4 }; sharp.losCancel(W, m, { los: false, e }); assert.ok(!m.cast && m.glu > g0 && m.mlog.losCut === 1, '끊기');
   // 판 하나 (v2.6의 규칙: 버티기·마법의 부딪힘 감쇠 없이): 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
-  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0 }); for (const sd of x.sides) { sd.mages[0].deck = '대마법사 청사진'; if (tac) sd.mages[0].tac = tac; } const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };   // 덱은 v2.6의 것 (결투장 장면은 v2.16부터 '대마법사 결투')
+  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0, tune: false }); for (const sd of x.sides) { sd.mages[0].deck = '대마법사 청사진'; if (tac) sd.mages[0].tac = tac; } const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };   // 덱은 v2.6의 것 (결투장 장면은 v2.16부터 '대마법사 결투')
   const a = run({ read: 0 }), b = run({ read: 0 }), c = run({ survive: false, sharp: false, read: 0 });   // 수읽기(v2.15)는 끄고 이 둘만 견준다
   assert.deepStrictEqual(a, b); for (const k of ['스스로 입은 몫', '사거리 안 짓는 몫', '사거리 안 두 칸 몫', '쓸모 있는 벽 몫', '빈틈 찌른 몫', '폭주', '막힌 직사 몫']) assert.ok(k in a[0], k);
   const fall = r => r.reduce((x, q) => x + q['받은 피해'] * q['추락 몫'], 0), over = r => r.reduce((x, q) => x + q['폭주'], 0); assert.ok(fall(a) < fall(c) && over(a) < over(c), '추락 ' + fall(a) + ' < ' + fall(c) + ', 폭주 ' + over(a) + ' < ' + over(c));
@@ -696,6 +696,24 @@ ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 �
   const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
   const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
   const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
+});
+ok('v2.19 손잡이 (SPEC 43장): 틀마다 붙는 곳, 2단계는 그대로, 에너지·비용, 방출에서 사본으로, 숨김은 안 보인다, 초보는 2단계만, 수를 센다', () => {
+  const TU = require('../src/rules/tune').api, W0 = A.createWorld({ seed: 1, obstacles: 0, rules: { tune: true } }), S = W0.spells;
+  const a = TU.make(S['낙뢰'], 1.6, 2, 1.4, false); assert.ok(Math.abs(a.r - S['낙뢰'].r * 1.6) < 1e-9 && a.dmg === S['낙뢰'].dmg * 2 && Math.abs(a.delay - S['낙뢰'].delay / 1.4) < 1e-9, '구름');
+  const t = TU.make(S['짧은 실'], 0.6, 4, 1, true); assert.ok(t.tw === 0.6 && Math.abs(t.E - S['짧은 실'].E * 4 * 0.8) < 1e-9, '실 (숨김은 위력 × 0.8)');
+  const tr = TU.make(S['번개 지뢰'], 1, 1, 1.4, false); assert.ok(Math.abs(tr.tr.arm - 0.8 / 1.4) < 1e-9 && tr.tr.r === S['번개 지뢰'].tr.r, '함정');
+  const two = TU.make(S['낙뢰'], 1, 1, 1, false); assert.ok(two.r === S['낙뢰'].r && two.dmg === S['낙뢰'].dmg && Math.abs(two.cost - S['낙뢰'].cost) < 1e-9, '2단계는 그대로');
+  assert.ok(Math.abs(TU.energy(S['돌 압축탄'], 1, 1, 1.4) - 1.96) < 1e-9 && Math.abs(TU.energy(S['낙뢰'], 2.5, 4, 1.4) - 62.5) < 1e-9, '에너지: 던지기는 × 속도²');
+  // 방출: 손잡이를 돌린 시전은 사본으로 푼다
+  const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: { tune: true, flight: false, saltRing: false } }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 0, 20, 20), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 1, 30, 20);
+  m.thinkT = e.thinkT = 1e9; A.stepWorld(W); A.release(W, m, { s: S['낙뢰'], tx: 30, ty: 20, tgt: e, t: 0, T: 0, tz: 1.6, tf: 2, tv: 1, hid: false, tk: 'z3f3v2' });
+  assert.ok(Math.abs(W.areas[W.areas.length - 1].r - S['낙뢰'].r * 1.6 * A.sizeOf(m, S['낙뢰'])) < 1e-9, '사본의 반지름');
+  // 숨김: 상대 두뇌가 예비동작을 못 본다
+  const BH = require('../src/brain/hooks').hooks(W); assert.ok(BH.hideCast.some(f => f(W, m, { hid: true, s: S['낙뢰'], T: 1, t: 0 }, e)));
+  // 판단: 초보는 손잡이를 돌리지 않는다, 전설은 판을 돌리면 돌린 수를 센다
+  assert.ok(A.mage({ tier: '대마법사', skill: '초보' }).tac.tune === 1 && A.mage({ tier: '대마법사', skill: '전설' }).tac.tune === 5);
+  const sc = JSON.parse(JSON.stringify(SCENES['v2-tactics-legend'])); sc.seed = 1; sc.maxT = 20; const w = A.sceneWorld(sc); while (!A.over(w)) A.stepWorld(w);
+  const k = Object.keys(w.ms[0].mlog.tune || {}); assert.ok(k.length > 0 && k.every(x => /#z[1-4]f[1-4]v[1-3]h?$/.test(x)), k.join(','));
 });
 ok('v2.18 잔기술 (SPEC 42장): 맞는 종류만 막고, 0.05 s에 켜지고, 끈 뒤 0.3 s, 서클 하나·머리 열, 절연 막은 전기 굳힘도 줄인다, 끄면 일반 막기', () => {
   const PS = require('../src/rules/passive').api, mk = on => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: { pace: true, passives: on, flight: false, saltRing: false } }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 0, 20, 20), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 1, 40, 20); m.thinkT = e.thinkT = 1e9; A.stepWorld(W); return [W, m, e]; };
