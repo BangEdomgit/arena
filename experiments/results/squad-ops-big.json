@@ -1,0 +1,164 @@
+{
+ "v": "2.26.0",
+ "date": "2026-10-02",
+ "S": 12,
+ "out": {
+  "scattered": {
+   "20": {
+    "n": 12,
+    "win": 1,
+    "hp": 0.654,
+    "t": 81.8,
+    "kills": 20,
+    "enc": 114,
+    "sur": 0.022,
+    "sim": 0,
+    "iso": 0.326,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "30": {
+    "n": 12,
+    "win": 0.583,
+    "hp": 0.251,
+    "t": 74.2,
+    "kills": 22.1,
+    "enc": 139,
+    "sur": 0.072,
+    "sim": 0,
+    "iso": 0.254,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "40": {
+    "n": 12,
+    "win": 0.333,
+    "hp": 0.054,
+    "t": 65.4,
+    "kills": 18.5,
+    "enc": 144,
+    "sur": 0.096,
+    "sim": 0,
+    "iso": 0.232,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   }
+  },
+  "squad": {
+   "20": {
+    "n": 12,
+    "win": 1,
+    "hp": 0.82,
+    "t": 79,
+    "kills": 20,
+    "enc": 109,
+    "sur": 0.008,
+    "sim": 0.739,
+    "iso": 0.322,
+    "sqEnc": 115,
+    "volleys": 15.5,
+    "regroups": 2.9,
+    "role": {
+     "strike": {
+      "casts": 35.4,
+      "dmg": 7.5
+     },
+     "eye": {
+      "casts": 31.3,
+      "dmg": 8.2
+     },
+     "shield": {
+      "casts": 5.7,
+      "dmg": 1.8
+     },
+     "bind": {
+      "casts": 26.7,
+      "dmg": 5.9
+     },
+     "bait": {
+      "casts": 5.3,
+      "dmg": 1.1
+     }
+    }
+   },
+   "30": {
+    "n": 12,
+    "win": 1,
+    "hp": 0.435,
+    "t": 85.7,
+    "kills": 30,
+    "enc": 128,
+    "sur": 0.032,
+    "sim": 0.85,
+    "iso": 0.291,
+    "sqEnc": 133,
+    "volleys": 23.3,
+    "regroups": 3.5,
+    "role": {
+     "eye": {
+      "casts": 96.7,
+      "dmg": 20.5
+     },
+     "strike": {
+      "casts": 126.1,
+      "dmg": 31.6
+     },
+     "bind": {
+      "casts": 82.4,
+      "dmg": 16
+     },
+     "bait": {
+      "casts": 10.3,
+      "dmg": 2.3
+     },
+     "shield": {
+      "casts": 18.4,
+      "dmg": 4.7
+     }
+    }
+   },
+   "40": {
+    "n": 12,
+    "win": 0.25,
+    "hp": 0.047,
+    "t": 65.6,
+    "kills": 22.5,
+    "enc": 110,
+    "sur": 0.046,
+    "sim": 0.921,
+    "iso": 0.318,
+    "sqEnc": 118,
+    "volleys": 19.7,
+    "regroups": 2.9,
+    "role": {
+     "strike": {
+      "casts": 164.3,
+      "dmg": 49.8
+     },
+     "eye": {
+      "casts": 112.4,
+      "dmg": 35.7
+     },
+     "bait": {
+      "casts": 12.7,
+      "dmg": 2.3
+     },
+     "shield": {
+      "casts": 27.2,
+      "dmg": 8.9
+     },
+     "bind": {
+      "casts": 101.3,
+      "dmg": 33.1
+     }
+    }
+   }
+  }
+ }
+}
