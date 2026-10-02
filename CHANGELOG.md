@@ -1,5 +1,10 @@
 # 바뀐 것
 
+## 2.24.0 — 작은 수 막기 시험 (SPEC 47장, 기본 꺼짐: 판은 그대로)
+- 시험 규칙 `chipGuard`(`rules/chipGuard`, `data/rules/chipGuard.json`): 응수가 있는 동안(몸을 쓸 수 있다) 대마법사의 떡대가 적의 한 방마다 `cut`(1.5)을 뺀다. 걸음마다 드는 피해는 그대로
+- 엔진: `hurt`에 `tick`(지대·빔·불·소금), `hurtMod`가 `src`·`tick`도 받는다. core가 `hurt`를 내보낸다
+- 결투장에서 재 봤다(200판, reports/v2.24.0.md): cut 1.5면 흐름 34 → 48%, 큰 한 방 0.60 → 0.74, 판 61 → 69 s, 판이 끝을 강요함 10 → 20%
+
 ## 2.23.1 — 정리 (판은 그대로: 결과 지문·장면 결과·표준 시험 묶음 같음)
 - 순환 require 없앰(한 묶음 18파일·32간선 → 0): 규칙은 두뇌 파일을 require하지 않고 `B.lib`로 받는다(`src/brain/lib/`). 덫 칸 `crowded`는 공용 `src/brain/lib/traps.js`
 - 고리 장부(`rules/rings`)는 녹화(`W.rec`)나 지표(`W._wt`)를 잴 때만

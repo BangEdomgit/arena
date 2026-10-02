@@ -14,7 +14,7 @@ module.exports = {
         for (const z of W.zones) {
           if (!inZone(z, m.x, m.y)) continue;
           if (z.dps && z.src !== m && z.src.side !== m.side && !z.lured && W.t - (z.src.lureT ?? -9) < 3) { z.lured = 1; z.src.log.lure++; }   // 끌어들인 적이 내 지대에 들었다
-          if (z.dps && (z.src !== m || z.k === 'h2s')) hurt(W, m, z.dps * W.dt, z.src === m ? null : z.src, z.n, z.k === 'fire' ? 'fire' : 'tox');
+          if (z.dps && (z.src !== m || z.k === 'h2s')) hurt(W, m, z.dps * W.dt, z.src === m ? null : z.src, z.n, z.k === 'fire' ? 'fire' : 'tox', true);
           if (z.k === 'fire' && !(m.st.wet > 0)) m.st.burn = Math.max(m.st.burn || 0, 1);
           if (z.k === 'nh3') { m.st.blind = Math.max(m.st.blind || 0, 0.3); m.st.cough = Math.max(m.st.cough || 0, 0.5); }
           if (z.k === 'spore') m.st.cough = Math.max(m.st.cough || 0, 0.5);

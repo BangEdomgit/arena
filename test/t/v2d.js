@@ -128,6 +128,13 @@ function run() {
     e.hp = e.hpMax * 0.1; o = th(); PL.value(W, m, K, o); assert.strictEqual(o.v, 0, '끝내기'); K.pl = { n: '짧은 실', mate: false, check: true, line: false, j: 0 }; o = th(); PL.value(W, m, K, o);
       assert.ok(o.v > 1, '체크는 둔다');
   });
+  ok('v2.24 작은 수 막기 (SPEC 47장, 시험 규칙): 끄면 그대로, 켜면 몸을 쓸 수 있는 대마법사의 한 방에서 cut을 빼고 틱·굳은 몸·약자는 그대로', () => {
+    const C = require('../../src/core'), P = require('../../data/rules/chipGuard.json'), mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 40, 40), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 1, 50, 40); return { W, m, e }; };
+    const hit = (rules, v, tick, stun) => { const { W, m, e } = mk(rules); if (stun) m.st.stun = 1; const h0 = m.hp; C.hurt(W, m, v, e, '짧은 실', 'fire', tick); return h0 - m.hp; };
+    const off = hit({}, 3), on = hit({ chipGuard: true }, 3); assert.ok(off > 0 && on < off, '줄어든다 ' + off + ' ' + on);
+    assert.strictEqual(hit({ chipGuard: true }, 3, true), hit({}, 3, true), '틱은 그대로'); assert.strictEqual(hit({ chipGuard: true }, 3, false, true), hit({}, 3, false, true), '굳은 몸은 그대로');
+    assert.strictEqual(hit({ chipGuard: true }, 0.01), 0, '작은 수는 0까지'); assert.ok(P.cut > 0);
+  });
   return done();
 }
 module.exports = { run };
