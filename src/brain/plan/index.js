@@ -8,7 +8,7 @@
  *     slip s 동안 걸음을 바꾼다(가까운 바위 뒤로 떨어져 엄폐, 없으면 상대에게서 멀리 가장 열린 쪽으로) · 벽 마법 × wall · 가장 빠른 체크로 역체크 × counter. 정석을 알면 받는 법(away·keep·cast)
  *   commit: 시전에 cast.chk(체크)·cast.mate(메이트). 기록 m.mlog: chk·mate·brk·plN(읽은 수)·plNodes(본 마디) */
 const ST = require('./state'), SE = require('./search'), JO = require('./joseki'), P = ST.P;
-const { C, hyp, OFF, landDelay } = require('../util');
+const { C, hyp, OFF, landDelay, castTime } = require('../util');
 const on = (m, K) => m.tac.read > 0 && m.C >= 5 && K.foes && K.foes.length === 1;
 const SD = new WeakMap(), TMP = ST.newSide();
 function sides(m) { let o = SD.get(m); if (!o) { o = { e: ST.newSide(), me: ST.newSide() }; SD.set(m, o); } return o; }
@@ -51,13 +51,17 @@ function net(W, m, K) {
   if (bd === 1e9) { let bj = 1, bb = 1e9; for (let j = 1; j < 9; j++) if (S.blk[j] < bb && ST.OX[j] >= 0) { bb = S.blk[j]; bj = j; } tx = S.bx[bj] - m.x; ty = S.by[bj] - m.y; }
   const l = hyp(tx, ty) || 1; K.brkX = tx / l * 2; K.brkY = ty / l * 2; K.brk = W.t + (away ? P.net.away : P.net.slip); m.mlog.brk++;
 }
+// 과녁 e의 앞 방패가 τ s 뒤에도 서 있고 나를 바라보나 (core의 frontBlock과 같은 각 1.1)
+function faces(e, m, tau) { const f = e.buf.front; if (!f || f.t < tau) return false; const a = C.atan2(m.y - e.y, m.x - e.x), d = ((a - e.aim + Math.PI * 3) % (Math.PI * 2)) - Math.PI; return (d < 0 ? -d : d) < 1.1; }
 // 값 고치기 (맨 끝)
 function value(W, m, K, o) {
   if (!on(m, K)) return;
   const s = o.s, pl = K.pl;
   if (s.big && !(pl && pl.mate && pl.n === o.n)) { o.v = 0; return; }   // 큰 한 방은 메이트일 때만
   JO.value(W, m, K, o);
-  if (pl && pl.n) { if (o.n === pl.n) { o.v = Math.max(o.v, pl.mate ? 0.6 : P.plan.base) * (pl.mate ? P.plan.mateBoost : P.plan.boost) * (pl.check ? P.plan.check : 1); if (pl.j) { o.tx = pl.tx; o.ty = pl.ty; } } else if (OFF[s.t] && o.v > 0) o.v *= pl.mate ? P.plan.others * 0.5 : P.plan.others; }   // 메이트면 그 수를 꼭
+  if ((s.t === 'thread' || s.t === 'proj') && o.v > 0 && faces(K.e, m, castTime(W, m, s.cast) + 0.1)) o.v *= P.shield.thru;   // 세운 앞 방패를 마주 보고 실·투사체는 헛수 (v2.16)
+  if (pl && pl.n) { if (o.n === pl.n) { o.v = (o.v > 0 || o.wait ? Math.max(o.v, pl.mate ? 0.6 : P.plan.base) : 0) * (pl.mate ? P.plan.mateBoost : P.plan.boost) * (pl.check ? P.plan.check : 1); if (pl.j) { o.tx = pl.tx; o.ty = pl.ty; } else if (pl.mate && (s.t === 'area' || s.t === 'lob')) { const q = ST.aim(W, K.e, castTime(W, m, s.cast) + (s.t === 'area' ? s.delay : s.flight)); o.tx = q.x; o.ty = q.y; } } else if (OFF[s.t] && o.v > 0) o.v *= pl.mate ? P.plan.others * 0.5 : P.plan.others; }   // 메이트면 그 수를 꼭. 메이트의 지연 폭발은 몸을 못 쓰는 상대의 정해진 길에 (v2.16)
+  if (OFF[s.t] && o.v > 0 && !(pl && pl.n === o.n && (pl.mate || pl.line || pl.check)) && K.e.hp <= K.e.hpMax * P.plan.finHp) o.v *= P.plan.finOthers;   // 끝내기: 거의 쓰러진 상대는 메이트로 (v2.16)
   if (K.brk > W.t) { if (s.t === 'wall' || s.t === 'build') o.v = Math.max(o.v, P.plan.base) * P.net.wall; else if (s.t === 'thread' && o.v > 0) o.v *= P.net.counter; }   // 깨기: 벽, 역체크
   if (K.jsL && K.jsL.answer.cast === o.n && W.t < K.keepT && o.v > 0) o.v *= JO.P.boost;   // 정석의 받는 법
   if (K.keep & 8 && W.t < K.keepT && s.t === 'buff' && s.b && s.b.front) o.v *= 0.2;   // 아낄 방패

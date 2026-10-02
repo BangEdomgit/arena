@@ -12,7 +12,7 @@ const ST = require('./state'), { P, FM } = ST;
 const { C, hyp, castTime, estDmg } = require('../util');
 const NK = 12, MAXD = 6, W_ = P.w, WR = new Float64Array([W_.roll, W_.cut, W_.guard, W_.shield, W_.wall, W_.shake]), MATE = W_.mate;
 const CN = new Array(NK).fill(''), CT = new Float64Array(NK), TAU = new Float64Array(NK), CR = new Float64Array(NK), CDM = new Float64Array(NK), CBIG = new Uint8Array(NK), CMASK = new Int32Array(NK),
-  CCOST = new Float64Array(NK), CCD = new Float64Array(NK), CCOV = new Uint8Array(NK), CSH = new Uint8Array(NK), CH = new Float64Array(NK), ORD = new Int32Array(NK), MYCD = new Float64Array(NK);
+  CCOST = new Float64Array(NK), CCD = new Float64Array(NK), CCOV = new Uint8Array(NK), CSH = new Uint8Array(NK), CH = new Float64Array(NK), ORD = new Int32Array(NK), MYCD = new Float64Array(NK), CHF = new Float64Array(NK);
 const PH = new Float64Array(8), AV = new Float64Array(6), CDR = new Float64Array(6), BLK = new Float64Array(9), GEO = new Float64Array(9), SBLK = new Float64Array(9 * MAXD);
 let EXP = 0, NC = 0, HAS = 0, SH = 0, GLU = 0, DMG = 0, GK = 0.45, MM = false, SS = null, nodes = 0, CHK0 = false, ANS0 = 0, MATE0 = false, PRED0 = -1;
 const OUT = { k: -1, j: 0, v: 0, mate: false, line: false, check: false, ans: 0, pred: -1, nodes: 0 };   // pred: 첫 수에 상대가 쓸 응수 (0~5 자원, 6 움직임, -1 없음)   // mate: 첫 수가 메이트, line: 읽은 수순 끝에 메이트
@@ -50,9 +50,10 @@ function direct(k, t1, T, depth, ply) {
   const mask = CMASK[k]; let n = 0, bi = -1, bc = 1e9;
   for (let i = 0; i < 7; i++) { if (!(mask & (1 << i)) || !can(i, k, T)) continue; n++; const c = cost(i, k); if (c < bc) { bc = c; bi = i; } }
   if (ply === 0) ANS0 = n;
-  const ph = PH[(CSH[k] ? 0 : 4) + (n > 3 ? 3 : n)];   // 응수가 n개일 때 맞을 가망 (배운 값)
+  const ph = PH[(CSH[k] ? 0 : 4) + (n > 3 ? 3 : n)] * CHF[k];   // 응수가 n개일 때 맞을 가망 (배운 값, 마법마다의 명중으로 고친다)
   if (ply === 0) MATE0 = !n && ph >= P.hit.mate;
   if (!n && ph >= P.hit.mate) { if (ply === 0) CHK0 = true; return MATE - ply * 2 + W_.dmg * (DMG + CDM[k] * ph); }   // 메이트: 응수가 없고 거의 맞는다
+  if (CBIG[k]) return -1e9;   // 큰 한 방은 메이트일 때만 둔다 (v2.16)
   let v; EXP = ph;
   if (!n) { v = me(depth - 1, t1, ply + 1) + W_.dmg * CDM[k] * ph; if (ply === 0) CHK0 = true; return v; }   // 응수가 없지만 빗나갈 수 있다
   if (!MM) v = answer(bi, k, t1, T, depth, ply);
@@ -78,6 +79,8 @@ function me(depth, t, ply) {
   }
   return tried ? best : leaf(t);
 }
+// 마법마다 배운 명중 (v2.16): 세 번 넘게 쓴 수는 (맞힌 + 0.3) / (쓴 + 1)을 내 공격 전체의 명중(효과 학습의 effHR)과 견준다. 0.1 ~ 1.4
+function eff(m, n) { const K = m._k, c = m.log.casts[n] || 0; if (!K || !(K.effHR > 0) || c < 3) return 1; const h = m.log.hits[n] || 0, q = (Math.min(c, h) + 0.3) / (c + 1) / (K.effHR > 0.05 ? K.effHR : 0.05), k = q * Math.sqrt(q); return k < 0.1 ? 0.1 : k > 1.4 ? 1.4 : k; }
 // 내 마법 표: 지금 과녁 e에게 닿는 공격마다 짓는 시간·닿는 때·덮는 반경·피해·큰 수·응수 비트·당·다시 쓸 때까지
 function table(W, m, e, S) {
   const A = ST.ra(), pc = ST.paceOn(W, m) ? A.pace.P : null, d = hyp(e.x - m.x, e.y - m.y), tr = pc ? pc.track[m.tac.pace || 0] || 0 : 0, los = !C.blocked(W, m.x, m.y, e.x, e.y, m.z > e.z ? m.z : e.z);
@@ -86,12 +89,13 @@ function table(W, m, e, S) {
     if (NC >= NK) break; const s = W.spells[n]; if (!s) continue; const f = s.t; if (!(f === 'thread' || f === 'proj' || f === 'area' || f === 'lob')) continue;
     if (d > C.rangeOf(m, s) || ((f === 'thread' || f === 'proj') && !los)) continue;
     if (e.z >= 2 && ((f === 'area' && !s.vis) || f === 'lob')) continue;   // 떠 있는 과녁에 헛된 수
+    if (s.big && e.hp > e.hpMax * P.big.hpAt) continue;   // 큰 한 방은 끝내기에만 (v2.16)
     const ct = castTime(W, m, s.cast), dm = estDmg(s);
     CN[NC] = n; CT[NC] = ct; TAU[NC] = ct + (f === 'thread' ? d / (32 * (s.fast || 1) * (pc ? pc.threadK : 1)) : f === 'proj' ? d / s.v : f === 'area' ? s.delay : s.flight);
     CR[NC] = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(m, s) + 0.3 : Math.max(1, tr + 0.6);
     CDM[NC] = dm; CBIG[NC] = s.big || dm >= P.big.minDmg ? 1 : 0; CMASK[NC] = FM[f]; CCOST[NC] = s.cost; CCD[NC] = s.cd * (pc ? pc.cdK : 1);
     CCOV[NC] = (f === 'area' || f === 'lob') && !CBIG[NC] && !S.fly ? 1 : 0; CSH[NC] = f === 'thread' || f === 'proj' ? 1 : 0; MYCD[NC] = m.cd[n] > 0 ? m.cd[n] : 0;
-    CH[NC] = dm / (TAU[NC] + 0.2); ORD[NC] = NC; NC++;
+    CHF[NC] = eff(m, n); CH[NC] = dm * CHF[NC] / (TAU[NC] + 0.2); ORD[NC] = NC; NC++;
   }
   for (let i = 1; i < NC; i++) { const x = ORD[i]; let j = i - 1; while (j >= 0 && CH[ORD[j]] < CH[x]) { ORD[j + 1] = ORD[j]; j--; } ORD[j + 1] = x; }   // 빠르고 센 것부터
 }
@@ -107,4 +111,4 @@ function read(W, m, e, S, depth, lt) {
   if (NC && depth > 0) me(depth, 0, 0);
   OUT.nodes = nodes; return OUT;
 }
-module.exports = { read, OUT, CN, TAU, CR };
+module.exports = { read, OUT, CN, TAU, CR, nc: () => NC };

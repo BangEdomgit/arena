@@ -53,7 +53,7 @@ function value(W, m, K, o) {
     const land = castTime(W, m, o.Tw) + landDelay(s, K.d), win = openFor(W, e);
     if (win > 0.15 && land < win && !off(m, 'open')) o.v *= 2 * (1 + 0.5 / (land + 0.2));   // 빈틈: 닫히기 전에 닿는 것, 빠를수록
     if (s.t !== 'trap' && s.t !== 'topple' && P.use && m.tac.aim && !off(m, 'chance') && !SW.on(W, m, e) && !(K.mode === 'poke' && MD.pokeOk(o))) {   // 공격 방식(v2.12): 견제의 싼·빠른 수만 문턱을 건너뛴다(맞히려는 게 아니라 움직이게 한다). 덮기·확정타까지 건너뛰니 전설 / 대가 0.71 → 0.48   // 무리 싸움(협공)엔 명중 문턱을 쓰지 않는다 (v2.10)
-      const ch = chance(W, m, K, o, land); o.v *= ch / (o.he > 0.05 ? o.he : 0.05); if (ch < (storm(W, m, K) ? P.minOpen : P.min) * patience(W, m) * (1 - K.hurry) && !(win > land) && !(K.slot === 'B' && m.tac.hold && W.rules.hold)) { o.v = 0; K.waitT = W.t; } }   // 명중 가망: 낮으면 빈틈을 기다린다 (v2.8)
+      const ch = chance(W, m, K, o, land); o.v *= ch / (o.he > 0.05 ? o.he : 0.05); if (ch < (storm(W, m, K) ? P.minOpen : P.min) * patience(W, m) * (1 - K.hurry) && !(win > land) && !(K.slot === 'B' && m.tac.hold && W.rules.hold)) { o.v = 0; K.waitT = W.t; o.wait = true; } }   // 명중 가망: 낮으면 빈틈을 기다린다 (v2.8)
     if (e.z >= 1 && !off(m, 'fly')) {
       const fast = s.t === 'thread' || (s.t === 'proj') || (s.t === 'area' && s.delay <= 0.6);
       if (fast) o.v *= 1.2;

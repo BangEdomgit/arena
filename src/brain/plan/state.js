@@ -21,12 +21,18 @@ function bookOf(W, d, S) {
   S.shN = ''; S.wlN = '';
   for (const n of d.book) { const s = W.spells[n]; if (!s) continue; if (!S.shN && s.t === 'buff' && s.b && s.b.front && s.react) S.shN = n; if (!S.wlN && (s.t === 'wall' || s.t === 'build')) S.wlN = n; }
 }
+// 떨어지는 사람이 몸을 못 쓰는 시간 (v2.16): 쿠션을 뿜을 줄 알면(날기 끊기, 판단 수준 flyCut 2부터) 굳음이 풀릴 때까지, 아니면 땅에 닿아 추락 굳음이 끝날 때까지
+function fallLock(W, d) {
+  if (W.rules.flightCut && (d.tac.flyCut || 0) >= 2) return d.st.stun > 0 ? d.st.stun : 0;
+  const vz = d.vz || 0, z = d.z > 0 ? d.z : 0, tg = (vz + Math.sqrt(vz * vz + 2 * G * z)) / G;
+  return tg + ra().fl.F.fallStun;
+}
 // 막는 사람 d의 줄인 상태 (치는 사람 a의 눈). h: 피할 곳을 볼 앞날(s)
 function build(W, d, a, S, h) {
   const A = ra(), av = S.av, cd = S.cd; let has = 0;
   bookOf(W, d, S);
   for (let i = 0; i < 6; i++) { av[i] = Infinity; cd[i] = 0; }
-  const fly = d.z >= 1 && d.fly === 1, lock = Math.max(d.st.stun, d.st.root, d.fly === 2 ? P.fallT : 0);   // 굳음·묶임·떨어짐이 풀릴 때까지는 몸을 못 쓴다
+  const fly = d.z >= 1 && d.fly === 1, lock = Math.max(d.st.stun, d.st.root, d.fly === 2 ? fallLock(W, d) : 0);   // 굳음·묶임·떨어짐이 풀릴 때까지는 몸을 못 쓴다
   // 0 구르기: 땅에 서 있고 기력이 있으면
   if (!fly && d.fly !== 3 && d.stam > 1.5) { av[0] = Math.max(d.rollCd, lock, 0); cd[0] = P.res.roll.cd; has |= 1; }
   // 1 옆 튀기: 날기 끊기를 쓰는 사람이 날 때
@@ -75,4 +81,16 @@ function slack(S, within) {
   for (let j = 1; j < 9; j++) if (S.blk[j] <= within && moveOK(S, within + 0.25, 1.5)) { n++; break; }
   return n;
 }
-module.exports = { P, RES, RI, MOVE, FM, OX, OY, ra, newSide, build, moveOK, cutOK, rollOK, slack, paceOn };
+// 굳거나 묶이거나 떨어지는 상대가 τ s 뒤 있을 자리 (v2.16): 몸을 못 쓰는 동안은 길이 정해져 있다. 떨어지면 중력·공기(× (1 − 0.5 dt)), 땅에서 굳으면 걸음 가속 9로 선다, 풀리면 그 빠르기로. 결과는 AIM
+const AIM = { x: 0, y: 0, lock: 0 };
+function aim(W, e, tau) {
+  const dt = W.dt, n = Math.min(90, Math.ceil(tau / dt)); let x = e.x, y = e.y, z = e.z, vx = e.vx, vy = e.vy, vz = e.vz || 0, fall = e.fly === 2, st = e.st.stun > e.st.root ? e.st.stun : e.st.root;
+  for (let i = 0; i < n; i++) {
+    if (fall) { vz -= G * dt; z += vz * dt; const k = 1 - 0.5 * dt; vx *= k; vy *= k; if (z <= 0) { fall = false; z = 0; if (st < P.fallT) st = P.fallT; } }
+    else if (st > 0) { const k = 1 - Math.min(1, dt * 9); vx *= k; vy *= k; }
+    st -= dt; x += vx * dt; y += vy * dt;
+  }
+  AIM.x = x < 0.4 ? 0.4 : x > W.width - 0.4 ? W.width - 0.4 : x; AIM.y = y < 0.4 ? 0.4 : y > W.height - 0.4 ? W.height - 0.4 : y; AIM.lock = st;
+  return AIM;
+}
+module.exports = { P, RES, RI, MOVE, FM, aim, AIM, OX, OY, ra, newSide, build, moveOK, cutOK, rollOK, slack, paceOn };

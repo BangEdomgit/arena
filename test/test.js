@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.16.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.17.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -540,7 +540,7 @@ ok('v2.6 스스로 죽지 않기·날카롭게 (SPEC 30장): 머리 넘침 막�
   [W, m, e] = mk('대가', '대가', '대마법사 청사진', [{ x: 100, y: 75, r: 2 }]); m.z = e.z = 0; const g0 = m.glu;
   m.cast = { s: W.spells['체인'], tgt: e, tx: e.x, ty: e.y, t: 0, T: 0.4, cost: 4 }; sharp.losCancel(W, m, { los: false, e }); assert.ok(!m.cast && m.glu > g0 && m.mlog.losCut === 1, '끊기');
   // 판 하나 (v2.6의 규칙: 버티기·마법의 부딪힘 감쇠 없이): 걸음마다 지표, 같은 씨앗이면 같다. 전설끼리 추락 피해가 기술이 없을 때보다 적다
-  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0 }); if (tac) for (const sd of x.sides) sd.mages[0].tac = tac; const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };
+  const sc = SCENES['v2-tactics-legend'], run = tac => { const x = JSON.parse(JSON.stringify(sc)); x.seed = 2; x.rules = Object.assign({}, x.rules, { endureK: 0, bluntK: 0 }); for (const sd of x.sides) { sd.mages[0].deck = '대마법사 청사진'; if (tac) sd.mages[0].tac = tac; } const w = A.sceneWorld(x); while (!A.over(w)) { A.stepWorld(w); Wt.watch(w); } return w.ms.map(q => Wt.seen(w, q)); };   // 덱은 v2.6의 것 (결투장 장면은 v2.16부터 '대마법사 결투')
   const a = run({ read: 0 }), b = run({ read: 0 }), c = run({ survive: false, sharp: false, read: 0 });   // 수읽기(v2.15)는 끄고 이 둘만 견준다
   assert.deepStrictEqual(a, b); for (const k of ['스스로 입은 몫', '사거리 안 짓는 몫', '사거리 안 두 칸 몫', '쓸모 있는 벽 몫', '빈틈 찌른 몫', '폭주', '막힌 직사 몫']) assert.ok(k in a[0], k);
   const fall = r => r.reduce((x, q) => x + q['받은 피해'] * q['추락 몫'], 0), over = r => r.reduce((x, q) => x + q['폭주'], 0); assert.ok(fall(a) < fall(c) && over(a) < over(c), '추락 ' + fall(a) + ' < ' + fall(c) + ', 폭주 ' + over(a) + ' < ' + over(c));
@@ -696,6 +696,26 @@ ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 �
   const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
   const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
   const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
+});
+ok('v2.17 수읽기의 끝내기 (SPEC 41장): 떨어지는 상대의 잠김·정해진 길, 큰 한 방은 끝내기에만, 세운 방패를 마주 본 실은 헛수, 거의 쓰러진 상대엔 메이트·체크만', () => {
+  const PL = A.brain.plan, ST = PL.ST, SE = require('../src/brain/plan/search');
+  const W = A.createWorld({ seed: 1, obstacles: [], width: 200, height: 150, rules: { flightCut: true, reflex: true, snap: true, pace: true, fineStep: true } });
+  const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 0, 90, 75), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 1, 100, 75); A.stepWorld(W); require('../src/brain/hooks').hooks(W); m.thinkT = e.thinkT = 1e9;
+  // 굳은 채 떨어진다: 쿠션을 쓸 줄 알면(날기 끊기 2부터) 굳음이 풀릴 때까지, 모르면 땅에 닿아 추락 굳음이 끝날 때까지 몸을 못 쓴다
+  e.z = 3; e.fly = 2; e.vz = 0; e.vx = 20; e.vy = 0; e.st.stun = 0.4; e.tac.flyCut = 3; let S = ST.build(W, e, m, ST.newSide(), 0.5); assert.ok(S.av[3] >= 0 && Math.abs(S.up - Math.max(0.4, PL.ST.P.takeoff)) < 1e-9, '쿠션: ' + S.up);
+  e.tac.flyCut = 0; S = ST.build(W, e, m, ST.newSide(), 0.5); assert.ok(S.up > 0.78 + 1, '땅까지 + 추락 굳음: ' + S.up);
+  // 정해진 길: 떨어지는 동안 20 m/s로 미끄러진다 (반만 앞선 겨냥보다 멀리)
+  const q = ST.aim(W, e, 0.6); assert.ok(q.x > e.x + 9 && q.x < e.x + 12.5 && Math.abs(q.y - e.y) < 1e-9, q.x);
+  e.z = 0; e.fly = 0; e.vx = 0; e.st.stun = 0; e.tac.flyCut = 3;
+  // 큰 한 방은 상대 체력이 절반 아래일 때만 수 목록에 든다
+  const lt = new Float64Array(16).fill(10); for (let i = 0; i < 8; i++) lt[8 + i] = 9; m.glu = 100; for (const n in m.cd) m.cd[n] = 0;
+  const S2 = ST.build(W, e, m, ST.newSide(), 0.5); SE.read(W, m, e, S2, 1, lt); const has = () => SE.CN.slice(0, SE.nc()).includes('대낙뢰');
+  assert.ok(!has(), '체력이 가득하면 큰 한 방 없음'); e.hp = e.hpMax * 0.4; SE.read(W, m, e, S2, 1, lt); assert.ok(has(), '절반 아래면 있음');
+  // 세운 앞 방패가 나를 마주 보면 실은 헛수. 거의 쓰러진 상대에겐 메이트·체크가 아닌 공격을 쉰다
+  const K = { foes: [e], e, pl: { n: '', mate: false }, brk: -9, keep: 0, keepT: -9, jsL: null, jo: -1 }, th = () => ({ s: W.spells['짧은 실'], n: '짧은 실', v: 1 });
+  e.hp = e.hpMax; e.aim = 3.14159; e.buf.front = { t: 1.5 }; let o = th(); PL.value(W, m, K, o); assert.strictEqual(o.v, 0, '방패');
+  e.aim = 0; o = th(); PL.value(W, m, K, o); assert.strictEqual(o.v, 1, '등 뒤에서는 그대로'); e.buf.front = null;
+  e.hp = e.hpMax * 0.1; o = th(); PL.value(W, m, K, o); assert.strictEqual(o.v, 0, '끝내기'); K.pl = { n: '짧은 실', mate: false, check: true, line: false, j: 0 }; o = th(); PL.value(W, m, K, o); assert.ok(o.v > 1, '체크는 둔다');
 });
 // 병렬 실행기 (1.11.1): 일꾼 수·차례와 상관없이 한 줄로 돌린 것과 같다
 (async () => {
