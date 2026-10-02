@@ -21,6 +21,7 @@ const on = (W, m) => m.C >= P.cMin;
 const TR = { thread: 1, proj: 1, area: 2 };
 const FL = require('./flight').api, SR = require('./saltRing').api;
 const SKIP = { fall: 1, salt: 1, backfire: 1, wave: 1 };
+const GF = require('./gunfire').api;
 module.exports = {
   name: 'pace', switch: 'pace', api: { P },
   engine: X => ({
@@ -31,8 +32,8 @@ module.exports = {
       const k = t === 2 ? (c.s.delay || 0) * 0.5 : 0, px = q.x + q.vx * k, py = q.y + q.vy * k, d = X.hyp(px - c.tx, py - c.ty);   // 구름은 터질 때의 반쯤 앞으로
       if (d < R && d > 0) { c.tx = px; c.ty = py; m.mlog.trackN++; }
     },
-    hurtMod(W, m, v, kind) {
-      if (!on(W, m) || SKIP[kind]) return v;
+    hurtMod(W, m, v, kind, name) {
+      if (!on(W, m) || SKIP[kind] || (W.rules.gunfire && GF.isGun(W, name))) return v;   // 총알은 마력이 아니다 (rules/gunfire, v2.25)
       v *= P.bulk;
       if (m.st.guard > 0) { m.mlog.guardBlk += v * (1 - G.k); v *= G.k; if (m.st.guard < G.okT && m.mlog.gdOkC !== m.mlog.gdOn) { m.mlog.gdOk++; m.mlog.gdOkC = m.mlog.gdOn; } }   // 순간 켜기 성공: 켠 지 okT s 안에 맞았다 (v2.16 지표)
       return v;

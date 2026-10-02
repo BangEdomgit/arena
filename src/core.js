@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.24.1
+ * 숨 결투장 — 엔진 핵심 v2.25.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.24.1';
+const VERSION = '2.25.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -54,6 +54,8 @@ const DEFAULT_RULES = {
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
   fineStep: false,     // (v2.14) 잘게 걷기: 한 걸음 1/60 s (W.dt). 대마법사 장면이 켠다: 빠른 판의 피하기·끊기가 걸음 크기에 덜 묶인다 (SPEC 38장)
   tune: false,         // (v2.19) 손잡이: 크기·화력·속도, 숨김 (SPEC 43장, rules/tune)
+  gunfire: false,      // (v2.25) 총의 쏨: 머스킷은 풀 때까지 과녁을 따라 겨누고, 떡대·잔기술은 총알을 줄이지 않는다 (SPEC 48장, rules/gunfire)
+  calm: false,         // (v2.25) 머리 아끼기: 낮은 단계(선명도 5 아래)는 파도를 타되 휩쓸리지 않는다 (SPEC 48장, rules/calm)
   chipGuard: false,    // (v2.24, 시험) 작은 수 막기: 응수가 있는 동안 떡대가 적의 한 방마다 일정량을 뺀다 (SPEC 47장, rules/chipGuard)
   rings: false,        // (v2.22) 고리 장부: 사람마다 서클의 쓰임을 읽어낸다(m.mlog.rings). 판에 닿지 않는다 (SPEC 46장, rules/rings)
   stunRes: false,      // (v2.21) 굳힘 내성과 몸 털기: 다시 굳으면 짧게(× 0.5 → × 0.25), 굳음을 터는 몸 털기 (SPEC 45장, rules/stunRes)

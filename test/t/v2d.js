@@ -135,6 +135,15 @@ function run() {
     assert.strictEqual(hit({ chipGuard: true }, 3, true), hit({}, 3, true), '틱은 그대로'); assert.strictEqual(hit({ chipGuard: true }, 3, false, true), hit({}, 3, false, true), '굳은 몸은 그대로');
     assert.strictEqual(hit({ chipGuard: true }, 0.01), 0, '작은 수는 0까지'); assert.ok(P.cut > 0);
   });
+  ok('총의 쏨 (v2.25, SPEC 48장): 총알은 떡대·잔기술이 줄이지 않고, 머스킷은 방아쇠 때의 과녁을 앞질러 겨눈다. 머리 아끼기는 끄면 그대로', () => {
+    const C = require('../../src/core'), mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules: Object.assign({ profile: '결투장' }, rules) }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 40, 40), e = A.addMage(W, A.mage({ tier: '병사', deck: '머스킷' }), 1, 50, 40); return { W, m, e }; };
+    const hit = rules => { const { W, m, e } = mk(rules); const h0 = m.hp; C.hurt(W, m, 60, e, '머스킷', 'blunt'); return h0 - m.hp; };
+    assert.ok(hit({ gunfire: true }) > 2 * hit({}), '총알 ' + hit({}) + ' → ' + hit({ gunfire: true }));
+    const { W, m, e } = mk({ gunfire: true }); m.vx = 6; m.vy = 0; const c = { s: W.spells['머스킷'], t: 0.2, T: 0.4, tgt: m, tx: m.x, ty: m.y };
+    e.cast = c; for (const f of W.H.mageStep) f(W, e); for (const f of W.H.track) f(W, e, c);
+    assert.ok(c.tx > m.x + 1, '앞질러 겨눈다 ' + c.tx + ' ' + m.x);
+    assert.ok(A.rulesOf({ profile: '지금' }).gunfire && !A.rulesOf({}).gunfire && !A.rulesOf({}).calm);
+  });
   return done();
 }
 module.exports = { run };

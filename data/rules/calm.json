@@ -1,0 +1,9 @@
+{
+ "desc": "낮은 단계의 머리 아끼기 (rules.calm, v2.25, SPEC 48장)",
+ "cMax": 5,
+ "enter": [999, 100],
+ "edge": 150,
+ "edgeM": 120,
+ "finish": 0.25,
+ "rest": 0
+}

@@ -7,7 +7,7 @@
  *   켜진 판에선 빠른 판의 일반 막기(rules/pace)는 쉰다. 기록은 막기의 것(mlog.guardN·guardT·guardBlk·gdOn·gdOff·gdOk)을 그대로
  * 두뇌 (tac.passive): 1 중급 늘 켬(상대 책의 공격 가운데 가장 많은 종류) · 2 상급 바꿔 낌(보이는 위협 → 상대가 마지막에 푼 공격 → 책)
  *   · 3 대가 위협이 lead s 안에 닿을 때만 · 4 전설 같게, 더 짧은 lead (맞기 직전에만) */
-const P = require('../../data/rules/passive.json');
+const P = require('../../data/rules/passive.json'), GF = require('./gunfire').api;
 const KIND = {}; P.kinds.forEach((ks, i) => { for (const k of ks) KIND[k] = i + 1; });   // 피해 종류 → 잔기술
 const on = (W, m) => m.C >= P.cMin && m.tac.passive > 0;
 const kindOf = s => s.t === 'thread' ? 'elec' : (s.kind || (s.hit && s.hit.kind) || 'blunt');   // 이 마법의 피해 종류 (실은 전기, 투사체는 맞힘의 것)
@@ -18,8 +18,8 @@ function turnOn(W, m, p) { if (m.st.psv === p) return; if (m.st.psv > 0) { off(W
 module.exports = {
   name: 'passive', switch: 'passives', api: { P, KIND, kindOf, psvOf, active, on },
   engine: X => ({
-    hurtMod(W, m, v, kind) {
-      if (!active(m) || KIND[kind] !== m.st.psv) return v;
+    hurtMod(W, m, v, kind, name) {
+      if (!active(m) || KIND[kind] !== m.st.psv || (W.rules.gunfire && GF.isGun(W, name))) return v;   // 총알은 마력이 아니다 (rules/gunfire, v2.25)
       m.mlog.guardBlk += v * (1 - P.k); if (m.st.psvT < P.okT && m.mlog.gdOkC !== m.mlog.gdOn) { m.mlog.gdOk++; m.mlog.gdOkC = m.mlog.gdOn; }   // 순간 켜기 성공
       return v * P.k;
     },

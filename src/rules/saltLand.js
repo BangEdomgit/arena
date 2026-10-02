@@ -5,6 +5,8 @@
 module.exports = {
   name: 'saltLand', on: W => W.salt.length > 0,
   engine: X => ({
+    // 짓는 벽(build)은 짓는 동안 블록이 하나씩 선다: 소금 땅에 올라서면 흙을 더 끌어오지 못한다 (v2.25: 풀 때만 보던 구멍)
+    mageStep(W, m) { const c = m.cast; if (c && c.s.t === 'build' && X.onSalt(W, m.x, m.y)) { m.cast = null; m.log.fizz++; } },
     gate(W, m, s, tx, ty) { if (s.mundane) return false; const p = X.formPoint(m, s, tx, ty) || [m.x, m.y]; return X.onSalt(W, p[0], p[1]); },
   }),
   brain: B => ({
