@@ -2,9 +2,9 @@
 /* 숨 결투장 — 싸움의 그림 지표 (v2.20.1, GATE-v4.md 0장·1장, SPEC 44장)
  * watch(metrics/watch.js)가 걸음마다 맨 끝에 부르고 seen이 합친다. 판에는 닿지 않는다(읽기만: 상태는 W._wf, 사람마다 Map).
  *   C7 메이트 (바꿈): 쓰러뜨린 한 방(쓰러지기 1.5 s 안에 나에게 풀린 적의 마지막 공격)이 알아채지 못한 수였거나(cast.unseen),
- *      온전히 받는 응수(막기·잔기술 빼고)가 0이고 막기·잔기술을 써도 남는 피해(× k)로 쓰러지는 수였다. 응수는 짓기 시작할 때와 풀 때 세어 작은 쪽(plan.ansSplit, v2.21: 굳은 동안은 몸 털기뿐)
+ *      온전히 받는 응수(막기·잔기술 빼고)가 0이고 막기·잔기술을 써도 남는 피해(× k)로 쓰러지는 수였다. 응수는 짓기 시작할 때 센다(풀 때 과녁이 굳어 있으면 다시 세어 작은 쪽, v2.22)(plan.ansSplit, v2.21: 굳은 동안은 몸 털기뿐)
  *   덫이 결정타면(v2.21) 못 본 덫이거나 몸을 못 쓰는 채(굳음·묶임·떨어짐) 밟았을 때 메이트, 보고 걸어 들어갔으면 견제
- *   B15 판을 끝낸 까닭: 시간 / 실수(소금·역류·폭주·내 피해·적의 굳힘 없는 추락) / 떨어뜨림(적이 떨어뜨린 추락) / 메이트 / 견제가 쌓여. 끝낸 수의 이름#손잡이
+ *   B15 판을 끝낸 까닭: 시간 / 판이 끝을 강요함(줄어드는 소금 원, v2.23) / 실수(역류·폭주·내 피해·적의 굳힘 없는 추락) / 떨어뜨림(적이 떨어뜨린 추락) / 메이트 / 견제가 쌓여. 끝낸 수의 이름#손잡이
  *   B9 1 s 최대 손실 (바꿈): 그 1 s가 시작될 때 내 방어 여유(plan.slackOf)가 1 이상이던 창만, 메이트의 결정타가 든 걸음은 뺀다
  *   B7 침묵 (바꿈): 짓기(칸·뿜기)·숨·숨기(둘 사이 시야가 막힘)·자리 잡기(상대 쪽으로 3 m/s 넘게 다가가거나 멀어짐)도 행동
  *   B13 흐름: 판의 마지막 3분의 1에 잃은 체력 몫. B14 역전: 판 절반에서 체력 몫이 5%p 넘게 뒤진 쪽이 이겼나
@@ -15,9 +15,11 @@ const C = require('../src/core'), PL = require('../src/brain/plan');
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, SELF = { salt: 1, backfire: 1, wave: 1 };
 const AD = { n: 0, g: false };
 const newF = n => ({ hp: -1, tk: {}, fd: 0, ring: new Float64Array(n), ok: new Uint8Array(n), ri: 0, full: false, okNow: 1, burst: 0, lastC: null, lastCT: -9, pc: null, pb: null, info: new WeakMap(), bigs: [], bigN: 0, bigCut: 0,
-  rel: [], uN: 0, uH: 0, sN: 0, sH: 0, relN: 0, weak: 0, fz: 0, fz0: -1, push0: false, pushN: 0, kill: '', killMove: '', kWhy: '', samp: [], lk: false });
+  rel: [], uN: 0, uH: 0, sN: 0, sH: 0, relN: 0, weak: 0, fz: 0, fz0: -1, push0: false, pushN: 0, kill: '', killMove: '', kWhy: '', samp: [], lk: false, kH: -1, kBig: false, kBigOK: false, dOk: 0, dAll: 0, dAns: 0, dNo: 0, dUn: 0 });
 const foeOf = (W, m) => { let e = null, bd = 1e9; for (const q of W.ms) { if (q.side === m.side || q.hp <= 0) continue; const d = C.hyp(q.x - m.x, q.y - m.y); if (d < bd) { bd = d; e = q; } } return e; };
 const foeDealt = (W, m) => { let x = 0; for (const q of W.ms) if (q.side !== m.side) for (const k in q.log.dealt) x += q.log.dealt[k]; return x; };
+// 큰 한 방을 지금 시작할 수 있나 (v2.22 재기): 책의 큰 마법(big)이 간격이 끝났고 당이 있다
+const bigReady = (W, m) => { for (const n of m.book) { const s = W.spells[n]; if (s && s.big && !(m.cd[n] > 0) && m.glu >= s.cost) return true; } return false; };
 const guardK = W => { const R = C.RULES; if (W.rules.passives) { const r = R.find(x => x.name === 'passive'); return r.api.P.k; } const r = R.find(x => x.name === 'pace'); return r.api.P.guard.k; };
 function step(W) {
   const A = W._wf || (W._wf = { by: new Map(), sil: 0, last: 0, samp: [], sampT: -9, n: 0, tp: [] });
@@ -36,11 +38,11 @@ function step(W) {
     // 내 시전: 시작(응수·알아챔·큰 수), 풀림(E8·D7), 끊김(C12)
     for (let q = 0; q < 2; q++) {
       const c = q ? m.castB : m.cast, p = q ? F.pb : F.pc;
-      if (c && c !== p && !c.auto && OFF[c.s.t] && e) { PL.ansSplit(W, e, m, c, AD); F.info.set(c, { n: AD.n, g: AD.g, un: !!c.unseen, mv: c.s.n + (c.tk ? '#' + c.tk : '') }); if (c.s.big || c.tf >= 4 || c.tz >= 2.5) { F.bigs.push(c); F.bigN++; } }
+      if (c && c !== p && !c.auto && OFF[c.s.t] && e) { PL.ansSplit(W, e, m, c, AD); F.info.set(c, { n: AD.n, g: AD.g, un: !!c.unseen, mv: c.s.n + (c.tk ? '#' + c.tk : ''), h: e.hp / e.hpMax, big: !!(c.s.big || c.tf >= 4 || c.tz >= 2.5), bigOK: bigReady(W, m) }); if (c.s.big || c.tf >= 4 || c.tz >= 2.5) { F.bigs.push(c); F.bigN++; } }
       if (p && p !== c && OFF[p.s.t] && !p.auto) {
         const rel = p.t >= p.T - W.dt * 1.5, bi = F.bigs.indexOf(p); if (bi >= 0) { if (!rel) F.bigCut++; F.bigs.splice(bi, 1); }
         if (rel) { F.relN++; if (C.gAt(W, m, p.s, p.tx, p.ty) < 0.5) F.weak++; F.rel.push({ n: p.s.n, h0: m.log.hits[p.s.n] || 0, due: W.t + 1.5, un: !!p.unseen });
-          const tg = p.tgt; if (tg && tg.side !== m.side) { const T = A.by.get(tg), I = F.info.get(p); if (I && tg.hp > 0) { PL.ansSplit(W, tg, m, p, AD); if (AD.n < I.n) I.n = AD.n; if (!AD.g) I.g = false; } if (T) { T.lastC = I || null; T.lastCT = W.t; } } }   // 풀 때 다시 센다(v2.21: 짓는 동안 굳었으면 응수가 사라진다)
+          const tg = p.tgt; if (tg && tg.side !== m.side) { const T = A.by.get(tg), I = F.info.get(p); if (I && tg.hp > 0 && tg.st.stun > 0) { PL.ansSplit(W, tg, m, p, AD); if (AD.n < I.n) I.n = AD.n; if (!AD.g) I.g = false; } if (T) { T.lastC = I || null; T.lastCT = W.t; } } }   // 풀 때 과녁이 굳어 있으면 다시 센다(짓는 동안 굳어 응수가 사라졌다). 굳지 않았으면 다시 세지 않는다: 실은 풀자마자 닿아 무엇이든 0이 된다 (v2.22 바로잡음)
       }
       if (q) F.pb = c; else F.pc = c;
     }
@@ -56,13 +58,15 @@ function step(W) {
       const wa = W._wt && W._wt.by.get(m), fallBy = !!(wa && wa.fallBy), lc = W.t - F.lastCT <= 1.5 ? F.lastC : null;
       F.kWhy = bk + (foe < tot * 0.5 ? '·내 것' : '');
       if (bk === 'fall') F.kill = fallBy ? '떨어뜨림' : '실수';
+      else if (bk === 'salt') F.kill = '판이 끝을 강요함';   // 줄어드는 소금 원 (v2.23: 실수에서 뺀다)
       else if (SELF[bk] || foe < tot * 0.5) F.kill = '실수';
       else if (tp) { F.kill = !tp.seen.has(m.id) || F.lk ? '메이트' : '견제가 쌓여'; mateStep = F.kill === '메이트'; }   // 덫 (v2.21): 못 본 덫이거나 몸을 못 쓰는 채 밟았으면 메이트, 보고 걸어 들어갔으면 견제
       else if (lc && (lc.un || (lc.n === 0 && (!lc.g || tot * K >= F.hp)))) { F.kill = '메이트'; mateStep = true; }
       else F.kill = '견제가 쌓여';
-      F.killMove = tp ? tp.s.n : lc ? lc.mv : '';
+      F.killMove = tp ? tp.s.n : lc ? lc.mv : ''; if (lc && !tp) { F.kH = lc.h; F.kBig = lc.big; F.kBigOK = lc.bigOK; }
     }
     // 1 s 최대 손실 (바꾼 정의): 창이 시작될 때 응수가 남아 있었던 것만, 메이트의 결정타 걸음은 뺀다
+    if (foe > 0) { F.dAll += foe; if (F.okNow) F.dOk += foe; const q = W.t - F.lastCT <= 1.5 ? F.lastC : null; if (q) { if (q.un) F.dUn += foe; else if (q.n >= 1) F.dAns += foe; else F.dNo += foe; } }   // 받은 적 피해 가운데 응수가 남아 있던 때(방어 여유 1 이상)의 몫 (v2.22 재기)
     if (!mateStep) { const i0 = F.ri; if (F.ok[i0] && F.ring[i0] - hp > F.burst) F.burst = F.ring[i0] - hp; }
     F.ring[F.ri] = hp; F.ok[F.ri] = F.okNow; F.ri = (F.ri + 1) % n;
     F.hp = hp; F.fd = fd; for (const k in tk) F.tk[k] = tk[k]; F.lk = m.st.stun > 0 || m.st.root > 0 || m.fly === 2;
@@ -89,6 +93,8 @@ function seen(W, m) {
     '판 절반에 뒤진 편이 있던 판': behind >= 0 && r && r.winner >= 0 ? 1 : 0, '역전한 판': behind >= 0 && r && r.winner >= 0 && r.winner === behind ? 1 : 0,
     '큰 수를 지은 수': F.bigN, '큰 수가 끊긴 수': F.bigCut,
     '풀린 공격': F.relN, '장악권에 흐려진 공격': F.weak, '흩어진 공격': F.fz, '장악권을 밀어낸 수': F.pushN,
+    '결정타 시작 때 내 체력 몫': m.hp <= 0 ? F.kH : -1, '결정타가 큰 수': m.hp <= 0 && F.kBig ? 1 : 0, '결정타 때 큰 수를 쓸 수 있었음': m.hp <= 0 && F.kBigOK ? 1 : 0,
+    '응수가 남은 채 받은 피해 몫': F.dAll ? F.dOk / F.dAll : 0, '받은 적 피해': F.dAll, '응수가 있던 수에 받은 피해 몫': F.dAll ? F.dAns / F.dAll : 0, '응수가 없던 수에 받은 피해 몫': F.dAll ? F.dNo / F.dAll : 0, '알아채지 못한 수에 받은 피해 몫': F.dAll ? F.dUn / F.dAll : 0,
     '알아채지 못한 시전': F.uN, '알아채지 못한 시전 명중': F.uH, '알아챈 시전': F.sN, '알아챈 시전 명중': F.sH,
   };
 }

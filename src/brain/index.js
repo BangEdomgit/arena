@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v2.22.0
+ * 숨 결투장 — 기본 두뇌 v2.23.0
  * 판단 순서: 읽기(read) → 입장(stance) → 움직임(move) → 고르기(choose: 자동 진 → 칸 → 휴식 → 마법 고르기)
  * 기술(콤보·속임수·엄폐·유도·학습·덱 읽기·붙잡기…)은 techniques/에 하나씩, 어느 단계가 어떤 기술을 켜는지는 skills.js(data/skills.json).
  * 규칙(스위치)에 딸린 판단은 그 규칙 파일(src/rules/)의 brain 훅에 있다. 세계마다 켜진 규칙의 훅만 모은다(hooks.js).
@@ -28,8 +28,8 @@ function think(W, m) {
   if (!aimAt(W, m, K)) return;
   sample(W, m, K);   // 모습 지표 (v2.2): 거리, 장악 경계
   readThreats(W, m, K); rhythm.phase(W, m, K); chooseStance(W, m, K); if (m.tac.engage) engage.adjust(W, m, K); if (m.tac.read) plan.net(W, m, K); steer(W, m, K);   // 리듬: 떠보기·들어가기·빠지기 (v2.2)
-  if (m.st.stun > 0) { const h = W._bh.stunned; for (let i = 0; i < h.length; i++) h[i](W, m, K); return; }   // 굳은 동안: 몸 털기 (rules/stunRes)
+  if (m.st.stun > 0) return;
   decide(W, m, K);
 }
 
-module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.22.0' };
+module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.23.0' };

@@ -5,8 +5,8 @@
  *   떡대 — 적이 준 피해(추락·소금·폭주 빼고) × bulk. 빨리 식기(머리 회복 × cool), 땅 걸음 × run, 꺾는 가속(걷기·날기의 끊는 움직임) × agile
  *   막기 — 순간 켜기 패시브 (st.guard: 켠 뒤 지난 시간, 0이면 꺼짐). 켠 동안 피해 × guard.k, 당 초당 guard.glu, 그동안 지어 푼 마법의 위력 × guard.pow.
  *     잔기술 규칙(rules/passive, v2.18)이 켜진 판에선 막기를 켜지 않는다(잔기술이 대신한다). 켜고 끄는 데 시간이 들지 않는다. 끈 뒤 guard.cd s는 다시 못 켠다(v2.15: 수읽기의 자원). 당이 guard.gluMin 아래거나 굳으면 꺼진다. 기록 m.mlog.guardN(켜고 끈 수)·guardT(켠 시간)·guardBlk(막은 피해)
- *   감각 조준 (track 훅) — 실·투사체·구름을 풀 때 과녁의 지금 자리(구름은 터질 때까지의 반쯤 앞)가 겨눈 곳에서 track[tac.pace] × 드러남 m 안이면 그리로 고쳐 겨눈다. 기록 mlog.trackN
- *     드러남 (v2.21) = 시전의 vis(손잡이 규칙의 E^(1/3), 숨기면 × hide.vis)를 trackVis로 자른 것. trackVis가 null(기본)이면 끔. 손잡이가 꺼진 판은 vis 1이라 그대로
+ *   감각 조준 (track 훅) — 실·투사체·구름을 풀 때 과녁의 지금 자리(구름은 터질 때까지의 반쯤 앞)가 겨눈 곳에서 track[tac.pace] m 안이면 그리로 고쳐 겨눈다. 기록 mlog.trackN
+ *     숨긴 수(c.hid)는 반경 × trackHid (v2.23, 기본 1 = 끔: 0.6은 명중을 무너뜨렸다. v2.21의 × 드러남은 거뒀다)
  * 두뇌 (대마법사 누구나): 시전 시간 × castK, 되쓰기 × cdK, 당 × costK, 실은 threadK 배 빨리 뻗는다 (빠른 수의 연속)
  * 두뇌 (판단 수준 tac.pace: 상급 1·대가 2·전설 3):
  *   서두름 K.hurry = move.hurry: 날카롭게의 명중 문턱 × (1 − hurry) (기다림이 아니라 빠른 수)
@@ -17,7 +17,6 @@
  *     짧은 실이 준비됐고 노린 수가 없으면 들고, 막 쏘았거나 노린 수가 곧 닿으면 난다)
  *   끊기를 옆 튀기로 (preMove): 떨어지기·내리꽂기·급정지와 반사 겹의 멈칫은 걸음을 못 바꾸거나 멈춘다. 옆 튀기·옆으로 꺾기로 바꾼다(반사 겹 뒤에 돈다) */
 const P = require('../../data/rules/pace.json'), G = P.guard, MV = P.move;
-const HV = require('../../data/rules/tune.json').hide.vis;   // 숨긴 시전의 드러남 몫 (v2.21 감각 조준)
 const on = (W, m) => m.C >= P.cMin;
 const TR = { thread: 1, proj: 1, area: 2 };
 const FL = require('./flight').api, SR = require('./saltRing').api;
@@ -28,7 +27,7 @@ module.exports = {
     // 감각 조준: 실·투사체·구름을 풀 때 과녁의 지금 자리가 겨눈 곳에서 track m 안이면 그리로 고쳐 겨눈다 (짓는 동안 장악권으로 과녁을 느낀다)
     track(W, m, c) {
       const q = c.tgt, t = TR[c.s.t]; if (!on(W, m) || !q || q.hp <= 0 || c.auto || !t) return;
-      const TV = P.trackVis, v = TV ? (c.vis > 0 ? c.vis : 1) * (c.hid ? HV : 1) : 1, R = (P.track[m.tac.pace || 0] || 0) * (!TV ? 1 : v < TV[0] ? TV[0] : v > TV[1] ? TV[1] : v); if (!R) return;   // × 드러남 (v2.21): 큰 수는 멀리 느끼고 숨긴 수는 가까이만
+      const R = (P.track[m.tac.pace || 0] || 0) * (c.hid ? P.trackHid : 1); if (!R) return;   // 숨긴 수는 짓는 동안 장악권을 억눌러 과녁을 덜 느낀다 (v2.23)
       const k = t === 2 ? (c.s.delay || 0) * 0.5 : 0, px = q.x + q.vx * k, py = q.y + q.vy * k, d = X.hyp(px - c.tx, py - c.ty);   // 구름은 터질 때의 반쯤 앞으로
       if (d < R && d > 0) { c.tx = px; c.ty = py; m.mlog.trackN++; }
     },

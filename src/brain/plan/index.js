@@ -73,13 +73,13 @@ function commit(W, m, K, best, cast) {
   const f = FI[best.s.t]; if (pl && f !== undefined && pl.qN < 16 && K.e) { const i = pl.qN++, n = ansOf(W, K.e, m, cast, !!W.rules.stunRes); pl.qName[i] = best.n; pl.qCell[i] = f + (n > 3 ? 3 : n); pl.qH[i] = m.log.hits[best.n] || 0; pl.qT[i] = W.t + cast.T + P.hit.wait; }   // 배울 것
   JO.commit(W, m, K, best.n); K.plT = -9;   // 다음 칸에서 다시 읽는다
 }
-// 지표 (metrics/watch, 읽기만): d의 방어 여유, 시전 c에 대한 d의 응수 수. 굳음은 바로 센다(v2.21: 굳으면 응수는 몸 털기뿐)
+// 지표 (metrics/watch, 읽기만): d의 방어 여유, 시전 c에 대한 d의 응수 수. 굳음은 바로 센다(v2.21: 굳은 채 닿으면 응수가 없다)
 function slackOf(W, d, a) { return ST.slack(ST.build(W, d, a, TMP, 0.5, true), 0.3); }
 function ansOf(W, d, a, c, sk = true) {
   const S = ST.build(W, d, a, TMP, 0.5, sk), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
   const tau = Math.max(0, c.T - c.t) + (f === 'thread' ? 0 : landDelay(s, dist)), r = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(a, s) + 0.3 : Math.max(1, (pc ? pc.track[a.tac.pace || 0] || 0 : 0) + 0.6);
   let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp >= tau) n++;
-  for (let i = 0; i < 6; i++) { if (!(mask & (1 << i) || (i === 5 && S.sl > tau)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 2 && s.big) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
+  for (let i = 0; i < 6; i++) { if (!(mask & (1 << i)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 2 && s.big) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
   if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
   return n;
 }
@@ -88,7 +88,7 @@ function ansSplit(W, d, a, c, out) {
   const S = ST.build(W, d, a, TMP, 0.5, true), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
   const tau = Math.max(0, c.T - c.t) + (f === 'thread' ? 0 : landDelay(s, dist)), r = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(a, s) + 0.3 : Math.max(1, (pc ? pc.track[a.tac.pace || 0] || 0 : 0) + 0.6);
   let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp > 0 && S.shUp >= tau) n++;   // 세운 방패가 있어야 (v2.21)
-  for (let i = 0; i < 6; i++) { if (i === 2 || !(mask & (1 << i) || (i === 5 && S.sl > tau)) || !(S.has & (1 << i)) || S.av[i] > tau || tau <= 0) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
+  for (let i = 0; i < 6; i++) { if (i === 2 || !(mask & (1 << i)) || !(S.has & (1 << i)) || S.av[i] > tau || tau <= 0) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
   if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
   const q = A.ps ? A.ps.psvOf(s) : 0; out.n = n; out.g = !!(mask & 4) && !!(S.has & 4) && (S.av[2] < tau || (S.av[2] === 0 && d.st.psv > 0)) && !s.big && (!S.pk || (q > 0 && (S.pk & (1 << (q - 1))) > 0)); return out;
 }

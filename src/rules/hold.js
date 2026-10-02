@@ -27,7 +27,7 @@ module.exports = {
         const land = landDelay(c.s, K.d), win = sharp.openFor(W, e), ch = sharp.chance(W, m, K, { n: c.s.n, he: 0.35 }, land);
         if (!(win > land || ch >= P.go)) return;
         const lead = land * (K.lead || 1), tx = e.x + e.vx * lead * 0.7, ty = e.y + e.vy * lead * 0.7;
-        if (m.tac.hazard && (c.s.t === 'area' || c.s.t === 'lob') && B.hyp(tx - m.x - m.vx * land, ty - m.y - m.vy * land) < (c.s.r || 1) * B.C.sizeOf(m, c.s) + B.SELF_GAP) return;   // 내 위험 지대 (v2.21, tac.hazard): 터질 때 내가 안이면 더 붙잡는다
+        if (m.tac.hazard >= 2 && (c.s.t === 'area' || c.s.t === 'lob') && B.hyp(tx - m.x - m.vx * land, ty - m.y - m.vy * land) < (c.s.r || 1) * B.C.sizeOf(m, c.s) + B.SELF_GAP) return;   // 내 위험 지대 (v2.21, tac.hazard 2 대가부터): 터질 때 내가 안이면 더 붙잡는다
         c.tx = tx; c.ty = ty; c.tgt = e; c.go = true; m.mlog.held++;
       },
       // 두 번째 칸에 고른 공격은 붙잡는다

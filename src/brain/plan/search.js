@@ -27,7 +27,7 @@ function can(i, k, T) {
   const tau = TAU[k], r = CR[k];
   if (i === 6) return ST.moveOK(SS, tau, r) && freeSlot(T) > 0;
   if (!(HAS & (1 << i)) || AV[i] > T) return false;
-  if (SS.sl > T) return i === 5;   // 굳은 채 닿는다: 몸 털기뿐 (v2.21, rules/stunRes. 굳음을 셀 때만 sl)
+  if (SS.sl > T && !(i === 2 && AV[2] === 0)) return false;   // 굳은 채 닿는다: 이미 켠 잔기술 말고는 응수가 없다 (v2.23, rules/stunRes. 굳음을 셀 때만 sl)
   if (i === 2) return !CBIG[k] && (!SS.pk || (SS.pk & CKD[k]) > 0);   // 잔기술은 맞는 종류만 (v2.18)
   if (i === 1) return ST.cutOK(SS, tau, r);
   if (i === 0) return ST.rollOK(SS, tau, r);
@@ -49,7 +49,7 @@ function answer(i, k, t1, T, depth, ply) {
 function direct(k, t1, T, depth, ply) {
   if (CSH[k] && SH >= T) { if (ply === 0) { PRED0 = 3; MATE0 = false; CHK0 = false; ANS0 = 1; } return me(depth - 1, t1, ply + 1) - 0.1; }   // 세운 방패가 거저 막는다
   const mask = CMASK[k]; let n = 0, bi = -1, bc = 1e9;
-  for (let i = 0; i < 7; i++) { if (!(mask & (1 << i) || (i === 5 && SS.sl > T)) || !can(i, k, T)) continue; n++; const c = cost(i, k); if (c < bc) { bc = c; bi = i; } }
+  for (let i = 0; i < 7; i++) { if (!(mask & (1 << i)) || !can(i, k, T)) continue; n++; const c = cost(i, k); if (c < bc) { bc = c; bi = i; } }
   if (ply === 0) ANS0 = n;
   const ph = PH[(CSH[k] ? 0 : 4) + (n > 3 ? 3 : n)] * CHF[k];   // 응수가 n개일 때 맞을 가망 (배운 값, 마법마다의 명중으로 고친다)
   if (ply === 0) MATE0 = !n && ph >= P.hit.mate;
@@ -60,7 +60,7 @@ function direct(k, t1, T, depth, ply) {
   if (!MM) v = answer(bi, k, t1, T, depth, ply);
   else {   // 상대도 읽는다: 응수마다 끝까지 읽어 나에게 가장 나쁜 것
     v = 1e9; let tried = 0, bm = P.beam.them[ply] || 2;
-    for (let i = 0; i < 7 && tried < bm; i++) { if (!(mask & (1 << i) || (i === 5 && SS.sl > T)) || !can(i, k, T)) continue; tried++; EXP = ph; const x = answer(i, k, t1, T, depth, ply); if (x < v) { v = x; bi = i; } }
+    for (let i = 0; i < 7 && tried < bm; i++) { if (!(mask & (1 << i)) || !can(i, k, T)) continue; tried++; EXP = ph; const x = answer(i, k, t1, T, depth, ply); if (x < v) { v = x; bi = i; } }
   }
   if (ply === 0) { CHK0 = bi !== 6; PRED0 = bi; }
   return v;
@@ -108,7 +108,7 @@ function read(W, m, e, S, depth, lt) {
   for (let i = 0; i < 6; i++) { AV[i] = count ? S.av[i] : (HAS & (1 << i) ? 0 : Infinity); CDR[i] = count ? S.cd[i] : 0; }
   for (let j = 0; j < 9; j++) { BLK[j] = S.blk[j]; GEO[j] = S.geo[j]; }
   // 이미 짓고 있는 내 수가 먼저 닿는다: 상대가 가장 싼 응수를 쓴다고 보고 상태를 고친다 (자원을 셀 때만)
-  if (count) for (let q = 0; q < 2; q++) { const c = q ? m.castB : m.cast; if (!c || c.auto || c.tgt !== e) continue; let k = -1; for (let i = 0; i < NC; i++) if (CN[i] === c.s.n) { k = i; break; } if (k < 0) continue; const T = c.T - c.t + (c.s.t === 'area' ? c.s.delay : 0); let bi = -1, bc = 1e9; for (let i = 0; i < 7; i++) { if (!(CMASK[k] & (1 << i) || (i === 5 && SS.sl > T)) || !can(i, k, T)) continue; const x = cost(i, k); if (x < bc) { bc = x; bi = i; } } if (bi >= 0 && bi < 6) { AV[bi] = T + CDR[bi]; if (bi === 3) SH = T + P.res.shieldUp; } }
+  if (count) for (let q = 0; q < 2; q++) { const c = q ? m.castB : m.cast; if (!c || c.auto || c.tgt !== e) continue; let k = -1; for (let i = 0; i < NC; i++) if (CN[i] === c.s.n) { k = i; break; } if (k < 0) continue; const T = c.T - c.t + (c.s.t === 'area' ? c.s.delay : 0); let bi = -1, bc = 1e9; for (let i = 0; i < 7; i++) { if (!(CMASK[k] & (1 << i)) || !can(i, k, T)) continue; const x = cost(i, k); if (x < bc) { bc = x; bi = i; } } if (bi >= 0 && bi < 6) { AV[bi] = T + CDR[bi]; if (bi === 3) SH = T + P.res.shieldUp; } }
   if (NC && depth > 0) me(depth, 0, 0);
   OUT.nodes = nodes; return OUT;
 }

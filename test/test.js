@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.22.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.23.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -709,21 +709,21 @@ ok('v2.22 고리 장부 (SPEC 46장): 켜도 판은 그대로, 고리 수 = 서�
   assert.ok(Math.abs(sum - 1) < 1e-9 && o['빈 고리 몫'] > 0 && o['빈 고리 몫'] < 1, '몫의 합 ' + sum);
   const W1 = A.createWorld({ seed: 1, obstacles: 0, rules: { rings: true, circles: false } }), m1 = A.addMage(W1, { tier: '대마법사', skill: '전설' }, 0, 10, 10); A.addMage(W1, { tier: '대마법사', skill: '전설' }, 1, 30, 10); A.stepWorld(W1); assert.strictEqual(m1.mlog.rings.r.length, 1, '서클 규칙이 꺼지면 고리 하나');
 });
-ok('v2.21 굳힘 내성과 몸 털기 (SPEC 45장): 다시 굳으면 × 0.5 → × 0.25, 털면 굳음이 풀리고 간격이 걸린다, 굳은 상대의 응수는 몸 털기뿐', () => {
+ok('v2.21 굳힘 내성 (SPEC 45장, v2.23 몸 털기 거둠): 다시 굳으면 × 0.5 → × 0.25, 굳음은 털 수 없고 굳은 상대의 응수는 없다', () => {
   const C = require('../src/core'), PL = require('../src/brain/plan'), mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, { tier: '대마법사', skill: '전설', book: [] }, 0, 40, 40), e = A.addMage(W, { tier: '대마법사', skill: '전설', book: ['짧은 실'] }, 1, 50, 40); return { W, m, e }; };
   const o = { stun: 1, kind: 'elec' }, run = rules => { const { W, m } = mk(rules), out = []; for (let i = 0; i < 3; i++) { m.st.stun = 0; C.eff(W, m, o); out.push(m.st.stun); W.t += 0.5; } return out; };
   assert.deepStrictEqual(run({}), [1, 1, 1], '끄면 그대로');
   const r = run({ stunRes: true }); assert.ok(Math.abs(r[0] - 1) < 1e-9 && Math.abs(r[1] - 0.5) < 1e-9 && Math.abs(r[2] - 0.25) < 1e-9, '내성 ' + r);
   { const { W, m } = mk({ stunRes: true }); C.eff(W, m, o); W.t += 3; m.st.stun = 0; C.eff(W, m, o); assert.ok(Math.abs(m.st.stun - 1) < 1e-9, '풀리고 1 s 넘으면 처음부터'); }
-  { const { W, m } = mk({ stunRes: true }); C.eff(W, m, o); m.st.shk = 1; const g = m.glu; A.stepWorld(W); assert.ok(m.st.stun === 0 && m.mlog.shk === 1 && m.glu < g && m.unbindCd > W.t, '몸 털기'); m.st.stun = 1; m.st.shk = 1; A.stepWorld(W); assert.ok(m.st.stun > 0, '간격 안엔 못 턴다'); }
+  { const { W, m } = mk({ stunRes: true, response: true }); C.eff(W, m, o); m.unbindReq = 1; A.stepWorld(W); assert.ok(m.st.stun > 0, '풀기는 굳음을 못 턴다'); }
   for (const rules of [{}, { stunRes: true }]) { const { W, m, e } = mk(rules); m.st.stun = 2; const c = { s: W.spells['짧은 실'], tgt: m, tx: m.x, ty: m.y, t: 0, T: 0.6 }, out = { n: 0, g: false }; PL.ansSplit(W, m, e, c, out);
-    assert.strictEqual(out.n, rules.stunRes ? 1 : 0, '굳은 사람의 응수 ' + JSON.stringify(rules)); }
+    assert.strictEqual(out.n, 0, '굳은 사람의 응수 ' + JSON.stringify(rules)); }
 });
 ok('v2.20.1 문턱 4판 지표 (SPEC 44장): 지켜보기는 판을 바꾸지 않고, 판을 끝낸 까닭·메이트·1 s 손실·침묵·흐름을 낸다', () => {
   const Wt = require('../metrics/watch'), sc = JSON.parse(JSON.stringify(SCENES['v2-tactics-legend'])); sc.seed = 5;
   const a = A.runScene(JSON.parse(JSON.stringify(sc))), W = A.sceneWorld(sc); while (!A.over(W)) { A.stepWorld(W); Wt.watch(W); }
   assert.deepStrictEqual(W.ms.map(m => m.hp), a.ms.map(m => m.hp), '지켜봐도 판은 같다');
-  const L = Wt.seen(W, W.ms[0]); assert.ok(['메이트', '견제가 쌓여', '떨어뜨림', '실수', '시간'].includes(L['판을 끝낸 까닭']), L['판을 끝낸 까닭']);
+  const L = Wt.seen(W, W.ms[0]); assert.ok(['메이트', '견제가 쌓여', '떨어뜨림', '판이 끝을 강요함', '실수', '시간'].includes(L['판을 끝낸 까닭']), L['판을 끝낸 까닭']);
   for (const k of ['메이트로 끝난 판 (4판)', '1 s에 잃은 가장 큰 체력 몫 (4판)', '2 s 넘는 침묵 몫 (4판)', '흐름: 마지막 3분의 1에 잃은 몫', '큰 수를 지은 수', '풀린 공격', '알아챈 시전']) assert.ok(typeof L[k] === 'number', k);
   assert.ok(L['1 s에 잃은 가장 큰 체력 몫 (4판)'] <= L['1 s에 잃은 가장 큰 체력 몫'] + 1e-9 && L['2 s 넘는 침묵 몫 (4판)'] <= L['2 s 넘는 침묵 몫'] + 1e-9, '좁힌 정의는 넓지 않다');
 });
