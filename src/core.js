@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.17.1
+ * 숨 결투장 — 엔진 핵심 v2.18.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.17.1';
+const VERSION = '2.18.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -52,6 +52,7 @@ const DEFAULT_RULES = {
   hpK: 1.2,            // 체력의 선명도 지수 (1.x의 hpScale은 powerK = 2.5)
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
   fineStep: false,     // (v2.14) 잘게 걷기: 한 걸음 1/60 s (W.dt). 대마법사 장면이 켠다: 빠른 판의 피하기·끊기가 걸음 크기에 덜 묶인다 (SPEC 38장)
+  passives: false,     // (v2.18) 잔기술: 절연 막·굳은 살·열 차단, 순간 켜기 (SPEC 42장, rules/passive)
   pace: false,         // (v2.14) 빠른 판: 대마법사의 떡대·막기(순간 켜기)·빠른 시전과 늘 움직이기 (SPEC 38장, rules/pace)
 };
 // 규칙 모듈이 스위치의 기본값을 따로 적었으면 (등록한 규칙). 기본 규칙의 스위치는 위 표에 있다
@@ -147,13 +148,13 @@ function addMage(W, spec, side, x, y) {
       shieldAny: false, shieldSave: false, cancel: false, cover: false, tempo: false, coverW: 1.5,
       // (1.7.0 대가·전설) 몰이, 엄폐 걷어내기, 유도, 동시 착탄, 기회 캔슬 / 방어 미끼, 약한 척 물러서기, 세 마법 겹치기
       herd: false, strip: false, lure: false, simul: false, cancel2: false, bait: false, fakeRetreat: false, triple: false,
-      bigPlan: false, dodgeAim: false, grab: false,
+      bigPlan: false, dodgeAim: false, grab: false, passive: 0,
       swarm: true, siege: true, wallSite: false, wallBreak: false, retreat: false,
       rhythm: false, rhythmTime: false, domainPush: false, efficacy: false, buffNeed: false, shape: false, roles: false,
       flyCut: 0, fortify: 0, breach: false,
       reflex: 0, chop: false, footwork: 0, blueprint: 0, ops: 0,
       aim: false, wallLos: 0, swarmR: 0, breathAt: 0.05, breathSafe: false, breathPre: 0, mode: 0, engage: 0, trapLine: false, pace: 0, read: 0 }, spec.tac),   // (v2.10) 명중 가망(전설, techniques/sharp), 시야 공격 몫이 이만큼일 때만 벽(대가부터), 협공: 선명도 몇 배부터 무리 싸움인가(상위 1.8, 0이면 3, techniques/swarm)   // (v2.5) 작전 겹(1 대가 · 2 전설: 강요하는 수·작전 읽기, rules/tactics, 29장)   // (v2.4) 반사 겹의 반응 지연(대가 0.1 · 전설 0.05 s, rules/reflex), 끊어 걷기·발놀림(1 옆 뒤집기 · 2 거리 톱질 · 3 높이 튕기기, rules/snap), 청사진(1 상급 · 2 대가부터 상황에 맞게, rules/blueprint) (28장)   // (v2.3) 날기 끊기(1 상급 · 2 대가 · 3 전설, rules/flight), 진지 짓기(1 상급 · 2 대가 몰이길 · 3 전설 미끼)·부수기(대가, rules/fort) (27장)   // (v2.2) 리듬(상급 'mimic', 대가부터 true)·때 재기·장악권 밀기, 효과 학습, 강화의 때(상급), 지형 설계·칸의 역할 (26장)   // (v2.0 둘째) 무리·성 (강한 적 하나, 또는 총·무리를 상대할 때만), 벽 자리(상급)·벽 없애기(대가)·물러나기(상급)   // (1.10.0 risk) 피할 자리 겨냥(상급부터), 붙잡기(대가부터)   // (1.9.0 대가·전설) 큰 수를 짝 묶기에 맞춰 꽂는다
-    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0, breath: 0, guard: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
+    st: { stun: 0, root: 0, wet: 0, burn: 0, chill: 0, blind: 0, cough: 0, mycel: 0, cramp: 0, lime: 0, fetter: 0, breath: 0, guard: 0, psv: 0, psvT: 0 }, _bufx: [], _sigX: NaN, _sigN: false, _szC: NaN, _sz: 1, _pwC: NaN, _pwK: NaN, _pw: 1, buf: { speed: null, elecRes: null, bluntRes: null, toxRes: null, front: null, block: null, smoke: null }, cd: {}, cast: null, castB: null, chan: null, roll: 0, rollCd: 0, autoCd: 0, fat: 0, aim: 0, thinkT: W.rng() * 0.1,
     mv: { x: 0, y: 0 }, mem: {}, waveWant: false, relT: null, lastRel: -9, comboPend: null, combo: null, last: null, lastT: -9, sf: 1, stance: 'normal', vault: 0, _sig: 1, _act: false, deathT: null,
     // 판 중에 채우는 칸. 처음부터 두어 객체 모양이 바뀌지 않게 한다(속도, 1.11.1). 값은 비어 있을 때와 같게 읽힌다 (null ?? −9, 0 || 0)
     bigp: null, simul: null, herd: null, hold: 0, lureT: null, baitT: null, baitDone: 0, emptyT: -9, lastHit: null, h2sT: 0, thinkAt: null, losWas: false, pauseLen: 0, rollSide: 0, rollPref: 0, _ref: null,

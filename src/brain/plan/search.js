@@ -12,7 +12,7 @@ const ST = require('./state'), { P, FM } = ST;
 const { C, hyp, castTime, estDmg } = require('../util');
 const NK = 12, MAXD = 6, W_ = P.w, WR = new Float64Array([W_.roll, W_.cut, W_.guard, W_.shield, W_.wall, W_.shake]), MATE = W_.mate;
 const CN = new Array(NK).fill(''), CT = new Float64Array(NK), TAU = new Float64Array(NK), CR = new Float64Array(NK), CDM = new Float64Array(NK), CBIG = new Uint8Array(NK), CMASK = new Int32Array(NK),
-  CCOST = new Float64Array(NK), CCD = new Float64Array(NK), CCOV = new Uint8Array(NK), CSH = new Uint8Array(NK), CH = new Float64Array(NK), ORD = new Int32Array(NK), MYCD = new Float64Array(NK), CHF = new Float64Array(NK);
+  CCOST = new Float64Array(NK), CCD = new Float64Array(NK), CCOV = new Uint8Array(NK), CSH = new Uint8Array(NK), CH = new Float64Array(NK), ORD = new Int32Array(NK), MYCD = new Float64Array(NK), CHF = new Float64Array(NK), CKD = new Uint8Array(NK);
 const PH = new Float64Array(8), AV = new Float64Array(6), CDR = new Float64Array(6), BLK = new Float64Array(9), GEO = new Float64Array(9), SBLK = new Float64Array(9 * MAXD);
 let EXP = 0, NC = 0, HAS = 0, SH = 0, GLU = 0, DMG = 0, GK = 0.45, MM = false, SS = null, nodes = 0, CHK0 = false, ANS0 = 0, MATE0 = false, PRED0 = -1;
 const OUT = { k: -1, j: 0, v: 0, mate: false, line: false, check: false, ans: 0, pred: -1, nodes: 0 };   // pred: 첫 수에 상대가 쓸 응수 (0~5 자원, 6 움직임, -1 없음)   // mate: 첫 수가 메이트, line: 읽은 수순 끝에 메이트
@@ -27,7 +27,7 @@ function can(i, k, T) {
   const tau = TAU[k], r = CR[k];
   if (i === 6) return ST.moveOK(SS, tau, r) && freeSlot(T) > 0;
   if (!(HAS & (1 << i)) || AV[i] > T) return false;
-  if (i === 2) return !CBIG[k];
+  if (i === 2) return !CBIG[k] && (!SS.pk || (SS.pk & CKD[k]) > 0);   // 잔기술은 맞는 종류만 (v2.18)
   if (i === 1) return ST.cutOK(SS, tau, r);
   if (i === 0) return ST.rollOK(SS, tau, r);
   return true;
@@ -95,7 +95,7 @@ function table(W, m, e, S) {
     CR[NC] = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(m, s) + 0.3 : Math.max(1, tr + 0.6);
     CDM[NC] = dm; CBIG[NC] = s.big || dm >= P.big.minDmg ? 1 : 0; CMASK[NC] = FM[f]; CCOST[NC] = s.cost; CCD[NC] = s.cd * (pc ? pc.cdK : 1);
     CCOV[NC] = (f === 'area' || f === 'lob') && !CBIG[NC] && !S.fly ? 1 : 0; CSH[NC] = f === 'thread' || f === 'proj' ? 1 : 0; MYCD[NC] = m.cd[n] > 0 ? m.cd[n] : 0;
-    CHF[NC] = eff(m, n); CH[NC] = dm * CHF[NC] / (TAU[NC] + 0.2); ORD[NC] = NC; NC++;
+    CHF[NC] = eff(m, n); { const q = ST.ra().ps.psvOf(s); CKD[NC] = q ? 1 << (q - 1) : 0; } CH[NC] = dm * CHF[NC] / (TAU[NC] + 0.2); ORD[NC] = NC; NC++;
   }
   for (let i = 1; i < NC; i++) { const x = ORD[i]; let j = i - 1; while (j >= 0 && CH[ORD[j]] < CH[x]) { ORD[j + 1] = ORD[j]; j--; } ORD[j + 1] = x; }   // 빠르고 센 것부터
 }

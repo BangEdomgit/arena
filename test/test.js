@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.17.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.18.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -696,6 +696,20 @@ ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 �
   const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
   const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
   const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
+});
+ok('v2.18 잔기술 (SPEC 42장): 맞는 종류만 막고, 0.05 s에 켜지고, 끈 뒤 0.3 s, 서클 하나·머리 열, 절연 막은 전기 굳힘도 줄인다, 끄면 일반 막기', () => {
+  const PS = require('../src/rules/passive').api, mk = on => { const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: { pace: true, passives: on, flight: false, saltRing: false } }); const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 0, 20, 20), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 1, 40, 20); m.thinkT = e.thinkT = 1e9; A.stepWorld(W); return [W, m, e]; };
+  let [W, m] = mk(true); const hit = (k) => { m.hp = 1000; const H = W.H.hurtMod; let v = 10; for (const f of H) v = f(W, m, v, k, 'x'); return v; };
+  const base = hit('elec'), bl = hit('blunt'); m.st.psv = 1; m.st.psvT = 0.01; assert.strictEqual(hit('elec'), base, '켜는 중엔 아직'); m.st.psvT = 0.06;
+  assert.ok(Math.abs(hit('elec') - base * PS.P.k) < 1e-9 && Math.abs(hit('blunt') - bl) < 1e-9, '맞는 종류만');
+  let g = 1; for (const f of W.H.effHold) g = f(W, m, { stun: 1, kind: 'elec' }, g); assert.ok(Math.abs(g - PS.P.stunK) < 1e-9, '절연 막: 전기 굳힘');
+  const f0 = m.fat; for (let i = 0; i < 60; i++) A.stepWorld(W); assert.ok(m.fat > f0 || m.st.psv === 0, '머리 열');
+  const U = require('../src/brain/util'); require('../src/brain/hooks').hooks(W); m.st.psv = 1; const c1 = U.circOf(W, m); m.st.psv = 0; assert.strictEqual(U.circOf(W, m), c1 + 1, '서클 하나');
+  assert.ok(PS.psvOf(W.spells['짧은 실']) === 1 && PS.psvOf(W.spells['화산 기둥']) === 3 && PS.psvOf(W.spells['돌 비']) === 2, '피해 종류');
+  // 줄인 상태: 켜진 절연 막은 실의 응수지만 불의 응수는 아니다
+  const ST = A.brain.plan.ST, e = W.ms[1]; m.st.psv = 1; m.st.psvT = 1; const S = ST.build(W, m, e, ST.newSide(), 0.5); assert.ok(S.has & 4 && S.av[2] === 0 && S.pk === 1, S.pk);
+  // 끄면 일반 막기(빠른 판)는 그대로, 켜면 쉰다
+  [W, m] = mk(false); assert.ok(!W.mods.some(r => r.name === 'passive'));
 });
 ok('v2.17 수읽기의 끝내기 (SPEC 41장): 떨어지는 상대의 잠김·정해진 길, 큰 한 방은 끝내기에만, 세운 방패를 마주 본 실은 헛수, 거의 쓰러진 상대엔 메이트·체크만', () => {
   const PL = A.brain.plan, ST = PL.ST, SE = require('../src/brain/plan/search');

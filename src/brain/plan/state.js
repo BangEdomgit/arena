@@ -1,7 +1,7 @@
 'use strict';
 /* 숨 결투장 — 수읽기 1: 줄인 상태 (v2.15, SPEC 39장, 수는 data/plan.json)
  * 막는 사람(d) 하나를 치는 사람(a)의 눈으로 줄인다. 새 객체는 사람마다 한 번만 만들고 다시 쓴다(속도).
- *   자원 여섯 (차례가 비트): 0 구르기(땅) · 1 옆 튀기(날기 끊기) · 2 막기(순간 켜기, rules/pace) · 3 방패(앞 방패 마법, 서클 셋부터는 자동 진으로 바로) · 4 벽(벽·흙벽 마법) · 5 몸 털기(풀기, rules/response)
+ *   자원 여섯 (차례가 비트): 0 구르기(땅) · 1 옆 튀기(날기 끊기) · 2 막기(순간 켜기, rules/pace. 잔기술 규칙이 켜진 판에선 잔기술: pk가 막는 종류의 비트, v2.18) · 3 방패(앞 방패 마법, 서클 셋부터는 자동 진으로 바로) · 4 벽(벽·흙벽 마법) · 5 몸 털기(풀기, rules/response)
  *     av: 지금부터 몇 s 뒤에 쓸 수 있나(없으면 Infinity), cd: 쓰면 다시 쓸 때까지, has: 가진 것의 비트, shUp: 세운 앞 방패가 남은 시간
  *   피할 곳 아홉: 0 제자리, 1~8 치는 사람 쪽에서 본 옆(±90°)·비스듬히(±45°·±135°)·뒤·앞으로 slotD m. blk: 몇 s 뒤까지 막혔나(0 열림, Infinity 늘 막힘)
  *     늘 막힘: 싸움터 끝·소금 원 밖·바위·벽(낮을 때)·치는 사람의 덫(땅). 그때까지 막힘: 치는 사람의 지연 폭발(터질 때까지)
@@ -13,8 +13,8 @@ const FM = {}; for (const f in P.form) { let b = 0; for (const k of P.form[f]) b
 const R2 = Math.SQRT1_2, OX = [0, 0, 0, R2, R2, -R2, -R2, 1, -1], OY = [0, 1, -1, R2, -R2, R2, -R2, 0, 0];   // 피할 곳의 방향 (치는 사람 → 막는 사람 축에서): 제자리·옆·옆·비스듬히 앞뒤·뒤·앞
 const G = 9.8;
 let RA = null;   // 규칙의 api (처음 부를 때 읽는다: 엔진이 규칙을 읽을 때 두뇌는 아직 없다)
-function ra() { if (!RA) { const f = n => { const r = C.RULES.find(x => x.name === n); return r ? r.api : null; }; RA = { fl: f('flight'), pace: f('pace'), resp: f('response'), sr: f('saltRing') }; } return RA; }
-function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), why: new Uint8Array(9), a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
+function ra() { if (!RA) { const f = n => { const r = C.RULES.find(x => x.name === n); return r ? r.api : null; }; RA = { fl: f('flight'), pace: f('pace'), resp: f('response'), sr: f('saltRing'), ps: f('passive') }; } return RA; }
+function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), why: new Uint8Array(9), pk: 0, a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
 const paceOn = (W, q) => { const p = ra().pace; return !!(W.rules.pace && p && q.C >= p.P.cMin); };
 // 앞 방패·벽 마법 (책마다 한 번)
 function bookOf(W, d, S) {
@@ -38,7 +38,9 @@ function build(W, d, a, S, h) {
   // 1 옆 튀기: 날기 끊기를 쓰는 사람이 날 때
   if (fly && W.rules.flightCut && (d.tac.flyCut || 0) >= 2) { av[1] = Math.max(d.cut.cd, lock, 0); cd[1] = A.fl.F.cut.cd; has |= 2; }
   // 2 막기: 빠른 판의 대마법사(판단 수준 pace), 당이 있으면
-  if (paceOn(W, d) && d.tac.pace && d.glu > A.pace.P.guard.gluMin + 3) { const g = A.pace.P.guard; av[2] = d.st.guard > 0 ? 0 : Math.max(0, d.mlog.gdOff + g.cd - W.t); cd[2] = g.cd + g.min; has |= 4; }
+  S.pk = 0;
+  if (W.rules.passives && A.ps.on(W, d)) { const Q = A.ps.P; if (d.st.psv > 0) { av[2] = d.st.psvT >= Q.onT ? 0 : Q.onT - d.st.psvT; S.pk = 1 << (d.st.psv - 1); } else { av[2] = Math.max(0, d.mlog.gdOff + Q.cd - W.t) + Q.onT; S.pk = 7; } cd[2] = Q.cd + Q.onT; has |= 4; }   // 잔기술 (v2.18): 맞는 종류만 응수 (S.pk)
+  else if (paceOn(W, d) && d.tac.pace && d.glu > A.pace.P.guard.gluMin + 3) { const g = A.pace.P.guard; av[2] = d.st.guard > 0 ? 0 : Math.max(0, d.mlog.gdOff + g.cd - W.t); cd[2] = g.cd + g.min; has |= 4; }
   // 3 앞 방패: 마법의 간격, 서클 셋부터는 자동 진(간격 autoCd)이 바로 세운다. 아니면 빈 칸이 있어야
   if (S.shN) { const s = W.spells[S.shN]; let t = d.cd[S.shN] > 0 ? d.cd[S.shN] : 0; if (d.circles >= 3) { if (d.autoCd > t) t = d.autoCd; } else { if (d.cast && d.castB) t = Math.max(t, d.cast.T - d.cast.t); t += castTime(W, d, s.cast); } av[3] = t; cd[3] = s.cd; has |= 8; }
   S.shUp = d.buf.front ? d.buf.front.t : 0;
