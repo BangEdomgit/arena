@@ -83,6 +83,15 @@ function ansOf(W, d, a, c) {
   if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
   return n;
 }
+// 지표용 (v2.20.1, GATE 4판 C7): 응수를 둘로 — 온전히 받는 응수 수(막기·잔기술 빼고)와 피해를 줄이기만 하는 막기·잔기술을 쓸 수 있나
+function ansSplit(W, d, a, c, out) {
+  const S = ST.build(W, d, a, TMP, 0.5), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
+  const tau = Math.max(0, c.T - c.t) + (f === 'thread' ? 0 : landDelay(s, dist)), r = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(a, s) + 0.3 : Math.max(1, (pc ? pc.track[a.tac.pace || 0] || 0 : 0) + 0.6);
+  let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp >= tau) n++;
+  for (let i = 0; i < 6; i++) { if (i === 2 || !(mask & (1 << i)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
+  if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
+  const q = A.ps ? A.ps.psvOf(s) : 0; out.n = n; out.g = !!(mask & 4) && !!(S.has & 4) && S.av[2] <= tau && !s.big && (!S.pk || (q > 0 && (S.pk & (1 << (q - 1))) > 0)); return out;
+}
 // 방어 자원의 남은 몫 (샌드박스): 자원마다 0(지금 쓸 수 있음)~1(cap s 넘게 잠김), 없으면 -1
 function resBars(S, out) { for (let i = 0; i < 6; i++) out[i] = S.has & (1 << i) ? Math.min(1, S.av[i] / P.w.lockCap) : -1; return out; }
-module.exports = { read, net, value, commit, slackOf, ansOf, resBars, on, JO, ST };
+module.exports = { read, net, value, commit, slackOf, ansOf, ansSplit, resBars, on, JO, ST };

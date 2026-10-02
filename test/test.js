@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.20.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.20.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -696,6 +696,14 @@ ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 �
   const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
   const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
   const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
+});
+ok('v2.20.1 문턱 4판 지표 (SPEC 44장): 지켜보기는 판을 바꾸지 않고, 판을 끝낸 까닭·메이트·1 s 손실·침묵·흐름을 낸다', () => {
+  const Wt = require('../metrics/watch'), sc = JSON.parse(JSON.stringify(SCENES['v2-tactics-legend'])); sc.seed = 5;
+  const a = A.runScene(JSON.parse(JSON.stringify(sc))), W = A.sceneWorld(sc); while (!A.over(W)) { A.stepWorld(W); Wt.watch(W); }
+  assert.deepStrictEqual(W.ms.map(m => m.hp), a.ms.map(m => m.hp), '지켜봐도 판은 같다');
+  const L = Wt.seen(W, W.ms[0]); assert.ok(['메이트', '견제가 쌓여', '떨어뜨림', '실수', '시간'].includes(L['판을 끝낸 까닭']), L['판을 끝낸 까닭']);
+  for (const k of ['메이트로 끝난 판 (4판)', '1 s에 잃은 가장 큰 체력 몫 (4판)', '2 s 넘는 침묵 몫 (4판)', '흐름: 마지막 3분의 1에 잃은 몫', '큰 수를 지은 수', '풀린 공격', '알아챈 시전']) assert.ok(typeof L[k] === 'number', k);
+  assert.ok(L['1 s에 잃은 가장 큰 체력 몫 (4판)'] <= L['1 s에 잃은 가장 큰 체력 몫'] + 1e-9 && L['2 s 넘는 침묵 몫 (4판)'] <= L['2 s 넘는 침묵 몫'] + 1e-9, '좁힌 정의는 넓지 않다');
 });
 ok('v2.19 손잡이 (SPEC 43장): 틀마다 붙는 곳, 2단계는 그대로, 에너지·비용, 방출에서 사본으로, 숨김은 안 보인다, 초보는 2단계만, 수를 센다', () => {
   const TU = require('../src/rules/tune').api, W0 = A.createWorld({ seed: 1, obstacles: 0, rules: { tune: true } }), S = W0.spells;

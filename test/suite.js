@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.20.0 — 표준 시험 묶음
+/* 숨 결투장 v2.20.1 — 표준 시험 묶음
  * 정해진 대진을 돌려 기준(suite-baseline.json)과 비교한다. 바뀐 줄만 보여 주고, 차이마다 판 수를 고려해
  * "운일 수 있음 / 진짜 차이"를 붙인다. 규칙이나 두뇌를 바꾼 뒤 무엇이 움직였는지 한눈에 보는 용도 (SPEC 21장).
  *   node cli.js suite            기준과 비교
@@ -47,7 +47,7 @@ function arena(file, N) {
   const Wt = require('../metrics/watch'), sc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', file), 'utf8')), acc = {};
   for (let k = 1; k <= N; k++) {
     const W = A.sceneWorld(Object.assign({}, sc, { seed: k })); while (!A.over(W)) { A.stepWorld(W); Wt.watch(W); }
-    for (const m of W.ms) { const o = Wt.seen(W, m), sp = Wt.spells(m); for (const n of BIG) o['명중 ' + n] = sp[n] ? sp[n].hit : 0; for (const [key, v] of Object.entries(o)) (acc[key] = acc[key] || []).push(v); }
+    for (const m of W.ms) { const o = Wt.seen(W, m), sp = Wt.spells(m); for (const n of BIG) o['명중 ' + n] = sp[n] ? sp[n].hit : 0; for (const [key, v] of Object.entries(o)) if (typeof v === 'number') (acc[key] = acc[key] || []).push(v); }   // 글자 값(판을 끝낸 까닭 따위)은 빼고
   }
   const look = {}; for (const [key, xs] of Object.entries(acc)) { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); look[key] = { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; }
   return { N: acc['받은 피해'].length, look };
