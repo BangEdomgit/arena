@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.26.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js [--jobs N] [--fresh] [이름…]
+/* 숨 결투장 v2.26.1 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js [--jobs N] [--fresh] [이름…]
  * 시험은 주제마다 test/t/*.js에 있고(공용은 test/lib.js), 파일(무거운 것은 장면 몫)마다 일꾼에 나눠 돌린다(experiments/par.js, v2.23.1. 일꾼은 다시 쓴다: 시험은 바꾼 등록·기본값을 되돌린다. --fresh면 일감마다 새 일꾼). 혼자: node test/t/이름.js */
 const assert = require('assert'), fs = require('fs'), path = require('path');
 const A = require('../src'), P = require('../experiments/par');

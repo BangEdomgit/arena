@@ -57,13 +57,13 @@ function run(name, from, N, rules) {
     const r = A.result(W), army = W.ms.filter(m => m.side !== 0), gone = army.map(m => m.alog.fledT ?? m.deathT).filter(x => x != null).sort((a, b) => a - b), need = Math.ceil(army.length * 0.8);
     o.n++; if (r.winner === 0) o.win++; if (r.byTime) o.byTime++; o.t += r.t; o.hp += Math.max(0, c.hp) / c.hpMax;
     if (gone.length >= need) { o.broke++; o.breakT += gone[need - 1]; }
-    const fl = army.filter(m => m.alog.fled).length; o.fled += fl; o.army += army.length; if (fl >= army.length * 0.5) o.mb++;   // 사기로 무너진 판: 무리의 반 넘게 도망쳤다 (v2.24.1)
+    const fl = army.filter(m => m.alog.fled).length, fs = army.filter(m => m.flee).length; o.fled += fl; o.army += army.length; if (fs >= army.length * 0.5) o.mb++;   // 사기로 무너진 판: 무리의 반 넘게 도망치기 시작했다 (v2.24.1, v2.26.1부터 끝에 닿지 못하고 쓰러진 사람도 센다)
     o.walls += c.alog.walls; o.wallT += c.alog.wallT; o.z += zn ? zs / zn : 0; o.blind += c.alog.blinded;
     for (const m of army) { o.heavyTry += m.log.casts['무거운 돌'] || 0; o.heavyHit += m.log.hits['무거운 돌'] || 0; o.flashHit += m.alog.flashHit; }
   }
   return o;
 }
-const rate = o => ({ games: o.n, win: +(o.win / o.n).toFixed(3), byTime: +(o.byTime / o.n).toFixed(3), len: +(o.t / o.n).toFixed(1), hp: +(o.hp / o.n).toFixed(3), breakT: o.broke ? +(o.breakT / o.broke).toFixed(1) : null, broke: +(o.broke / o.n).toFixed(3), fled: +(o.fled / o.army).toFixed(3), walls: +(o.walls / o.n).toFixed(2), wallT: +(o.wallT / o.n).toFixed(1), z: +(o.z / o.n).toFixed(1), blind: +(o.blind / o.n).toFixed(2), heavy: o.heavyTry ? `${o.heavyHit}/${o.heavyTry}` : null });
+const rate = o => ({ games: o.n, win: +(o.win / o.n).toFixed(3), byTime: +(o.byTime / o.n).toFixed(3), len: +(o.t / o.n).toFixed(1), hp: +(o.hp / o.n).toFixed(3), breakT: o.broke ? +(o.breakT / o.broke).toFixed(1) : null, broke: +(o.broke / o.n).toFixed(3), mb: +(o.mb / o.n).toFixed(3), fled: +(o.fled / o.army).toFixed(3), walls: +(o.walls / o.n).toFixed(2), wallT: +(o.wallT / o.n).toFixed(1), z: +(o.z / o.n).toFixed(1), blind: +(o.blind / o.n).toFixed(2), heavy: o.heavyTry ? `${o.heavyHit}/${o.heavyTry}` : null });
 async function main() {
   const args = process.argv.slice(2), R = args.indexOf('--rules'), rules = R >= 0 ? JSON.parse(args[R + 1]) : null, pos = args.filter((a, i) => !a.startsWith('--') && !(R >= 0 && i === R + 1));
   if (pos[0] === 'scenes') return scenes();
