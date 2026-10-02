@@ -42,7 +42,7 @@ function net(W, m, K) {
   const e = K.e, S = ST.build(W, m, e, sides(m).me, 0.5); K.netN = ST.slack(S, 0.3);
   const L = JO.read(W, m, K); K.jsL = L;
   if (K.brk > W.t) return;
-  let busy = false; for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.hid && !c.auto && OFF[c.s.t] && c.tgt === m) busy = true; }
+  let busy = false; for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.unseen && !c.auto && OFF[c.s.t] && c.tgt === m) busy = true; }
   const away = L && L.answer.do === 'away';
   if (!((K.netN <= P.net.low && busy) || away)) return;
   // 깨기: 바위 뒤(상대와 사이에 두고) 또는 상대에게서 멀리, 가장 열린 쪽으로

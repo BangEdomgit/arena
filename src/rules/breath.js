@@ -3,7 +3,8 @@
  * 엔진: 마시는 동안(st.breath, T 0.5 s) 새 마법을 짓지 못하고(두뇌의 rest 훅: 자동 진은 돈다) 느려진다(× slow 0.5, 날면 마시기 시작한 속도의 절반으로).
  *   끝나면 당 + glu 80 (당 한도까지) · 머리 피로 − fat 30 · 기력 + stam 3
  * 두뇌 (판단 수준의 tac): 남은 몫 = 머리의 남은 몫(1 − 피로/100)과 당의 몫(당/한도) 가운데 적은 쪽. 숨은 둘 다 채운다
- *   breathAt 아래면 마신다 (초보 0.05 · 중급 0.15 · 상급 0.25 · 대가·전설 0.25). breathSafe(중급부터)면 위협(나를 겨눈 수)이 없을 때만
+ *   breathAt 아래면 마신다 (초보 0.05 · 중급 0.15 · 상급 0.25 · 대가·전설 0.25). breathSafe(중급부터)면 위협(나를 겨눈 수)이 없을 때만,
+ *   상대가 숨긴 수(손잡이)를 쓰면 엄폐 뒤(시야가 막힌 곳)에서만 (v2.20)
  *   breathPre(대가·전설 0.45): 작전 압박·끝내기를 고른 직후(pre 1 s 안)에 남은 몫이 이 아래면 위협이 없을 때 미리 마신다
  *   두 칸이 비어 있을 때만 마신다(짓던 설계는 버리지 않는다)
  * 기록 (m.mlog): breath 쓴 수, breathHit 마시다 맞은 수(빈틈, 한 번 마실 때 한 번), breathAtk·breathAtkHit 숨 뒤 after 5 s 안에 쏜 공격·맞힌 공격 */
@@ -37,6 +38,7 @@ module.exports = {
       if (!go && K.coverDone > W.t - 1.5 && m.fat > (MP || (MP = require('../../data/mode.json'))).heat && !threat && r < 0.5) go = true;   // 덮기 뒤 머리가 뜨거우면 (v2.12)
       if (!go && K.low && r < (EP || (EP = require('../../data/engage.json'))).breathR && !threat) go = true;   // 몰린 쪽은 깊이 마신다 (v2.13)
       if (!go && T.breathPre && r < T.breathPre && !threat && m.op && (m.op.cur === 'press' || m.op.cur === 'finish') && W.t - m.op.t0 < P.pre) go = true;   // 몰아치기 직전에 미리 (대가·전설)
+      if (go && T.breathSafe && K.los && B.hidesOf(K.e)) go = false;   // 숨긴 수를 쓰는 상대: 언제 올지 모르니 엄폐 뒤(시야가 막힌 곳)에서만 마신다 (v2.20)
       if (!go) return restNow;
       m.st.breath = P.T; m.mlog.breath++; m.mlog.brHitF = false; m.mlog.brV = Math.max(B.C.hyp(m.vx, m.vy) * P.slow, 2.5); m.relT = null; return true;
     },

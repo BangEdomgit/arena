@@ -3,17 +3,23 @@
  * 모든 마법에 같은 손잡이 셋 — 크기 z · 화력 f · 속도 v (2단계 = 지금 마법, 최대는 서클 maxCirc 이상) — 과 숨김 스위치(예비동작이 안 보이는 대신 시전 × 1.5, 위력 × 0.8).
  * 붙는 곳은 틀마다: 던지기(무게 × z³ × f·반지름 × z, 빠르기 × v) · 실(굵기 tw × z, 전하 E × f, 뻗는 빠르기 × v) · 구름·발밑·곡사(반지름 × z, 피해 × f, 지연·나는 시간 ÷ v)
  *   · 벽(반지름 × z, 체력 × f) · 함정(반지름 × z, 피해 × f, 터지기까지 ÷ v)
- * 비용: 에너지 E = z³ f (던지기는 × v²). 예비동작 × (sig + (1 − sig) E) (숨김 × 1.5), 당 × f, 머리 피로(풀 때) × log₂(1 + E). 드러남 E^(1/3)은 cast.vis에 적는다
+ * 비용: 에너지 E = z³ f (던지기는 × v²). 예비동작 × (sig + (1 − sig) E) (숨김 × 1.5), 당 × f, 머리 피로(풀 때) × log₂(1 + E) (숨김 × (1 + hide.heat)).
+ * 드러남 v = E^(1/3) (cast.vis), 숨기면 × hide.vis(1/3). v가 1 아래면 과녁이 짓기 시작할 때 단계·거리에 따라 알아챈다(notice). 못 알아챈 시전(cast.unseen)은 읽는 쪽(hideCast 훅·반사 겹·잔기술·막기·수읽기)이 건너뛴다
  * 엔진: 훅 tune(방출 첫머리) — 손잡이를 돌린 시전(c.tk)은 손잡이가 박힌 마법 사본으로 푼다(세계마다 열쇠로 모아 둔다)
  * 값 = 맞을 가망 × 피해 ÷ (예비동작 + 닿는 때 + 0.25 + 더 쓴 당 ÷ 당 회복 + 더 쓴 머리 ÷ 머리 회복). 회복은 엔진 훅 gluRegen·fatRecover의 사슬로 그 자리에서 잰다
- * 두뇌 (tac.tune): 1 초보 2단계만 · 2 중급 2·3 · 3 상급 1·2·3 · 4 대가 1·2·3·최대 · 5 전설 사이를 잘라 씀. 고른 마법 하나만 조합을 따지고 공격 방식으로 먼저 거른다(견제 1·2, 메이트 3·최대).
+ * 두뇌 (tac.tune): 1 초보 2단계만 · 2 중급 2·3 · 3 상급 1·2·3·최대 · 4 대가 1·2·3·최대 · 5 전설 같게 + 속도만 사이를 잘라 씀 (최대는 메이트에만). 고른 마법 하나만 조합을 따지고 공격 방식으로 먼저 거른다(견제 1·2, 메이트 3·최대).
  *   기록 m.mlog.tune['이름#z?f?v?(h)'] (2단계 셋에 숨김이 없으면 세지 않는다) */
 const P = require('../../data/rules/tune.json');
-const { pow, log, hyp } = require('../math');
+const { pow, log, exp, hyp } = require('../math');
 const LN2 = log(2), TUNED = { proj: 1, thread: 1, area: 1, lob: 1, wall: 1, trap: 1 };
 const energy = (s, z, f, v) => z * z * z * f * (s.t === 'proj' ? v * v : 1);
 const near = (a, x) => { let b = 0; for (let i = 1; i < a.length; i++) if (Math.abs(a[i] - x) < Math.abs(a[b] - x)) b = i; return b + 1; };
 const keyOf = (z, f, v, h) => 'z' + near(P.z, z) + 'f' + near(P.f, f) + 'v' + near(P.v, v) + (h ? 'h' : '');
+// 알아채기 (v2.20): 드러남 v(= E^(1/3), 숨기면 × hide.vis)가 1 아래면 읽는 쪽의 단계와 거리에 따라 1 − e^(−k · v · 눈 · 가까움)로 알아챈다
+function notice(W, v, e, d) {
+  if (v >= 1 || !e) return true; const N = P.notice, L = e.tac.tune || 0, eye = N.eye[L] ?? N.eye[0], nr = d > N.near ? N.near / d : 1;
+  return W.rng() < 1 - exp(-N.k * v * eye * (nr < N.far ? N.far : nr));
+}
 // 손잡이가 박힌 마법 사본
 function make(s, z, f, v, h) {
   const t = Object.assign({}, s), E = energy(s, z, f, v), d = f * (h ? P.hide.pow : 1);
@@ -25,11 +31,11 @@ function make(s, z, f, v, h) {
     case 'wall': t.r = s.r * z; t.hp = s.hp * f; break;
     case 'trap': t.tr = Object.assign({}, s.tr, { r: s.tr.r * z, arm: 0.8 / v }); if (s.tr.dmg) t.tr.dmg = s.tr.dmg * d; break;
   }
-  t.cost = s.cost * log(1 + E) / LN2;   // 머리 피로는 풀 때 cost로 센다 (당은 짓기 시작할 때 이미 냈다)
+  t.cost = s.cost * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1);   // 숨기면 고리를 억누르느라 머리가 더 든다 (v2.20)   // 머리 피로는 풀 때 cost로 센다 (당은 짓기 시작할 때 이미 냈다)
   return t;
 }
 module.exports = {
-  name: 'tune', switch: 'tune', api: { P, energy, make, keyOf },
+  name: 'tune', switch: 'tune', api: { P, energy, make, keyOf, notice },
   engine: X => ({
     tune(W, m, c) {
       if (!c.tk) return; const C = W._tuneC || (W._tuneC = new Map()), k = c.s.n + '|' + c.tz + '|' + c.tf + '|' + c.tv + '|' + (c.hid ? 1 : 0);
@@ -39,7 +45,7 @@ module.exports = {
   brain: B => {
     const C = B.C, Z = P.z, F = P.f, V = P.v, AL = [];
     return {
-      hideCast(W, q, c) { return !!c.hid; },   // 숨김: 예비동작이 안 보인다
+      hideCast(W, q, c) { return !!c.unseen; },   // 알아채지 못한 예비동작은 안 보인다 (v2.20)
       commit(W, m, K, best, cast) {
         const L = m.tac.tune, s = best.s; if (!L || !TUNED[s.t] || s.big && !(K.pl && K.pl.mate)) return;   // 큰 한 방은 메이트에서만 손잡이를
         const pl = K.pl, mate = !!(pl && pl.mate && pl.n === s.n), poke = K.mode === 'poke', e = cast.tgt;
@@ -57,7 +63,7 @@ module.exports = {
         const value = (z, f, v, h) => {
           const E = energy(s, z, f, v), Tc = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (h ? P.hide.cast : 1) + ext / v;
           const glu = best.cost * f; if (glu - best.cost > m.glu) return -1e9;
-          const heat = s.cost * 1.6 * log(1 + E) / LN2; if (m.fat + heat > P.heatMax && E > 1) return -1e9;
+          const heat = s.cost * 1.6 * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1); if (m.fat + heat > P.heatMax && E > 1) return -1e9;
           const land = s.t === 'area' ? s.delay / v : s.t === 'lob' ? s.flight / v : s.t === 'proj' ? d / (s.v * v) : 0, t = Tc + land;
           const seen = h || !sees ? land : t, need = lock >= t ? 0.3 : vl * seen * 0.5 + 0.3;
           const ph = s.t === 'wall' ? 1 : Math.min(1, reach * z / need), D = (s.t === 'thread' ? pow(f, 0.55) : s.t === 'proj' ? pow(E, 0.75) : s.t === 'wall' ? pow(z * f, 0.5) : f) * (h ? P.hide.pow : 1);
@@ -66,19 +72,14 @@ module.exports = {
         };
         for (const iz of AL) { if (iz < lo || iz > hi) continue; for (const iff of AL) { if (iff < lo || iff > hi) continue; for (const iv of AL) { if (iv > 2) continue;
           for (let h = 0; h < (L >= P.hideFrom ? 2 : 1); h++) { const x = value(Z[iz], F[iff], V[iv], h === 1); if (x > bv + 1e-9) { bv = x; bz = Z[iz]; bf = F[iff]; bvv = V[iv]; bh = h === 1; } } } } }
-        // 전설: 단계 사이를 잘라 쓴다 — 덮을 넓이에 딱 맞는 크기, 메이트면 쓸 수 있는 가장 센 화력
-        if (L >= 5 && s.t !== 'wall') {
-          const zmax = Z[mate && m.circles >= P.maxCirc ? 3 : 2], q = P.q, rq = x => Math.round(x / q) * q;
-          const Tz = (T0 - ext) * (P.sig + (1 - P.sig) * energy(s, bz, bf, bvv)) + ext / bvv, land = s.t === 'area' ? s.delay / bvv : s.t === 'lob' ? s.flight / bvv : 0;
-          const need = lock >= Tz + land ? 0.3 : vl * ((bh || !sees) ? land : Tz + land) * 0.5 + 0.3, z = rq(Math.max(Z[0], Math.min(zmax, need * 1.05 / reach)));
-          if (value(z, bf, bvv, bh) >= bv - 1e-9) bz = z;
-          if (mate) for (let f = Math.min(F[m.circles >= P.maxCirc && AL.includes(3) ? 3 : 2], (m.glu + best.cost) / best.cost); f > bf; f = rq(f - 0.25)) { if (value(bz, rq(f), bvv, bh) > bv * 0.95) { bf = rq(f); break; } }
-        }
+        // 전설: 속도만 단계 사이를 잘라 쓴다 (확정 순간에 딱 맞게). 크기·화력은 단계로 (v2.20)
+        if (L >= 5 && s.t !== 'wall') { const q = P.q; for (let v = V[0]; v <= V[2] + 1e-9; v += q) { const vq = Math.round(v / q) * q, x = value(bz, bf, vq, bh); if (x > bv + 1e-9) { bv = x; bvv = vq; } } }
         if (bz === 1 && bf === 1 && bvv === 1 && !bh) return;
         const E = energy(s, bz, bf, bvv);
         cast.T = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (bh ? P.hide.cast : 1) + ext / bvv;
         m.glu -= best.cost * (bf - 1); cast.cost = best.cost * bf;
         cast.tz = bz; cast.tf = bf; cast.tv = bvv; cast.hid = bh; cast.vis = pow(E, 1 / 3); cast.tk = keyOf(bz, bf, bvv, bh);
+        cast.unseen = !notice(W, cast.vis * (bh ? P.hide.vis : 1), e, d);   // 과녁이 알아챘나 (짓기 시작할 때 과녁의 눈으로 한 번)
         const T = m.mlog.tune || (m.mlog.tune = {}), k = s.n + '#' + cast.tk; T[k] = (T[k] || 0) + 1;
       },
     };

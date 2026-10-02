@@ -39,7 +39,7 @@ function scan(W, m) {
   if (TH.th || !m.tac.readCast || m.st.blind > 0) return;
   const v2 = m.vx * m.vx + m.vy * m.vy;
   for (const q of W.foes[m.side]) for (let j = 0; j < 2; j++) {
-    const c = j ? q.castB : q.cast; if (!(c && !c.hid && c.tgt === m && LEAD[c.s.t] && c.T - c.t < P.read)) continue;
+    const c = j ? q.castB : q.cast; if (!(c && !c.unseen && c.tgt === m && LEAD[c.s.t] && c.T - c.t < P.read)) continue;
     const ax = c.tx - m.x, ay = c.ty - m.y, d = hyp(ax, ay), s = v2 > 1 ? (ax * m.vx + ay * m.vy) / v2 : 0;   // 겨눈 자리가 내 앞길의 s초 뒤인가
     if (d >= P.aheadMin && s > P.aheadT[0] && s < P.aheadT[1] && hyp(ax - m.vx * s, ay - m.vy * s) < P.aheadR) { TH.th = c; TH.q = q; TH.kind = 3; return; }   // 앞길을 겨눴다: 흔든다
     if (d < P.aheadMin) { const k = d > 0.1 ? d : 1; TH.th = c; TH.q = q; TH.kind = 4; TH.dx = d > 0.1 ? -ax / k : -(q.y - m.y); TH.dy = d > 0.1 ? -ay / k : q.x - m.x; return; }   // 거의 나를 겨눴다: 겨눈 자리에서 비킨다

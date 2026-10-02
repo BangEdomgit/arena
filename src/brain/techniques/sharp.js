@@ -10,7 +10,7 @@
  * 세운 벽 뒤에 머문다 (v2.8): 벽·기둥을 세우고 2 s는 작전의 둘레 돌기를 쉬고, 엄폐가 제 벽 뒤로 끌고, 2 m로 낮게 난다. 벽을 떼어 재니 둘레 돌기가 두 사람 사이의 벽을 반으로 줄였다
  * 몰아치기·빈 칸의 준비·벽 자리 (v2.9, SPEC 33장): 몰아칠 틈(storm)엔 문턱 minOpen, 문턱에 막혀 기다리는 동안 벽·함정·지대(wait, 빈틈이 열리면 끊는다), 세운 벽에 anchorT 머문다(behind). 수를 모두 끄면 v2.8
  * 방패는 0.4 s 안에 닿는 위협(나를 겨눈 예비동작이 풀려 닿는 때, 날아오는 투사체)에만 (v2.8). (둘 다 높이 떠 있을 때 기둥·벽을 막으면 대가/상급이 0.06 떨어졌다: 굳을 위험에 낮게 날아 벽이 곧 다시 가린다) */
-const { OFF, landDelay, castTime, hyp, C } = require('../util'), { undo } = require('./cancel');
+const { OFF, landDelay, castTime, hyp, C, hidesOf } = require('../util'), { undo } = require('./cancel');
 const on = m => m.tac.sharp && m.C >= 5;
 const SW = require('./swarm'); let MD = null;
 const off = (m, k) => m.tac.sharpOff && m.tac.sharpOff[k];   // 떼어 재기 (실험): 기능 하나를 끈다
@@ -28,7 +28,7 @@ function losCancel(W, m, K) {
 // 명중 가망 (v2.8): 판 중의 명중률(쏜 수 대비, 앞의 짐작 0.35를 세 번 몫으로 섞는다) × 지금의 형편(과녁이 묶였나·구를 수 있나·닿는 데 얼마나 걸리나)
 // 기다림의 끝 (v2.13): 쏜 지 waitMax 넘게 지나면 문턱을 waitFade 동안 0까지 낮춘다. 문턱에 막혀 둘 다 쏘지 않는 침묵이 판의 20%였다
 const patience = (W, m) => { const t = W.t - m.lastRel - P.waitMax; return t > 0 ? (t < P.waitFade ? 1 - t / P.waitFade : 0) : 1; };
-const P = { prior: 3, pin: 2.5, roll: 0.6, fly: 0.7, landT: 0.6, min: 0.14, use: 1, minOpen: 0.05, hotF: 85, inHeld: 0.5, waitW: 0.5, prep: 1.2, prepMin: 0.6, prepFat: 50, anchorT: 10, ownCover: 0.4, losPrior: 30, waitMax: 1.5, waitFade: 1.5 };
+const P = { hideWall: 0.8, prior: 3, pin: 2.5, roll: 0.6, fly: 0.7, landT: 0.6, min: 0.14, use: 1, minOpen: 0.05, hotF: 85, inHeld: 0.5, waitW: 0.5, prep: 1.2, prepMin: 0.6, prepFat: 50, anchorT: 10, ownCover: 0.4, losPrior: 30, waitMax: 1.5, waitFade: 1.5 };
 // 몰아칠 틈 (v2.9): 과녁의 빈틈(굳음·묶임·꺼짐·빈손), 과열이 다가옴(머리 hotF 넘음, 파도 아님), 내 작전 끝내기. 이때 명중 문턱은 minOpen
 const storm = (W, m, K) => { const e = K.e; return openFor(W, e) > 0 || (e.fat > P.hotF && !e.wave) || (m.op && m.op.cur === 'finish'); };
 function chance(W, m, K, o, land) {
@@ -63,6 +63,7 @@ function value(W, m, K, o) {
   if (s.t === 'buff' && s.b && s.b.front && !off(m, 'shield') && !threatSoon(W, m, K)) o.v = 0;  // 방패는 0.4 s 안에 닿는 실제 위협에만 (v2.8)
   if ((s.t === 'wall' || s.t === 'build' || s.t === 'blueprint') && !off(m, 'wall') && (m.z > 2 || e.z > 2)) o.v = 0;   // 둘 중 하나가 2 m 넘게 떠 있으면 벽은 가리지 않는다 (v2.7)
   if ((s.t === 'wall' || s.t === 'build') && o.v > 0 && m.tac.wallLos && losShare(W, e) < m.tac.wallLos && !threatSoon(W, m, K)) o.v = 0;   // 상대의 주력이 시야가 필요한 공격일 때만 벽 (v2.10)
+  if ((s.t === 'wall' || s.t === 'build') && !off(m, 'wall') && m.z <= 2 && e.z <= 2 && hidesOf(e) && !W.walls.some(w => w.mk === m.id && hyp(w.x - m.x, w.y - m.y) < 4)) o.v = Math.max(o.v, P.hideWall);   // 숨긴 수를 쓰는 상대: 읽지 못해도 시야를 막으면 막힌다 — 곁에 벽이 없으면 세운다 (v2.20)
 }
 // 기다리는 동안 빈 칸을 지형과 준비에 (v2.9): 명중 문턱에 공격이 막힌 뒤 0.5 s 안이면 벽·흙벽(둘 다 2 m 아래)·함정(한도 안)·지대에 값을 준다.
 // 피로 벌점(머리 100에 0.5)을 넘어 고를 만하게 prepMin. 벽은 내 앞 적 쪽에(엄폐 각), 함정은 나와 적 사이 3 m에(다가오는 길)

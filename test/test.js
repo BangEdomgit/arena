@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.19.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.20.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -708,8 +708,11 @@ ok('v2.19 손잡이 (SPEC 43장): 틀마다 붙는 곳, 2단계는 그대로, �
   const W = A.createWorld({ seed: 1, obstacles: 0, width: 60, height: 40, rules: { tune: true, flight: false, saltRing: false } }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 0, 20, 20), e = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설', deck: '대마법사 결투' }), 1, 30, 20);
   m.thinkT = e.thinkT = 1e9; A.stepWorld(W); A.release(W, m, { s: S['낙뢰'], tx: 30, ty: 20, tgt: e, t: 0, T: 0, tz: 1.6, tf: 2, tv: 1, hid: false, tk: 'z3f3v2' });
   assert.ok(Math.abs(W.areas[W.areas.length - 1].r - S['낙뢰'].r * 1.6 * A.sizeOf(m, S['낙뢰'])) < 1e-9, '사본의 반지름');
-  // 숨김: 상대 두뇌가 예비동작을 못 본다
-  const BH = require('../src/brain/hooks').hooks(W); assert.ok(BH.hideCast.some(f => f(W, m, { hid: true, s: S['낙뢰'], T: 1, t: 0 }, e)));
+  // 숨김 (v2.20): 알아채지 못한 예비동작만 안 보인다. 흔적(드러남 1/3)이 남아 전설은 가까이서 잘 알아채고, 큰 수는 숨겨도 보인다
+  const BH = require('../src/brain/hooks').hooks(W); assert.ok(BH.hideCast.some(f => f(W, m, { unseen: true, s: S['낙뢰'], T: 1, t: 0 }, e)) && !BH.hideCast.some(f => f(W, m, { hid: true, unseen: false, s: S['낙뢰'], T: 1, t: 0 }, e)));
+  const rate = (v, L, d) => { let k = 0; const q = { tac: { tune: L } }; for (let i = 0; i < 2000; i++) if (TU.notice(W, v, q, d)) k++; return k / 2000; };
+  assert.ok(rate(0.2, 5, 5) > rate(0.2, 2, 5) + 0.1 && rate(0.2, 5, 5) > rate(0.2, 5, 40) + 0.1 && rate(2 / 3, 5, 5) > 0.8 && rate(1.2, 1, 40) === 1, '알아채기');
+  assert.ok(TU.make(S['낙뢰'], 1, 1, 1, true).cost > TU.make(S['낙뢰'], 1, 1, 1, false).cost * 1.4, '숨김은 머리가 더 든다');
   // 판단: 초보는 손잡이를 돌리지 않는다, 전설은 판을 돌리면 돌린 수를 센다
   assert.ok(A.mage({ tier: '대마법사', skill: '초보' }).tac.tune === 1 && A.mage({ tier: '대마법사', skill: '전설' }).tac.tune === 5);
   const sc = JSON.parse(JSON.stringify(SCENES['v2-tactics-legend'])); sc.seed = 1; sc.maxT = 20; const w = A.sceneWorld(sc); while (!A.over(w)) A.stepWorld(w);
