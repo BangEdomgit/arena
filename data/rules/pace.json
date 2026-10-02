@@ -1,8 +1,8 @@
 {
- "desc": "빠른 판 (rules/pace, v2.14, SPEC 38장). 선명도 cMin 이상(대마법사)에게만. 엔진: bulk 떡대(적이 준 피해 ×), cool 머리 회복 ×, run 땅 걸음 ×, agile 꺾는 가속 ×, guard 막기(순간 켜기 패시브), track 감각 조준 반경(tac.pace 0~3). 두뇌: castK·cdK·costK 시전·되쓰기·당 ×, threadK 실 빠르기 ×, move 늘 움직이기(tac.pace)",
+ "desc": "빠른 판 (rules/pace, v2.14, SPEC 38장). 선명도 cMin 이상(대마법사)에게만. 엔진: bulk 떡대(적이 준 피해 ×), cool 머리 회복 ×, run 땅 걸음 ×, agile 꺾는 가속 ×, guard 막기(순간 켜기 패시브), track 감각 조준 반경(tac.pace 0~3) × 드러남(시전의 vis, 숨기면 × 손잡이 hide.vis, trackVis [아래, 위]로 자름, v2.21. null이면 끔: 켜면 전설끼리 명중 33 → 19%, reports/v2.21.0.md). 두뇌: castK·cdK·costK 시전·되쓰기·당 ×, threadK 실 빠르기 ×, move 늘 움직이기(tac.pace)",
  "cMin": 8, "bulk": 0.35, "cool": 2, "run": 2.2, "agile": 4,
  "castK": 0.6, "cdK": 0.5, "costK": 0.6, "threadK": 3,
- "track": [0, 1, 2, 5],
+ "track": [0, 1, 2, 5], "trackVis": null,
  "guard": { "cd": 0.35, "okT": 0.3, "k": 0.45, "glu": 5, "pow": 0.7, "min": 0.12, "lead": 0.3, "near": 2.2, "gluMin": 12 },
  "move": { "vMin": 26, "vIn": 34, "inK": 0.35, "outK": 0.5, "lat": 0.6, "flip": [0.35, 0.8], "flipL": [0.25, 0.55], "turnP": 0.8, "hurry": [0.4, 0.6, 0.8], "fly": true, "noDrop": true, "read": true }
 }

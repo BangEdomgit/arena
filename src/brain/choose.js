@@ -10,7 +10,7 @@ const combo = require('./techniques/combo'), cancel = require('./techniques/canc
 const tempo = require('./techniques/tempo'), bait = require('./techniques/bait'), learn = require('./techniques/learn'), counter = require('./techniques/counter');
 const cover = require('./techniques/cover'), herd = require('./techniques/herd'), crowd = require('./techniques/crowd');
 const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
-const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), sharp = require('./techniques/sharp'), mode = require('./techniques/mode'), engage = require('./techniques/engage'), trapline = require('./techniques/trapline'), PL = require('./plan');
+const rhythm = require('./techniques/rhythm'), efficacy = require('./techniques/efficacy'), shape = require('./techniques/shape'), survive = require('./techniques/survive'), hazard = require('./techniques/hazard'), sharp = require('./techniques/sharp'), mode = require('./techniques/mode'), engage = require('./techniques/engage'), trapline = require('./techniques/trapline'), PL = require('./plan');
 
 function decide(W, m, K) {
   const { S, T, rest, e, De, d, eDown, aimed, threat } = K, bh = W._bh;
@@ -142,6 +142,7 @@ function pipeOf(W, m) {
   if (T.engage) P.push(engage.value);     // 숨은 상대를 쫓아 들춘다 (v2.13)
   if (T.trapLine) P.push(trapline.value); // 덫은 길에, 한 칸에 둘까지, 0.8 s에 하나 (v2.13)
   if (T.read) P.push(PL.value);         // 수읽기의 첫 수·큰 한 방은 메이트에만·깨기·정석 (v2.15)
+  if (T.hazard) P.push(hazard.value);   // 터질 때 내가 안에 있을 지역 마법은 버린다 (v2.21)
   return P;
 }
 // 마법 하나의 값. 쓸 만하면 후보에 넣는다

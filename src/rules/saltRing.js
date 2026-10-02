@@ -15,7 +15,7 @@ const safeOn = m => m.tac.survive && m.C >= 5;
 const WO = [0, 0];
 function wallOf(W, m, vx, vy) {
   const rx = m.x - W.width / 2, ry = m.y - W.height / 2, r = hyp(rx, ry) || 0.01, ux = rx / r, uy = ry / r, fly = m.fly === 1 && m.z >= 1;
-  const Rf = saltRAt(W, W.t + SAFE.look), a = fly ? SAFE.flyA : SAFE.walkA, Rs = Rf - Math.min(SAFE.pad, SAFE.padK * Rf), vr = m.vx * ux + m.vy * uy, brake = vr > 0 ? vr * vr / (2 * a) : 0;
+  const Rf = saltRAt(W, W.t + SAFE.look), a = fly ? SAFE.flyA : SAFE.walkA, Rs = Rf - Math.min(SAFE.pad, SAFE.padK * Rf) - (m._k ? m._k.saltPad : 0), vr = m.vx * ux + m.vy * uy, brake = vr > 0 ? vr * vr / (2 * a) : 0;
   if (r + brake < Rs - 1) return null;
   const out = vx * ux + vy * uy; if (out > 0) { vx -= ux * out; vy -= uy * out; }
   const outside = r + brake >= Rs; if (outside) { const l = hyp(vx, vy); vx = vx * 0.5 - ux * (l > 1 ? l : 2); vy = vy * 0.5 - uy * (l > 1 ? l : 2); }

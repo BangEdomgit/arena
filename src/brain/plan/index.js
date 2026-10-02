@@ -32,14 +32,14 @@ function read(W, m, K) {
   const pl = K.pl || (K.pl = newPl());
   if (W.t - K.plT < P.every) return;
   learn(W, m, pl);
-  const e = K.e, S = ST.build(W, e, m, sides(m).e, 0.5), o = SE.read(W, m, e, S, m.tac.read, table(pl));
+  const e = K.e, S = ST.build(W, e, m, sides(m).e, 0.5, !!W.rules.stunRes), o = SE.read(W, m, e, S, m.tac.read, table(pl));
   K.plT = W.t; pl.t = W.t; pl.S = S; pl.n = o.k >= 0 ? SE.CN[o.k] : ''; pl.j = o.j; pl.tx = o.j ? S.bx[o.j] : 0; pl.ty = o.j ? S.by[o.j] : 0; pl.mate = o.mate; pl.line = o.line; pl.check = o.check; pl.ans = o.ans; pl.pred = o.pred;
   m.mlog.plN++; m.mlog.plNodes += o.nodes;
 }
 // 막는 쪽 (걸음 앞, 판단마다)
 function net(W, m, K) {
   if (!on(m, K)) return;
-  const e = K.e, S = ST.build(W, m, e, sides(m).me, 0.5); K.netN = ST.slack(S, 0.3);
+  const e = K.e, S = ST.build(W, m, e, sides(m).me, 0.5, !!W.rules.stunRes); K.netN = ST.slack(S, 0.3);
   const L = JO.read(W, m, K); K.jsL = L;
   if (K.brk > W.t) return;
   let busy = false; for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.unseen && !c.auto && OFF[c.s.t] && c.tgt === m) busy = true; }
@@ -70,27 +70,27 @@ function value(W, m, K, o) {
 function commit(W, m, K, best, cast) {
   if (!on(m, K)) return;
   const pl = K.pl; if (pl && pl.n === best.n) { cast.chk = pl.check; cast.mate = pl.mate; cast.pred = pl.pred; if (pl.check) m.mlog.chk++; if (pl.mate) m.mlog.mate++; }
-  const f = FI[best.s.t]; if (pl && f !== undefined && pl.qN < 16 && K.e) { const i = pl.qN++, n = ansOf(W, K.e, m, cast); pl.qName[i] = best.n; pl.qCell[i] = f + (n > 3 ? 3 : n); pl.qH[i] = m.log.hits[best.n] || 0; pl.qT[i] = W.t + cast.T + P.hit.wait; }   // 배울 것
+  const f = FI[best.s.t]; if (pl && f !== undefined && pl.qN < 16 && K.e) { const i = pl.qN++, n = ansOf(W, K.e, m, cast, !!W.rules.stunRes); pl.qName[i] = best.n; pl.qCell[i] = f + (n > 3 ? 3 : n); pl.qH[i] = m.log.hits[best.n] || 0; pl.qT[i] = W.t + cast.T + P.hit.wait; }   // 배울 것
   JO.commit(W, m, K, best.n); K.plT = -9;   // 다음 칸에서 다시 읽는다
 }
-// 지표 (metrics/watch, 읽기만): d의 방어 여유, 시전 c에 대한 d의 응수 수
-function slackOf(W, d, a) { return ST.slack(ST.build(W, d, a, TMP, 0.5), 0.3); }
-function ansOf(W, d, a, c) {
-  const S = ST.build(W, d, a, TMP, 0.5), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
+// 지표 (metrics/watch, 읽기만): d의 방어 여유, 시전 c에 대한 d의 응수 수. 굳음은 바로 센다(v2.21: 굳으면 응수는 몸 털기뿐)
+function slackOf(W, d, a) { return ST.slack(ST.build(W, d, a, TMP, 0.5, true), 0.3); }
+function ansOf(W, d, a, c, sk = true) {
+  const S = ST.build(W, d, a, TMP, 0.5, sk), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
   const tau = Math.max(0, c.T - c.t) + (f === 'thread' ? 0 : landDelay(s, dist)), r = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(a, s) + 0.3 : Math.max(1, (pc ? pc.track[a.tac.pace || 0] || 0 : 0) + 0.6);
   let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp >= tau) n++;
-  for (let i = 0; i < 6; i++) { if (!(mask & (1 << i)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 2 && s.big) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
+  for (let i = 0; i < 6; i++) { if (!(mask & (1 << i) || (i === 5 && S.sl > tau)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 2 && s.big) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
   if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
   return n;
 }
 // 지표용 (v2.20.1, GATE 4판 C7): 응수를 둘로 — 온전히 받는 응수 수(막기·잔기술 빼고)와 피해를 줄이기만 하는 막기·잔기술을 쓸 수 있나
 function ansSplit(W, d, a, c, out) {
-  const S = ST.build(W, d, a, TMP, 0.5), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
+  const S = ST.build(W, d, a, TMP, 0.5, true), s = c.s, f = s.t, mask = ST.FM[f] || 0, A = ST.ra(), pc = ST.paceOn(W, a) ? A.pace.P : null, dist = hyp(c.tx - a.x, c.ty - a.y);
   const tau = Math.max(0, c.T - c.t) + (f === 'thread' ? 0 : landDelay(s, dist)), r = f === 'area' || f === 'lob' ? (s.r || 1) * C.sizeOf(a, s) + 0.3 : Math.max(1, (pc ? pc.track[a.tac.pace || 0] || 0 : 0) + 0.6);
-  let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp >= tau) n++;
-  for (let i = 0; i < 6; i++) { if (i === 2 || !(mask & (1 << i)) || !(S.has & (1 << i)) || S.av[i] > tau) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
+  let n = 0; if ((f === 'thread' || f === 'proj') && S.shUp > 0 && S.shUp >= tau) n++;   // 세운 방패가 있어야 (v2.21)
+  for (let i = 0; i < 6; i++) { if (i === 2 || !(mask & (1 << i) || (i === 5 && S.sl > tau)) || !(S.has & (1 << i)) || S.av[i] > tau || tau <= 0) continue; if (i === 1 && !ST.cutOK(S, tau, r)) continue; if (i === 0 && !ST.rollOK(S, tau, r)) continue; n++; }
   if (mask & (1 << ST.MOVE) && ST.moveOK(S, tau, r)) for (let j = 1; j < 9; j++) if (S.blk[j] <= tau) { n++; break; }
-  const q = A.ps ? A.ps.psvOf(s) : 0; out.n = n; out.g = !!(mask & 4) && !!(S.has & 4) && S.av[2] <= tau && !s.big && (!S.pk || (q > 0 && (S.pk & (1 << (q - 1))) > 0)); return out;
+  const q = A.ps ? A.ps.psvOf(s) : 0; out.n = n; out.g = !!(mask & 4) && !!(S.has & 4) && (S.av[2] < tau || (S.av[2] === 0 && d.st.psv > 0)) && !s.big && (!S.pk || (q > 0 && (S.pk & (1 << (q - 1))) > 0)); return out;
 }
 // 방어 자원의 남은 몫 (샌드박스): 자원마다 0(지금 쓸 수 있음)~1(cap s 넘게 잠김), 없으면 -1
 function resBars(S, out) { for (let i = 0; i < 6; i++) out[i] = S.has & (1 << i) ? Math.min(1, S.av[i] / P.w.lockCap) : -1; return out; }

@@ -13,8 +13,8 @@ const FM = {}; for (const f in P.form) { let b = 0; for (const k of P.form[f]) b
 const R2 = Math.SQRT1_2, OX = [0, 0, 0, R2, R2, -R2, -R2, 1, -1], OY = [0, 1, -1, R2, -R2, R2, -R2, 0, 0];   // 피할 곳의 방향 (치는 사람 → 막는 사람 축에서): 제자리·옆·옆·비스듬히 앞뒤·뒤·앞
 const G = 9.8;
 let RA = null;   // 규칙의 api (처음 부를 때 읽는다: 엔진이 규칙을 읽을 때 두뇌는 아직 없다)
-function ra() { if (!RA) { const f = n => { const r = C.RULES.find(x => x.name === n); return r ? r.api : null; }; RA = { fl: f('flight'), pace: f('pace'), resp: f('response'), sr: f('saltRing'), ps: f('passive') }; } return RA; }
-function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), why: new Uint8Array(9), pk: 0, a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
+function ra() { if (!RA) { const f = n => { const r = C.RULES.find(x => x.name === n); return r ? r.api : null; }; RA = { fl: f('flight'), pace: f('pace'), resp: f('response'), sr: f('saltRing'), ps: f('passive'), sr2: f('stunRes') }; } return RA; }
+function newSide() { return { av: new Float64Array(6), cd: new Float64Array(6), has: 0, shUp: 0, blk: new Float64Array(9), geo: new Float64Array(9), bx: new Float64Array(9), by: new Float64Array(9), why: new Uint8Array(9), pk: 0, sl: 0, a: 0, up: 0, fly: false, walkV: 6, shN: '', wlN: '', ux: 1, uy: 0, x: 0, y: 0 }; }
 const paceOn = (W, q) => { const p = ra().pace; return !!(W.rules.pace && p && q.C >= p.P.cMin); };
 // 앞 방패·벽 마법 (책마다 한 번)
 function bookOf(W, d, S) {
@@ -28,7 +28,8 @@ function fallLock(W, d) {
   return tg + ra().fl.F.fallStun;
 }
 // 막는 사람 d의 줄인 상태 (치는 사람 a의 눈). h: 피할 곳을 볼 앞날(s)
-function build(W, d, a, S, h) {
+// sk (v2.21): 굳음을 바로 센다 — 굳은 동안은 생각도 시전도 못 하니 막기·방패·벽도 굳음이 풀린 뒤에야(이미 켠 잔기술·세운 방패는 그대로). 몸 털기는 굳음을 풀 수 있을 때만(굳힘 내성 규칙) 바로
+function build(W, d, a, S, h, sk) {
   const A = ra(), av = S.av, cd = S.cd; let has = 0;
   bookOf(W, d, S);
   for (let i = 0; i < 6; i++) { av[i] = Infinity; cd[i] = 0; }
@@ -48,6 +49,10 @@ function build(W, d, a, S, h) {
   if (S.wlN) { const s = W.spells[S.wlN]; av[4] = (d.cd[S.wlN] > 0 ? d.cd[S.wlN] : 0) + castTime(W, d, s.cast); cd[4] = s.cd; has |= 16; }
   // 5 몸 털기: 대응 규칙의 풀기를 여는 판단 수준
   if (W.rules.response && A.resp && A.resp.levelOf(d).unbind) { av[5] = Math.max(0, d.unbindCd - W.t); cd[5] = A.resp.P.unbind.cd; has |= 32; }
+  const sl = sk && d.st.stun > 0 ? d.st.stun : 0; S.sl = sl;   // 굳음 (v2.21): 몸 털기는 굳힘 내성 규칙이 켜졌을 때만 굳음을 턴다
+  if (W.rules.stunRes && A.sr2.can(d) && sl > 0 && d.glu >= A.sr2.P.shake.glu) { av[5] = Math.max(0, d.unbindCd - W.t); cd[5] = A.sr2.P.shake.cd; has |= 32; }
+  else if (sl > 0) av[5] = Math.max(av[5], sl);
+  if (sl > 0) { if (!(d.st.psv > 0 && av[2] === 0)) av[2] = Math.max(av[2], sl); av[3] = Math.max(av[3], sl); av[4] = Math.max(av[4], sl); }
   S.has = has; S.fly = fly;
   // 움직임
   const canF = fly || (W.rules.flight && A.fl.canFly(d));   // 땅에 있어도 뜰 수 있으면 날아 비킨다 (뜨는 데 takeoff s)

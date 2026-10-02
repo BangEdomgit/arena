@@ -4,7 +4,7 @@
  * 피하기가 이기고, 알아챈 함정과 내 지연 폭발은 늘 비킨다. 걸음 방향은 K.vx·K.vy를 거쳐 기술·훅이 함께 고친다 */
 const { hyp } = require('./util');
 const cover = require('./techniques/cover'), position = require('./techniques/position'), lure = require('./techniques/lure');
-const swarm = require('./techniques/swarm'), siege = require('./techniques/siege');
+const swarm = require('./techniques/swarm'), siege = require('./techniques/siege'), hazard = require('./techniques/hazard');
 function steer(W, m, K) {
   const { foes, prefR, d, ux, uy, dodge, stance, escape } = K;
   let vx = 0, vy = 0;
@@ -39,6 +39,7 @@ function steer(W, m, K) {
   for (const a of W.areas) if (a.src === m && hyp(a.x - m.x, a.y - m.y) < a.r + 1) { const l = hyp(m.x - a.x, m.y - a.y) || 1; vx = (m.x - a.x) / l * 2.5; vy = (m.y - a.y) / l * 2.5; }
   // 단단한 벽: 모든 걸음이 정해진 뒤 규칙이 막는다 (소금 원의 안전 반경·과열 전 착지, v2.6). 훅이 없으면 그대로
   const hb = W._bh.bound; if (hb.length) { K.vx = vx; K.vy = vy; for (let i = 0; i < hb.length; i++) hb[i](W, m, K); vx = K.vx; vy = K.vy; }
+  if (m.tac.hazard) { K.vx = vx; K.vy = vy; hazard.bound(W, m, K); vx = K.vx; vy = K.vy; }   // 내 위험 지대 비키기 (v2.21): 내 지연 폭발·곡사, 낮은 체력의 소금 원 여유
   m.mv.x = vx; m.mv.y = vy;
 }
 module.exports = { steer };
