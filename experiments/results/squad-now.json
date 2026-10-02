@@ -1,0 +1,258 @@
+{
+ "v": "2.26.0",
+ "date": "2026-10-02",
+ "S": 20,
+ "out": {
+  "scattered": {
+   "6": {
+    "n": 20,
+    "win": 1,
+    "hp": 1,
+    "t": 21.3,
+    "kills": 6,
+    "enc": 30,
+    "sur": 0,
+    "sim": 0,
+    "iso": 0.594,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "8": {
+    "n": 20,
+    "win": 1,
+    "hp": 1,
+    "t": 24.6,
+    "kills": 8,
+    "enc": 44,
+    "sur": 0,
+    "sim": 0,
+    "iso": 0.618,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "10": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.996,
+    "t": 32.9,
+    "kills": 10,
+    "enc": 58,
+    "sur": 0,
+    "sim": 0,
+    "iso": 0.507,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "12": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.998,
+    "t": 37.2,
+    "kills": 12,
+    "enc": 70,
+    "sur": 0,
+    "sim": 0,
+    "iso": 0.453,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   },
+   "15": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.998,
+    "t": 35.9,
+    "kills": 15,
+    "enc": 87,
+    "sur": 0.001,
+    "sim": 0,
+    "iso": 0.425,
+    "sqEnc": 0,
+    "volleys": 0,
+    "regroups": 0,
+    "role": {}
+   }
+  },
+  "squad": {
+   "6": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.999,
+    "t": 31.3,
+    "kills": 6,
+    "enc": 39,
+    "sur": 0,
+    "sim": 0.01,
+    "iso": 0.742,
+    "sqEnc": 40,
+    "volleys": 4,
+    "regroups": 0.9,
+    "role": {
+     "bind": {
+      "casts": 0.3,
+      "dmg": 0
+     },
+     "eye": {
+      "casts": 0.7,
+      "dmg": 0.1
+     },
+     "strike": {
+      "casts": 0.3,
+      "dmg": 0
+     },
+     "shield": {
+      "casts": 0.1,
+      "dmg": 0
+     }
+    }
+   },
+   "8": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.998,
+    "t": 34.8,
+    "kills": 8,
+    "enc": 53,
+    "sur": 0,
+    "sim": 0.022,
+    "iso": 0.661,
+    "sqEnc": 55,
+    "volleys": 5,
+    "regroups": 1,
+    "role": {
+     "strike": {
+      "casts": 1.1,
+      "dmg": 0
+     },
+     "bind": {
+      "casts": 0.7,
+      "dmg": 0
+     },
+     "bait": {
+      "casts": 0.2,
+      "dmg": 0
+     },
+     "eye": {
+      "casts": 0.6,
+      "dmg": 0
+     }
+    }
+   },
+   "10": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.989,
+    "t": 44.8,
+    "kills": 10,
+    "enc": 72,
+    "sur": 0,
+    "sim": 0.183,
+    "iso": 0.534,
+    "sqEnc": 75,
+    "volleys": 5.7,
+    "regroups": 1.5,
+    "role": {
+     "eye": {
+      "casts": 1.9,
+      "dmg": 0
+     },
+     "strike": {
+      "casts": 2,
+      "dmg": 0
+     },
+     "bind": {
+      "casts": 0.6,
+      "dmg": 0
+     },
+     "shield": {
+      "casts": 0.2,
+      "dmg": 0
+     },
+     "bait": {
+      "casts": 0.3,
+      "dmg": 0
+     }
+    }
+   },
+   "12": {
+    "n": 20,
+    "win": 1,
+    "hp": 1,
+    "t": 43.1,
+    "kills": 12,
+    "enc": 77,
+    "sur": 0.002,
+    "sim": 0.215,
+    "iso": 0.487,
+    "sqEnc": 80,
+    "volleys": 6.1,
+    "regroups": 1.6,
+    "role": {
+     "strike": {
+      "casts": 3,
+      "dmg": 0
+     },
+     "eye": {
+      "casts": 3.1,
+      "dmg": 0
+     },
+     "bind": {
+      "casts": 1.8,
+      "dmg": 0
+     },
+     "bait": {
+      "casts": 0.5,
+      "dmg": 0
+     },
+     "shield": {
+      "casts": 0.1,
+      "dmg": 0
+     }
+    }
+   },
+   "15": {
+    "n": 20,
+    "win": 1,
+    "hp": 0.978,
+    "t": 56.7,
+    "kills": 15,
+    "enc": 82,
+    "sur": 0,
+    "sim": 0.388,
+    "iso": 0.413,
+    "sqEnc": 85,
+    "volleys": 9.4,
+    "regroups": 1.8,
+    "role": {
+     "bind": {
+      "casts": 7.4,
+      "dmg": 0
+     },
+     "eye": {
+      "casts": 7.9,
+      "dmg": 0.1
+     },
+     "strike": {
+      "casts": 7.6,
+      "dmg": 0
+     },
+     "bait": {
+      "casts": 2.1,
+      "dmg": 0
+     },
+     "shield": {
+      "casts": 2.4,
+      "dmg": 0.1
+     }
+    }
+   }
+  }
+ }
+}

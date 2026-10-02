@@ -144,6 +144,17 @@ function run() {
     assert.ok(c.tx > m.x + 1, '앞질러 겨눈다 ' + c.tx + ' ' + m.x);
     assert.ok(A.rulesOf({ profile: '지금' }).gunfire && !A.rulesOf({}).gunfire && !A.rulesOf({}).calm);
   });
+  ok('전투단 (v2.26, SPEC 49장): 끄면 칠판이 없고, 켜면 tac.squad 편에 역할·조·자리를 정하고 포위각을 잰다', () => {
+    const SQ = require('../../src/rules/squad').api, CR = require('../../experiments/crowd'), X = require('../../src/core');
+    const [enc] = SQ.encircle(X, 0, 0, [{ x: 1, y: 0 }, { x: -1, y: 0 }]); assert.ok(Math.abs(enc - 3.1416) < 0.01, '맞선 둘은 180° ' + enc);
+    const [e2] = SQ.encircle(X, 0, 0, [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }]); assert.ok(Math.abs(e2 - 4.712) < 0.01, '넷은 270°');
+    const run = rules => { const sc = CR.scene(10, 1, { squad: 1 }); sc.rules = Object.assign({}, sc.rules, rules); const W = A.sceneWorld(sc); for (let i = 0; i < 60; i++) A.stepWorld(W); return W; };
+    assert.strictEqual(run({}).H.world.length, run({ squad: false }).H.world.length);
+    const W = run({ squad: true }), b = SQ.stats(W).b[1];
+    assert.ok(b.on && b.tgt === W.ms[0], '과녁은 대마법사'); assert.ok(b.k >= 2, '조 ' + b.k);
+    const rs = [...b.role.values()]; assert.ok(rs.includes('eye') && rs.includes('bind') && rs.includes('strike'), rs.join(',')); assert.ok(rs.every(r => SQ.ROLES.includes(r)));
+    assert.strictEqual(b.pt.size, 10, '모두 자리가 있다'); assert.ok([...b.pt.values()].every(p => p[0] === p[0] && p[1] === p[1]), 'NaN 없음');
+  });
   return done();
 }
 module.exports = { run };

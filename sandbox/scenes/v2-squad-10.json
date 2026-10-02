@@ -1,0 +1,108 @@
+{
+ "v": "2.26.0",
+ "name": "대마법사 전설 대 상위 전투단 10 (칠판·역할·조·번갈아·동시 체크) [지금]",
+ "seed": 1,
+ "width": 200,
+ "height": 150,
+ "rules": {
+  "profile": "지금",
+  "squad": true
+ },
+ "sides": [
+  {
+   "name": "대마법사",
+   "mages": [
+    {
+     "tier": "대마법사",
+     "skill": "전설",
+     "deck": "대마법사 청사진"
+    }
+   ]
+  },
+  {
+   "name": "상위",
+   "mages": [
+    {
+     "tier": "상위",
+     "skill": "대가",
+     "deck": "광역",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "상급",
+     "deck": "기술",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "대가",
+     "deck": "합법 최강",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "상급",
+     "deck": "광역",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "대가",
+     "deck": "기술",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "상급",
+     "deck": "합법 최강",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "대가",
+     "deck": "광역",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "상급",
+     "deck": "기술",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "대가",
+     "deck": "합법 최강",
+     "tac": {
+      "squad": 1
+     }
+    },
+    {
+     "tier": "상위",
+     "skill": "상급",
+     "deck": "광역",
+     "tac": {
+      "squad": 1
+     }
+    }
+   ]
+  }
+ ]
+}

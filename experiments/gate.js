@@ -33,6 +33,7 @@ function arenaGames(a, b, s0, n, look, deck) {
 const NOW = { profile: '지금' };   // H줄은 지금의 규칙으로 (v2.24.1)
 function duels(a, b, s0, n, rules) { const { part } = require('./versus'); return part(a, b, s0, n, rules || {}); }
 function crowdJob(n, s0, cnt) { return require('./crowd').run(n, s0, cnt); }
+function squadJob(n, s0, cnt) { return require('./squad').run(n, s0, cnt, 1); }   // v2.26: 전투단 (rules.squad, tac.squad)
 function ringJob(c, q, n, s0, cnt, maxT) { return require('./jobs').crowd(c, q, n, s0, cnt, NOW, 'ring', maxT); }
 function armyJob(name, s0, cnt) { return require('./army').run(name, s0, cnt); }
 // 낮은 단계 결투 (지금의 규칙): 받은 피해 가운데 파도(폭주)의 몫 (v2.24.1)
@@ -139,6 +140,7 @@ async function measure(q) {
   for (let i = 1; i <= 4; i++) { for (const t of ['평범', '중간']) for (let s = 0; s < NL; s += 50) add(`lad:${t}:${i}`, 'duels', [{ tier: t, skill: SK[i] }, { tier: t, skill: SK[i - 1] }, s, Math.min(50, NL - s)]); for (let s = 1; s <= NL; s += 4) add(`lad:대마법사:${i}`, 'arenaGames', [SK[i], SK[i - 1], s, Math.min(4, NL - s + 1), false]); }
   for (const [hi, lo] of [['중간', '평범'], ['상위', '중간'], ['대마법사', '상위']]) add('up:' + hi, 'duels', [{ tier: hi }, { tier: lo }, 0, N, NOW]);
   for (const n of [20, 30]) for (let s = 1; s <= NC; s += 2) add('crowd:' + n, 'crowdJob', [n, s, Math.min(2, NC - s + 1)]);
+  for (let s = 1; s <= NC; s += 2) add('squad:10', 'squadJob', [10, s, Math.min(2, NC - s + 1)]);
   for (let s = 0; s < NC; s += 5) { add('ring30', 'ringJob', [{ tier: '상위' }, { tier: '평범', deck: '기본기' }, 30, s, Math.min(5, NC - s), 120]); add('ring100', 'ringJob', [{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 100, s, Math.min(5, NC - s), 90]); }
   for (const nm of ['ambush', 'field-musket', 'salt-city', 'throw-조약돌-100', 'throw-번쩍 돌-100']) for (let s = 0; s < NC; s += 5) add('army:' + nm, 'armyJob', [nm, s, Math.min(5, NC - s)]);
   for (const t of ['평범', '중간']) for (let s = 0; s < N; s += 25) add('low:' + t, 'lowJob', [t, s, Math.min(25, N - s)]);   // 낮은 단계 결투의 폭주 (v2.24.1)
@@ -168,7 +170,7 @@ async function measure(q) {
   o['H1-중간'] = dsc('up:중간'); o['H1-상위'] = dsc('up:상위'); o.H2 = dsc('up:대마법사');
   const win = k => { const r = (R[k] || []); const n = r.reduce((a, p) => a + p.n, 0); return Pr(r.reduce((a, p) => a + p.win, 0), n); };
   o.H3 = win('ring30'); o.H4 = (() => { const g = flat('crowd:20'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })(); o.H5 = (() => { const g = flat('crowd:30'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })();
-  o.H6 = NA('상위 전투단 두뇌가 아직 없다 (4단계)'); o.H7 = win('ring100'); o.H8 = win('army:ambush'); o.H9 = win('army:field-musket'); o.H10 = win('army:throw-조약돌-100'); o.H11 = win('army:throw-번쩍 돌-100');
+  o.H6 = (() => { const g = flat('squad:10'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })(); o.H7 = win('ring100'); o.H8 = win('army:ambush'); o.H9 = win('army:field-musket'); o.H10 = win('army:throw-조약돌-100'); o.H11 = win('army:throw-번쩍 돌-100');
   { const f = R['army:field-musket'] || []; let mb = 0, n = 0; for (const p of f) { mb += p.mb || 0; n += p.n; } o.H9m = n ? Pr(mb, n) : null; o.H12 = win('army:salt-city');
     let w = 0, t = 0; for (const k of ['low:평범', 'low:중간']) for (const p of R[k] || []) { w += p.wave; t += p.tot; } o.H13 = t ? X(w / t, '평범·중간 합법 최강 대 기본기') : null; }   // 설정 기준 줄 (v2.24.1)
   // I
@@ -246,5 +248,5 @@ async function main(args) {
   if (!args.includes('--show')) { const r = await measure(args.includes('--quick')); card.versions[A.VERSION] = Object.assign({ date: new Date().toISOString().slice(0, 10) }, r); fs.writeFileSync(file, JSON.stringify(card, null, 1) + '\n'); fs.writeFileSync(md, render(card)); console.log(`v${A.VERSION} 잼 (${r.sec} s) → ${path.relative(process.cwd(), md)}`); }
   console.log(render(card));
 }
-module.exports = { arenaGames, duels, crowdJob, ringJob, armyJob, lowJob, measure, render, judge, ROWS, JUDGE, main };
+module.exports = { arenaGames, duels, crowdJob, squadJob, ringJob, armyJob, lowJob, measure, render, judge, ROWS, JUDGE, main };
 if (require.main === module) main(process.argv.slice(2)).catch(e => { console.error(e); process.exitCode = 1; });

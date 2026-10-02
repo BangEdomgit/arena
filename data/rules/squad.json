@@ -1,0 +1,20 @@
+{
+ "desc": "전투단과 다수 대응 (rules.squad, v2.26, SPEC 49장)",
+ "ratio": 1.8,
+ "every": 0.25,
+ "teamN": 4,
+ "sep": 2.094,
+ "out": 4,
+ "spread": 7,
+ "turn": 3,
+ "rot": 0.35,
+ "sight": 120,
+ "sync": 0.3,
+ "lead": 0.7,
+ "fallback": 0.3,
+ "regroup": 5,
+ "threatT": 1.5,
+ "w": { "bind": 3, "strike": 2.5, "volley": 3, "off": 0.8, "shield": 3, "scatter": 0.2 },
+ "solo": { "cMin": 5, "foes": 3, "R": 90, "enc": 3.14, "move": 1.5, "iso": 15, "isoB": 14, "bindB": 8, "gunR": 100, "gunN": 3, "gunHold": 0.6, "gunGo": 1.5 },
+ "note": "ratio: 과녁 선명도가 편의 가운데 선명도의 몇 배부터 전투단인가. teamN: 조 크기의 목표(3~5). sep: 조가 둘·셋일 때 조 사이 각(rad, 120°). out: 과녁 장악 반경 밖 여유(m). spread: 조원 사이(m). turn: 번갈아 쏘는 한 조의 차례(s), rot: 옮기는 조가 차례마다 도는 각(rad). sync: 동시 체크의 창(s), lead: 일제 사격을 부른 뒤 닿기까지(s). fallback: 모인 뒤 잃은 몫이 이만큼이면 흩어졌다 regroup s 뒤 다시 모인다. threatT: 노려진 조가 물러서는 시간(s). w: 두뇌 값의 곱. solo: 개인의 다수 모드(선명도 cMin 이상, 적 foes 넘게): R 안의 적으로 포위각을 재고 enc(rad) 넘으면 가장 넓은 틈 쪽으로 move만큼, iso m 안에 동료가 없는 적·묶는 적을 먼저(거리에서 isoB·bindB m를 뺀다), gunR 안에 장전된 총이 gunN 넘으면 공격 × gunHold, 대부분 장전 중이면 × gunGo"
+}
