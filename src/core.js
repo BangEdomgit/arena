@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.27.0
+ * 숨 결투장 — 엔진 핵심 v2.28.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.27.0';
+const VERSION = '2.28.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -59,6 +59,7 @@ const DEFAULT_RULES = {
   squad: false,        // (v2.26) 전투단과 다수 대응: tac.squad 편의 지휘 겹(칠판·역할·조·번갈아·동시 체크·물러섬)과 선명도 5 이상의 다수 모드 (SPEC 49장, rules/squad)
   chorus: false,       // (v2.27) 합창: 박자를 맞춘 무리(상위 6·중간 3까지, 서로 10 m 안, 1.5 s)는 선명도 × √N, 앞소리꾼의 위력 × √N^2.5 (SPEC 50장, rules/chorus)
   steady: false,       // (v2.27) 중간의 읽기: 선명도 2~5는 적의 예비동작을 풀기 0.25 s 전부터만 읽는다 (SPEC 51장, rules/steady)
+  drain: false,        // (v2.28) 마름: 칸마다 곳간, 마법은 서는 자리 둘레에서 에너지를 꺼내고 모자라면 그만큼 약하다, 햇빛으로 다시 찬다 (SPEC 52장, rules/drain)
   chipGuard: false,    // (v2.24, 시험) 작은 수 막기: 응수가 있는 동안 떡대가 적의 한 방마다 일정량을 뺀다 (SPEC 47장, rules/chipGuard)
   rings: false,        // (v2.22) 고리 장부: 사람마다 서클의 쓰임을 읽어낸다(m.mlog.rings). 판에 닿지 않는다 (SPEC 46장, rules/rings)
   stunRes: false,      // (v2.21) 굳힘 내성과 몸 털기: 다시 굳으면 짧게(× 0.5 → × 0.25), 굳음을 터는 몸 털기 (SPEC 45장, rules/stunRes)

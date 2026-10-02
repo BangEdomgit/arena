@@ -12,20 +12,23 @@
  *   동시 체크: 과녁의 응수가 바닥나면(굳음·묶임·눈멂·떨어짐·두 칸이 다 참) 일제 사격을 부른다: lead s 뒤 sync s 안에 닿을 공격 × w.volley.
  *     과녁이 굳거나 묶이면 타격의 큰 수 × w.strike(메이트), 묶기는 늘 묶는 수 × w.bind
  *   물러섬: 모인 뒤 잃은 몫이 fallback이면 흩어졌다(regroup s, 과녁에서 멀어지고 공격 × w.scatter) 다시 모인다(역할을 다시 정한다)
+ * 물러서기 (v2.28, solo.retreat): 살아 있는 적이 retreat.foes 넘고 지는 판(체력 retreat.hp 아래, 또는 체력 hpDry 아래에 둘레가 dry 아래로 말랐거나 머리가 fat을 넘음, 또는 숨을 breaths번 다 쓰고 당이 glu 아래)이면
+ *   도망치는 사람처럼 싸움터 끝으로 떠난다(m.flee, rules/morale이 끝에서 뺀다: alog.fled). 판의 '물러남'
+ * 합창(rules.chorus)이 켜지면 조는 맞추기 전엔 과녁의 장악 반경 + chorus.out 밖에서 모이고, 맞추면 제 자리로 나온다
  * 개인의 다수 모드 (선명도 solo.cMin 이상, 살아 있는 적 solo.foes 넘게. 전투단이 아니어도): 두뇌 훅 aim·steer·value
  *   위협 지도: R 안 적의 각으로 포위각(360° − 가장 넓은 틈)을 재고, enc를 넘으면 가장 넓은 틈 쪽으로 빠져 적을 앞쪽 부채꼴에 모은다
  *   과녁: 가까운 적부터이되, 둘레 iso m 안에 동료가 없는 적(isoB m)·묶는 수를 가진 적(bindB m)을 먼저 지운다(거리에서 뺀다)
  *   총: gunR 안의 장전된 총이 gunN 넘게 나를 겨누면 공격 × gunHold(움직인다), 대부분 장전 중이면 × gunGo(일제 사격 직후의 틈)
  * 지표 (api.stats): 포위각, 동시 공격 몫(과녁에 닿는 공격 가운데 0.3 s 안에 다른 조의 공격이 같이 풀린 몫), 고립 처치 몫, 둘러싸인 시간(포위각 270° 넘게), 역할마다 시전·피해.
  *   사람·시전에 칸을 더하지 않는다: 상태는 세계마다 WeakMap */
-const P = require('../../data/rules/squad.json'), SO = P.solo, CH = require('./chorus').api;
+const P = require('../../data/rules/squad.json'), SO = P.solo, CH = require('./chorus').api, DR = require('./drain').api;
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const isShield = s => !!((s.t === 'buff' && s.b && s.b.front) || s.t === 'wall' || s.t === 'build');
 const ROLES = ['eye', 'bait', 'bind', 'strike', 'shield', 'reserve'];
 const STATE = new WeakMap();
 function newBoard() { return { on: false, t: -9, tgt: null, sx: 0, sy: 0, svx: 0, svy: 0, seenT: -9, base: 0, n0: 0, alive: 0, k: 0, scatter: -9, g0: 0, vAt: -9, vEnd: -9, threat: -1, thrT: -9, role: new Map(), team: new Map(), pt: new Map(), ang: [], log: { volleys: 0, regroups: 0, enc: 0, encN: 0 } }; }
-function newStats() { return { rel: [], hitN: 0, simN: 0, enc: 0, encN: 0, surT: 0, kills: 0, isoK: 0, role: {} }; }
+function newStats() { return { retreat: -1, rel: [], hitN: 0, simN: 0, enc: 0, encN: 0, surT: 0, kills: 0, isoK: 0, role: {} }; }
 function stOf(W) { let s = STATE.get(W); if (!s) STATE.set(W, s = { b: [newBoard(), newBoard()], solo: new Map(), stats: newStats(), last: -9 }); return s; }
 // 둘레의 포위각: R 안의 점들(과녁에서 본 각)의 가장 넓은 틈을 360°에서 뺀다. [포위각, 틈 가운데의 각]
 function encircle(X, cx, cy, pts) {
@@ -77,14 +80,20 @@ function board(X, W, side) {
   const tm = []; for (let j = 0; j < b.k; j++) tm.push(0);
   for (const m of mem) {
     const j = b.team.get(m); if (j === undefined) continue; const role = b.role.get(m);
-    const R = role === 'eye' ? bestRange(X, W, m) : midRange(X, W, m), r0 = Math.min(D + P.out, R * 0.85) + (role === 'eye' ? 8 : role === 'reserve' ? 15 : role === 'shield' ? -2 : 0) + (b.threat === j && W.t < b.thrT ? 6 : 0);
+    const R = role === 'eye' ? bestRange(X, W, m) : midRange(X, W, m), sing = W.rules.chorus && !teamSings(W, b, j), r0 = (sing ? D + CH.P.out : Math.min(D + P.out, R * 0.85)) + (role === 'eye' ? 8 : role === 'reserve' ? 15 : role === 'shield' ? -2 : 0) + (b.threat === j && W.t < b.thrT ? 6 : 0);
     const a = b.ang[j] + (j !== act ? P.rot * turn : P.rot * (turn - 1 > 0 ? turn - 1 : 0)), i = tm[j]++, off = (i - 1.5) * (W.rules.chorus ? CH.P.spread : P.spread) / (r0 > 1 ? r0 : 1);   // 합창하면 조원이 붙어 선다 (rules/chorus)
     const x = b.sx + X.cos(a + off) * r0, y = b.sy + X.sin(a + off) * r0;
     let p = b.pt.get(m); if (!p) b.pt.set(m, p = [0, 0]); p[0] = x; p[1] = y;
   }
   const [enc] = encircle(X, tgt.x, tgt.y, mem); b.log.enc += enc; b.log.encN++;
 }
+// 이 조가 합창을 맞췄나 (v2.28: 맞추기 전엔 과녁의 장악 반경 밖에서 모이고, 맞추면 나온다)
+function teamSings(W, b, j) { for (const [q, t] of b.team) if (t === j && q.hp > 0 && CH.of(W, q)) return true; return false; }
 function soloOn(W, m) { if (m.C < SO.cMin) return false; let n = 0; const f = W.foes[m.side]; for (let i = 0; i < f.length; i++) if (f[i].hp > 0 && !f[i].flee && ++n > SO.foes) return true; return false; }
+// 지는 판인가: 체력·당·머리·둘레의 마름으로 (v2.28)
+function losing(W, m) { const R = SO.retreat; if (!R) return false; let n = 0; for (const q of W.foes[m.side]) if (q.hp > 0 && !q.flee) n++; if (n < R.foes) return false;
+  const dry = W.rules.drain ? DR.around(W, m.x, m.y) : 1, hp = m.hp / m.hpMax;
+  return hp < R.hp || (hp < R.hpDry && dry < R.dry) || (m.glu < R.glu * m.gluMax && m.mlog.breath >= R.breaths) || (m.fat > R.fat && hp < R.hpDry); }
 function loadedGuns(W, m) { let r = 0, a = 0; const f = W.foes[m.side]; for (const q of f) if (q.hp > 0 && !q.flee && q.book.includes('머스킷')) { const d = Math.sqrt((q.x - m.x) * (q.x - m.x) + (q.y - m.y) * (q.y - m.y)); if (d > SO.gunR) continue; a++; if (!((q.cd['머스킷'] || 0) > 1)) r++; } return [r, a]; }
 module.exports = {
   name: 'squad', switch: 'squad', api: { P, stats: W => stOf(W), encircle, isBind, isShield, ROLES },
@@ -114,6 +123,7 @@ module.exports = {
       const S = STATE.get(W); if (!S) return;
       const b = S.b[m.side]; if (m.tac.squad && b.on && b.tgt && b.tgt.hp > 0) { K.e = b.tgt; return; }
       if (!soloOn(W, m)) return;
+      if (!m.flee && losing(W, m)) { m.flee = 1; m.alog.fledT = W.t; S.stats.retreat = W.t; return; }   // 물러서기 (v2.28): 무리에게 지는 판이면 날아서 떠난다
       let e = null, bs = 1e9; for (const q of K.foes) { if (q.hp <= 0 || q.flee) continue; let sc = B.hyp(q.x - m.x, q.y - m.y), al = false;
         for (const o of W.ms) if (o !== q && o.side === q.side && o.hp > 0 && B.hyp(o.x - q.x, o.y - q.y) < SO.iso) { al = true; break; }
         if (!al) sc -= SO.isoB; if (W.rules.chorus && CH.of(W, q)) sc -= CH.P.aimB;   // 합창하는 무리를 먼저 (v2.27)

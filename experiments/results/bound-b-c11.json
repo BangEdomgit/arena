@@ -1,0 +1,81 @@
+{
+ "v": "2.27.0",
+ "tier": "상위",
+ "S": 6,
+ "opt": {
+  "arch": null,
+  "rules": null,
+  "squad": true,
+  "maxT": null
+ },
+ "out": {
+  "40": {
+   "n": 6,
+   "win": 0.5,
+   "dead": 0,
+   "retreat": 0.5,
+   "byTime": 0,
+   "t": 66.4,
+   "kills": 32.5,
+   "hp": 0.429,
+   "fat": 1,
+   "glu": 0.97,
+   "stam": 6,
+   "breaths": 2.5,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 95
+  },
+  "50": {
+   "n": 6,
+   "win": 0.833,
+   "dead": 0,
+   "retreat": 0.167,
+   "byTime": 0,
+   "t": 77.2,
+   "kills": 47.8,
+   "hp": 0.573,
+   "fat": 5,
+   "glu": 0.89,
+   "stam": 6,
+   "breaths": 2.2,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 34.5
+  },
+  "60": {
+   "n": 6,
+   "win": 0.333,
+   "dead": 0,
+   "retreat": 0.5,
+   "byTime": 0.167,
+   "t": 89.8,
+   "kills": 33.3,
+   "hp": 0.19,
+   "fat": 0,
+   "glu": 0.91,
+   "stam": 5.1,
+   "breaths": 0.3,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 34.4
+  },
+  "80": {
+   "n": 6,
+   "win": 0,
+   "dead": 0,
+   "retreat": 1,
+   "byTime": 0,
+   "t": 28.8,
+   "kills": 10.3,
+   "hp": 0,
+   "fat": 4,
+   "glu": 0.81,
+   "stam": 4.6,
+   "breaths": 0.2,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 59.3
+  }
+ }
+}

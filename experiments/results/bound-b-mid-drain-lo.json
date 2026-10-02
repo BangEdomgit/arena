@@ -1,0 +1,49 @@
+{
+ "v": "2.28.0",
+ "tier": "중간",
+ "S": 4,
+ "opt": {
+  "arch": null,
+  "rules": {
+   "drain": true
+  },
+  "squad": true,
+  "maxT": null
+ },
+ "out": {
+  "100": {
+   "n": 4,
+   "win": 1,
+   "dead": 0,
+   "retreat": 0,
+   "byTime": 0,
+   "t": 52.9,
+   "kills": 100,
+   "hp": 0.924,
+   "fat": 7,
+   "glu": 0.94,
+   "stam": 6,
+   "breaths": 1,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 86.5
+  },
+  "200": {
+   "n": 4,
+   "win": 0,
+   "dead": 0,
+   "retreat": 1,
+   "byTime": 0,
+   "t": 39.4,
+   "kills": 98.3,
+   "hp": 0.248,
+   "fat": 0,
+   "glu": 0.87,
+   "stam": 6,
+   "breaths": 3,
+   "over": 0,
+   "lostBy": {},
+   "msPerS": 147.8
+  }
+ }
+}

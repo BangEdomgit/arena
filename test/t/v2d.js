@@ -166,6 +166,15 @@ function run() {
     q.st.stun = 1; st(20); assert.strictEqual(CH.of(W, W.ms[2]), null, '한 명이 굳으면 깨진다');
     assert.ok(SD.P.readT < 0.1 && A.rulesOf({ profile: '지금' }).steady && A.rulesOf({ profile: '지금' }).calm && !A.rulesOf({}).steady);
   });
+  ok('마름 (v2.28, SPEC 52장): 대마법사의 마법은 서는 자리 둘레의 곳간을 비우고, 모자라면 위력이 그만큼, 햇빛으로 다시 찬다', () => {
+    const D = require('../../src/rules/drain').api, C = require('../../src/core');
+    const W = A.createWorld({ seed: 1, obstacles: 0, width: 100, height: 100, rules: { drain: true, saltRing: false } }); const m = A.addMage(W, A.mage({ tier: '대마법사' }), 0, 50, 50), e = A.addMage(W, A.mage({ tier: '평범' }), 1, 70, 50);
+    const s = W.spells['낙뢰'], c = () => ({ s, tgt: e, tx: 70, ty: 50, t: 0, T: 0 }); assert.ok(D.at(W, 70, 50) === 1);
+    for (let i = 0; i < 40; i++) C.release(W, m, c()); assert.ok(D.at(W, 70, 50) < 0.05, '비었다 ' + D.at(W, 70, 50));
+    const h0 = e.hp; e.hp = 1e6; C.release(W, m, c()); for (let i = 0; i < 90; i++) A.stepWorld(W); assert.ok(D.stats(W).short > 0, '모자란 시전');
+    const v = D.at(W, 70, 50); for (let i = 0; i < 600; i++) A.stepWorld(W); assert.ok(D.at(W, 70, 50) > v, '다시 찬다');
+    assert.ok(!A.rulesOf({}).drain && !A.rulesOf({ profile: '지금' }).drain);
+  });
   return done();
 }
 module.exports = { run };
