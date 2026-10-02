@@ -27,11 +27,35 @@ const RULE_TXT = {
   snap: ['끊는 움직임', '걸음 속도가 목표를 가속 한계(대마법사 4.6 g) 안에서 곧장 따라간다. 끊어 걷기·옆 뒤집기·거리 톱질·높이 튕기기'],
   blueprint: ['청사진', "'청사진' 마법으로 반원 보루·몰이길·덫길·하늘 막기·엄폐 사다리를 여러 칸으로 한꺼번에 (대마법사 1~3 s)"],
   fort: ['진지', '함정 한도 = 서클 수, 하늘 덮개(떠 있는 적을 굳힘), 불·비가 적의 함정을 치운다. 강자(상급부터)가 진지를 짓는다'], trapChain: ['함정 연쇄', '함정 하나가 터지면 같은 사람의 3.5 m 안 함정도 0.2 s 뒤 터진다'],
-  gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3']
+  gluRegen: ['당 회복', '초당 g (버티기가 상위·대마법사에게 곱한다). v2.11 3, 1.x·v2.10까지 1.2', 0, 10, 0.1], breath: ['숨', '판마다 세 번: 0.5 s 마시는 동안 새 마법을 못 짓고 느려진다, 끝나면 당 +80 · 머리 피로 −30 · 기력 +3'],
+  stunRes: ['굳힘 내성', '다시 굳으면 굳는 시간 × 0.5 → × 0.25, 굳음을 터는 몸 털기(상급부터)'], rings: ['고리 장부', '가슴 둘레에 서클 고리를 그린다: 짓기·붙잡음·잔기술·날기·공기막·자동 진·몸·빈 고리 (보기만, 판은 그대로)'],
 };
 const PLN = window.ArenaBrain && window.ArenaBrain.plan, PSD = PLN ? PLN.ST.newSide() : null, PRB = new Float64Array(6);   // 수읽기 (v2.15): 줄인 상태를 읽어 그린다 (판에 닿지 않는다)
 const OFFT = { proj: 1, thread: 1, area: 1, lob: 1, touch: 1, cone: 1 };   // 공격 틀 (판단 그림, v0.2)
 const MODEN = { poke: '견제', sure: '확정타', cover: '덮기', big: '큰 한 방', throw: '던지기', repeat: '반복' };   // 공격 방식 (v2.12)
+// 고리 장부 (v2.22, rules/rings): 가슴 둘레에 고리를 그린다. 짓는 동안 밝아지고 쏘면 튕겨 퍼진다, 잔기술은 몸 가까이, 날기는 발밑 넓고 하얗게,
+// 자동 진은 혼자 빠르게 돌다 막을 때 번쩍, 빈 고리는 희미한 점선, 숨긴 시전은 드러남만큼 희미하게. 빛깔·모습은 data/rules/rings.json
+const RGP = (() => { const r = A.RULES.find(x => x.name === 'rings'); return r ? r.api.P : null; })();
+function drawRings(W, m, x, y, footY) {
+  const L = m.mlog.rings, P = RGP; if (!L || !P) return;
+  const n = L.r.length, r0 = 10, gap = Math.min(2.4, 22 / Math.max(1, n));
+  for (let i = 0; i < n; i++) {
+    const g = L.r[i], lk = P.look[g.k] || P.look['빈'], col = g.k === '짓기' || g.k === '붙잡음' ? (P.el[g.el] || P.el['없음']) : (lk.c || P.el[g.el] || P.el['없음']);
+    let R = r0 + i * gap; if (lk.r) R = r0 * (0.9 + lk.r * 0.2);   // 잔기술·몸은 몸 가까이
+    let a = lk.a ?? 0.85; if (g.k === '짓기') a = 0.2 + 0.8 * g.p; a *= g.v ?? 1;
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = lk.w || 1.5; ctx.globalAlpha = a; ctx.setLineDash(lk.dash || []);
+    if (lk.spin) ctx.lineDashOffset = -W.t * lk.spin * 2 * Math.PI * R;
+    ctx.beginPath();
+    if (lk.foot) ctx.ellipse(x, footY, R * lk.foot, R * lk.foot * 0.45, 0, 0, 7);   // 날기: 발밑에 넓게
+    else ctx.arc(x, y, R, 0, 7);
+    ctx.stroke();
+    const dt = W.t - g.f;
+    if (g.fk === 'shot' && dt >= 0 && dt < P.pulse) { const k = dt / P.pulse; ctx.setLineDash([]); ctx.strokeStyle = P.el[g.el] || P.el['없음']; ctx.globalAlpha = (1 - k) * (g.v ?? 1); ctx.lineWidth = 2.5 * (1 - k) + 0.5; ctx.beginPath(); ctx.arc(x, y, R + k * 16, 0, 7); ctx.stroke(); }   // 쏘면 튕겨 퍼짐
+    if (g.fk === 'flash' && g.k === '자동 진' && dt >= 0 && dt < P.flash) { ctx.setLineDash([]); ctx.strokeStyle = '#ffffff'; ctx.globalAlpha = 1 - dt / P.flash; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.stroke(); }   // 자동 진이 막았다
+    ctx.restore();
+  }
+}
+const ringsTxt = L => { const o = [], e = L.r.filter(g => !g.id).length; for (const g of L.r) if (g.id) o.push(g.k + (g.n ? '(' + g.n + (g.k === '짓기' ? ' ' + Math.round(g.p * 100) + '%' : '') + ')' : '')); return (o.join(' · ') || '모두 빔') + (e ? ' · 빈 ' + e : '') + ' / ' + L.n; };   // 고리 장부 글 (v2.22)
 const breathDots = m => { const n = A.RULES.find(r => r.name === 'breath').api.P.n, u = Math.min(n, m.mlog.breath); return '●'.repeat(n - u) + '○'.repeat(u) + (m.st.breath > 0 ? ' 마심' : ''); };   // 남은 숨 (v2.11)
 const STANCE = { normal: '보통', hold: '버티기', breakout: '돌파', kite: '거리 두기' };
 const PHASE = { probe: '떠보기', in: '들어가기', out: '빠지기', build: '짓기', home: '진지' };
@@ -224,7 +248,8 @@ function draw0(W, vp) {
     if (m.st.guard > 0 && !dead) { ctx.strokeStyle = 'rgba(159,224,255,.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10.5, 0, 7); ctx.stroke(); }   // 막기를 켰다 (v2.14, rules/pace): 몸에 붙은 얇은 고리
     if (m.st.breath > 0 && !dead) { ctx.strokeStyle = 'rgba(200,235,210,.35)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.stroke(); }   // 숨을 마시는 중 (v2.11): 옅은 고리
     if (m.wave) { ctx.strokeStyle = 'rgba(111,214,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.stroke(); }
-    if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+    if (m.mlog.rings && !dead && W.ms.length <= 12) drawRings(W, m, x, y, X(m.y));   // 고리 장부 (v2.22)
+    else if (m.castB) { ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
     const cs = m.cast || m.chan;
     if (cs && !dead) { const pr = m.cast ? m.cast.t / m.cast.T : 1; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, -1.57, -1.57 + Math.min(1, pr) * 6.28); ctx.stroke(); ctx.font = '' + F(10) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#e9e4d8'; ctx.fillText(cs.s.n, x, y + 22); }
     ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 14, y - 16, 28, 3); ctx.fillStyle = c; ctx.fillRect(x - 14, y - 16, 28 * Math.max(0, m.hp) / m.hpMax, 3);
@@ -392,7 +417,8 @@ function renderMageEd() {
     el('div', { className: 'row' },
       el('button', { type: 'button', on: { click: () => edit(sc => { const c = clone(m); if (c.x != null) { c.x = r2(Math.min(sc.width - 1, c.x + 1)); } sc.sides[sel.s].mages.push(c); S.sel = { k: 'mage', s: sel.s, i: sc.sides[sel.s].mages.length - 1 }; }) } }, '복제'),
       el('button', { type: 'button', on: { click: () => removeSel(sel) } }, '지우기')),
-    live && S.W ? el('p', { className: 'hint' }, '지금: 체력 ' + Math.round(Math.max(0, live.hp)) + ', 피로 ' + Math.round(live.fat) + ', 입장 ' + (STANCE[live.stance] || live.stance) + (live.wave ? ', 파도를 탄다' : live.crash > 0 ? ', 꺼짐' : '')) : null);
+    live && S.W ? el('p', { className: 'hint' }, '지금: 체력 ' + Math.round(Math.max(0, live.hp)) + ', 피로 ' + Math.round(live.fat) + ', 입장 ' + (STANCE[live.stance] || live.stance) + (live.wave ? ', 파도를 탄다' : live.crash > 0 ? ', 꺼짐' : '')) : null,
+    live && S.W && live.mlog.rings ? el('p', { className: 'hint' }, '고리: ' + ringsTxt(live.mlog.rings)) : null);
 }
 
 /* ---------------- 패널: 규칙, 장면 ---------------- */

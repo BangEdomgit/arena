@@ -1,5 +1,5 @@
 {
- "v": "2.21.0",
+ "v": "2.22.0",
  "name": "대마법사 결투장 전설 대 전설: 빠른 판·잘게 걷기 (결투 덱, 200×150)",
  "seed": 1,
  "width": 200,
@@ -16,7 +16,8 @@
   "pace": true,
   "passives": true,
   "tune": true,
-  "stunRes": true
+  "stunRes": true,
+  "rings": true
  },
  "sides": [
   {

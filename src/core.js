@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.21.0
+ * 숨 결투장 — 엔진 핵심 v2.22.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.21.0';
+const VERSION = '2.22.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -53,6 +53,7 @@ const DEFAULT_RULES = {
   hpFloor: 1,          // 선명도가 이보다 낮아도 이것으로 본다: 마법사가 아닌 몸(병사)은 150보다 약해지지 않는다 (1.x는 0)
   fineStep: false,     // (v2.14) 잘게 걷기: 한 걸음 1/60 s (W.dt). 대마법사 장면이 켠다: 빠른 판의 피하기·끊기가 걸음 크기에 덜 묶인다 (SPEC 38장)
   tune: false,         // (v2.19) 손잡이: 크기·화력·속도, 숨김 (SPEC 43장, rules/tune)
+  rings: false,        // (v2.22) 고리 장부: 사람마다 서클의 쓰임을 읽어낸다(m.mlog.rings). 판에 닿지 않는다 (SPEC 46장, rules/rings)
   stunRes: false,      // (v2.21) 굳힘 내성과 몸 털기: 다시 굳으면 짧게(× 0.5 → × 0.25), 굳음을 터는 몸 털기 (SPEC 45장, rules/stunRes)
   passives: false,     // (v2.18) 잔기술: 절연 막·굳은 살·열 차단, 순간 켜기 (SPEC 42장, rules/passive)
   pace: false,         // (v2.14) 빠른 판: 대마법사의 떡대·막기(순간 켜기)·빠른 시전과 늘 움직이기 (SPEC 38장, rules/pace)
@@ -70,7 +71,7 @@ const THREAT = { thread: 1, area: 1, touch: 1, cone: 1, proj: 1 };
 
 /* ---------------- 규칙 모듈과 훅 (SPEC 22장) ---------------- */
 // 훅 모음: 이름마다 배열 하나. 리터럴로 만들어 모양이 늘 같다(속도). 이름은 rules/index.js의 ENGINE_HOOKS
-function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [], gluRegen: [], castHold: [], track: [], flyAccel: [], tune: [], stunHold: [] }; }
+function emptyH() { return { place: [], init: [], world: [], wall: [], wallHit: [], lobLand: [], ceff: [], power: [], gate: [], share: [], release: [], overload: [], roll: [], hurtMod: [], hurt: [], effHold: [], eff: [], rain: [], smother: [], ring: [], fatRecover: [], mageStep: [], mageZones: [], move: [], speed: [], speedLate: [], accel: [], chan: [], projSub: [], ignite: [], areaHit: [], zoneTick: [], notice: [], trapCap: [], trapFire: [], preMove: [], castMove: [], walk: [], gluRegen: [], castHold: [], track: [], flyAccel: [], tune: [], stunHold: [], stepEnd: [] }; }
 // 규칙 모듈이 엔진에서 쓰는 것 (X). 규칙 파일은 이것만 받아 쓴다
 let X = null;
 const ENG = new Map(), TFX = {}; let tfxVer = -1;
@@ -187,7 +188,7 @@ function addMage(W, spec, side, x, y) {
       bpN: 0, bpItems: 0, bpT: 0, bpName: {}, bpPick: null, bpLast: -9 },   // 청사진 (v2.4, rules/blueprint): 다 지은 청사진 수·구조물 수·걸린 시간 합, 이름별 수, 고른 것, 마지막 시각
     // 군대와 벽의 기록 (v2.0 둘째, 25장): 번쩍임·맞힌 수·눈먼 수, 무거운 돌 시도·명중, 세운 벽 수·벽 뒤 시간, 도망(시각)
     // 고수 싸움의 기록 (v2.2, 26장 지표): 칸마다 역할별 시전(A·B·자동), 리듬 단계별 시간, 세운·없앤 지형
-    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, mode: { t: {}, n: {}, bigN: 0, bigSure: 0, covS: 0, covN: 0, bait: 0 }, breath: 0, breathHit: 0, brHitF: false, breathAtk: 0, breathAtkHit: 0, brT: -9, brA: 0, brH: 0, brV: 0, guardN: 0, guardT: 0, guardBlk: 0, gdT: -9, pcT: 0, pcIn: false, pcS: 1, pcR0: 0, pcR1: 0, pcN: '', trackN: 0, gdOff: -9, gdOn: -9, gdOk: 0, gdOkC: -9, tune: null, chk: 0, mate: 0, brk: 0, plN: 0, plNodes: 0, jsS: 0, jsF: 0, jsA: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0, shk: 0, shT: -9 },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
+    mlog: { role: { A: {}, B: {}, auto: {} }, phase: {}, built: 0, razed: 0, losCut: 0, held: 0, prep: 0, prepCut: 0, mode: { t: {}, n: {}, bigN: 0, bigSure: 0, covS: 0, covN: 0, bait: 0 }, breath: 0, breathHit: 0, brHitF: false, breathAtk: 0, breathAtkHit: 0, brT: -9, brA: 0, brH: 0, brV: 0, guardN: 0, guardT: 0, guardBlk: 0, gdT: -9, pcT: 0, pcIn: false, pcS: 1, pcR0: 0, pcR1: 0, pcN: '', trackN: 0, gdOff: -9, gdOn: -9, gdOk: 0, gdOkC: -9, tune: null, chk: 0, mate: 0, brk: 0, plN: 0, plNodes: 0, jsS: 0, jsF: 0, jsA: 0, dS: 0, dS2: 0, dN: 0, gS: 0, bMove: 0, bx: NaN, by: NaN, bT: 0, shk: 0, shT: -9, rings: null },   // 거리 합·제곱 합·수, 경계 틈 합, 경계가 움직인 거리, 지난 경계 자리·시각 (판단 때마다, brain/index)
     alog: { flash: 0, flashHit: 0, blinded: 0, heavyTry: 0, heavyHit: 0, walls: 0, wallT: 0, fled: 0, fledT: null },
     log: { dealt: {}, casts: {}, hits: {}, taken: {}, fizz: 0, over: 0, barrel: 0, stanceT: {}, waves: 0, lost: 0, waveDmg: 0, waveDeath: 0, taunted: 0,
       // 행동 지표 (1.7.0): 시전 시작 시각, 빈틈(쏜 뒤 다음 시작까지) 합·수, 콤보 시도·성공
@@ -619,6 +620,7 @@ function stepWorld(W) {
     }
   }
   keepIf(W.traps, trapLive);
+  const he = H.stepEnd; for (let i = 0; i < he.length; i++) he[i](W);   // 걸음의 끝: 다 정해진 상태를 읽는다 (고리 장부 rules/rings, v2.22)
   if (W.rec && W.step % W._recN === 0) W.rec.push(snapshot(W)); else W.fx.length = 0;   // 녹화 간격: 기본 두 걸음, recEvery 1이면 매 걸음 (v2.4)
 }
 

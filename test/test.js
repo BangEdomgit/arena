@@ -1,5 +1,5 @@
 'use strict';
-/* 숨 결투장 v2.21.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
+/* 숨 결투장 v2.22.0 회귀 시험. 규칙을 바꾸면 여기부터 돌린다: node test/test.js
  * v2.0에서 기본 규칙이 바뀌었다(SPEC 24장). 1.x의 기본(규칙 꺼짐)을 전제로 한 시험은 V1(= A.V1_RULES)을 명시해 1.x 동작을 그대로 본다 */
 const assert = require('assert');
 const A = require('../src');
@@ -696,6 +696,18 @@ ok('v2.15 수읽기 (SPEC 39장): 줄인 상태·응수 0이면 메이트·큰 �
   const Wt = require('../metrics/watch'), run = () => { const v = A.sceneWorld(Object.assign({}, SCENES['v2-chess-legend'], { seed: 2, maxT: 15 })); while (!A.over(v)) { A.stepWorld(v); Wt.watch(v); } return v; };
   const a = run(), b = run(); assert.strictEqual(JSON.stringify(a.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])), JSON.stringify(b.ms.map(q => [q.x, q.y, q.hp, q.mlog.chk, q.mlog.plN])));
   const lk = Wt.seen(a, a.ms[0]); assert.ok(a.ms[0].mlog.plN > 10 && lk['분당 체크'] >= 0 && lk['체크에 자원을 쓴 몫'] >= 0 && '메이트로 끝난 판' in lk && '그물에서 빠져나감' in lk);
+});
+ok('v2.22 고리 장부 (SPEC 46장): 켜도 판은 그대로, 고리 수 = 서클, 짓기·붙잡음·날기·빈을 읽어내고 쏜 고리는 튕긴다', () => {
+  const sc = JSON.parse(JSON.stringify(SCENES['v2-tactics-legend'])); sc.seed = 4; sc.maxT = 25; const off = JSON.parse(JSON.stringify(sc)); off.rules.rings = false; sc.rules.rings = true;
+  const a = A.runScene(off), W = A.sceneWorld(sc); let fly = 0, cast = 0, held = 0, shot = 0;
+  while (!A.over(W)) { A.stepWorld(W); for (const m of W.ms) { const L = m.mlog.rings; if (!L || m.hp <= 0) continue; assert.strictEqual(L.r.length, m.circles);
+    const ks = L.r.map(g => g.k); if (m.z >= 1 && m.fly !== 3) { assert.ok(ks.includes('날기'), '날면 날기 고리'); fly++; } if (m.cast) { assert.ok(L.r.some(g => g.id === 'A' && g.n === m.cast.s.n), '첫 칸'); cast++; }
+    if (m.castB && m.castB.hold && m.castB.t >= m.castB.T) { assert.ok(ks.includes('붙잡음')); held++; } if (L.r.some(g => g.fk === 'shot' && g.f === W.t)) shot++; } }
+  assert.deepStrictEqual(W.ms.map(m => [m.hp, m.x, m.y]), a.ms.map(m => [m.hp, m.x, m.y]), '켜도 판이 같다');
+  assert.ok(fly > 0 && cast > 0 && shot > 0, [fly, cast, held, shot].join(' '));
+  const RG = require('../src/rules/rings').api, o = RG.seen(W.ms[0]); let sum = 0; for (const k of RG.KEYS) sum += o['고리 시간 몫: ' + k];
+  assert.ok(Math.abs(sum - 1) < 1e-9 && o['빈 고리 몫'] > 0 && o['빈 고리 몫'] < 1, '몫의 합 ' + sum);
+  const W1 = A.createWorld({ seed: 1, obstacles: 0, rules: { rings: true, circles: false } }), m1 = A.addMage(W1, { tier: '대마법사', skill: '전설' }, 0, 10, 10); A.addMage(W1, { tier: '대마법사', skill: '전설' }, 1, 30, 10); A.stepWorld(W1); assert.strictEqual(m1.mlog.rings.r.length, 1, '서클 규칙이 꺼지면 고리 하나');
 });
 ok('v2.21 굳힘 내성과 몸 털기 (SPEC 45장): 다시 굳으면 × 0.5 → × 0.25, 털면 굳음이 풀리고 간격이 걸린다, 굳은 상대의 응수는 몸 털기뿐', () => {
   const C = require('../src/core'), PL = require('../src/brain/plan'), mk = rules => { const W = A.createWorld({ seed: 1, obstacles: 0, rules }); const m = A.addMage(W, { tier: '대마법사', skill: '전설', book: [] }, 0, 40, 40), e = A.addMage(W, { tier: '대마법사', skill: '전설', book: ['짧은 실'] }, 1, 50, 40); return { W, m, e }; };
