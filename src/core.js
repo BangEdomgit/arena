@@ -66,6 +66,7 @@ const DEFAULT_RULES = {
   selfSafe: false,     // (v2.30) 스스로 다치지 않기: 누구나 머리가 넘칠 수를 고르지 않고 고르지 않은 파도에서 내려오며, 겨눠진 동안 큰 수를 모으지 않고 닿을 위협엔 끊는다 (SPEC 53장, rules/selfSafe)
   crowdFire: false,    // (v2.30) 갈라 쏘기: 전투단의 투사체는 사람마다 가운데·왼쪽·오른쪽 피할 자리를 나눠 겨눈다 (SPEC 53장, rules/crowdFire)
   unstuck: false,      // (v2.30) 막힘 풀기: 땅에 붙은 날기는 내려앉고, 걸으려는데 제자리면 옆으로 돌아간다 (SPEC 53장, rules/unstuck)
+  edgeCancel: false,   // (v2.30.1) 장악권 경계: 나보다 1.5배 넘게 선명한 과녁 앞에선 서는 자리가 장악권에 흩어질 수를 짓지 않고, 짓다가 흩어지게 되면 끊고 물러난다 (SPEC 53장, rules/edgeCancel)
   chipGuard: false,    // (v2.24, 시험) 작은 수 막기: 응수가 있는 동안 떡대가 적의 한 방마다 일정량을 뺀다 (SPEC 47장, rules/chipGuard)
   rings: false,        // (v2.22) 고리 장부: 사람마다 서클의 쓰임을 읽어낸다(m.mlog.rings). 판에 닿지 않는다 (SPEC 46장, rules/rings)
   stunRes: false,      // (v2.21) 굳힘 내성과 몸 털기: 다시 굳으면 짧게(× 0.5 → × 0.25), 굳음을 터는 몸 털기 (SPEC 45장, rules/stunRes)

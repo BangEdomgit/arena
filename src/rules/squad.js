@@ -103,6 +103,8 @@ function board(X, W, side) {
   const [enc] = encircle(X, b.ax, b.ay, mem); b.log.enc += enc; b.log.encN++;   // 포위는 과녁의 평균 자리 기준 (v2.29)
 }
 // 이 조가 합창을 맞췄나 (v2.28: 맞추기 전엔 과녁의 장악 반경 밖에서 모이고, 맞추면 나온다)
+// 조의 차례 (v2.30.1, 점검이 읽는다): 0 닻에서 모으기·맞추기, 1 들어가 치기, 2 나오기, 전투단이 아니면 -1
+function phaseOf(W, m) { const S = STATE.get(W); if (!S) return -1; const b = S.b[m.side]; if (!b || !b.on) return -1; const j = b.team.get(m); return j === undefined || !b.ts[j] ? -1 : b.ts[j].st; }
 function teamSings(W, b, j) { for (const [q, t] of b.team) if (t === j && q.hp > 0 && CH.of(W, q)) return true; return false; }
 function soloOn(W, m) { if (m.C < SO.cMin) return false; let n = 0; const f = W.foes[m.side]; for (let i = 0; i < f.length; i++) if (f[i].hp > 0 && !f[i].flee && ++n > SO.foes) return true; return false; }
 // 지는 판인가: 체력·당·머리·둘레의 마름으로 (v2.28)
@@ -115,7 +117,7 @@ function losing(W, m) { const R = SO.retreat; if (!R) return false; let n = 0; f
   return hp < R.hp || (hp < R.hpDry && dry < R.dry) || (tired(W, m) && thr > SO.rest.threat); }   // v2.29: 지쳤어도 위협이 약하면 숨 돌리기(물러남이 아니다)
 function loadedGuns(W, m) { let r = 0, a = 0; const f = W.foes[m.side]; for (const q of f) if (q.hp > 0 && !q.flee && q.book.includes('머스킷')) { const d = Math.sqrt((q.x - m.x) * (q.x - m.x) + (q.y - m.y) * (q.y - m.y)); if (d > SO.gunR) continue; a++; if (!((q.cd['머스킷'] || 0) > 1)) r++; } return [r, a]; }
 module.exports = {
-  name: 'squad', switch: 'squad', api: { P, stats: W => stOf(W), encircle, isBind, isShield, ROLES },
+  name: 'squad', switch: 'squad', api: { P, stats: W => stOf(W), encircle, isBind, isShield, ROLES, phaseOf },
   engine: X => ({
     world(W) {
       const S = stOf(W), ev = Math.round(P.every / W.dt); if (W.step % ev) return;

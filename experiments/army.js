@@ -39,7 +39,7 @@ const SCENES = {
     const ms = []; for (let i = 0; i < 60; i++) ms.push({ tier: '병사', deck: '머스킷', x: 60 + (i * 37) % 130, y: 12 + (i * 53) % 126 });
     // 광장은 소금 땅에서 빼 사각형 여럿으로 나눈다 (소금 = 전체 − 광장)
     const cut = []; let rects = salt; for (const [px, py] of plazas) { const out = []; for (const r of rects) { const x0 = px - 12, x1 = px + 12, y0 = py - 12, y1 = py + 12; if (x1 <= r.x || x0 >= r.x + r.w || y1 <= r.y || y0 >= r.y + r.h) { out.push(r); continue; } if (r.x < x0) out.push({ x: r.x, y: r.y, w: x0 - r.x, h: r.h }); if (r.x + r.w > x1) out.push({ x: x1, y: r.y, w: r.x + r.w - x1, h: r.h }); const cx0 = Math.max(r.x, x0), cx1 = Math.min(r.x + r.w, x1); if (r.y < y0) out.push({ x: cx0, y: r.y, w: cx1 - cx0, h: y0 - r.y }); if (r.y + r.h > y1) out.push({ x: cx0, y: y1, w: cx1 - cx0, h: r.y + r.h - y1 }); } rects = out; }
-    for (const m of ms) for (const [px, py] of plazas) if (Math.abs(m.x - px) < 13 && Math.abs(m.y - py) < 13) m.x += 30;
+    for (const m of ms) for (const [px, py] of plazas) if (Math.abs(m.x - px) < 13 && Math.abs(m.y - py) < 13) m.x = m.x + 30 <= 196 ? m.x + 30 : m.x - 30;   // 광장 밖으로 (v2.30.1: 판 끝을 넘지 않게, 예전엔 201까지 갔다)
     return { v, name: '소금 도시: 걸어 들어가는 대마법사 대 머스킷 60 (골목, 광장 셋만 맨땅)', seed: s, width: 200, height: 150, maxT: 240, obstacles: obs.filter(o => !ms.some(m => Math.hypot(m.x - o.x, m.y - o.y) < o.r + 1)), salt: rects, rules: NOSALT,
       sides: [{ name: '대마법사', mages: [Object.assign({ x: 4, y: 75 }, ARCH)] }, { name: '총병', mages: ms.filter(m => !obs.some(o => Math.hypot(m.x - o.x, m.y - o.y) < o.r + 0.5)) }] };
   },
@@ -66,7 +66,7 @@ function run(name, from, N, rules) {
 const rate = o => ({ games: o.n, win: +(o.win / o.n).toFixed(3), byTime: +(o.byTime / o.n).toFixed(3), len: +(o.t / o.n).toFixed(1), hp: +(o.hp / o.n).toFixed(3), breakT: o.broke ? +(o.breakT / o.broke).toFixed(1) : null, broke: +(o.broke / o.n).toFixed(3), mb: +(o.mb / o.n).toFixed(3), fled: +(o.fled / o.army).toFixed(3), walls: +(o.walls / o.n).toFixed(2), wallT: +(o.wallT / o.n).toFixed(1), z: +(o.z / o.n).toFixed(1), blind: +(o.blind / o.n).toFixed(2), heavy: o.heavyTry ? `${o.heavyHit}/${o.heavyTry}` : null });
 async function main() {
   const args = process.argv.slice(2), R = args.indexOf('--rules'), rules = R >= 0 ? JSON.parse(args[R + 1]) : null, pos = args.filter((a, i) => !a.startsWith('--') && !(R >= 0 && i === R + 1));
-  if (pos[0] === 'scenes') return scenes();
+  if (pos[0] === 'scenes') return scenes(pos[1] ? pos[1].split(',') : null);
   const names = pos[0] && pos[0] !== 'all' ? pos[0].split(',') : Object.keys(SCENES), N = +(pos[1] || 20), CH = 2;
   const { runJobs } = require('./par'), jobs = [], own = [];
   for (const nm of names) { if (!SCENES[nm]) throw new Error('없는 장면: ' + nm + ' (' + Object.keys(SCENES).join(', ') + ')'); for (let f = 0; f < N; f += CH) { jobs.push({ mod: __filename, fn: 'run', args: [nm, f, Math.min(CH, N - f), rules] }); own.push(nm); } }
@@ -77,9 +77,9 @@ async function main() {
   if (!rules && names.length === Object.keys(SCENES).length) { fs.mkdirSync(path.join(__dirname, 'results'), { recursive: true }); fs.writeFileSync(path.join(__dirname, 'results', 'army.json'), JSON.stringify({ v, date: new Date().toISOString().slice(0, 10), N, result: out }, null, 1) + '\n'); }
 }
 // 대표 장면: 씨앗 1~9 가운데 많이 난 결과 쪽이고 길이가 가운데값에 가장 가까운 판
-function scenes() {
+function scenes(only) {   // only: 다시 쓸 장면 이름(army.js의 이름, 예: salt-city)만
   const DIR = path.join(__dirname, '..', 'sandbox', 'scenes');
-  for (const [f, nm] of [['v2-army-field', 'field-musket'], ['v2-army-ambush', 'ambush'], ['v2-army-prepared', 'prepared'], ['v2-army-salt-city', 'salt-city']]) {
+  for (const [f, nm] of [['v2-army-field', 'field-musket'], ['v2-army-ambush', 'ambush'], ['v2-army-prepared', 'prepared'], ['v2-army-salt-city', 'salt-city']]) { if (only && !only.includes(nm)) continue;
     const rs = []; for (let s = 1; s <= 9; s++) { const sc = SCENES[nm](s), r = A.runScene(sc); rs.push({ s, sc, w: r.winner, t: r.t }); }
     const cnt = {}; for (const r of rs) cnt[r.w] = (cnt[r.w] || 0) + 1; const w = +Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
     const ts = rs.map(r => r.t).sort((a, b) => a - b), med = ts[ts.length >> 1], best = rs.filter(r => r.w === w).sort((a, b) => Math.abs(a.t - med) - Math.abs(b.t - med) || a.s - b.s)[0];
