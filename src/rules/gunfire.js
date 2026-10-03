@@ -28,7 +28,7 @@ function shield(X, W, m) {
     if (d2 < A.r * A.r && t < ht) { ht = t; hot = p; } }
   if (!hot || t0 === undefined || W.t - t0 < A.after || m.circles < 3 || m.st.stun > 0) return;
   if (m.buf.front && m.buf.front.t > 0.05) { m.aim = X.atan2(hot.y - m.y, hot.x - m.x); return; }   // 선 방패는 반사로 총알 쪽을 향한다
-  if (m.autoCd > 0) return;
+  if (m.autoCd > 0 || (W.rules.saltWise && W.salt.length && X.onSalt(W, m.x, m.y))) return;   // 소금 위에선 방패가 흩어진다 (rules/saltWise, v2.30)
   for (const n of m.book) { const s = W.spells[n]; if (!s || s.t !== 'buff' || !s.b || !s.b.front || !s.react || (m.cd[n] || 0) > 0) continue;
     const cost = s.cost * 1.2; if (m.glu < cost) continue;
     m.glu -= cost; m.cd[n] = s.cd; m.autoCd = 0.7 * 3 / m.circles; m.mlog.gunShield++;

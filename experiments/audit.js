@@ -34,11 +34,11 @@ function run(key, seed, rules) {
         if (m.x < -2 || m.y < -2 || m.x > W.width + 2 || m.y > W.height + 2) add(W.t, m.name, '오류: 판 밖', m.x);
         if (m.flee && !s.fled) { s.fled = true; const h = m.hp / m.hpMax; if (h > P.flee.hp) add(W.t, m.name, (m.C >= P.arch.cMin ? '체력 남기고 물러남' : m.book.includes('머스킷') ? '체력 남기고 도망 (군대)' : '체력 남기고 도망 (' + tierOf(m) + ')'), h); }
         if (m.flee) continue;
-        // 기회 놓침
+        // 기회 놓침 (장악권에 흩어질 수는 기회가 아니다)
         const busy = m.cast || m.castB || m.chan || m.st.stun > 0 || m.st.breath > 0 || m.roll > 0;
         let can = false; if (!busy) for (const nm of m.book) { const sp = W.spells[nm]; if (!sp || !OFF[sp.t] || (m.cd[nm] || 0) > 0 || m.glu < sp.cost) continue; const R = sp.t === 'cone' ? (sp.L || 3) * 1.5 : sp.t === 'touch' ? 1.3 : C.rangeOf(m, sp);
           if (sp.mundane && m.tac.volley > 1 && m.id % m.tac.volley !== Math.floor(W.t / (17.5 / m.tac.volley)) % m.tac.volley) continue;   // 돌아가며 쏘기: 제 줄 차례가 아니면 기다리는 게 맞다
-          for (const q of W.foes[m.side]) { if (!(q.hp > 0) || q.flee) continue; const d = C.hyp(q.x - m.x, q.y - m.y); if (sp.mundane && q.z >= 2 && d > 50) continue; if (d < R * 0.9 && !C.blocked(W, m.x, m.y, q.x, q.y, Math.max(m.z, q.z))) { can = true; break; } } if (can) break; }
+          for (const q of W.foes[m.side]) { if (!(q.hp > 0) || q.flee) continue; const d = C.hyp(q.x - m.x, q.y - m.y); if (sp.mundane && q.z >= 2 && d > 50) continue; if (d < R * 0.9 && !C.blocked(W, m.x, m.y, q.x, q.y, Math.max(m.z, q.z)) && (sp.mundane || C.gAt(W, m, sp, q.x, q.y) > P.idle.g)) { can = true; break; }  } if (can) break; }
         if (can) { s.idle += P.every; if (s.idle > P.idle.t && !s.idleRep) { s.idleRep = true; add(W.t, m.name, '기회 놓침 (s)', s.idle); } } else { s.idle = 0; s.idleRep = false; }
         // 막혀 제자리·떨림
         const wl = Math.hypot(m.mv.x, m.mv.y); if (wl > 0.5 && !(m.st.root > 0) && !(m.st.stun > 0) && m.z < 1 && !m.cast) { s.stuckT += P.every; if (s.stuckT >= P.stuck.t) { if (Math.hypot(m.x - s.sx, m.y - s.sy) < P.stuck.d) add(W.t, m.name, '막혀 제자리 (s)', s.stuckT); s.stuckT = 0; s.sx = m.x; s.sy = m.y; } } else { s.stuckT = 0; s.sx = m.x; s.sy = m.y; }

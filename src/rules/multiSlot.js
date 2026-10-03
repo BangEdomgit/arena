@@ -13,6 +13,7 @@ module.exports = {
         const { S, T, e, threat, late, aimed, bigThreat, empty, circ } = K;
         const th = threat || late, bigTh = late && !threat ? (!T.shieldSave || (bigAttack(late, S) && (late.s.t === 'proj' || late.s.t === 'thread'))) : bigThreat;
         if (!(!empty && circ >= 3 && (aimed && threat || late) && th && bigTh && th.T - th.t < 0.4 && m.autoCd <= 0)) return;
+        if (W.rules.saltWise && W.salt.length && m.z < 1 && C.onSalt(W, m.x, m.y)) return;   // 소금 위에선 진이 흩어진다 (rules/saltWise, v2.30)
         for (const n of m.book) {
           const s = S[n]; if ((m.cd[n] || 0) > 0) continue;
           if (!((s.t === 'buff' && s.react) || s.t === 'wall' || s.t === 'shoot')) continue;
