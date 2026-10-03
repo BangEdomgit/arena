@@ -1,23 +1,23 @@
 # 지능 점검
 
-엔진 v2.29.0 · 2026-10-03 · 장면 27개 × 씨앗 1·2·3 · 14 s. 문턱은 `data/rules/audit.json`, 만든 명령 `node cli.js audit`. 링크는 샌드박스를 그 장면·씨앗·시각으로 연다.
+엔진 v2.29.0 · 2026-10-03 · 장면 28개 × 씨앗 1·2·3 · 14 s. 문턱은 `data/rules/audit.json`, 만든 명령 `node cli.js audit`. 링크는 샌드박스를 그 장면·씨앗·시각으로 연다.
 
 ## 탐지기별 사건 수
 
 | 탐지기 | 사건 | 장면 수 |
 |---|---|---|
-| 체력 남기고 도망 | 1208 | 20 |
-| 기회 놓침 | 301 | 20 |
-| 헛시전 | 94 | 12 |
-| 막혀 제자리 | 24 | 6 |
+| 체력 남기고 도망 | 1251 | 21 |
+| 헛시전 | 96 | 13 |
+| 기회 놓침 | 86 | 14 |
+| 명중 범위 밖 | 28 | 8 |
+| 막혀 제자리 | 25 | 7 |
 | 스스로 입은 피해 몫 | 23 | 8 |
-| 명중 범위 밖 | 19 | 7 |
 | 떨림 | 18 | 5 |
 | 위험 지대 | 15 | 3 |
 | 역류 | 8 | 4 |
 | 같은 수 되풀이 몫 | 8 | 3 |
 | 대마법사: 소금 위 몫 | 6 | 2 |
-| 아군 피해 몫 | 4 | 3 |
+| 아군 피해 몫 | 5 | 4 |
 | 헛시전: 알 수 있었던 것 | 3 | 2 |
 | 데이터: 장면의 자리가 판 밖 | 1 | 1 |
 | 대마법사: 총 앞에 서 있음 | 1 | 1 |
@@ -27,29 +27,30 @@
 | 장면 | 사건 |
 |---|---|
 | v2-army-field | 225 |
-| v2-archmage-100 | 219 |
-| x-squad-30 | 138 |
-| x-top-vs-plain30 | 135 |
-| x-joint | 120 |
+| v2-archmage-100 | 213 |
+| x-joint | 115 |
 | v2-army-prepared | 105 |
-| archmage-50 | 101 |
-| v2-crowd-1v20 | 99 |
+| archmage-50 | 100 |
+| x-squad-30 | 84 |
 | v2-army-ambush | 83 |
-| x-scattered-30 | 65 |
-| v2-archmage-1v10 | 50 |
-| v2-army-salt-city | 50 |
-| element-league | 48 |
-| x-salt-fort | 43 |
+| v2-crowd-1v20 | 64 |
+| x-scattered-30 | 62 |
+| x-top-vs-plain30 | 62 |
+| x-squad-30-ranged | 57 |
+| v2-army-salt-city | 47 |
+| v2-archmage-1v10 | 44 |
 | v2-sky-musket | 42 |
 | musket-arc | 41 |
-| v2-squad-10 | 28 |
+| x-salt-fort | 41 |
+| element-league | 34 |
 | v2-musket-40 | 25 |
-| v2-archmage-2v6 | 23 |
+| v2-archmage-2v6 | 22 |
+| v2-squad-10 | 22 |
 | v2-sky-wide | 19 |
-| v2-squad-10-scattered | 19 |
 | v2-challenger-3 | 14 |
-| duel | 13 |
+| v2-squad-10-scattered | 14 |
 | v2-sky-narrow | 13 |
+| duel | 11 |
 | v2-neighbor-mid | 6 |
 | v2-neighbor-plain | 4 |
 | v2-tactics-legend | 4 |
@@ -131,13 +132,16 @@
 | x-scattered-30 | 1 | 대마법사1 | 99% | 16.9 | 0% |
 | x-scattered-30 | 2 | 대마법사1 | 99% | 17.2 | 0% |
 | x-scattered-30 | 3 | 대마법사1 | 90% | 17.1 | 0% |
+| x-squad-30-ranged | 1 | 대마법사1 | 100% | 17.5 | 0% |
+| x-squad-30-ranged | 2 | 대마법사1 | 98% | 17.2 | 0% |
+| x-squad-30-ranged | 3 | 대마법사1 | 97% | 17.1 | 0% |
 | x-squad-30 | 1 | 대마법사1 | 92% | 9.8 | 0% |
 | x-squad-30 | 2 | 대마법사1 | 91% | 13.3 | 0% |
 | x-squad-30 | 3 | 대마법사1 | 90% | 10.5 | 0% |
 
 ## 사건 (탐지기마다 앞의 25개)
 
-### 체력 남기고 도망 (1208)
+### 체력 남기고 도망 (1251)
 
 | 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
 |---|---|---|---|---|---|---|
@@ -167,37 +171,7 @@
 | archmage-50 | 1 | 1.5 | 무리23 | 체력 남기고 도망 (평범) | 1 | [열기](../sandbox/index.html#archmage-50&seed=1&t=1.5) |
 | archmage-50 | 1 | 1.5 | 무리25 | 체력 남기고 도망 (평범) | 1 | [열기](../sandbox/index.html#archmage-50&seed=1&t=1.5) |
 
-### 기회 놓침 (301)
-
-| 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
-|---|---|---|---|---|---|---|
-| archmage-50 | 3 | 2.25 | 무리18 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#archmage-50&seed=3&t=2.25) |
-| duel | 1 | 39.75 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=1&t=39.75) |
-| duel | 2 | 8.75 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=8.75) |
-| duel | 2 | 10.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=10.25) |
-| duel | 2 | 13.5 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=13.5) |
-| duel | 2 | 14.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=14.25) |
-| duel | 2 | 18.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=18.25) |
-| duel | 2 | 21 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=21) |
-| element-league | 1 | 21.25 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=21.25) |
-| element-league | 1 | 27.75 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=27.75) |
-| element-league | 1 | 32.25 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=32.25) |
-| element-league | 1 | 44.25 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=44.25) |
-| element-league | 1 | 47 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=47) |
-| element-league | 1 | 57.5 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=57.5) |
-| element-league | 2 | 15.5 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=15.5) |
-| element-league | 2 | 20.5 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=20.5) |
-| element-league | 2 | 25 | 얼음1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25) |
-| element-league | 2 | 25.5 | 흙1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25.5) |
-| element-league | 2 | 25.5 | 물1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25.5) |
-| element-league | 2 | 28.75 | 흙1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=28.75) |
-| element-league | 2 | 33.5 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=33.5) |
-| element-league | 2 | 43 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=43) |
-| element-league | 2 | 64 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=64) |
-| element-league | 3 | 12.75 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=3&t=12.75) |
-| element-league | 3 | 16 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=3&t=16) |
-
-### 헛시전 (94)
+### 헛시전 (96)
 
 | 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
 |---|---|---|---|---|---|---|
@@ -227,7 +201,67 @@
 | v2-archmage-1v10 | 3 | 18.98 | 상위4 | 헛시전 (장악권·소금 원) | 0.333 | [열기](../sandbox/index.html#v2-archmage-1v10&seed=3&t=18.98) |
 | v2-archmage-1v10 | 3 | 18.98 | 상위5 | 헛시전 (장악권·소금 원) | 0.143 | [열기](../sandbox/index.html#v2-archmage-1v10&seed=3&t=18.98) |
 
-### 막혀 제자리 (24)
+### 기회 놓침 (86)
+
+| 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
+|---|---|---|---|---|---|---|
+| duel | 1 | 39.75 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=1&t=39.75) |
+| duel | 2 | 10.25 | 청1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=10.25) |
+| duel | 2 | 10.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=10.25) |
+| duel | 2 | 14.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=14.25) |
+| duel | 2 | 18.25 | 적1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#duel&seed=2&t=18.25) |
+| element-league | 1 | 27.75 | 번개1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=1&t=27.75) |
+| element-league | 2 | 25 | 얼음1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25) |
+| element-league | 2 | 25.5 | 흙1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25.5) |
+| element-league | 2 | 25.5 | 물1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=25.5) |
+| element-league | 2 | 28.75 | 흙1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=2&t=28.75) |
+| element-league | 3 | 59.25 | 흙1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#element-league&seed=3&t=59.25) |
+| v2-army-salt-city | 1 | 21.25 | 대마법사1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-army-salt-city&seed=1&t=21.25) |
+| v2-challenger-3 | 2 | 10.25 | 전설1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-challenger-3&seed=2&t=10.25) |
+| v2-challenger-3 | 3 | 31 | 전설1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-challenger-3&seed=3&t=31) |
+| v2-crowd-1v20 | 3 | 8.75 | 상위19 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=3&t=8.75) |
+| v2-crowd-1v20 | 3 | 22.75 | 상위1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=3&t=22.75) |
+| v2-sky-musket | 1 | 9.25 | 대마법사1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-musket&seed=1&t=9.25) |
+| v2-sky-musket | 2 | 8.5 | 대마법사1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-musket&seed=2&t=8.5) |
+| v2-sky-narrow | 3 | 22.5 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=22.5) |
+| v2-sky-narrow | 3 | 27.75 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=27.75) |
+| v2-sky-narrow | 3 | 32.25 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=32.25) |
+| v2-sky-narrow | 3 | 36.25 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=36.25) |
+| v2-sky-narrow | 3 | 49.5 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=49.5) |
+| v2-sky-narrow | 3 | 56.25 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=56.25) |
+| v2-sky-narrow | 3 | 62.75 | 대가1 | 기회 놓침 (s) | 2.25 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=62.75) |
+
+### 명중 범위 밖 (28)
+
+| 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
+|---|---|---|---|---|---|---|
+| duel | 2 | 36.93 | 적1 | 명중 범위 밖 (중간) | 0.098 | [열기](../sandbox/index.html#duel&seed=2&t=36.93) |
+| element-league | 1 | 152.88 | 흙1 | 명중 범위 밖 (평범) | 0.039 | [열기](../sandbox/index.html#element-league&seed=1&t=152.88) |
+| element-league | 3 | 170.5 | 얼음1 | 명중 범위 밖 (평범) | 0.054 | [열기](../sandbox/index.html#element-league&seed=3&t=170.5) |
+| v2-challenger-3 | 1 | 33.73 | 초보1 | 명중 범위 밖 (평범) | 0 | [열기](../sandbox/index.html#v2-challenger-3&seed=1&t=33.73) |
+| v2-crowd-1v20 | 1 | 56.07 | 상위16 | 명중 범위 밖 (상위) | 0.048 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=1&t=56.07) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위3 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위4 | 명중 범위 밖 (상위) | 0.04 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위13 | 명중 범위 밖 (상위) | 0.038 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위15 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-crowd-1v20 | 2 | 53.1 | 상위16 | 명중 범위 밖 (상위) | 0.053 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
+| v2-sky-narrow | 3 | 71.97 | 대가1 | 명중 범위 밖 (대마법사) | 0 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=71.97) |
+| v2-sky-wide | 1 | 49.3 | 대가1 | 명중 범위 밖 (대마법사) | 0.059 | [열기](../sandbox/index.html#v2-sky-wide&seed=1&t=49.3) |
+| v2-sky-wide | 3 | 73.22 | 대가1 | 명중 범위 밖 (대마법사) | 0.052 | [열기](../sandbox/index.html#v2-sky-wide&seed=3&t=73.22) |
+| x-squad-30-ranged | 1 | 44.98 | 상위5 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=1&t=44.98) |
+| x-squad-30-ranged | 1 | 44.98 | 상위28 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=1&t=44.98) |
+| x-squad-30-ranged | 2 | 40.82 | 상위11 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=2&t=40.82) |
+| x-squad-30-ranged | 2 | 40.82 | 상위19 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=2&t=40.82) |
+| x-squad-30-ranged | 2 | 40.82 | 상위21 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=2&t=40.82) |
+| x-squad-30-ranged | 2 | 40.82 | 상위27 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=2&t=40.82) |
+| x-squad-30-ranged | 3 | 41.98 | 상위6 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=3&t=41.98) |
+| x-squad-30-ranged | 3 | 41.98 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=3&t=41.98) |
+| x-squad-30-ranged | 3 | 41.98 | 상위14 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=3&t=41.98) |
+| x-squad-30 | 1 | 59.1 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30&seed=1&t=59.1) |
+| x-squad-30 | 2 | 63.33 | 상위7 | 명중 범위 밖 (상위) | 0.056 | [열기](../sandbox/index.html#x-squad-30&seed=2&t=63.33) |
+
+### 막혀 제자리 (25)
 
 | 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
 |---|---|---|---|---|---|---|
@@ -253,6 +287,7 @@
 | v2-crowd-1v20 | 2 | 39 | 상위11 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=39) |
 | v2-neighbor-plain | 1 | 62.5 | 대가1 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#v2-neighbor-plain&seed=1&t=62.5) |
 | x-salt-fort | 3 | 19.75 | 대마법사1 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#x-salt-fort&seed=3&t=19.75) |
+| x-squad-30-ranged | 3 | 28.25 | 상위10 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=3&t=28.25) |
 | x-squad-30 | 1 | 29 | 상위23 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#x-squad-30&seed=1&t=29) |
 | x-squad-30 | 1 | 39 | 상위1 | 막혀 제자리 (s) | 3 | [열기](../sandbox/index.html#x-squad-30&seed=1&t=39) |
 
@@ -283,30 +318,6 @@
 | v2-sky-narrow | 2 | 30.17 | 대가1 | 스스로 입은 피해 몫 | 0.267 | [열기](../sandbox/index.html#v2-sky-narrow&seed=2&t=30.17) |
 | v2-sky-narrow | 2 | 30.17 | 상급1 | 스스로 입은 피해 몫 | 0.515 | [열기](../sandbox/index.html#v2-sky-narrow&seed=2&t=30.17) |
 | v2-tactics-legend | 3 | 60.97 | 전설 A1 | 스스로 입은 피해 몫 | 0.199 | [열기](../sandbox/index.html#v2-tactics-legend&seed=3&t=60.97) |
-
-### 명중 범위 밖 (19)
-
-| 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
-|---|---|---|---|---|---|---|
-| duel | 2 | 36.93 | 적1 | 명중 범위 밖 (중간) | 0.098 | [열기](../sandbox/index.html#duel&seed=2&t=36.93) |
-| element-league | 1 | 152.88 | 흙1 | 명중 범위 밖 (평범) | 0.039 | [열기](../sandbox/index.html#element-league&seed=1&t=152.88) |
-| element-league | 3 | 170.5 | 얼음1 | 명중 범위 밖 (평범) | 0.054 | [열기](../sandbox/index.html#element-league&seed=3&t=170.5) |
-| v2-challenger-3 | 1 | 33.73 | 초보1 | 명중 범위 밖 (평범) | 0 | [열기](../sandbox/index.html#v2-challenger-3&seed=1&t=33.73) |
-| v2-crowd-1v20 | 1 | 56.07 | 상위16 | 명중 범위 밖 (상위) | 0.048 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=1&t=56.07) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위3 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위4 | 명중 범위 밖 (상위) | 0.04 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위13 | 명중 범위 밖 (상위) | 0.038 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위15 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-crowd-1v20 | 2 | 53.1 | 상위16 | 명중 범위 밖 (상위) | 0.053 | [열기](../sandbox/index.html#v2-crowd-1v20&seed=2&t=53.1) |
-| v2-sky-narrow | 3 | 71.97 | 대가1 | 명중 범위 밖 (대마법사) | 0 | [열기](../sandbox/index.html#v2-sky-narrow&seed=3&t=71.97) |
-| v2-sky-wide | 1 | 49.3 | 대가1 | 명중 범위 밖 (대마법사) | 0.059 | [열기](../sandbox/index.html#v2-sky-wide&seed=1&t=49.3) |
-| v2-sky-wide | 3 | 73.22 | 대가1 | 명중 범위 밖 (대마법사) | 0.052 | [열기](../sandbox/index.html#v2-sky-wide&seed=3&t=73.22) |
-| x-squad-30 | 1 | 59.1 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30&seed=1&t=59.1) |
-| x-squad-30 | 2 | 63.33 | 상위7 | 명중 범위 밖 (상위) | 0.056 | [열기](../sandbox/index.html#x-squad-30&seed=2&t=63.33) |
-| x-squad-30 | 2 | 63.33 | 상위22 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30&seed=2&t=63.33) |
-| x-squad-30 | 2 | 63.33 | 상위25 | 명중 범위 밖 (상위) | 0.05 | [열기](../sandbox/index.html#x-squad-30&seed=2&t=63.33) |
-| x-squad-30 | 3 | 62.67 | 상위10 | 명중 범위 밖 (상위) | 0 | [열기](../sandbox/index.html#x-squad-30&seed=3&t=62.67) |
 
 ### 떨림 (18)
 
@@ -388,7 +399,7 @@
 | x-salt-fort | 2 | 22.17 | 대마법사1 | 대마법사: 소금 위 몫 | 0.864 | [열기](../sandbox/index.html#x-salt-fort&seed=2&t=22.17) |
 | x-salt-fort | 3 | 23.35 | 대마법사1 | 대마법사: 소금 위 몫 | 0.806 | [열기](../sandbox/index.html#x-salt-fort&seed=3&t=23.35) |
 
-### 아군 피해 몫 (4)
+### 아군 피해 몫 (5)
 
 | 장면 | 씨앗 | 시각 | 누가 | 무엇 | 값 | |
 |---|---|---|---|---|---|---|
@@ -396,6 +407,7 @@
 | v2-musket-40 | 2 | 0.52 | 편 1 | 아군 피해 몫 | 1 | [열기](../sandbox/index.html#v2-musket-40&seed=2&t=0.52) |
 | v2-musket-40 | 3 | 0.45 | 편 1 | 아군 피해 몫 | 1 | [열기](../sandbox/index.html#v2-musket-40&seed=3&t=0.45) |
 | x-salt-fort | 2 | 22.17 | 편 1 | 아군 피해 몫 | 0.946 | [열기](../sandbox/index.html#x-salt-fort&seed=2&t=22.17) |
+| x-squad-30-ranged | 3 | 41.98 | 편 1 | 아군 피해 몫 | 0.128 | [열기](../sandbox/index.html#x-squad-30-ranged&seed=3&t=41.98) |
 
 ### 헛시전: 알 수 있었던 것 (3)
 

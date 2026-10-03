@@ -16,7 +16,7 @@ function resolveK(X, W, m) { const R = M.resolve; let k = 1;
   if (m.hp > R.hp * m.hpMax) { let a = 0, f = 0; for (const q of W.ms) if (q !== m && q.side === m.side && q.hp > 0 && X.hyp(q.x - m.x, q.y - m.y) < M.shockR) { a++; if (q.flee) f++; } if (!(a && f / a >= R.herd)) k *= R.healthy; }
   return k; }
 module.exports = {
-  name: 'morale', switch: 'morale', on: W => W.rules.morale, api: { hard },
+  name: 'morale', switch: 'morale', on: W => W.rules.morale, api: { hard, resolveK },
   engine: X => ({
     world(W) {
       if (!W._sideN) { W._sideN = []; for (const m of W.ms) W._sideN[m.side] = (W._sideN[m.side] || 0) + 1; }

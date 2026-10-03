@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v2.29.0
+# 숨 결투장 규격 v2.30.0
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -13,6 +13,8 @@
 5. **규칙은 스위치로, 규칙 모듈로만**: 새 규칙은 `rules`의 스위치를 가진 규칙 모듈(22장) 하나로 넣고, 정해진 훅에만 끼어든다. 끄면 이전 동작이 나와야 한다(꺼진 규칙의 훅은 모이지 않는다)
 
 ## 1. 버전과 업데이트 절차
+
+**v2.30.0 (지능 점검과 원인 고침, 53장)**: 늘 돌릴 수 있는 지능 점검 `node cli.js audit`(모든 장면 × 씨앗, 탐지기 열다섯, 문턱은 `data/rules/audit.json`, 사건마다 샌드박스를 그 장면·씨앗·시각으로 여는 주소 `sandbox/index.html#장면&seed=2&t=34.5`). 찾은 것을 원인부터 고친 규칙 여섯(모두 기본 꺼짐, 끄면 결과 지문 그대로): `resolve`(사기의 버팀), `fireLane`(사선), `saltWise`(소금을 아는 대마법사), `selfSafe`(스스로 다치지 않기), `crowdFire`(갈라 쏘기), `unstuck`(막힘 풀기, 땅에 붙은 날기 버그 포함). 규칙 묶음 `지금`에 crowdFire를 뺀 다섯을 더했다(결투장 묶음과 전설 대 전설 줄은 그대로). 점검 장면 `x-*` 여섯
 
 **v2.29.0 (무리의 닻·규율, 대마법사의 숨 돌리기, 52장 끝)**: 전투단은 땅에 닻 자리(과녁의 몇 초 평균 자리 둘레, 엄폐 뒤)를 두고, 조가 6 m 안에 모여 서서 합창을 맞춘 뒤 한 덩어리로 들어가 치고 나온다. 합창 없이 과녁의 장악 반경 안으로 들어가지 않는다(흩어진 무리도 서서 버티고, 15 m 안이면 물러난다). 포위는 평균 자리 기준. 대마법사는 지쳤어도 위협이 약하면 숨 돌리기(적 사거리 밖에서 당을 채우고 돌아온다), 물러남은 체력이 낮거나 지쳤는데 위협이 클 때만, 서 있는 무리에게는 다가간다(사냥). `A.result`에 편마다 쓰러짐(`dead`)·물러남(`fled`). 샌드박스는 고리 장부를 어느 판에서나(대마법사·고른 사람은 늘, 나머지는 크게 보일 때만). 문턱 H18~H22.
 
@@ -608,6 +610,7 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 
 - 사람 자리(`x`, `y`)를 모두 비우고 바위를 비우면 `A.battle`과 **같은 판**이 된다. 예: `archmage-50`은 `node cli.js ring 대마법사 평범 50 기본기`의 씨앗 1과 같다
 - `node cli.js scene 장면.json [녹화.json]`: 명령줄에서 장면 한 판
+- 주소로 열기 (엔진 v2.30): `sandbox/index.html#장면&seed=2&t=34.5`는 그 장면(`sandbox/scenes`의 이름)을 그 씨앗으로 열어 그 시각까지 돌리고 멈춘다. 주소가 바뀌면(`hashchange`) 다시 연다. 지능 점검(`node cli.js audit`, 53장)의 사건마다 이 주소가 붙는다
 
 ### 등록 (`Arena.register`)
 
@@ -2406,6 +2409,35 @@ v2.19의 숨김은 싸고 완벽해서 숨기·벽·순간 켜기를 모두 쓸�
 
 **문턱 (GATE-v4 H, `experiments/gate.js`의 `boundJob`, 8판)**: H14 막는 수 서클 8 대가 대 상위 전투단 30(대마법사 승 30~70%), H15 잡는 수 서클 8 대가 대 100(쓰러짐 30~70%), H16 막는 수 서클 11 전설 대 50, H17 잡는 수 서클 11 전설 대 70, H17r 물러남(봄)
 
+## 53. 지능 점검과 원인 고침 (v2.30.0)
+
+받은 요청: "늘 돌릴 수 있는 지능 점검 도구"를 먼저 만들고, 그걸로 찾은 것을 원인부터 고친다. 고침마다 스위치(기본 꺼짐, 끄면 결과 지문 그대로), 결과를 보고 `지금`에 넣을지 정한다. 탐지기마다 시험 하나. 결투장 전설 대 전설 줄이 나빠지면 안 된다. 잰 결과는 `reports/v2.30.0.md`, 점검표는 `reports/audit.md`(v2.29.0의 같은 점검은 `reports/audit-v2.29.0.md`).
+
+**점검 `node cli.js audit [--seeds 1,2,3] [--only 장면,…] [--rules '{…}'] [--save 이름]` (`experiments/audit.js`, 문턱 `data/rules/audit.json`)**
+- 모든 장면(`sandbox/scenes`, 이름이 `[역사]`로 시작하는 것 빼고) × 씨앗 `seeds`를 일꾼에 나눠 돌린다(`par.js`, 일꾼 수와 상관없이 같다). 판에 닿지 않는다: 세계의 훅 배열(`release`·`hurt`)에 읽기만 하는 함수를 붙이고 `every`(0.25) s마다 상태를 읽는다(시험: 점검을 붙여도 판이 같다)
+- 사건 = 장면 · 씨앗 · 판 시각 · 누가 · 무엇 · 값. 보고서(`reports/audit.md`·`.json`)는 탐지기별·장면별 수, 대마법사 판마다(떠 있는 몫·평균 속도·소금 위 몫), 탐지기마다 앞의 `maxEv`개와 샌드박스 주소
+- 탐지기: 기회 놓침(적이 사거리·시야 안이고 장악 계수가 `idle.g` 넘게 서며 당·다시 쓰기가 되는데 `idle.t` s 넘게 아무것도 안 짓는다. 총은 제 줄 차례·멀리 뜬 과녁·막힌 사선을 뺀다) · 헛시전(장악 계수 0.02 이하로 흩어진 시전의 몫이 `fizz.share` 넘게, 서는 자리가 소금 위라 알 수 있었던 것은 따로) · 명중 범위 밖(단계마다 `hit`) · 떨림(걸음 방향 뒤집기 초당 `jitter.perS` 넘게) · 막혀 제자리(걸으려는데 `stuck.t` s 동안 `stuck.d` m 못 감) · 위험 지대(선명도 2 이상이 소금 위·적의 독·불 지대·내 지연 폭발 안에 `danger.t` s 넘게) · 아군 피해 몫(편마다) · 스스로 입은 피해 몫(제 마법·역류·파도·추락) · 역류(번) · 체력 남기고 도망(체력 `flee.hp` 넘게 남기고 달아나기 시작, 단계·군대·대마법사의 물러남 따로) · 끝나지 않는 판 · 같은 수 되풀이 · 대마법사(선명도 `arch.cMin` 이상: 벽 뒤·사선이 막히지 않은 장전된 총 `gunN` 넘게 앞에 `gunStand` s 넘게 서 있음, 소금 위 몫) · 오류(NaN·판 밖·예외·느린 걸음 `stepMs` ms) · 데이터(마법 이름 칸·틀·비용·원소, 덱의 없는 마법, 장면의 없는 단계·덱·판 밖 자리)
+- 샌드박스 주소: `sandbox/index.html#장면&seed=2&t=34.5`는 그 장면을 그 씨앗으로 열어 그 시각까지 돌리고 멈춘다(`hashchange`도 따른다, 19장)
+
+**사기의 버팀 `resolve` (`rules/morale`, 수는 `data/rules/army.json`의 `morale.resolve`)**: 도망칠 확률 × 버팀. 지휘가 있는 무리(전투단 `tac.squad`·돌아가며 쏘는 줄 `tac.volley` > 1) ÷ `org`(2.5), `wallR` m 안에 선 벽(보루) ÷ `fort`(2.5), 체력이 `hp`(0.7) 넘는 사람 × `healthy`(0.1) — 다만 사기 반경 안의 같은 편 가운데 달아나는 몫이 `herd`(0.3) 넘으면 그대로(멀쩡한 사람은 혼자 먼저 달아나지 않는다)
+
+**사선 `fireLane` (`rules/fireLane.js`, `data/rules/fireLane.json`)**: 총(`mundane` 투사체)은 쏘기 전에 사선을 본다 — 쏘는 자리에서 과녁 너머 사거리 끝까지, 총의 흔들림((aimN + aimD × 거리) × 흔들림 배수, 눈멀면 × 3)이 벌어지는 띠(몸 + `pad` + 흔들림 × 거리 × `k`)에 같은 편이 서 있으면(높이 차 1.2 m 안, 총구에 붙어 선 사람도) 값 0(두뇌 훅 `valueLate`). 화승이 타는 동안 막히면 방아쇠를 늦추고(엔진 훅 `mageStep`, `wait` s 넘으면 시전을 거둔다: 장전은 쏠 때만 돈다), 막혔으면 `hold` s 동안 막은 사람의 반대쪽으로 비킨다(두뇌 훅 `steer`). api `lane(W, m, tx, ty, R)` → 0 또는 막은 쪽(±1)
+
+**소금을 아는 대마법사 `saltWise` (`rules/saltWise.js`, `data/rules/saltWise.json`, 소금 땅이 있는 판, 선명도 `cMin`(5) 이상)**: 소금 땅에 섰으면 `radii` × `dirs` 자리 가운데 맨땅이고 (거리 + `far` × 과녁에서 선호 거리를 넘는 몫)이 가장 작은 곳으로 간다. 맨땅에서 과녁이 손닿는 거리면 소금으로 걸어 들어가지 않고 걸음을 45°·90°·135° 돌려 둘레를 따라 돈다. 값 고치기가 끝난 뒤의 겨눈 자리로 서는 자리를 다시 보고 소금이면 값 0, 과녁이 소금 위면 직사·곡사 × `lobK`(1.4). 자동 진(`rules/multiSlot`)과 총 대응의 반사 방패(`rules/gunfire`)는 소금 위에서 세우지 않는다
+
+**스스로 다치지 않기 `selfSafe` (`rules/selfSafe.js`, `data/rules/selfSafe.json`)**: 잰 원인 — 낮은 단계(평범·중간)가 스스로 입은 피해는 큰 수를 모으다 맞은 역류(22)와 고르지 않은 파도뿐이었다. 그래서 누구나(이미 `tac.survive`가 있는 선명도 5 이상은 빼고): 풀 때 머리가 넘칠 수는 고르지 않고, 고르지 않은 파도에 올랐으면 겨눠지지 않았을 때 쉰다(두뇌 훅 `rest`). 큰 수(`risk` 규칙의 `big`)는 겨눠진 동안·적이 `near`(6) m 안이면 모으지 않고, 모으는 중에 닿을 위협(읽은 예비동작이 내 시전보다 먼저 닿거나 날아오는 투사체)을 보면 남은 시간이 `cancelT` s 넘을 때 끊는다(당 70% 돌려받음, 두뇌 훅 `cancel`)
+
+**갈라 쏘기 `crowdFire` (`rules/crowdFire.js`, `data/rules/crowdFire.json`, `지금`에 넣지 않음)**: 전투단(`tac.squad`)의 투사체는 과녁이 (모으는 시간 + 날아갈 시간) 동안 `slack` m 넘게 움직일 빠르기면 쏘지 않는다(값 0). 쏠 땐 날아갈 동안 갈 자리를 앞질러 겨누고(× `lead`), 곁 `R` m 안에 같은 편이 `n` 넘게 있으면 몫(id mod 3)마다 가운데·왼쪽·오른쪽 피할 자리(`w` m)를 나눠 겨눈다(엔진 훅 `track`)
+
+**막힘 풀기 `unstuck` (`rules/unstuck.js`, `data/rules/unstuck.json`)**
+- 땅에 붙은 날기(버그): 날기를 그만둔(`flyWant` 꺼짐) 사람의 높이는 0으로 다가가기만 하고 닿지 않아(1e-27 m) 날기 상태로 남았다. 힘이 모자라 걷지도 못해 판 끝에 붙어 섰다. 높이가 `eps` m 아래로 내려오면 내려앉는다(엔진 훅 `mageStep`)
+- 판 끝: 판 밖으로 걸으려는 몫은 버린다(끝 `edge` m 안). 달아나는 사람은 그대로 나간다
+- 막혀 제자리: 걸으려는데 `every` s 동안 `d` m도 못 갔으면 `hold` s(거듭 막히면 네 배까지) 동안 돈다: 곁 `near` m의 바위가 막았으면 바위를 끼고(가려던 쪽에 가까운 접선, 밖으로 `out`), 아니면 직각으로(세 번 막히면 쪽을 바꾼다)
+
+**규칙 묶음 `지금`**: `resolve`·`fireLane`·`saltWise`·`selfSafe`·`unstuck`을 더했다. 결투장 묶음은 그대로라 전설 대 전설의 줄(문턱 B·C, 성적표의 결투장)은 바뀌지 않는다
+
+**점검 장면** (`sandbox/scenes/x-*.json`, 받은 점검의 판을 닮게): `x-squad-30`(전설 대마법사 대 상위 전투단 30, 합창), `x-squad-30-ranged`(같은 판, 장면의 덱 `무리 원거리`: 직사 넷·실·지대), `x-scattered-30`(흩어진 상위 30), `x-joint`(머스킷 40 + 상위 8), `x-salt-fort`(소금 위 흙벽 고리 안의 머스킷 34), `x-top-vs-plain30`(상위 대가 하나 대 평범 30)
+
 ## 부록 A. 구현 메모 (v2.23.1에 CLAUDE.md에서 옮김)
 
 CLAUDE.md는 원칙과 어디를 볼지만 둔다. 버전마다 새로 생긴 상태·훅·기록의 자리와 실험 명령은 여기에 쌓는다(새 버전의 메모도 여기에).
@@ -2431,6 +2463,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 
 ### A.2 버전마다의 자리
 
+- **v2.30**: 점검은 `experiments/audit.js`(`run(key, seed, rules, opt)`: 시험은 `opt.sc` 장면 객체·`prep`·`step`·`after`로 탐지기를 하나씩 일으킨다, `dataCheck`, `render`). 새 규칙 여섯은 모두 상태를 모듈의 WeakMap에(사람에 칸을 더하지 않는다): `fireLane`(BL 비킬 쪽·HOLD 늦춘 시간), `unstuck`(ST 잰 자리·돌기), `saltWise`·`selfSafe`·`crowdFire`(상태 없음). 다른 규칙 파일에 이 스위치를 보는 곳: `rules/gunfire`의 반사 방패·`rules/multiSlot`의 자동 진(saltWise), `rules/morale`의 `resolveK`(resolve, api). 새 훅은 없다. 샌드박스의 `openHash()`(`#장면&seed=&t=`)
 - **v2.29**: `rules/squad`의 닻(`b.ax`·`ay` 평균 자리, `b.cx`·`cy` 닻을 놓은 기준, `b.anc` 조마다 닻, `b.ts` 조의 차례), 장악권 규율(steer), 숨 돌리기(`S.solo`의 `thr`·`rest`), 무리 시간 지표(`stats.crowd`). `rules/chorus`의 `good`. `core.result`의 `dead`·`fled`
 - **v2.28**: `rules/drain`(스위치 `drain`, 엔진 훅 `world`·`release`·`power`·`hurtMod`, 두뇌 훅 `steer`, 시전마다의 몫은 WeakMap PEND(사람 → 걸음·마법·몫)). 물러서기는 `rules/squad`의 `losing`(다수 모드의 aim 훅), 합창 자리는 `teamSings`. `experiments/bound.js`는 늘 rules.squad(대마법사의 다수 모드), 결과는 승·쓰러짐·물러남·시간 끝으로 나눈다
 - **v2.27**: `rules/chorus`(스위치 `chorus`, 사람의 `tac.chorus`·`tac.squad`, 엔진 훅 `world`·`ceff`·`share`·`power`·`tune`·`release`·`hurt`, 두뇌 훅 `circles`·`valueLate`, 상태는 WeakMap), `rules/steady`(두뇌 훅 `hideCast`만). 엔진 `X.sigOf`. 실험 `experiments/bound.js`. `experiments/crowd.js`의 `scene(n, seed, tac, arch)`, `squad.js`의 `--arch`·`--only`

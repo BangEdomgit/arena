@@ -1,11 +1,13 @@
 'use strict';
 /* 규칙: 소금을 아는 대마법사 (rules.saltWise, v2.30, SPEC 53장, 수는 data/rules/saltWise.json) — 기본 꺼짐. 소금 땅(saltLand)이 있는 판에서만 일한다
  * 선명도 cMin 이상의 마법사는
- *   서지 않는다: 소금 땅 위에 섰으면 가까운 맨땅으로 간다(과녁에서 너무 멀어지지 않는 곳). 맨땅에서 과녁이 손닿는 거리면 소금으로 걸어 들어가지 않는다
+ *   서지 않는다: 소금 땅 위에 섰으면 가까운 맨땅으로 간다(과녁에서 너무 멀어지지 않는 곳). 맨땅에서 과녁이 손닿는 거리면 소금으로 걸어 들어가지 않고
+ *     걸음을 45°·90°·135° 돌려 소금 둘레를 따라 돈다(멈춰 서면 총 앞의 과녁이다)
  *   흩어질 수는 쓰지 않는다: 값 고치기가 다 끝난 뒤의 겨눈 자리로 다시 본다(앞의 기술이 과녁을 옮겼을 수 있다). 자동 진의 반사 방패도 소금 위에선 세우지 않는다(rules/gunfire)
  *   과녁이 소금 위면 내 자리에서 서는 수(직사·곡사)를 고른다(값 × lobK) */
 const P = require('../../data/rules/saltWise.json');
 const SELF = { proj: 1, lob: 1 };
+const H = 0.707107, ROT = [[H, H], [H, -H], [0, 1], [0, -1], [-H, H], [-H, -H]];   // 45°·90°·135° 돌리기 [cos, sin]
 const on = (W, m) => W.salt.length > 0 && m.C >= P.cMin;
 module.exports = {
   name: 'saltWise', switch: 'saltWise', api: { P, on },
@@ -18,8 +20,10 @@ module.exports = {
     steer(W, m, K) {
       if (K.dodge || m.flee || m.z >= 1 || !on(W, m)) return; const e = K.e;
       if (!B.C.onSalt(W, m.x, m.y)) {   // 맨땅: 손닿는 과녁이 있으면 소금으로 들어가지 않는다
-        if (!e || !(K.d <= K.prefR + P.reach)) return; const nx = m.x + K.vx * P.look, ny = m.y + K.vy * P.look;
-        if (B.C.onSalt(W, nx, ny)) { K.vx = 0; K.vy = 0; } return; }
+        if (!e || !(K.d <= K.prefR + P.reach)) return; const vx = K.vx, vy = K.vy; if (!B.C.onSalt(W, m.x + vx * P.look, m.y + vy * P.look)) return;
+        for (let i = 0; i < ROT.length; i++) { const c = ROT[i][0], s = ROT[i][1], rx = vx * c - vy * s, ry = vx * s + vy * c;   // 소금 쪽 몫을 버리고 둘레를 따라 돈다 (서 있으면 총 앞의 과녁이다)
+          if (!B.C.onSalt(W, m.x + rx * P.look, m.y + ry * P.look)) { K.vx = rx; K.vy = ry; return; } }
+        K.vx = 0; K.vy = 0; return; }
       let bx = 0, by = 0, bs = 1e9;
       for (let i = 0; i < P.radii.length; i++) { const r = P.radii[i]; if (r > bs) break;
         for (let k = 0; k < P.dirs; k++) { const a = k * 6.2832 / P.dirs, x = m.x + B.C.cos(a) * r, y = m.y + B.C.sin(a) * r;

@@ -8,37 +8,39 @@
 const fs = require('fs'), path = require('path'), A = require('../src'), C = require('../src/core'), P = require('../data/rules/audit.json');
 const ROOT = path.join(__dirname, '..'), SC = path.join(ROOT, 'sandbox', 'scenes');
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
+const LANE = require('../src/rules/fireLane').api.lane;   // 사선이 막힌 총은 쏠 수 없다 (rules.fireLane이 켜졌을 때)
 const BAD = { fire: 1, h2s: 1, nh3: 1, acid: 1, spore: 1, ice: 0, pit: 0 };
 function scenes(only) { const out = {}; for (const f of fs.readdirSync(SC).filter(f => f.endsWith('.json')).sort()) { const k = f.slice(0, -5), sc = JSON.parse(fs.readFileSync(path.join(SC, f), 'utf8')); if ((sc.name || '').startsWith('[역사]')) continue; if (only && !only.includes(k)) continue; out[k] = sc; } return out; }
 // 마법이 서는 자리 (core의 formPoint와 같은 셈: core가 내보내지 않는다)
 function formPt(m, s, tx, ty) { const k = C.FORM[s.t], d = Math.hypot(tx - m.x, ty - m.y) || 1; if (k === 'target' || k === 'path') return [tx, ty]; if (k === 'front') { const L = Math.min(d, s.L || 3) * 0.4; return [m.x + (tx - m.x) / d * L, m.y + (ty - m.y) / d * L]; } if (k === 'self') return [m.x + (tx - m.x) / d * 0.5, m.y + (ty - m.y) / d * 0.5]; return null; }
 const tierOf = m => m.C >= 8 ? '대마법사' : m.C >= 4 ? '상위' : m.C >= 2 ? '중간' : m.C >= 0.9 ? '평범' : '병사';
 // 한 판: 사건 목록과 사람마다의 합
-function run(key, seed, rules) {
-  const sc = Object.assign({}, scenes([key])[key], { seed }); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
+// opt (시험용): sc 장면 객체(key 대신), prep(W) 세계를 만든 뒤 한 번, step(W)·after(W) 걸음마다 그 앞·뒤 (탐지기 훅 뒤에 부른다)
+function run(key, seed, rules, opt) {
+  const sc = Object.assign({}, opt && opt.sc || scenes([key])[key], { seed }); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
   const ev = [], add = (t, who, what, v) => ev.push({ scene: key, seed, t: +t.toFixed(2), who, what, v: typeof v === 'number' ? +v.toFixed(3) : v });
   let W; try { W = A.sceneWorld(sc); } catch (e) { add(0, '-', '오류: 장면을 못 만듦', String(e.message || e)); return { ev, sum: {} }; }
-  const n = W.ms.length, S = W.ms.map(() => ({ idle: 0, idleRep: false, stuckT: 0, sx: 0, sy: 0, flips: [], jitRep: false, dang: 0, dangRep: false, gun: 0, gunRep: false, salt: 0, air: 0, sp: 0, k: 0, lmx: 0, lmy: 0, fizzS: 0, fizzF: 0, rel: 0, ff: 0, self: 0, tot: 0, fled: false }));
+  const n = W.ms.length, S = W.ms.map(() => ({ idle: 0, idleRep: false, stuckT: 0, sx: 0, sy: 0, flips: [], jitRep: false, dang: 0, dangRep: false, gun: 0, gunRep: false, salt: 0, air: 0, sp: 0, k: 0, lmx: 0, lmy: 0, fizzS: 0, fizzF: 0, rel: 0, ff: 0, self: 0, tot: 0, fled: false, nan: false, out: false }));
   W.ms.forEach((m, i) => { S[i].sx = m.x; S[i].sy = m.y; });
   const idx = new Map(W.ms.map((m, i) => [m, i]));
   W.H.release.push((W, m, c) => { const i = idx.get(m); if (i === undefined || c.auto) return; const s = c.s; S[i].rel++; if (s.mundane) return;
     const g = C.gAt(W, m, s, c.tx, c.ty); if (g <= 0.02) { const p = formPt(m, s, c.tx, c.ty) || [m.x, m.y]; if (W.salt.length && C.onSalt(W, p[0], p[1])) S[i].fizzF++; else S[i].fizzS++; } });
   W.H.hurt.push((W, m, v, src, name, kind) => { const i = idx.get(m); if (i === undefined) return; S[i].tot += v; if (src === m || (!src && (kind === 'wave' || kind === 'backfire' || kind === 'fall'))) S[i].self += v; else if (src && src.side === m.side) S[i].ff += v; });
-  const ev0 = Math.round(P.every / W.dt); let slow = 0;
+  const ev0 = Math.round(P.every / W.dt); let slow = 0; if (opt && opt.prep) opt.prep(W);
   try {
     while (!A.over(W)) {
-      const t0 = Date.now(); A.stepWorld(W); const dtMs = Date.now() - t0; if (dtMs > P.stepMs && ++slow <= 3) add(W.t, '-', '오류: 느린 걸음 (ms)', dtMs);
+      if (opt && opt.step) opt.step(W); const t0 = Date.now(); A.stepWorld(W); const dtMs = Date.now() - t0; if (opt && opt.after) opt.after(W); if (dtMs > P.stepMs && ++slow <= 3) add(W.t, '-', '오류: 느린 걸음 (ms)', dtMs);
       if (W.step % ev0) continue;
       for (let i = 0; i < n; i++) { const m = W.ms[i], s = S[i]; if (m.hp <= 0) continue;
-        if (!(m.x === m.x && m.y === m.y && m.hp === m.hp)) { add(W.t, m.name, '오류: NaN', m.x); continue; }
-        if (m.x < -2 || m.y < -2 || m.x > W.width + 2 || m.y > W.height + 2) add(W.t, m.name, '오류: 판 밖', m.x);
+        if (!(m.x === m.x && m.y === m.y && m.hp === m.hp)) { if (!s.nan) { s.nan = true; add(W.t, m.name, '오류: NaN', m.x); } continue; }
+        if ((m.x < -2 || m.y < -2 || m.x > W.width + 2 || m.y > W.height + 2) && !s.out) { s.out = true; add(W.t, m.name, '오류: 판 밖', m.x); }
         if (m.flee && !s.fled) { s.fled = true; const h = m.hp / m.hpMax; if (h > P.flee.hp) add(W.t, m.name, (m.C >= P.arch.cMin ? '체력 남기고 물러남' : m.book.includes('머스킷') ? '체력 남기고 도망 (군대)' : '체력 남기고 도망 (' + tierOf(m) + ')'), h); }
         if (m.flee) continue;
         // 기회 놓침 (장악권에 흩어질 수는 기회가 아니다)
         const busy = m.cast || m.castB || m.chan || m.st.stun > 0 || m.st.breath > 0 || m.roll > 0;
         let can = false; if (!busy) for (const nm of m.book) { const sp = W.spells[nm]; if (!sp || !OFF[sp.t] || (m.cd[nm] || 0) > 0 || m.glu < sp.cost) continue; const R = sp.t === 'cone' ? (sp.L || 3) * 1.5 : sp.t === 'touch' ? 1.3 : C.rangeOf(m, sp);
           if (sp.mundane && m.tac.volley > 1 && m.id % m.tac.volley !== Math.floor(W.t / (17.5 / m.tac.volley)) % m.tac.volley) continue;   // 돌아가며 쏘기: 제 줄 차례가 아니면 기다리는 게 맞다
-          for (const q of W.foes[m.side]) { if (!(q.hp > 0) || q.flee) continue; const d = C.hyp(q.x - m.x, q.y - m.y); if (sp.mundane && q.z >= 2 && d > 50) continue; if (d < R * 0.9 && !C.blocked(W, m.x, m.y, q.x, q.y, Math.max(m.z, q.z)) && (sp.mundane || C.gAt(W, m, sp, q.x, q.y) > P.idle.g)) { can = true; break; }  } if (can) break; }
+          for (const q of W.foes[m.side]) { if (!(q.hp > 0) || q.flee) continue; const d = C.hyp(q.x - m.x, q.y - m.y); if (sp.mundane && q.z >= 2 && d > 50) continue; if (sp.mundane && W.rules.fireLane && LANE(W, m, q.x, q.y, R)) continue; if (d < R * 0.9 && !C.blocked(W, m.x, m.y, q.x, q.y, Math.max(m.z, q.z)) && (sp.mundane || C.gAt(W, m, sp, q.x, q.y) > P.idle.g)) { can = true; break; }  } if (can) break; }
         if (can) { s.idle += P.every; if (s.idle > P.idle.t && !s.idleRep) { s.idleRep = true; add(W.t, m.name, '기회 놓침 (s)', s.idle); } } else { s.idle = 0; s.idleRep = false; }
         // 막혀 제자리·떨림
         const wl = Math.hypot(m.mv.x, m.mv.y); if (wl > 0.5 && !(m.st.root > 0) && !(m.st.stun > 0) && m.z < 1 && !m.cast) { s.stuckT += P.every; if (s.stuckT >= P.stuck.t) { if (Math.hypot(m.x - s.sx, m.y - s.sy) < P.stuck.d) add(W.t, m.name, '막혀 제자리 (s)', s.stuckT); s.stuckT = 0; s.sx = m.x; s.sy = m.y; } } else { s.stuckT = 0; s.sx = m.x; s.sy = m.y; }
@@ -52,7 +54,7 @@ function run(key, seed, rules) {
         if (bad) { s.dang += P.every; if (s.dang > P.danger.t && !s.dangRep) { s.dangRep = true; add(W.t, m.name, '위험 지대 (s)', s.dang); } } else { s.dang = 0; s.dangRep = false; }
         // 대마법사
         if (m.C >= P.arch.cMin) { s.k++; s.sp += Math.hypot(m.vx, m.vy); if (m.z >= 1) s.air++; if (W.salt.length && C.onSalt(W, m.x, m.y) && m.z < 1) s.salt++;
-          let g = 0; for (const q of W.foes[m.side]) if (q.hp > 0 && !q.flee && q.book.includes('머스킷') && !((q.cd['머스킷'] || 0) > 1) && C.hyp(q.x - m.x, q.y - m.y) < P.arch.gunR) g++;
+          let g = 0; for (const q of W.foes[m.side]) if (q.hp > 0 && !q.flee && q.book.includes('머스킷') && !((q.cd['머스킷'] || 0) > 1) && C.hyp(q.x - m.x, q.y - m.y) < P.arch.gunR && !C.blocked(W, q.x, q.y, m.x, m.y, Math.max(m.z, q.z)) && !(W.rules.fireLane && LANE(W, q, m.x, m.y, P.arch.gunR))) g++;   // 벽 뒤·사선이 막힌 총은 빼고
           if (g >= P.arch.gunN && m.z < 1 && Math.hypot(m.vx, m.vy) < 1.5) { s.gun += P.every; if (s.gun > P.arch.gunStand && !s.gunRep) { s.gunRep = true; add(W.t, m.name, '대마법사: 총 앞에 서 있음 (s)', s.gun); } } else { s.gun = 0; s.gunRep = false; } }
       }
     }

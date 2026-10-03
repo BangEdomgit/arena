@@ -24,6 +24,7 @@ node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 �
 node cli.js suite --save          # 바뀐 게 의도한 것이면 기준을 새로 저장하고 같이 커밋한다
 node cli.js report                # v2.9 성적표: 결투장 전설 대 전설·사다리·상위 무리 기준을 재서 reports/scorecard.md에 이 버전으로 쌓는다 (약 20 s, --show는 보기만)
 node cli.js gate [--quick]        # v2.16 v3.0 문턱(GATE-v4.md 1장, v2.20.1부터 4판): 모두 재서 ✓·✗·△·—를 reports/gate.md에 이 버전으로 쌓는다 (약 5분, quick 약 1분, --show는 보기만). 끝에 2장 판단 확인 표
+node cli.js audit                 # v2.30 지능 점검: 모든 장면 × 씨앗의 사건(기회 놓침·헛시전·막힘·아군 피해…)을 reports/audit.md에 (약 20 s, 문턱 data/rules/audit.json, --only·--seeds·--rules·--save). 두뇌·규칙을 바꿨으면 돌려 사건 수를 본다
 # 실험 명령(v2tune·army·master·diag·versus·crowd·ladder·v2rules)과 재는 요령은 SPEC 부록 A.1
 ```
 
