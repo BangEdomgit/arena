@@ -42,10 +42,12 @@ function run() {
     const r = AU.run('', 1, null, { sc, prep: still, step: W => { if (W.step === 5) { const [a, b] = W.ms; C.hurt(W, b, 40, a, '불덩이', 'fire'); C.hurt(W, a, 30, a, '불기둥', 'fire'); a.log.backfire = 1; } } });
     assert.ok(evs(r, /^아군 피해 몫/).length === 1 && evs(r, /^스스로 입은 피해 몫/).length === 1 && evs(r, /^역류/).length === 1, JSON.stringify(r.ev));
   });
-  ok('v2.30 점검: 체력 남기고 도망 — 체력 70% 넘게 남기고 달아나기 시작하면 (단계·군대 따로)', () => {
+  ok('v2.30 점검: 체력 남기고 도망 — 비슷한 상대(2배 아래) 앞에서 멀쩡한데 달아나면 적고, 3배 넘게 선명한 상대 앞은 세지 않는다 (v2.31)', () => {
     const sc = scene([[['평범', '기본기', 10, 10], ['병사', '머스킷', 10, 30]], [['평범', '기본기', 50, 20]]]);
     const r = AU.run('', 1, null, { sc, prep: W => { still(W); W.ms[0].flee = 1; W.ms[1].flee = 1; } });
-    assert.ok(evs(r, /^체력 남기고 도망 \(평범\)/).length === 1 && evs(r, /^체력 남기고 도망 \(군대\)/).length === 1, JSON.stringify(r.ev));
+    assert.ok(evs(r, /^체력 남기고 도망 \(평범\)/).length === 1 && evs(r, /^체력 남기고 도망 \(군대\)/).length === 0, JSON.stringify(r.ev));
+    const sc2 = scene([[['병사', '머스킷', 10, 10], ['병사', '머스킷', 10, 30]], [['병사', '머스킷', 50, 20]]]);
+    const r2 = AU.run('', 1, null, { sc: sc2, prep: W => { still(W); W.ms[0].flee = 1; } }); assert.strictEqual(evs(r2, /^체력 남기고 도망 \(군대\)/).length, 1, JSON.stringify(r2.ev));
   });
   ok('v2.30 점검: 끝나지 않는 판 — 시간이 다 되면 적는다', () => {
     const r = AU.run('', 1, null, { sc: duo({ maxT: 4 }), prep: still });
@@ -65,7 +67,8 @@ function run() {
   ok('v2.30 점검: 데이터 — 덱에 없는 마법, 장면의 자리가 판 밖', () => {
     A.DECKS['시험 덱'] = ['없는 마법']; let ev; try { ev = AU.dataCheck(); } finally { delete A.DECKS['시험 덱']; }
     assert.ok(ev.some(e => e.what === '데이터: 덱에 없는 마법' && e.who === '시험 덱'));
-    assert.ok(ev.some(e => e.what === '데이터: 장면의 자리가 판 밖' && e.who === 'v2-army-salt-city'));
+    assert.ok(!ev.some(e => e.what === '데이터: 장면의 자리가 판 밖'), '소금 도시의 총병 (v2.31에 고침)');
+    assert.ok(AU.dataCheck({ 시험: scene([[['평범', '기본기', 61, 20]], [['평범', '기본기', 30, 20]]]) }).some(e => e.what === '데이터: 장면의 자리가 판 밖' && e.who === '시험'));
     assert.ok(!AU.dataCheck().some(e => e.what === '데이터: 마법 이름 칸이 키와 다름'), '얼음 담 같은 이름 칸 (v2.28.1)');
   });
   ok('v2.30 점검: 같은 씨앗이면 같은 사건, 판에는 닿지 않는다(점검을 붙여도 결과가 같다)', () => {

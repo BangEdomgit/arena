@@ -81,11 +81,11 @@ function run(key, seed, rules, opt) {
   return { ev, sum: { scene: key, seed, t: W.t, arch } };
 }
 // 데이터 검사
-function dataCheck() {
+function dataCheck(scs) {   // scs: 장면 { 이름: 장면 } (시험용, 없으면 sandbox/scenes)
   const ev = [], add = (who, what, v) => ev.push({ scene: '데이터', seed: 0, t: 0, who, what, v });
   for (const [k, s] of Object.entries(A.SPELLS)) { if (typeof s.n !== 'string' || s.n !== k) add(k, '데이터: 마법 이름 칸이 키와 다름', String(s.n)); if (!s.t) add(k, '데이터: 마법에 틀(t)이 없음', ''); if (!(s.cost >= 0)) add(k, '데이터: 마법에 비용이 없음', String(s.cost)); if (!s.el) add(k, '데이터: 마법에 원소가 없음', ''); }
   for (const [d, list] of Object.entries(A.DECKS)) for (const n of (Array.isArray(list) ? list : list.spells || [])) if (!A.SPELLS[n]) add(d, '데이터: 덱에 없는 마법', n);
-  const all = scenes(); for (const [k, sc] of Object.entries(all)) for (const side of sc.sides || []) for (const mm of side.mages || []) {
+  const all = scs || scenes(); for (const [k, sc] of Object.entries(all)) for (const side of sc.sides || []) for (const mm of side.mages || []) {
     if (mm.tier && !A.TIERS[mm.tier]) add(k, '데이터: 장면에 없는 단계', mm.tier); if (mm.deck && !A.DECKS[mm.deck] && !(sc.decks && sc.decks[mm.deck])) add(k, '데이터: 장면에 없는 덱', mm.deck);
     if (mm.x != null && sc.width && (mm.x < 0 || mm.x > sc.width || mm.y < 0 || mm.y > sc.height)) add(k, '데이터: 장면의 자리가 판 밖', mm.x + ',' + mm.y); }
   return ev;
