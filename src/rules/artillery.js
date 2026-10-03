@@ -107,7 +107,8 @@ module.exports = {
         const S = stOf(W);
         if (isGun(m)) { const e = K.e; if (e && K.d > 250) return; K.vx = 0; K.vy = 0; return; }   // 포는 닿으면 선다
         const g = S.crew.get(m); if (g && g.hp > 0 && !m.flee) { const e = g._k && g._k.e; let ux = 0, uy = 0; if (e) { const dx = g.x - e.x, dy = g.y - e.y, l = hyp(dx, dy) || 1; ux = dx / l; uy = dy / l; }   // 포수: 포 뒤
-          const sd = ((m.id % 4) - 1.5) * P.crew.side, tx = g.x + ux * P.crew.post - uy * sd, ty = g.y + uy * P.crew.post + ux * sd, dx = tx - m.x, dy = ty - m.y, l = hyp(dx, dy); if (l > 0.3) { K.vx = dx / l * Math.min(3, l * 2); K.vy = dy / l * Math.min(3, l * 2); } else { K.vx = 0; K.vy = 0; } return; }
+          const sd = ((m.id % 4) - 1.5) * P.crew.side, tx = B.C.clamp(g.x + ux * P.crew.post - uy * sd, 1, W.width - 1), ty = B.C.clamp(g.y + uy * P.crew.post + ux * sd, 1, W.height - 1),   // 판 안의 자리
+            dx = tx - m.x, dy = ty - m.y, l = hyp(dx, dy); if (l > P.crew.stay) { K.vx = dx / l * Math.min(3, l); K.vy = dy / l * Math.min(3, l); } else { K.vx = 0; K.vy = 0; } return; }   // 자리 둘레 stay m 안이면 선다 (과녁이 돌면 포 뒤도 돈다: 쫓으면 흔들린다)
         if (K.dodge || m.flee) return;
         if (S.fog && m.C >= 0.9 && m.book.some(n => W.spells[n] && !W.spells[n].mundane)) for (const f of W.zones) { if (f.k !== 'saltfog') continue; const dx = m.x - f.x, dy = m.y - f.y, l = hyp(dx, dy) || 0.1, pad = m.C >= P.arch.cMin ? P.arch.fogPad : 0.5; if (l < f.r + pad && m.z < P.salt.h) { K.vx = dx / l * 4; K.vy = dy / l * 4; return; } }   // 안개 밖으로
         if (m.C < P.arch.cMin) return;

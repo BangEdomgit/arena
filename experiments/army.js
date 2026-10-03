@@ -58,7 +58,7 @@ const SCENES = {
   // 포병 (v2.31): 들판·기습·소금 도시·소금 성채에 포대를 더한다. 기습은 소금 탄까지(덱 그대로: 포는 셋 다 싣는다)
   'field-gun': s => withGuns(SCENES['field-musket'](s), [[640, 280], [640, 300], [640, 320]], '들판 + 포: 대마법사 대 머스킷 100 + 청동포 셋'),
   'ambush-gun': s => withGuns(SCENES.ambush(s), arcPts(GUNN, 6, 15, 14), '기습 + 포 + 소금: 대마법사 대 머스킷 40 반원 + 청동포 ' + GUNN + '(산탄·소금 탄)'),
-  'salt-city-gun': s => withGuns(SCENES['salt-city'](s), [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56]], '소금 도시 + 포: 대마법사 대 머스킷 60 + 청동포 셋'),
+  'salt-city-gun': s => withGuns(SCENES['salt-city'](s), [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [3, 40], [8, 110], [110, 84], [60, 56]], '소금 도시 + 포: 대마법사 대 머스킷 60 + 청동포 열 (맨땅 띠를 따라 여덟, 광장에 둘)'),
   'salt-fort': s => Object.assign(JSON.parse(JSON.stringify(SALTFORT)), { seed: s }),
   'salt-fort-gun': s => withGuns(SCENES['salt-fort'](s), [[150, 70], [150, 80]], '소금 성채 + 포: 대마법사 대 보루 안의 머스킷 34 + 청동포 둘'),
 };
