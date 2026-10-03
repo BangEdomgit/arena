@@ -1,0 +1,11 @@
+{
+ "desc": "붙잡기 (rules.ringHold, v2.39, SPEC 60장). 고리 장부(ringLedger) 위에서. 뇌가 짓고 띠가 붙잡아 돌린다: 새긴 진(자동 진 여럿·종류), 잔기술 여럿을 함께 켜 두기, 준비된 수. 붙잡은 것은 하나에 고리 하나",
+ "arrays": { "n": [[8, 6, 4], [4, 3, 2], [2, 1, 1]], "order": ["react", "psv0", "psv1", "cushion", "psv2", "heal", "react"] },
+ "auto": { "lead": 0.15, "r": 3, "pr": 1.5, "on": 0.4, "heat": 0.3 },
+ "heal": { "min": 5, "k": 0.3, "cd": 1, "heat": 0.5 },
+ "cushion": { "k": 0.3 },
+ "psv": { "L": 3, "heat": 1 },
+ "prep": { "L": 3, "cap": 3, "heat": 0.3, "fatMax": 45, "gluMin": 30, "heatCap": 70, "hk": 2, "quietT": 1.5, "wait": 2, "maxHold": 8, "loseT": 0.4 },
+ "v": { "more": 5.5 },
+ "note": "arrays.n: [선명도 이상, 새길 진의 최대, 남겨 둘 일하는 고리] — 새길 수 = min(최대, 서클 − 일하는 고리): 대마법사 서클 8 → 4 · 서클 11 → 6, 상위 서클 4 → 2 · 5~6 → 3, 중간 서클 2~3 → 1 (WORLD 4-1 자동 진: 중간 1 · 상위 2~3 · 대마법사 여러 개). order: 새기는 차례(psvN은 상대들의 책에 N+1번째로 많은 피해 종류, 없으면 건너뜀, cushion은 날기가 켜진 판만, 두 번째 react는 자동 대처가 그만큼 빨리 다시 돈다). auto: 자동 잔기술 — 그 종류의 보이는 공격이 lead s 안에 내 둘레 r m(투사체는 지나가는 거리 pr m)에 닿으면 on s 켜진다(헛켜짐 포함), 켤 때마다 머리 heat. heal: 둔기 상처가 min 넘으면 × (1 − k), cd s마다, 머리 heat. cushion: 추락 피해 × k. psv: 함께 켜 두는 잔기술(tac.passive ≥ L), 초당 머리 heat. prep: 준비된 수(tac.passive ≥ L) — cap개까지, 붙잡는 동안 하나에 초당 머리 heat, 머리 fatMax 넘거나 당 gluMin 아래면 짓지 않고, (지금 머리 + 쥔 수들의 머리 열 + 이 수 × hk)가 heatCap을 넘으면 쥐지 않는다. quietT: 이 안에 나를 겨눈 예비동작이 있으면 조용하지 않다. loseT: 나를 겨눈 수가 이 안에 닿으면 쥔 것을 먼저 푼다(굳으면 흩어지니). wait: 다 쥐고 이만큼이면 기회가 없어도 푼다, maxHold: 첫 수를 쥔 지 이만큼이면 푼다. v.more: 함께 켜 둘 잔기술 하나의 장부 값(두 번째 칸 8 · 잔기술 5 사이)"
+}

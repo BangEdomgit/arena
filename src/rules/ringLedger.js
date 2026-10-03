@@ -14,8 +14,10 @@ const ST = new WeakMap(), XK = new WeakMap(), WS = new WeakMap();   // 사람 �
 const tierOf = m => m.C >= 8 ? '대마법사' : m.C >= 4 ? '상위' : m.C >= 2 ? '중간' : m.C >= 0.9 ? '평범' : '병사';
 const T0 = () => ({ T: 0, full: 0, ringT: 0, usedT: 0, drop: { fly: 0, psv: 0, hold: 0, auto: 0, B: 0 }, hist: [0, 0, 0, 0, 0, 0, 0, 0, 0], xN: 0, xRel: 0, xLost: 0, xDrop: 0 });
 function wsOf(W) { let s = WS.get(W); if (!s) WS.set(W, s = { by: {} }); return s; }
-function stOf(m) { let s = ST.get(m); if (!s) ST.set(m, s = { X: [], F: 0, R: 0, fly: true, film: true, psv: true, auto: true, hold: true, B: true, over: 0 }); return s; }
-const KS = ['chorus', 'B', 'hold', 'fly', 'film', 'psv', 'auto'], VAL = [0, 0, 0, 0, 0, 0, 0], HAS = [false, false, false, false, false, false, false];
+function stOf(m) { let s = ST.get(m); if (!s) ST.set(m, s = { X: [], F: 0, R: 0, fly: true, film: true, psv: true, auto: true, hold: true, B: true, chorus: true, more: 0, over: 0 }); return s; }
+const KS = ['chorus', 'B', 'hold', 'fly', 'film', 'psv', 'auto', 'more'], VAL = [0, 0, 0, 0, 0, 0, 0, 0], NEED = [0, 0, 0, 0, 0, 0, 0, 0], GOT = [0, 0, 0, 0, 0, 0, 0, 0];
+// 바깥 규칙의 일 (v2.39, rules/ringHold: 새긴 진·준비된 수는 늘 먼저, 함께 켜 둔 잔기술은 값 more로). 없으면 예전 그대로
+let EXT = null;
 // 지금 쥔 수들이 풀릴 때 더해질 머리 열 (첫 칸 × 1, 두 번째 × 1.3, k번째 X × (1 + heat (k + 1)))
 const TU = require('./tune').api, LN2 = Math.LN2;
 // 한 시전이 풀릴 때의 머리 열 (손잡이를 돌렸으면 그 값: rules/tune의 비용 × log₂(1 + E), 숨기면 더)
@@ -32,24 +34,27 @@ function alloc(X, W, m) {
   if (m.cast || m.chan) fixed++; fixed += S.X.length;
   for (const z of W.zones) if (z.up && z.src === m) fixed++;
   if (m.buf.speed || m.buf.elecRes || m.buf.bluntRes || m.buf.toxRes) fixed++;
+  const ext = EXT && EXT.on(W, m); if (ext) fixed += EXT.fixed(W, m);
   const flying = W.rules.flight && ((m.z >= 1 && m.fly === 1) || m.flyWant);
   let danger = false; if (flying) { for (const a of W.areas) if (a.src.side !== m.side && !a.vis && X.hyp(a.x - m.x, a.y - m.y) < a.r + P.danger) { danger = true; break; }
     if (!danger) for (const t of W.traps) if (t.src.side !== m.side && X.hyp(t.x - m.x, t.y - m.y) < P.danger) { danger = true; break; } }
   let aimed = false; if (W.rules.circles && m.circles >= 3) for (const q of W.foes[m.side]) if (q.hp > 0 && ((q.cast && q.cast.tgt === m) || (q.castB && q.castB.tgt === m) || xAt(q, m))) { aimed = true; break; }
   const b = m.castB, held = !!(b && b.hold && b.t >= b.T);
-  HAS[0] = !!CH.of(W, m); VAL[0] = V.chorus; HAS[1] = !!b && !held; VAL[1] = V.B; HAS[2] = held; VAL[2] = V.hold;
-  HAS[3] = !!flying; VAL[3] = danger ? V.flyDanger : V.fly; HAS[4] = !!flying && m.airFilm; VAL[4] = V.film;
-  HAS[5] = m.st.psv > 0; VAL[5] = PS.holdOn && PS.holdOn(W, m) ? V.psvHold : V.psv; HAS[6] = !!(W.rules.circles && m.circles >= 3); VAL[6] = aimed ? V.autoAimed : V.auto;
+  NEED[0] = CH.of(W, m) ? 1 : 0; VAL[0] = V.chorus; NEED[1] = b && !held ? 1 : 0; VAL[1] = V.B; NEED[2] = held ? 1 : 0; VAL[2] = V.hold;
+  NEED[3] = flying ? 1 : 0; VAL[3] = danger ? V.flyDanger : V.fly; NEED[4] = flying && m.airFilm ? 1 : 0; VAL[4] = V.film;
+  NEED[5] = m.st.psv > 0 ? 1 : 0; VAL[5] = PS.holdOn && PS.holdOn(W, m) ? V.psvHold : V.psv; NEED[6] = !ext && W.rules.circles && m.circles >= 3 ? 1 : 0; VAL[6] = aimed ? V.autoAimed : V.auto;   // 진을 새겨 두면(ringHold) 자동 진은 늘 먼저
+  NEED[7] = ext ? EXT.want(W, m) : 0; VAL[7] = ext ? EXT.value(W, m) : 0;
   let left = R - fixed; S.over = left < 0 ? -left : 0; if (left < 0) left = 0;
-  S.chorus = S.B = S.hold = S.fly = S.film = S.psv = S.auto = true;
-  // 값이 높은 차례로 (일곱이라 고르기 정렬 없이 매번 가장 큰 것)
-  for (let n = 0; n < 7; n++) { let bi = -1; for (let i = 0; i < 7; i++) if (HAS[i] && (bi < 0 || VAL[i] > VAL[bi])) bi = i; if (bi < 0) break; HAS[bi] = false;
-    if (left > 0) left--; else S[KS[bi]] = false; }
+  S.chorus = S.B = S.hold = S.fly = S.film = S.psv = S.auto = true; for (let i = 0; i < 8; i++) GOT[i] = 0;
+  // 값이 높은 차례로 (여덟이라 고르기 정렬 없이 매번 가장 큰 것. more는 여럿을 바랄 수 있다)
+  for (;;) { let bi = -1; for (let i = 0; i < 8; i++) if (NEED[i] > 0 && (bi < 0 || VAL[i] > VAL[bi])) bi = i; if (bi < 0) break; NEED[bi]--;
+    if (left > 0) { left--; GOT[bi]++; } else if (bi < 7) S[KS[bi]] = false; }
+  S.more = GOT[7];
   if (S.fly === false) S.film = false;
   S.R = R; S.F = left; return S;
 }
 module.exports = {
-  name: 'ringLedger', switch: 'ringLedger', api: { P, stats: W => wsOf(W).by, extra: m => stOf(m).X, ledger: m => ST.get(m) || null, alloc: (W, m) => alloc(XX, W, m) },
+  name: 'ringLedger', switch: 'ringLedger', api: { P, stats: W => wsOf(W).by, extra: m => stOf(m).X, ledger: m => ST.get(m) || null, alloc: (W, m) => alloc(XX, W, m), heatOf: c => heatOf(c), crowded: (m, K) => crowded(m, K), ext: e => { EXT = e; } },
   engine: X => {
     XX = X;
     return {
