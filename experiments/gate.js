@@ -1,6 +1,6 @@
 'use strict';
 /* 숨 결투장 — v3.0 문턱 (GATE-v4.md, v2.16, SPEC 40장): 1장의 목표 수치를 모두 재서 통과·불합격·애매·못 잼으로 판정하고 버전마다 쌓는다
- *   node cli.js gate [--quick] [--show] [--out 파일]      → reports/gate.json(원자료)·reports/gate.md(표)
+ *   node cli.js gate [--quick] [--show] [--out 파일] [--rules '{…}']      → reports/gate.json(원자료)·reports/gate.md(표)
  * 판정 (99%): 값의 99% 신뢰 구간(± 2.576 표준오차)이 목표 안이면 ✓ 통과, 목표와 겹치지 않으면 ✗ 불합격, 걸치면 △ 애매(통과로 치지 않음), 잴 수 없으면 — 못 잼.
  *   표준오차: 평균은 표본 표준편차 / √n, 몫(승률·비율)은 √(p(1−p)/n), 시험·결정론·계산 시간처럼 한 번에 정해지는 값은 0.
  * 판 수 (GATE 머리): 결투 100판, 사다리 400판, 무리 20판. --quick이면 결투 30·사다리 100·무리 10 (판정은 그 판 수로)
@@ -15,7 +15,8 @@ const fs = require('fs'), path = require('path'), A = require('../src');
 const ROOT = path.join(__dirname, '..'), ARENA = path.join(ROOT, 'sandbox', 'scenes', 'v2-tactics-legend.json'), Z = 2.576;
 const SK = ['초보', '중급', '상급', '대가', '전설'], ELEMS = ['불', '번개', '흙', '물', '얼음', '독'], TYPES = ['서퍼', '메타', '이단'], BASE = ['합법 최강', '광역', '기본기', '기술', '큰 수'];
 const OLD = '대마법사 청사진';   // 옛 덱 줄: v2.17에 결투장 덱이 바뀌어 두세 버전은 옛 덱으로도 잰다. 그만 잴 때 ''로
-const arena = () => JSON.parse(fs.readFileSync(ARENA, 'utf8'));
+const EXTRA = process.env.GATE_RULES ? JSON.parse(process.env.GATE_RULES) : null;   // --rules '{…}' (v2.37): 결투장·막는 수의 장면 규칙에 덧씌운다 (일꾼도 같은 환경을 받는다)
+const arena = () => { const sc = JSON.parse(fs.readFileSync(ARENA, 'utf8')); if (EXTRA) sc.rules = Object.assign({}, sc.rules, EXTRA); return sc; };
 
 /* ---------------- 일감 (일꾼이 부른다) ---------------- */
 // 결투장: 두 단계(a, b)로 씨앗 s0..s0+n−1, 판마다 자리를 번갈아. 지표가 필요하면 look
@@ -33,7 +34,7 @@ function arenaGames(a, b, s0, n, look, deck) {
 const NOW = { profile: '지금' };   // H줄은 지금의 규칙으로 (v2.24.1)
 function duels(a, b, s0, n, rules) { const { part } = require('./versus'); return part(a, b, s0, n, rules || {}); }
 function crowdJob(n, s0, cnt) { return require('./crowd').run(n, s0, cnt); }
-function boundJob(n, s0, cnt, arch) { return typeof n === 'string' ? require('./bound').run(n, 0, s0, cnt, {}) : require('./bound').run('상위', n, s0, cnt, { squad: true, arch }); }   // n이 조건 id면 그 조건 (v2.33: H17 = c32)   // v2.28: 막는 수·잡는 수 (전투단 + 합창)
+function boundJob(n, s0, cnt, arch) { return typeof n === 'string' ? require('./bound').run(n, 0, s0, cnt, { rules: EXTRA }) : require('./bound').run('상위', n, s0, cnt, { squad: true, arch, rules: EXTRA }); }   // n이 조건 id면 그 조건 (v2.33: H17 = c32)   // v2.28: 막는 수·잡는 수 (전투단 + 합창)
 function squadJob(n, s0, cnt) { return require('./squad').run(n, s0, cnt, 1); }   // v2.26: 전투단 (rules.squad, tac.squad)
 function ringJob(c, q, n, s0, cnt, maxT) { return require('./jobs').crowd(c, q, n, s0, cnt, NOW, 'ring', maxT); }
 function armyJob(name, s0, cnt) { return require('./army').run(name, s0, cnt); }
@@ -265,6 +266,7 @@ function render(card) {
 }
 async function main(args) {
   const opt = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
+  if (opt('--rules')) process.env.GATE_RULES = opt('--rules');
   const file = opt('--out') || path.join(ROOT, 'reports', 'gate.json'), md = file.replace(/\.json$/, '.md'); let card; try { card = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { card = { versions: {} }; }
   if (!args.includes('--show')) { const r = await measure(args.includes('--quick')); card.versions[A.VERSION] = Object.assign({ date: new Date().toISOString().slice(0, 10) }, r); fs.writeFileSync(file, JSON.stringify(card, null, 1) + '\n'); fs.writeFileSync(md, render(card)); console.log(`v${A.VERSION} 잼 (${r.sec} s) → ${path.relative(process.cwd(), md)}`); }
   console.log(render(card));

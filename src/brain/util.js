@@ -46,9 +46,11 @@ function estDmg0(s) {
 // 머리 넘침 (v2.6, 스스로 죽지 않기): 지금 이 마법을 시작해 Tc 뒤에 풀면 그때 굳는가(폭주). 날면 머리가 더 뜨거워진다(비행 피로 − 회복 4/s).
 // 파도: 이미 탔거나 스스로 고른 파도(파도 고르기, 전설)면 170에서 휩쓸리는지만 본다. 고르지 않은 파도(100을 넘으면 저절로 오른다)는 타지 않는다:
 // 몸을 태우고(초당 1.5~2.4) 170에서 휩쓸린다. 대가/상급이 0.63 → 0.76 (reports/v2.6.0.md)
+// 쥔 수들이 풀릴 때 더해질 머리 열 (v2.37, 두뇌 훅 heat: 셋째 칸부터의 수, rules/ringLedger). 훅이 없으면 0
+function pendHeat(W, m) { let h = 0; const hs = W._bh.heat; for (let i = 0; i < hs.length; i++) h = hs[i](W, m, h); return h; }
 function heatOver(W, m, cost, Tc, mul) {
   if (!W.rules.fatigue) return false;
-  const L = m.load || 0, air = m.fly === 1 && m.z >= 1 ? 1 + 6 * L + (L > 1 ? 40 * (L - 1) : 0) : 0, f0 = m.fat + (air - 4) * (Tc > 0 ? Tc : 0), f = (air && m.fat <= 100 && f0 > 100 ? 100 : f0) + cost * mul * 1.6;   // 비행 피로는 100에서 멈춘다
+  const L = m.load || 0, air = m.fly === 1 && m.z >= 1 ? 1 + 6 * L + (L > 1 ? 40 * (L - 1) : 0) : 0, f0 = m.fat + pendHeat(W, m) + (air - 4) * (Tc > 0 ? Tc : 0), f = (air && m.fat <= 100 && f0 > 100 ? 100 : f0) + cost * mul * 1.6;   // 비행 피로는 100에서 멈춘다
   if (W.rules.wave && m.type !== '이단' && (m.wave || (m.tac.waveChoose && m.waveWant))) return f > 165;   // 고르지 않은 파도는 타지 않는다: 몸을 태우고 170에서 휩쓸린다
   if (W.rules.wave && m.type === '이단') return false;
   return f > 97;   // 모으는 동안 끊기·쿠션(1.5씩)이 더할 몫을 남긴다
@@ -166,4 +168,4 @@ function defenseDown(e, S, W) {
 
 // 상대가 숨긴 수(손잡이)를 쓰나: 풀린 수는 보인다(손잡이 규칙의 기록 m.mlog.tune의 'h' 열쇠, v2.20)
 const hidesOf = e => { const T = e && e.mlog.tune; if (!T) return false; for (const k in T) if (k.charCodeAt(k.length - 1) === 104) return true; return false; };
-module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf, ringsOf };
+module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf, ringsOf, pendHeat };

@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.36.0
+ * 숨 결투장 — 엔진 핵심 v2.37.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -9,7 +9,7 @@
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.36.0';
+const VERSION = '2.37.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -57,6 +57,7 @@ const DEFAULT_RULES = {
   gunfire: false,      // (v2.25) 총의 쏨: 머스킷은 풀 때까지 과녁을 따라 겨누고, 떡대·잔기술은 총알을 줄이지 않는다 (SPEC 48장, rules/gunfire)
   calm: false,         // (v2.25) 머리 아끼기: 낮은 단계(선명도 5 아래)는 파도를 타되 휩쓸리지 않는다 (SPEC 48장, rules/calm)
   squad: false,        // (v2.26) 전투단과 다수 대응: tac.squad 편의 지휘 겹(칠판·역할·조·번갈아·동시 체크·물러섬)과 선명도 5 이상의 다수 모드 (SPEC 49장, rules/squad)
+  ringLedger: false,   // (v2.37) 고리 장부 3단계: 모든 일(짓기·붙잡음·날기·공기막·잔기술·자동 진·몸·합창·버팀 벽)이 고리 하나씩, 모자라면 값이 낮은 것을 내려놓고, 빈 고리만큼 동시에 짓는다 (SPEC 59장, rules/ringLedger)
   chorusCast: false,   // (v2.34) 합창 설계: 합창은 고리·출력을 모아 앞소리꾼이 혼자는 못 쥐는 큰 마법·큰 손잡이·합창만의 마법(고요한 원·번개 장막·석회 고리·구름 걸기·곳간 터뜨리기·합창 방패)을 짓는다. 짓다 깨지면 역류 (SPEC 56장, rules/chorusCast)
   chorus: false,       // (v2.27) 합창: 박자를 맞춘 무리(상위 6·중간 3까지, 서로 10 m 안, 1.5 s)는 선명도 × √N, 앞소리꾼의 위력 × √N^2.5 (SPEC 50장, rules/chorus)
   steady: false,       // (v2.27) 중간의 읽기: 선명도 2~5는 적의 예비동작을 풀기 0.25 s 전부터만 읽는다 (SPEC 51장, rules/steady)

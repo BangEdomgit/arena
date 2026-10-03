@@ -97,6 +97,9 @@ module.exports = {"win":0.5,"pad":0.4,"read":0.3,"aheadT":[0.05,1.2],"aheadR":1.
 D["data/rules/response.json"] = [function (module, exports, require) {
 module.exports = {"reflex":{"window":0.2,"again":0.25},"brace":{"k":0.6,"dur":0.6,"fat":5,"speed":0.3,"within":0.35,"minDmg":12},"unbind":{"fat":12,"glu":4,"cd":5,"min":0.5},"levels":{"초보":{"reflex":0,"brace":false,"unbind":false},"중급":{"reflex":0.3,"brace":true,"unbind":false},"상급":{"reflex":0.5,"brace":true,"unbind":true},"대가":{"reflex":0.7,"brace":true,"unbind":true},"전설":{"reflex":0.85,"brace":true,"unbind":true}},"noSkill":{"autoDodge":{"reflex":0.4,"brace":true,"unbind":false},"plain":{"reflex":0,"brace":false,"unbind":false}}};
 }, {}];
+D["data/rules/ringLedger.json"] = [function (module, exports, require) {
+module.exports = {"desc":"고리 장부 3단계 (rules.ringLedger, v2.37, SPEC 59장). 서클 규칙(circles) 위에서. 모든 일이 고리 하나씩을 쓴다: 첫 칸(짓기·흐름)·두 번째 칸(짓기·붙잡음)·셋째 칸부터(X)·합창의 박자·버팀 벽마다·날기·공기막·잔기술·자동 진·몸 강화. 고리가 모자라면 값이 낮은 일부터 내려놓는다","v":{"A":10,"X":9.5,"bul":10,"body":10,"chorus":9,"B":8,"hold":6,"flyDanger":7.5,"fly":5,"film":7.4,"psvHold":7,"psv":5,"autoAimed":5.5,"auto":4},"danger":6,"x":{"heat":0.3,"glu":0.3,"fatMax":55,"gluMin":20,"heatCap":60,"capAll":80,"dropAt":85},"holdHeat":1.5,"note":"v: 일마다 고리의 값(높은 것부터 고리를 준다). A·X·bul·body는 이미 쥔 것이라 늘 먼저(내려놓을 수 없다). 날기는 둘레 danger m 안에 적의 안 보이는 구름·덫·해로운 지대가 있으면 flyDanger, 공기막은 날기와 함께(빠르게 날 때). 잔기술은 전설의 켜 두기(rules/passive hold) 중이면 psvHold. 자동 진은 나를 겨눈 수가 있으면 autoAimed. 내려놓기: 날기 → 내려앉는다, 잔기술 → 끈다, 붙잡음 → 거둔다, 자동 진 → 쉰다, 두 번째 칸·셋째 칸 → 새로 짓지 않는다. x: 셋째 칸부터 k번째(1부터)의 시전은 머리 열 × (1 + heat × (k + 1))·당 × (1 + glu × (k + 1)), 머리가 fatMax를 넘거나 당이 gluMin 아래면 새로 짓지 않는다. holdHeat: 동시에 짓는 수 n이 셋 이상이면 초당 머리 holdHeat × (n − 2) (많이 쥘 수 있어도 오래는 못 쥔다). x.heatCap: 지금 머리 + 쥔 수들이 풀릴 때의 머리 열 + 이 수의 머리 열이 이것을 넘으면 셋째 칸부터 짓지 않는다(폭주 막기). x.capAll: 셋째 칸부터 쥔 수가 있는 동안엔 첫·두 번째 칸의 수도 같은 셈으로 이것을 넘으면 짓지 않는다. x.dropAt: 셋째 칸부터의 수가 다 지어졌는데 풀면 (지금 머리 + 다른 쥔 수들의 머리 열 + 이 수의 머리 열)이 이것을 넘으면 풀지 않고 놓는다"};
+}, {}];
 D["data/rules/rings.json"] = [function (module, exports, require) {
 module.exports = {"desc":"고리 장부 (rules/rings, v2.22, SPEC 46장). 판에 닿지 않는다: 매 걸음 지금 상태에서 사람마다 고리(서클)의 쓰임을 읽어낸다(m.mlog.rings). 고리 수 = 서클 규칙이 켜지면 m.circles, 아니면 1. 엔진이 서클을 세는 것(날기·공기막·잔기술·버팀 벽·첫 칸·두 번째 칸)을 먼저, 보이기만 하는 것(자동 진: 서클 셋부터, 몸: 몸에 건 강화)은 남은 고리에. 한 번 앉은 고리는 그 일이 끝날 때까지 자리를 지킨다(안쪽부터). el: 원소 빛깔, look: 상태마다 그리는 모습(반지름 몫 r, 굵기 w, 점선 dash, 회전 spin 초당 바퀴), pulse: 쏜 뒤 튕겨 퍼지는 시간(s), flash: 자동 진이 막은 뒤 번쩍이는 시간(s). 빛깔·모습은 WORLD에 표가 들어오면 그대로 바꾼다 (지금은 임시)","el":{"불":"#ff7a3a","번개":"#b9a6ff","흙":"#c79a5b","물":"#4aa3ff","얼음":"#bff0ff","독":"#9bd45a","빛":"#fff3b0","신호":"#ff9ad5","없음":"#e9e4d8"},"psvEl":["","번개","흙","불"],"look":{"빈":{"c":"#8a8a8a","a":0.35,"dash":[1,4],"w":1},"짓기":{"w":2},"붙잡음":{"w":2.5,"dash":[6,3]},"잔기술":{"w":2,"r":0.55},"날기":{"c":"#ffffff","w":3,"a":0.55,"foot":1.8},"공기막":{"c":"#d9f3ff","w":1.5,"a":0.7,"dash":[3,2]},"자동 진":{"c":"#d8d1c3","w":1.5,"dash":[8,6],"spin":3},"버팀 벽":{"c":"#c79a5b","w":2},"몸":{"c":"#ffe0b0","w":1.5,"r":0.65}},"pulse":0.3,"flash":0.25,"minVis":0.15};
 }, {}];
@@ -674,8 +677,10 @@ function decide(W, m, K) {
 
   // ---- 칸 고르기 ----
   let slot = 'A';
-  if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else return; }   // 두 번째 칸은 대가부터 (기본은 씀)
-  if (empty) slot = 'B';
+  if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else slot = ''; }   // 두 번째 칸은 대가부터 (기본은 씀)
+  h = bh.slot; for (let i = 0; i < h.length; i++) slot = h[i](W, m, K, slot);   // 고리 장부 3단계: 빈 고리만큼 더 짓는다(셋째 칸부터 'X', rules/ringLedger, v2.37)
+  if (!slot) return;
+  if (empty && slot !== 'X') slot = 'B';
   K.slot = slot;
 
   // ---- 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다. 규칙이 고친다(파도의 부류, rules/wave) ----
@@ -838,7 +843,7 @@ function commit(W, m, K) {
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
   const plan = K.plan, cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint: fe, cost: best.cost, bait: m.baitT === W.t, roll0: e.roll > 0, down: !!(best.down || best.pin), fin: plan && s.n === plan.fin ? plan.land + 0.1 : 0, tz: 1, tf: 1, tv: 1, hid: false, unseen: false, tk: '', vis: 1 };
-  if (slot === 'B') m.castB = cast; else m.cast = cast;
+  if (slot === 'B') m.castB = cast; else if (slot !== 'X') m.cast = cast;   // 'X'는 규칙의 commit 훅이 쥔다
   // 행동 지표: 시작 시각, 빈틈, 콤보 시도
   m.log.starts.push(W.t); if (m.relT != null) { if (slot === 'A') { m.log.gapSum += W.t - m.relT; m.log.gapN++; if (m.log.gaps.length < 400) m.log.gaps.push(W.t - m.relT); } m.relT = null; }
   combo.tried(W, m, K, best, Tc);
@@ -863,7 +868,7 @@ D["src/brain/hooks.js"] = [function (module, exports, require) {
 const R = require('../rules'), U = require('./util');
 const BRN = new Map(), BT = {}; let btVer = -1;
 // 훅 모음: 이름마다 배열 하나 (리터럴이라 모양이 늘 같다). 이름은 rules/index.js의 BRAIN_HOOKS
-function emptyBH() { return { aim: [], read: [], hideCast: [], steer: [], avoid: [], empty: [], circles: [], react: [], cancel: [], rest: [], prep: [], value: [], valueRisk: [], valueMid: [], valueLate: [], commit: [], castTime: [], phase: [], bound: [], rings: [] };
+function emptyBH() { return { aim: [], read: [], hideCast: [], steer: [], avoid: [], empty: [], circles: [], react: [], cancel: [], rest: [], prep: [], value: [], valueRisk: [], valueMid: [], valueLate: [], commit: [], castTime: [], phase: [], bound: [], rings: [], slot: [], heat: [] };
   }
 // 규칙의 두뇌 훅이 받는 것: 두뇌 도구(util) + 기술의 공용 도구 B.lib (v2.23.1: 규칙은 두뇌 파일을 require하지 않는다)
 let BL_ = null; const BL = () => BL_ || (BL_ = Object.assign({}, U, { lib: require('./lib') }));
@@ -890,7 +895,7 @@ module.exports = { hooks, types };
 D["src/brain/index.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v2.36.0
+ * 숨 결투장 — 기본 두뇌 v2.37.0
  * 판단 순서: 읽기(read) → 입장(stance) → 움직임(move) → 고르기(choose: 자동 진 → 칸 → 휴식 → 마법 고르기)
  * 기술(콤보·속임수·엄폐·유도·학습·덱 읽기·붙잡기…)은 techniques/에 하나씩, 어느 단계가 어떤 기술을 켜는지는 skills.js(data/skills.json).
  * 규칙(스위치)에 딸린 판단은 그 규칙 파일(src/rules/)의 brain 훅에 있다. 세계마다 켜진 규칙의 훅만 모은다(hooks.js).
@@ -922,7 +927,7 @@ function think(W, m) {
   decide(W, m, K);
 }
 
-module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.36.0' };
+module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.37.0' };
 }, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/rhythm":"src/brain/techniques/rhythm.js","./techniques/engage":"src/brain/techniques/engage.js","./plan":"src/brain/plan/index.js","./read":"src/brain/read.js","./stance":"src/brain/stance.js","./move":"src/brain/move.js","./choose":"src/brain/choose.js"}];
 D["src/brain/lib/index.js"] = [function (module, exports, require) {
 'use strict';
@@ -2369,9 +2374,11 @@ function estDmg0(s) {
 // 머리 넘침 (v2.6, 스스로 죽지 않기): 지금 이 마법을 시작해 Tc 뒤에 풀면 그때 굳는가(폭주). 날면 머리가 더 뜨거워진다(비행 피로 − 회복 4/s).
 // 파도: 이미 탔거나 스스로 고른 파도(파도 고르기, 전설)면 170에서 휩쓸리는지만 본다. 고르지 않은 파도(100을 넘으면 저절로 오른다)는 타지 않는다:
 // 몸을 태우고(초당 1.5~2.4) 170에서 휩쓸린다. 대가/상급이 0.63 → 0.76 (reports/v2.6.0.md)
+// 쥔 수들이 풀릴 때 더해질 머리 열 (v2.37, 두뇌 훅 heat: 셋째 칸부터의 수, rules/ringLedger). 훅이 없으면 0
+function pendHeat(W, m) { let h = 0; const hs = W._bh.heat; for (let i = 0; i < hs.length; i++) h = hs[i](W, m, h); return h; }
 function heatOver(W, m, cost, Tc, mul) {
   if (!W.rules.fatigue) return false;
-  const L = m.load || 0, air = m.fly === 1 && m.z >= 1 ? 1 + 6 * L + (L > 1 ? 40 * (L - 1) : 0) : 0, f0 = m.fat + (air - 4) * (Tc > 0 ? Tc : 0), f = (air && m.fat <= 100 && f0 > 100 ? 100 : f0) + cost * mul * 1.6;   // 비행 피로는 100에서 멈춘다
+  const L = m.load || 0, air = m.fly === 1 && m.z >= 1 ? 1 + 6 * L + (L > 1 ? 40 * (L - 1) : 0) : 0, f0 = m.fat + pendHeat(W, m) + (air - 4) * (Tc > 0 ? Tc : 0), f = (air && m.fat <= 100 && f0 > 100 ? 100 : f0) + cost * mul * 1.6;   // 비행 피로는 100에서 멈춘다
   if (W.rules.wave && m.type !== '이단' && (m.wave || (m.tac.waveChoose && m.waveWant))) return f > 165;   // 고르지 않은 파도는 타지 않는다: 몸을 태우고 170에서 휩쓸린다
   if (W.rules.wave && m.type === '이단') return false;
   return f > 97;   // 모으는 동안 끊기·쿠션(1.5씩)이 더할 몫을 남긴다
@@ -2489,12 +2496,12 @@ function defenseDown(e, S, W) {
 
 // 상대가 숨긴 수(손잡이)를 쓰나: 풀린 수는 보인다(손잡이 규칙의 기록 m.mlog.tune의 'h' 열쇠, v2.20)
 const hidesOf = e => { const T = e && e.mlog.tune; if (!T) return false; for (const k in T) if (k.charCodeAt(k.length - 1) === 104) return true; return false; };
-module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf, ringsOf };
+module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf, ringsOf, pendHeat };
 }, {"../core":"src/core.js"}];
 D["src/core.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.36.0
+ * 숨 결투장 — 엔진 핵심 v2.37.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -2503,7 +2510,7 @@ D["src/core.js"] = [function (module, exports, require) {
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.36.0';
+const VERSION = '2.37.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -2551,6 +2558,7 @@ const DEFAULT_RULES = {
   gunfire: false,      // (v2.25) 총의 쏨: 머스킷은 풀 때까지 과녁을 따라 겨누고, 떡대·잔기술은 총알을 줄이지 않는다 (SPEC 48장, rules/gunfire)
   calm: false,         // (v2.25) 머리 아끼기: 낮은 단계(선명도 5 아래)는 파도를 타되 휩쓸리지 않는다 (SPEC 48장, rules/calm)
   squad: false,        // (v2.26) 전투단과 다수 대응: tac.squad 편의 지휘 겹(칠판·역할·조·번갈아·동시 체크·물러섬)과 선명도 5 이상의 다수 모드 (SPEC 49장, rules/squad)
+  ringLedger: false,   // (v2.37) 고리 장부 3단계: 모든 일(짓기·붙잡음·날기·공기막·잔기술·자동 진·몸·합창·버팀 벽)이 고리 하나씩, 모자라면 값이 낮은 것을 내려놓고, 빈 고리만큼 동시에 짓는다 (SPEC 59장, rules/ringLedger)
   chorusCast: false,   // (v2.34) 합창 설계: 합창은 고리·출력을 모아 앞소리꾼이 혼자는 못 쥐는 큰 마법·큰 손잡이·합창만의 마법(고요한 원·번개 장막·석회 고리·구름 걸기·곳간 터뜨리기·합창 방패)을 짓는다. 짓다 깨지면 역류 (SPEC 56장, rules/chorusCast)
   chorus: false,       // (v2.27) 합창: 박자를 맞춘 무리(상위 6·중간 3까지, 서로 10 m 안, 1.5 s)는 선명도 × √N, 앞소리꾼의 위력 × √N^2.5 (SPEC 50장, rules/chorus)
   steady: false,       // (v2.27) 중간의 읽기: 선명도 2~5는 적의 예비동작을 풀기 0.25 s 전부터만 읽는다 (SPEC 51장, rules/steady)
@@ -3239,7 +3247,7 @@ module.exports = { SPELLS: spells(), BOOKS: require('../data/books.json'), DECKS
 }, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/빛.json":"data/spells/빛.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
 D["src/index.js"] = [function (module, exports, require) {
 'use strict';
-/* 숨 결투장 v2.36.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v2.37.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (sandbox/arena.js 묶음, node cli.js pack)
  * 데이터(마법·마법책·덱·등급·판단 수준·장비)는 data/에 JSON으로 있다. 판단 수준은 brain/skills.js, 행동 지표는 metrics/look.js */
 const core = require('./core'), brain = require('./brain'), makeRegistry = require('./registry');
@@ -3396,7 +3404,7 @@ module.exports = { sin, cos, atan, atan2, exp, log, pow, hyp, hyp3, clamp, mulbe
 D["src/registry.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 등록 v2.36.0
+ * 숨 결투장 — 등록 v2.37.0
  * 새 마법·덱·등급·두뇌·규칙을 붙이는 곳. Arena.register.spell(...) 모양으로 쓴다.
  * 등록한 것은 그 프로세스(브라우저 탭) 안의 모든 판에 붙는다. 한 장면에서만 덮으려면 장면의 spells·decks를 쓴다.
  * 규칙은 규칙 모듈(SPEC 22장)로 붙는다: src/rules/의 파일과 같은 모양
@@ -5154,10 +5162,10 @@ D["src/rules/index.js"] = [function (module, exports, require) {
  *   types·brainTypes: 새 마법 틀의 방출과 두뇌의 값. 틀은 스위치와 상관없이 늘 붙는다(마법이 규칙에 딸리면 rule 필드가 책에서 뺀다)
  *   brain: 두뇌 훅. 기본 두뇌가 세계마다 켜진 규칙의 것만 모은다 (brain/hooks.js)
  * 차례가 곧 같은 훅 안의 부르는 차례다. 예전 한 덩어리의 계산 차례를 그대로 따른다(결과가 비트 하나 안 바뀌게). 새 규칙은 뒤에 붙는다 */
-const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light'), require('./bulwark'), require('./army'), require('./morale'), require('./saltLand'), require('./fort'), require('./snap'), require('./reflex'), require('./blueprint'), require('./tactics'), require('./endure'), require('./hold'), require('./breath'), require('./pace'), require('./passive'), require('./tune'), require('./stunRes'), require('./rings'), require('./chipGuard'), require('./gunfire'), require('./calm'), require('./squad'), require('./chorus'), require('./steady'), require('./drain'), require('./fireLane'), require('./saltWise'), require('./selfSafe'), require('./crowdFire'), require('./unstuck'), require('./edgeCancel'), require('./artillery'), require('./chorusCast')];
+const RULES = [require('./gear'), require('./terrain'), require('./saltRing'), require('./wave'), require('./control'), require('./risk'), require('./taunt'), require('./multiSlot'), require('./barrels'), require('./response'), require('./silver'), require('./body'), require('./evade'), require('./flight'), require('./light'), require('./bulwark'), require('./army'), require('./morale'), require('./saltLand'), require('./fort'), require('./snap'), require('./reflex'), require('./blueprint'), require('./tactics'), require('./endure'), require('./hold'), require('./breath'), require('./pace'), require('./passive'), require('./tune'), require('./stunRes'), require('./rings'), require('./chipGuard'), require('./gunfire'), require('./calm'), require('./squad'), require('./chorus'), require('./steady'), require('./drain'), require('./fireLane'), require('./saltWise'), require('./selfSafe'), require('./crowdFire'), require('./unstuck'), require('./edgeCancel'), require('./artillery'), require('./chorusCast'), require('./ringLedger')];
 // 엔진 훅의 이름과 부르는 자리 (SPEC 22장 표). 값을 돌려주는 훅은 받은 값을 고쳐 돌려준다
 const ENGINE_HOOKS = ['place', 'init', 'world', 'wall', 'wallHit', 'lobLand', 'ceff', 'power', 'gate', 'share', 'release', 'overload', 'roll', 'hurtMod', 'hurt', 'effHold', 'eff', 'rain', 'smother', 'ring', 'fatRecover', 'mageStep', 'mageZones', 'move', 'speed', 'speedLate', 'accel', 'chan', 'projSub', 'ignite', 'areaHit', 'zoneTick', 'notice', 'trapCap', 'trapFire', 'preMove', 'castMove', 'walk', 'gluRegen', 'castHold', 'track', 'flyAccel', 'tune', 'stunHold', 'stepEnd', 'book'];
-const BRAIN_HOOKS = ['aim', 'read', 'hideCast', 'steer', 'avoid', 'empty', 'circles', 'react', 'cancel', 'rest', 'prep', 'value', 'valueRisk', 'valueMid', 'valueLate', 'commit', 'castTime', 'phase', 'bound', 'rings'];
+const BRAIN_HOOKS = ['aim', 'read', 'hideCast', 'steer', 'avoid', 'empty', 'circles', 'react', 'cancel', 'rest', 'prep', 'value', 'valueRisk', 'valueMid', 'valueLate', 'commit', 'castTime', 'phase', 'bound', 'rings', 'slot', 'heat'];
 let ver = 0;   // 목록이 바뀐 횟수 (엔진이 틀 표를 다시 만든다)
 const onOf = r => r.on || (r.switch ? W => !!W.rules[r.switch] : () => true);
 // 규칙을 더한다(같은 이름이면 바꾼다). 스위치가 있으면 기본값을 DEFAULT_RULES에 적는 건 부르는 쪽(registry)
@@ -5168,7 +5176,7 @@ function add(r) {
 }
 function remove(name) { const i = RULES.findIndex(x => x.name === name); if (i >= 0) { RULES.splice(i, 1); ver++; } }
 module.exports = { RULES, ENGINE_HOOKS, BRAIN_HOOKS, onOf, add, remove, ver: () => ver };
-}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js","./bulwark":"src/rules/bulwark.js","./army":"src/rules/army.js","./morale":"src/rules/morale.js","./saltLand":"src/rules/saltLand.js","./fort":"src/rules/fort.js","./snap":"src/rules/snap.js","./reflex":"src/rules/reflex.js","./blueprint":"src/rules/blueprint.js","./tactics":"src/rules/tactics.js","./endure":"src/rules/endure.js","./hold":"src/rules/hold.js","./breath":"src/rules/breath.js","./pace":"src/rules/pace.js","./passive":"src/rules/passive.js","./tune":"src/rules/tune.js","./stunRes":"src/rules/stunRes.js","./rings":"src/rules/rings.js","./chipGuard":"src/rules/chipGuard.js","./gunfire":"src/rules/gunfire.js","./calm":"src/rules/calm.js","./squad":"src/rules/squad.js","./chorus":"src/rules/chorus.js","./steady":"src/rules/steady.js","./drain":"src/rules/drain.js","./fireLane":"src/rules/fireLane.js","./saltWise":"src/rules/saltWise.js","./selfSafe":"src/rules/selfSafe.js","./crowdFire":"src/rules/crowdFire.js","./unstuck":"src/rules/unstuck.js","./edgeCancel":"src/rules/edgeCancel.js","./artillery":"src/rules/artillery.js","./chorusCast":"src/rules/chorusCast.js"}];
+}, {"./gear":"src/rules/gear.js","./terrain":"src/rules/terrain.js","./saltRing":"src/rules/saltRing.js","./wave":"src/rules/wave.js","./control":"src/rules/control.js","./risk":"src/rules/risk.js","./taunt":"src/rules/taunt.js","./multiSlot":"src/rules/multiSlot.js","./barrels":"src/rules/barrels.js","./response":"src/rules/response.js","./silver":"src/rules/silver.js","./body":"src/rules/body.js","./evade":"src/rules/evade.js","./flight":"src/rules/flight.js","./light":"src/rules/light.js","./bulwark":"src/rules/bulwark.js","./army":"src/rules/army.js","./morale":"src/rules/morale.js","./saltLand":"src/rules/saltLand.js","./fort":"src/rules/fort.js","./snap":"src/rules/snap.js","./reflex":"src/rules/reflex.js","./blueprint":"src/rules/blueprint.js","./tactics":"src/rules/tactics.js","./endure":"src/rules/endure.js","./hold":"src/rules/hold.js","./breath":"src/rules/breath.js","./pace":"src/rules/pace.js","./passive":"src/rules/passive.js","./tune":"src/rules/tune.js","./stunRes":"src/rules/stunRes.js","./rings":"src/rules/rings.js","./chipGuard":"src/rules/chipGuard.js","./gunfire":"src/rules/gunfire.js","./calm":"src/rules/calm.js","./squad":"src/rules/squad.js","./chorus":"src/rules/chorus.js","./steady":"src/rules/steady.js","./drain":"src/rules/drain.js","./fireLane":"src/rules/fireLane.js","./saltWise":"src/rules/saltWise.js","./selfSafe":"src/rules/selfSafe.js","./crowdFire":"src/rules/crowdFire.js","./unstuck":"src/rules/unstuck.js","./edgeCancel":"src/rules/edgeCancel.js","./artillery":"src/rules/artillery.js","./chorusCast":"src/rules/chorusCast.js","./ringLedger":"src/rules/ringLedger.js"}];
 D["src/rules/light.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 빛 — 번쩍임·열선 (rules.light, v2.0 둘째 묶음, SPEC 25장, 마법은 data/spells/빛.json)
@@ -5454,7 +5462,7 @@ const active = m => m.st.psv > 0 && m.st.psvT >= P.onT;
 function off(W, m) { if (!(m.st.psv > 0)) return; m.st.psv = 0; m.st.psvT = 0; m.mlog.guardN++; m.mlog.gdOff = W.t; }
 function turnOn(W, m, p) { if (m.st.psv === p) return; if (m.st.psv > 0) { off(W, m); return; } if (W.t - m.mlog.gdOff < P.cd || m.st.stun > 0 || m.fat > P.fatOff - 5) return; m.st.psv = p; m.st.psvT = 1e-6; m.mlog.guardN++; m.mlog.gdOn = W.t; }
 module.exports = {
-  name: 'passive', switch: 'passives', api: { P, KIND, kindOf, psvOf, active, on, holdN: m => (HOLD.get(m) || { n: 0 }).n },
+  name: 'passive', switch: 'passives', api: { P, KIND, kindOf, psvOf, active, on, off, holdOn: (W, m) => { const h = HOLD.get(m); return !!h && W.t < h.t; }, holdN: m => (HOLD.get(m) || { n: 0 }).n },
   engine: X => ({
     hurtMod(W, m, v, kind, name) {
       if (!active(m) || KIND[kind] !== m.st.psv || (W.rules.gunfire && GF.isGun(W, name))) return v;   // 총알은 마력이 아니다 (rules/gunfire, v2.25)
@@ -5678,6 +5686,96 @@ module.exports = {
   }),
 };
 }, {"../math":"src/math.js","../../data/rules/response.json":"data/rules/response.json"}];
+D["src/rules/ringLedger.js"] = [function (module, exports, require) {
+'use strict';
+/* 규칙: 고리 장부 3단계 (rules.ringLedger, v2.37, SPEC 59장, 수는 data/rules/ringLedger.json) — 기본 꺼짐, 서클 규칙(circles) 위에서
+ * 1단계(rules/rings)는 읽어내기만 했다. 3단계는 장부 하나가 서클을 나눈다: 모든 일이 고리 하나씩을 쓴다
+ *   늘 먼저(이미 쥔 것): 첫 칸(짓기·흐름) · 셋째 칸부터의 짓기(X) · 버팀 벽마다 · 몸 강화(빠르기·절연·둔기·독 막기 가운데 걸린 것)
+ *   값으로 고른다(높은 것부터): 합창의 박자 · 두 번째 칸 · 붙잡음 · 날기(둘레가 위험하면 더) · 공기막 · 잔기술(전설의 켜 두기 중이면 더) · 자동 진(나를 겨눈 수가 있으면 더)
+ *   고리가 모자라 못 받은 일은 내려놓는다: 날기 → 내려앉는다(두뇌 훅 bound가 flyWant를 끈다), 잔기술 → 끈다, 붙잡음 → 거둔다, 자동 진 → 쉰다(두뇌 훅 circles)
+ * 동시에 짓기 = 빈 고리만큼(엔진의 두 칸 + 셋째 칸부터 X, 두뇌 훅 slot). X는 이 규칙이 쥐고 걸음마다 지어 풀며(엔진 훅 mageStep), 굳거나 쓰러지면 모두 흩어진다
+ *   k번째 X: 머리 열 × (1 + x.heat (k + 1))·당 × (1 + x.glu (k + 1)). 동시에 짓는 수 n이 셋 넘으면 초당 머리 holdHeat × (n − 2): 많이 쥘 수 있어도 오래는 못 쥔다
+ *   X는 상대의 예비동작 읽기(cast·castB)에 보이지 않는다(지금 엔진의 한계, 59장)
+ * 지표 (api.stats): 단계마다 고리가 꽉 찬 시간·고리 쓰임·내려놓은 시간, 시작할 때 동시에 짓는 수의 분포, X의 수·풀림·흩어짐 */
+const P = require('../../data/rules/ringLedger.json'), CH = require('./chorus').api, PS = require('./passive').api;
+let XX = null;   // 엔진의 것
+const ST = new WeakMap(), XK = new WeakMap(), WS = new WeakMap();   // 사람 → 장부, X 시전 → k, 세계 → 지표
+const tierOf = m => m.C >= 8 ? '대마법사' : m.C >= 4 ? '상위' : m.C >= 2 ? '중간' : m.C >= 0.9 ? '평범' : '병사';
+const T0 = () => ({ T: 0, full: 0, ringT: 0, usedT: 0, drop: { fly: 0, psv: 0, hold: 0, auto: 0, B: 0 }, hist: [0, 0, 0, 0, 0, 0, 0, 0, 0], xN: 0, xRel: 0, xLost: 0, xDrop: 0 });
+function wsOf(W) { let s = WS.get(W); if (!s) WS.set(W, s = { by: {} }); return s; }
+function stOf(m) { let s = ST.get(m); if (!s) ST.set(m, s = { X: [], F: 0, R: 0, fly: true, film: true, psv: true, auto: true, hold: true, B: true, over: 0 }); return s; }
+const KS = ['chorus', 'B', 'hold', 'fly', 'film', 'psv', 'auto'], VAL = [0, 0, 0, 0, 0, 0, 0], HAS = [false, false, false, false, false, false, false];
+// 지금 쥔 수들이 풀릴 때 더해질 머리 열 (첫 칸 × 1, 두 번째 × 1.3, k번째 X × (1 + heat (k + 1)))
+const TU = require('./tune').api, LN2 = Math.LN2;
+// 한 시전이 풀릴 때의 머리 열 (손잡이를 돌렸으면 그 값: rules/tune의 비용 × log₂(1 + E), 숨기면 더)
+function heatOf(c) { const s = c.s; let k = 1; if (c.tk) { const E = TU.energy(s, c.tz, c.tf, c.tv); k = XX.log(1 + E) / LN2 * (c.hid ? 1 + TU.P.hide.heat : 1); } return s.cost * 1.6 * k; }
+function pend(m, S) { let h = 0; if (m.cast) h += heatOf(m.cast); if (m.castB) h += heatOf(m.castB) * 1.3; for (let i = 0; i < S.X.length; i++) h += heatOf(S.X[i]) * (1 + P.x.heat * (i + 2)); return h; }
+// 장부: 이번 걸음의 일과 고리를 나눈다 (걸음마다, 새 객체 없이)
+function alloc(X, W, m) {
+  const S = stOf(m), V = P.v, R = W.rules.circles ? Math.max(1, m.circles) : 1; let fixed = 0;
+  if (m.cast || m.chan) fixed++; fixed += S.X.length;
+  for (const z of W.zones) if (z.up && z.src === m) fixed++;
+  if (m.buf.speed || m.buf.elecRes || m.buf.bluntRes || m.buf.toxRes) fixed++;
+  const flying = W.rules.flight && ((m.z >= 1 && m.fly === 1) || m.flyWant);
+  let danger = false; if (flying) { for (const a of W.areas) if (a.src.side !== m.side && !a.vis && X.hyp(a.x - m.x, a.y - m.y) < a.r + P.danger) { danger = true; break; }
+    if (!danger) for (const t of W.traps) if (t.src.side !== m.side && X.hyp(t.x - m.x, t.y - m.y) < P.danger) { danger = true; break; } }
+  let aimed = false; if (W.rules.circles && m.circles >= 3) for (const q of W.foes[m.side]) if (q.hp > 0 && ((q.cast && q.cast.tgt === m) || (q.castB && q.castB.tgt === m))) { aimed = true; break; }
+  const b = m.castB, held = !!(b && b.hold && b.t >= b.T);
+  HAS[0] = !!CH.of(W, m); VAL[0] = V.chorus; HAS[1] = !!b && !held; VAL[1] = V.B; HAS[2] = held; VAL[2] = V.hold;
+  HAS[3] = !!flying; VAL[3] = danger ? V.flyDanger : V.fly; HAS[4] = !!flying && m.airFilm; VAL[4] = V.film;
+  HAS[5] = m.st.psv > 0; VAL[5] = PS.holdOn && PS.holdOn(W, m) ? V.psvHold : V.psv; HAS[6] = !!(W.rules.circles && m.circles >= 3); VAL[6] = aimed ? V.autoAimed : V.auto;
+  let left = R - fixed; S.over = left < 0 ? -left : 0; if (left < 0) left = 0;
+  S.chorus = S.B = S.hold = S.fly = S.film = S.psv = S.auto = true;
+  // 값이 높은 차례로 (일곱이라 고르기 정렬 없이 매번 가장 큰 것)
+  for (let n = 0; n < 7; n++) { let bi = -1; for (let i = 0; i < 7; i++) if (HAS[i] && (bi < 0 || VAL[i] > VAL[bi])) bi = i; if (bi < 0) break; HAS[bi] = false;
+    if (left > 0) left--; else S[KS[bi]] = false; }
+  if (S.fly === false) S.film = false;
+  S.R = R; S.F = left; return S;
+}
+module.exports = {
+  name: 'ringLedger', switch: 'ringLedger', api: { P, stats: W => wsOf(W).by, extra: m => stOf(m).X, ledger: m => ST.get(m) || null, alloc: (W, m) => alloc(XX, W, m) },
+  engine: X => {
+    XX = X;
+    return {
+      mageStep(W, m) {
+        const S = stOf(m), dt = W.dt;
+        if (S.X.length) {   // 셋째 칸부터: 짓고 풀고, 굳거나 쓰러지면 흩어진다
+          const by = wsOf(W).by[tierOf(m)];
+          if (m.st.stun > 0 || !(m.hp > 0)) { if (by) by.xLost += S.X.length; S.X.splice(0); }
+          else { let w = 0; for (let i = 0; i < S.X.length; i++) { const c = S.X[i]; c.t += dt; if (c.t >= c.T) { const k = XK.get(c) || 1; if (W.rules.fatigue && !c.s.mundane && m.fat + heatOf(c) * (1 + P.x.heat * (k + 1)) > P.x.dropAt) { if (by) by.xDrop++; continue; } if (by) by.xRel++; X.release(W, m, c); } else S.X[w++] = c; } if (w < S.X.length) S.X.splice(w); }   // 풀면 머리가 넘칠 X는 놓는다(흩어짐, 머리 열 없이)
+        }
+        const n = (m.cast || m.chan ? 1 : 0) + (m.castB ? 1 : 0) + S.X.length; if (n > 2 && W.rules.fatigue) m.fat += P.holdHeat * (n - 2) * dt;   // 오래는 못 쥔다
+        const s = alloc(X, W, m);
+        if (!s.hold && m.castB && m.castB.hold) m.castB = null;   // 붙잡은 수를 내려놓는다
+        if (!s.psv && m.st.psv > 0) PS.off(W, m);
+        // 지표
+        const k = tierOf(m), WB = wsOf(W).by, by = WB[k] || (WB[k] = T0()); by.T += dt; by.ringT += s.R * dt; by.usedT += (s.R - s.F) * dt; if (s.F <= 0) by.full += dt;
+        if (!s.fly) by.drop.fly += dt; if (!s.psv && m.st.psv > 0) by.drop.psv += dt; if (!s.auto) by.drop.auto += dt; if (!s.B) by.drop.B += dt;
+      },
+      release(W, m, c) { const k = XK.get(c); if (k == null || !W.rules.fatigue || c.s.mundane) return; m.fat += c.s.cost * 1.6 * P.x.heat * (k + 1); },   // c.s는 이미 손잡이가 박힌 사본(cost에 log₂(1 + E))   // k번째 X의 머리 열
+    };
+  },
+  brain: B => ({
+    heat(W, m, h) { const s = ST.get(m); if (!s || !s.X.length) return h; let x = 0; for (let i = 0; i < s.X.length; i++) x += heatOf(s.X[i]) * (1 + P.x.heat * (i + 2)); return h + x + P.holdHeat * Math.max(0, (m.cast || m.chan ? 1 : 0) + (m.castB ? 1 : 0) + s.X.length - 2); },   // 쥔 셋째 칸부터의 수가 풀릴 때의 머리 열 + 1 s의 오래 쥠 (손잡이·스스로 죽지 않기가 본다)
+    circles(W, q, c) { const s = ST.get(q); if (!s) return c; return s.auto ? 3 : s.F >= 1 ? 2 : 1; },   // 장부가 정한 수: 자동 진이 고리를 받았나, 두 번째 칸에 빈 고리가 있나 (맨 뒤라 다른 규칙의 깎기를 덮는다)
+    slot(W, m, K, slot) {
+      const s = ST.get(m); if (!s) return slot;
+      if (slot === 'B' && s.F < 1) return '';
+      if (!slot && (m.cast || m.chan) && m.castB && s.F >= 1 && K.T.slotB && m.fat < P.x.fatMax && m.glu > P.x.gluMin) return 'X';   // 빈 고리만큼 더
+      return slot;
+    },
+    commit(W, m, K, best, cast) {
+      const s = stOf(m), WB = wsOf(W).by, k = tierOf(m), by = WB[k] || (WB[k] = T0());
+      if (K.slot === 'X') { s.X.push(cast); const x = s.X.length; XK.set(cast, x); m.glu -= best.cost * P.x.glu * (x + 1); if (m.glu < 0) m.glu = 0; by.xN++; }
+      const n = (m.cast || m.chan ? 1 : 0) + (m.castB ? 1 : 0) + s.X.length; by.hist[n < 8 ? n : 8]++;   // 시작할 때 동시에 짓는 수
+    },
+    bound(W, m, K) { const s = ST.get(m); if (!s) return; if (!s.fly && m.flyWant) m.flyWant = false; if (!s.psv && m.st.psv > 0) PS.off(W, m); },   // 내려놓은 날기·잔기술
+    valueLate(W, m, K, o) { const s = ST.get(m); if (!s || !(o.v > 0)) return;
+      if (W.rules.fatigue && (s.X.length || K.slot === 'X') && m.fat + pend(m, s) + o.s.cost * 1.6 * (K.slot === 'X' ? 1 + P.x.heat * (s.X.length + 2) : K.slot === 'B' ? 1.3 : 1) > (K.slot === 'X' ? P.x.heatCap : P.x.capAll)) { o.v = 0; return; }   // 쥔 수들이 풀릴 때의 머리 열까지 셈해 넘치면 셋째 칸부터는 짓지 않는다
+      const b = o.s.b; if (o.s.t === 'buff' && b && (b.speed || b.elecRes || b.bluntRes || b.toxRes) && s.F < 1) o.v = 0; },   // 몸 강화도 고리가 있어야
+  }),
+};
+}, {"../../data/rules/ringLedger.json":"data/rules/ringLedger.json","./chorus":"src/rules/chorus.js","./passive":"src/rules/passive.js","./tune":"src/rules/tune.js"}];
 D["src/rules/rings.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 고리 장부 (rules.rings, v2.22, SPEC 46장, 수는 data/rules/rings.json) — 1단계: 읽어내기만, 판에 닿지 않는다
@@ -6602,12 +6700,12 @@ function make(s, z, f, v, h) {
   return t;
 }
 // 손잡이 조합 하나의 값 (판단, commit이 부른다). 고르는 동안 같은 값은 TV에 모아 두고 다시 쓴다 (v2.23.1: 판단마다 새 함수를 만들지 않는다)
-const TV = { s: null, m: null, best: null, T0: 0, ext: 0, sees: false, lock: 0, vl: 0, reach: 0, gR: 0, hR: 0, d: 0 };
+const TV = { ex: 0, s: null, m: null, best: null, T0: 0, ext: 0, sees: false, lock: 0, vl: 0, reach: 0, gR: 0, hR: 0, d: 0 };
 function valueOf(z, f, v, h) {
   const s = TV.s, m = TV.m, best = TV.best, T0 = TV.T0, ext = TV.ext, sees = TV.sees, lock = TV.lock, vl = TV.vl, reach = TV.reach, gR = TV.gR, hR = TV.hR, d = TV.d;
   const E = energy(s, z, f, v), Tc = (T0 - ext) * (P.sig + (1 - P.sig) * E) * (h ? P.hide.cast : 1) + ext / v;
   const glu = best.cost * f; if (glu - best.cost > m.glu) return -1e9;
-  const heat = s.cost * 1.6 * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1); if (m.fat + heat > P.heatMax && E > 1) return -1e9;
+  const heat = s.cost * 1.6 * log(1 + E) / LN2 * (h ? 1 + P.hide.heat : 1); if (m.fat + TV.ex + heat > P.heatMax && E > 1) return -1e9;
   const land = s.t === 'area' ? s.delay / v : s.t === 'lob' ? s.flight / v : s.t === 'proj' ? d / (s.v * v) : 0, t = Tc + land;
   const seen = h || !sees ? land : t, need = lock >= t ? 0.3 : vl * seen * 0.5 + 0.3;
   const ph = s.t === 'wall' ? 1 : Math.min(1, reach * z / need), D = (s.t === 'thread' ? pow(f, 0.55) : s.t === 'proj' ? pow(E, 0.75) : s.t === 'wall' ? pow(z * f, 0.5) : f) * (h ? P.hide.pow : 1);
@@ -6640,7 +6738,7 @@ module.exports = {
         let hR = 4; const hf = W.H.fatRecover; for (let i = 0; i < hf.length; i++) hR = hf[i](W, m, hR);
         const sees = e && e.tac.readCast;   // 숨김은 상대가 예비동작을 읽을 때만 값이 있다
         let bv = -1e9, bz = 1, bf = 1, bvv = 1, bh = false;
-        TV.s = s; TV.m = m; TV.best = best; TV.T0 = T0; TV.ext = ext; TV.sees = sees; TV.lock = lock; TV.vl = vl; TV.reach = reach; TV.gR = gR; TV.hR = hR; TV.d = d; const value = valueOf;
+        TV.ex = B.pendHeat(W, m); TV.s = s; TV.m = m; TV.best = best; TV.T0 = T0; TV.ext = ext; TV.sees = sees; TV.lock = lock; TV.vl = vl; TV.reach = reach; TV.gR = gR; TV.hR = hR; TV.d = d; const value = valueOf;
         for (const iz of AL) { if (iz < lo || iz > hi) continue; for (const iff of AL) { if (iff < lo || iff > hi) continue; for (const iv of AL) { if (iv > 2) continue;
           for (let h = 0; h < (L >= P.hideFrom ? 2 : 1); h++) { const x = value(Z[iz], F[iff], V[iv], h === 1); if (x > bv + 1e-9) { bv = x; bz = Z[iz]; bf = F[iff]; bvv = V[iv]; bh = h === 1;
               } } } } }
@@ -6926,5 +7024,5 @@ G.ArenaData = { spells: G.ArenaCore.SPELLS, books: load('data/books.json'), visu
   "smother": "덮기: 몸 둘레를 덮는 막",
   "blueprint": "청사진: 여러 칸을 한꺼번에"
  }
-}, scenes: {"v2-agile-legend":{"v":"2.36.0","name":"[역사] 대마법사 전설 대 대가: 반사 겹·끊는 움직임·청사진 (청사진 덱, 매 걸음 녹화, 200×150)","seed":4,"width":200,"height":150,"rules":{"profile":"청사진"},"recEvery":1,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 청사진"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 8/9)이 이기고 길이(69.87 s)가 가운데값(69.87 s)에 가장 가까운 판"},"v2-chess-legend":{"v":"2.36.0","name":"[역사] 대마법사 수읽기 전설 대 전설: 체크와 메이트 (수읽기 덱, 200×150)","seed":6,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]}],"note":"수읽기(v2.15)를 보는 장면: 큰 한 방(대낙뢰·화산 기둥)과 정석(폭풍의 세 수·바위 감옥)이 든 덱. 대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 5/9)이 이기고 길이(55.0 s)가 가운데값(54.9 s)에 가장 가까운 판"},"v2-fort-legend":{"v":"2.36.0","name":"[역사] 대마법사 전설 대 대가: 날기 끊기와 진지 (진지 덱, 날기 끊기·진지·함정 연쇄, 200×150)","seed":3,"width":200,"height":150,"rules":{"profile":"진지"},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 진지"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 진지"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(67.5 s)가 가운데값(67.5 s)에 가장 가까운 판"},"v2-master-legend":{"v":"2.36.0","name":"[역사] 대마법사 전설 대 대가: 떠보기·들어가기·빠지기, 지형 (운영 덱, 200×150)","seed":5,"width":200,"height":150,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 운영"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 운영"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 6/9)이 이기고 길이(54.07 s)가 가운데값(54.07 s)에 가장 가까운 판"},"v2-pace-compare":{"v":"2.36.0","name":"[역사] 나란히: 대마법사 전설 대 전설(빠른 판) · 평범 대 평범, 같은 시간","seed":3,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]}],"note":"샌드박스는 beside 장면을 오른쪽 칸에 같은 시간만큼 나란히 돌린다(명령줄은 왼쪽 판만). 아래 띠는 지금까지의 평균 속도·방향 전환·하는 일·교환 (v2.14). 씨앗 3: 편 1이 56.7 s에 이긴다","beside":{"name":"평범 대 평범 (합법 최강, 40×30)","seed":3,"width":40,"height":30,"maxT":120,"sides":[{"name":"평범 A","mages":[{"tier":"평범","deck":"합법 최강"}]},{"name":"평범 B","mages":[{"tier":"평범","deck":"합법 최강"}]}]}},"v2-tactics-legend":{"v":"2.36.0","name":"대마법사 결투장 전설 대 전설: 빠른 판·잘게 걷기 (결투 덱, 200×150)","seed":1,"width":200,"height":150,"rules":{"profile":"결투장"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 1, 5/9)이 이기고 길이(64.0 s)가 가운데값(64.0 s)에 가장 가까운 판"}} };
+}, scenes: {"v2-agile-legend":{"v":"2.37.0","name":"[역사] 대마법사 전설 대 대가: 반사 겹·끊는 움직임·청사진 (청사진 덱, 매 걸음 녹화, 200×150)","seed":4,"width":200,"height":150,"rules":{"profile":"청사진"},"recEvery":1,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 청사진"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 8/9)이 이기고 길이(69.87 s)가 가운데값(69.87 s)에 가장 가까운 판"},"v2-chess-legend":{"v":"2.37.0","name":"[역사] 대마법사 수읽기 전설 대 전설: 체크와 메이트 (수읽기 덱, 200×150)","seed":6,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]}],"note":"수읽기(v2.15)를 보는 장면: 큰 한 방(대낙뢰·화산 기둥)과 정석(폭풍의 세 수·바위 감옥)이 든 덱. 대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 5/9)이 이기고 길이(55.0 s)가 가운데값(54.9 s)에 가장 가까운 판"},"v2-fort-legend":{"v":"2.37.0","name":"[역사] 대마법사 전설 대 대가: 날기 끊기와 진지 (진지 덱, 날기 끊기·진지·함정 연쇄, 200×150)","seed":3,"width":200,"height":150,"rules":{"profile":"진지"},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 진지"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 진지"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(67.5 s)가 가운데값(67.5 s)에 가장 가까운 판"},"v2-master-legend":{"v":"2.37.0","name":"[역사] 대마법사 전설 대 대가: 떠보기·들어가기·빠지기, 지형 (운영 덱, 200×150)","seed":5,"width":200,"height":150,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 운영"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 운영"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 6/9)이 이기고 길이(54.07 s)가 가운데값(54.07 s)에 가장 가까운 판"},"v2-pace-compare":{"v":"2.37.0","name":"[역사] 나란히: 대마법사 전설 대 전설(빠른 판) · 평범 대 평범, 같은 시간","seed":3,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]}],"note":"샌드박스는 beside 장면을 오른쪽 칸에 같은 시간만큼 나란히 돌린다(명령줄은 왼쪽 판만). 아래 띠는 지금까지의 평균 속도·방향 전환·하는 일·교환 (v2.14). 씨앗 3: 편 1이 56.7 s에 이긴다","beside":{"name":"평범 대 평범 (합법 최강, 40×30)","seed":3,"width":40,"height":30,"maxT":120,"sides":[{"name":"평범 A","mages":[{"tier":"평범","deck":"합법 최강"}]},{"name":"평범 B","mages":[{"tier":"평범","deck":"합법 최강"}]}]}},"v2-tactics-legend":{"v":"2.37.0","name":"대마법사 결투장 전설 대 전설: 빠른 판·잘게 걷기 (결투 덱, 200×150)","seed":1,"width":200,"height":150,"rules":{"profile":"결투장"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 1, 5/9)이 이기고 길이(64.0 s)가 가운데값(64.0 s)에 가장 가까운 판"}} };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

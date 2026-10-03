@@ -30,8 +30,10 @@ function decide(W, m, K) {
 
   // ---- 칸 고르기 ----
   let slot = 'A';
-  if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else return; }   // 두 번째 칸은 대가부터 (기본은 씀)
-  if (empty) slot = 'B';
+  if (m.cast || m.chan) { if (circ >= 2 && !m.castB && T.slotB) slot = 'B'; else slot = ''; }   // 두 번째 칸은 대가부터 (기본은 씀)
+  h = bh.slot; for (let i = 0; i < h.length; i++) slot = h[i](W, m, K, slot);   // 고리 장부 3단계: 빈 고리만큼 더 짓는다(셋째 칸부터 'X', rules/ringLedger, v2.37)
+  if (!slot) return;
+  if (empty && slot !== 'X') slot = 'B';
   K.slot = slot;
 
   // ---- 휴식: 머리가 뜨거우면 위협이 없을 때 쉰다. 규칙이 고친다(파도의 부류, rules/wave) ----
@@ -194,7 +196,7 @@ function commit(W, m, K) {
   const ns = m.noise * hyp(best.tx - m.x, best.ty - m.y) * (m.st.blind > 0 ? 3 : 1);
   m.glu -= best.cost; m.cd[best.n] = s.cd;
   const plan = K.plan, cast = { s, tgt: e, tx: best.tx + W.rnd(-ns, ns), ty: best.ty + W.rnd(-ns, ns), t: 0, T: Tc, B: slot === 'B', feint: fe, cost: best.cost, bait: m.baitT === W.t, roll0: e.roll > 0, down: !!(best.down || best.pin), fin: plan && s.n === plan.fin ? plan.land + 0.1 : 0, tz: 1, tf: 1, tv: 1, hid: false, unseen: false, tk: '', vis: 1 };
-  if (slot === 'B') m.castB = cast; else m.cast = cast;
+  if (slot === 'B') m.castB = cast; else if (slot !== 'X') m.cast = cast;   // 'X'는 규칙의 commit 훅이 쥔다
   // 행동 지표: 시작 시각, 빈틈, 콤보 시도
   m.log.starts.push(W.t); if (m.relT != null) { if (slot === 'A') { m.log.gapSum += W.t - m.relT; m.log.gapN++; if (m.log.gaps.length < 400) m.log.gaps.push(W.t - m.relT); } m.relT = null; }
   combo.tried(W, m, K, best, Tc);

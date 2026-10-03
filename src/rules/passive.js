@@ -17,7 +17,7 @@ const active = m => m.st.psv > 0 && m.st.psvT >= P.onT;
 function off(W, m) { if (!(m.st.psv > 0)) return; m.st.psv = 0; m.st.psvT = 0; m.mlog.guardN++; m.mlog.gdOff = W.t; }
 function turnOn(W, m, p) { if (m.st.psv === p) return; if (m.st.psv > 0) { off(W, m); return; } if (W.t - m.mlog.gdOff < P.cd || m.st.stun > 0 || m.fat > P.fatOff - 5) return; m.st.psv = p; m.st.psvT = 1e-6; m.mlog.guardN++; m.mlog.gdOn = W.t; }
 module.exports = {
-  name: 'passive', switch: 'passives', api: { P, KIND, kindOf, psvOf, active, on, holdN: m => (HOLD.get(m) || { n: 0 }).n },
+  name: 'passive', switch: 'passives', api: { P, KIND, kindOf, psvOf, active, on, off, holdOn: (W, m) => { const h = HOLD.get(m); return !!h && W.t < h.t; }, holdN: m => (HOLD.get(m) || { n: 0 }).n },
   engine: X => ({
     hurtMod(W, m, v, kind, name) {
       if (!active(m) || KIND[kind] !== m.st.psv || (W.rules.gunfire && GF.isGun(W, name))) return v;   // 총알은 마력이 아니다 (rules/gunfire, v2.25)
