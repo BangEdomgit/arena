@@ -370,5 +370,39 @@
   "cd": 8,
   "role": "방어",
   "rule": "blueprint"
+ },
+ "석회 고리": {
+  "n": "석회 고리",
+  "el": "흙",
+  "t": "limering",
+  "r": 3.5,
+  "multi": 18,
+  "pr": 0.55,
+  "hp": 350,
+  "dur": 12,
+  "R": 18,
+  "cost": 10,
+  "cast": 1.2,
+  "cd": 15,
+  "ring": 12,
+  "role": "공격",
+  "desc": "과녁 둘레에 석회 담 열여덟 칸을 둘러 가둔다. 잡으려면 가둬야 한다",
+  "rule": "chorusCast",
+  "chorusOnly": 1
+ },
+ "합창 방패": {
+  "n": "합창 방패",
+  "el": "흙",
+  "t": "cshield",
+  "r": 9,
+  "dur": 3,
+  "cost": 5,
+  "cast": 0.4,
+  "cd": 8,
+  "ring": 8,
+  "role": "방어",
+  "desc": "앞소리꾼 둘레 9 m의 우리 편 모두에게 석회 막을 씌운다",
+  "rule": "chorusCast",
+  "chorusOnly": 1
  }
 }

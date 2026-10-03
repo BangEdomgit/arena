@@ -57,6 +57,8 @@ function heatOver(W, m, cost, Tc, mul) {
 function groundSafe(W, m) { if (W.rules.bluntK > 0) return true; const f = W.foes[m.side];   // 마법의 부딪힘에 비율 감쇠가 있으면(v2.7) 함정은 한 방이 아니다
    for (let i = 0; i < f.length; i++) if (deck(f[i], W.spells).ground) return false; return true; }
 // 쓰는 서클 수: 서클 규칙(rules/multiSlot)이 꺼지면 누구나 1
+// 쥘 수 있는 고리 수 (v2.34): 서클 수에서 규칙이 고친다(합창의 앞소리꾼은 모은 고리, rules/chorusCast)
+function ringsOf(W, q) { let r = q.circles; const h = W._bh.rings; for (let i = 0; i < h.length; i++) r = h[i](W, q, r); return r; }
 function circOf(W, q) { let c = 1; const h = W._bh.circles; for (let i = 0; i < h.length; i++) c = h[i](W, q, c); return c; }
 // 큰 수와 짝 (1.9.0): 짝 묶기를 쓰면 그 틈에 큰 수를 꽂는다. bind = 굳힘 시간 안에 닿게, wet = 젖은 동안, ice = 내 빙판 위에 있을 때, herd = 불벽으로 몬 쪽에
 const PAIRS = { '번개 그물': { fin: '번개 창', kind: 'bind' }, '물 대포': { fin: '대낙뢰', kind: 'wet' }, '빙판': { fin: '대낙뢰', kind: 'ice' }, '불벽': { fin: '화산 기둥', kind: 'herd' } };
@@ -164,4 +166,4 @@ function defenseDown(e, S, W) {
 
 // 상대가 숨긴 수(손잡이)를 쓰나: 풀린 수는 보인다(손잡이 규칙의 기록 m.mlog.tune의 'h' 열쇠, v2.20)
 const hidesOf = e => { const T = e && e.mlog.tune; if (!T) return false; for (const k in T) if (k.charCodeAt(k.length - 1) === 104) return true; return false; };
-module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf };
+module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, DIR16, DIR8, OFF, SELF_GAP, catOf, FORMNAME, isSetup, logDec, estDmg, PAIRS, rollSide, holdsOf, castTime, bindOf, caged, pinned, hitBack, afterPin, pinOf, deck, obsNear, anyNear, bigAttack, landDelay, maxRange, ownShare, kindOf, counters, defenseDown, circOf, ringsOf };

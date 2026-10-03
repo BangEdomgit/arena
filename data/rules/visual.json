@@ -5,7 +5,7 @@
  "burn": "#ff9d4d",
  "stone": "#a08a66",
  "zone": { "fire": ["#ff9d4d", 0.32], "h2s": ["#a58ad8", 0.3, "hatch"], "nh3": ["#a58ad8", 0.3, "hatch"], "acid": ["#a58ad8", 0.32, "hatch"], "spore": ["#a58ad8", 0.28, "hatch"],
-   "ice": ["#b9f27d", 0.32], "chill": ["#b9f27d", 0.18], "smoke": ["#d8ccb2", 0.4], "mist": ["#3fd0c4", 0.22], "absorb": ["#3fd0c4", 0.18], "pit": ["#0f0c08", 0.6], "sky": ["#b58cff", 0.14], "saltfog": ["#f2f2ee", 0.42] },
+   "ice": ["#b9f27d", 0.32], "chill": ["#b9f27d", 0.18], "smoke": ["#d8ccb2", 0.4], "mist": ["#3fd0c4", 0.22], "absorb": ["#3fd0c4", 0.18], "pit": ["#0f0c08", 0.6], "sky": ["#b58cff", 0.14], "saltfog": ["#f2f2ee", 0.42], "calm": ["#ffd84a", 0.12], "rain": ["#6aa8ff", 0.14] },
  "wall": { "earth": "#a08a66", "lime": "#d8ccb2", "ice": "#b9f27d" },
  "proj": { "r0": 2.2, "rk": 2.6, "big": 1.6, "tail": 6, "glow": 9 },
  "thread": { "t": 0.3, "zig": 0.9, "seg": 1.6 },

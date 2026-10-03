@@ -1,0 +1,19 @@
+{
+ "desc": "합창 설계 (rules.chorusCast, v2.34, SPEC 56장). 합창(rules.chorus)이 고리·출력을 모아 앞소리꾼이 혼자는 못 쥐는 큰 마법을 짓는다",
+ "book": ["고요한 원", "번개 장막", "석회 고리", "구름 걸기", "곳간 터뜨리기", "합창 방패", "대낙뢰", "화산 기둥", "하늘 덮개", "걸어둔 구름"],
+ "kW": 2,
+ "outK": 2.5,
+ "bigE": 8,
+ "maxRing": 8,
+ "back": { "dmg": 12, "fat": 15, "stun": 0.4, "hold": 0.5 },
+ "hold": { "fat": 2.5 },
+ "calm": { "minN": 4, "reach": 12, "v": 1.6, "foeC": 1.5, "pad": 3 },
+ "net": { "z": 2, "v": 1.5 },
+ "lime": { "v": 1.3, "zMax": 1.5, "near": 4 },
+ "cloud": { "v": 0.7 },
+ "granary": { "left": 0.05, "v": 1.1, "min": 0.5 },
+ "shield": { "v": 1.3 },
+ "see": { "C": 8, "R": 90, "bind": 2 },
+ "push": { "v": 3, "T": 2, "pad": 3 },
+ "note": "book: 합창할 수 있는 사람(tac.squad·tac.chorus, 합창 한계 둘 이상)의 책에 더하는 마법(chorusOnly는 합창의 앞소리꾼만, ring은 쥘 수 있는 고리가 그만큼일 때만). 출력 = kW × C^outK × 피로 배수(kW). bigE: 손잡이의 에너지가 이만큼이면 큰 수. maxRing: 큰 손잡이를 쥔 고리. back: 짓다 깨진 큰 수의 역류(합창한 사람마다 피해 dmg·머리 fat·굳음 stun × 고리/8 × E^(1/3), 쥐던 고요한 원이 깨지면 × hold). hold.fat: 고요한 원을 쥐는 동안 사람마다 초당 머리. calm: 사람 minN 이상, 과녁 선명도가 앞소리꾼의 foeC배 이상일 때, 가운데는 앞소리꾼에서 reach m까지. see: 선명도 C 이상은 R m 안의 합창 큰 수를 보고 그 앞소리꾼을 노리고 묶는 수 × bind. push: 큰 수가 닿지 않으면 합창이 한 덩어리로 v m/s 다가간다(T s마다 다시 정한다)"
+}

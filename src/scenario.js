@@ -83,7 +83,7 @@ function build(cond, opt = {}) {
           if (g.gabion) for (let c = 0; c < 14; c++) { const a = (c - 6.5) * (4.712 / 14), gap = Math.abs(a) < 0.35; if (gap) continue;
             const bx = -ux, by = -uy, ca = cos(a), sa = sin(a), vx = bx * ca - by * sa, vy = bx * sa + by * ca; walls.push({ x: p[0] + vx * 2.4, y: p[1] + vy * 2.4, r: 0.55, hp: 300, mat: 'earth' }); } }
       }
-      if (g.squad) rules.squad = true; if (g.chorus) rules.chorus = true;
+      if (g.squad) rules.squad = true; if (g.chorus) { rules.chorus = true; rules.chorusCast = true; }   // 합창이면 합창 설계도 (v2.34)
     }
   });
   if (useArt) { rules.artillery = true; Object.assign(decks, ART.decks); }

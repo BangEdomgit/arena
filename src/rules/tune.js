@@ -64,7 +64,7 @@ module.exports = {
         const L = m.tac.tune, s = best.s; if (!L || !TUNED[s.t] || s.big && !(K.pl && K.pl.mate)) return;   // 큰 한 방은 메이트에서만 손잡이를
         const pl = K.pl, mate = !!(pl && pl.mate && pl.n === s.n), poke = K.mode === 'poke', e = cast.tgt;
         // 쓰는 단계 (크기·화력), 속도는 최대가 없다
-        const al = P.allow[L] || P.allow[1]; AL.length = 0; for (const i of al) if (i < 3 || m.circles >= P.maxCirc) AL.push(i);
+        const al = P.allow[L] || P.allow[1]; AL.length = 0; const rc = B.ringsOf(W, m); for (const i of al) if (i < 3 || rc >= P.maxCirc) AL.push(i);   // 쥘 수 있는 고리 (합창의 앞소리꾼은 모은 고리, v2.34)
         let lo = 0, hi = 2; if (poke) { lo = P.poke[0]; hi = P.poke[1]; } else if (mate) { lo = P.mate[0]; hi = P.mate[1]; }   // 최대는 메이트의 큰 한 방에만
         let any = false; for (const i of AL) if (i >= lo && i <= hi) any = true; if (!any) { lo = 0; hi = 2; }
         const d = hyp(cast.tx - m.x, cast.ty - m.y), lock = e ? Math.max(e.st.stun, e.st.root) : 0, vl = e ? hyp(e.vx, e.vy) : 0, rs = C.sizeOf(m, s), T0 = cast.T;

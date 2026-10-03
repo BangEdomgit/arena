@@ -48,7 +48,7 @@ function update(X, W) {
 const of = (W, m) => { const S = ST.get(W); if (!S) return null; const g = S.of.get(m); return g && g.on ? g : null; };
 const forming = (W, m) => { const S = ST.get(W); if (!S) return false; const g = S.of.get(m); return !!g && !g.on; };   // 맞추는 중 (v2.30.1, 점검이 읽는다)
 module.exports = {
-  name: 'chorus', switch: 'chorus', api: { P, of, forming, limitOf, stats: W => stOf(W).st },
+  name: 'chorus', switch: 'chorus', api: { P, of, forming, limitOf, stats: W => stOf(W).st, group: (W, m) => { const S = ST.get(W); return S ? S.of.get(m) || null : null; }, groups: W => { const S = ST.get(W); return S ? S.groups : []; } },   // group: 맞추는 중이어도 (v2.34, rules/chorusCast)
   engine: X => ({
     world(W) { if (W.step % Math.round(P.every / W.dt) === 0) update(X, W); },
     tune(W, m, c) { const g = of(W, m); if (g && g.lead === m && (c.s.t === 'area' || c.s.t === 'lob') && c.s.r > 0) c.s = bigOf(c.s, g.n); },   // 함께 짓는 큰 마법: 넓이 × √N

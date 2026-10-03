@@ -14,12 +14,12 @@ function scene(tier, n, seed, opt = {}) {
     const mm = tier === '평범' ? { tier, deck: '기본기' } : tier === '중간' ? { tier, deck: MID[i % 2] } : { tier, skill: SK[i % 2], deck: TOP[i % 3] };
     if (opt.squad) mm.tac = { squad: 1 }; crowd.push(Object.assign({ x, y }, mm)); }
   return { v: A.VERSION, name: `대마법사 하나 대 ${tier} ${n}`, seed, width: W, height: W, maxT: opt.maxT || 300, obstacles: 0,
-    rules: Object.assign({ profile: '지금', saltRing: false, squad: true }, opt.squad ? { chorus: true } : {}, opt.rules || {}),   // squad: 대마법사의 다수 모드·물러서기 (v2.28부터 늘)
+    rules: Object.assign({ profile: '지금', saltRing: false, squad: true }, opt.squad ? { chorus: true, chorusCast: true } : {}, opt.rules || {}),   // squad: 대마법사의 다수 모드·물러서기 (v2.28부터 늘)
     sides: [{ name: '대마법사', mages: [Object.assign({ tier: '대마법사', skill: '전설', deck: '대마법사 결투', x: cx, y: cy }, opt.arch || {})] }, { name: tier, mages: crowd }] };
 }
 // 무리의 모습 (v2.29): 한 사람의 시간(짓는 중·움직임·과녁 장악 반경 안), 전투단 포위각(과녁 평균 자리 기준), 오래 선 합창(셋 넘게 3 s 넘게), 대마법사의 숨 돌리기·물러날 때의 체력
-function crowdOf(W) { const SQ = require('../src/rules/squad').api.stats(W), c = SQ.stats.crowd, b = SQ.b[1], CH = W.rules.chorus ? require('../src/rules/chorus').api.stats(W) : null;
-  return { cCast: c.n ? c.cast / c.n : 0, cMove: c.n ? c.move / c.n : 0, cDom: c.n ? c.dom / c.n : 0, enc: b.log.encN ? b.log.enc / b.log.encN * 57.3 : 0, good: CH ? CH.good : 0, formed: CH ? CH.formed : 0, brokeHit: CH ? CH.brokeHit : 0, atN: CH ? CH.atN : 0, wideN: CH ? CH.wideN : 0, leadN: CH ? CH.leadN : 0, rests: SQ.stats.rests, retreatHp: SQ.stats.retreatHp }; }
+function crowdOf(W) { const SQ = require('../src/rules/squad').api.stats(W), c = SQ.stats.crowd, b = SQ.b[1], CH = W.rules.chorus ? require('../src/rules/chorus').api.stats(W) : null, CC = W.rules.chorusCast ? require('../src/rules/chorusCast').api.stats(W) : null;
+  return { cCast: c.n ? c.cast / c.n : 0, cMove: c.n ? c.move / c.n : 0, cDom: c.n ? c.dom / c.n : 0, enc: b.log.encN ? b.log.enc / b.log.encN * 57.3 : 0, good: CH ? CH.good : 0, formed: CH ? CH.formed : 0, brokeHit: CH ? CH.brokeHit : 0, atN: CH ? CH.atN : 0, wideN: CH ? CH.wideN : 0, leadN: CH ? CH.leadN : 0, bigN: CC ? CC.bigN : 0, bigOk: CC ? CC.bigOk : 0, bigBroke: CC ? CC.bigBroke : 0, calmN: CC ? CC.calmN : 0, calmIn: CC ? CC.calmIn : 0, cBy: CC ? CC.by : {}, rests: SQ.stats.rests, retreatHp: SQ.stats.retreatHp }; }
 function run(tier, n, s0, cnt, opt) {   // tier가 조건 id('c32')면 그 조건의 장면 (v2.33)
   const o = []; for (let s = s0; s < s0 + cnt; s++) {
     const sc = /^c\d+$/.test(tier) ? A.scenario.build(tier, { seed: s + 1 }) : scene(tier, n, s + 1, opt), W = A.sceneWorld(sc), t0 = Date.now(); while (!A.over(W)) A.stepWorld(W); const ms = Date.now() - t0;
