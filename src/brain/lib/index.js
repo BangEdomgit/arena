@@ -7,4 +7,5 @@ module.exports = {
   inDist: rhythm.inDist,                                                  // 리듬: 들어가는 거리
   dodgeAim: dodgeAim.value, grabValue: grab.value, grabCommit: grab.commit, undo: cancel.undo,   // 큰 수와 짝 (rules/risk)
   crowded: require('./traps').crowded,
+  plan: require('../plan/state'),   // 수읽기의 줄인 상태: 응수 자원·피할 곳·빠져나갈 거리 (v2.35, 합창의 체크·메이트 rules/chorusCast)
 };

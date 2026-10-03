@@ -21,9 +21,10 @@
 const P = require('../../data/rules/chorusCast.json'), TP = require('../../data/rules/tune.json');
 const CH = require('./chorus').api, DR = require('./drain').api, TU = require('./tune').api;
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, MINE = { calm: 1, limering: 1, cloud: 1, granary: 1, cshield: 1 };
+const CHK = new Set(P.cm.check), MATE = new Set(P.cm.mate);
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const ST = new WeakMap();
-function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { big: new Map(), calms: [], push: new Map(), st: { bigN: 0, bigOk: 0, bigBroke: 0, bigCancel: 0, by: {}, calmN: 0, calmT: 0, calmIn: 0, netHit: 0, limeN: 0, cloudN: 0, granN: 0, shieldN: 0, backDmg: 0 } }); return s; }
+function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { big: new Map(), calms: [], push: new Map(), chk: new Map(), es: new Map(), st: { checkN: 0, mateN: 0, chain: 0, bigN: 0, bigOk: 0, bigBroke: 0, bigCancel: 0, by: {}, calmN: 0, calmT: 0, calmIn: 0, netHit: 0, limeN: 0, cloudN: 0, granN: 0, shieldN: 0, backDmg: 0 } }); return s; }
 const fatK = m => { const k = 1 - Math.min(m.fat, 100) / 200; return k < 0.6 ? 0.6 : k; };
 // 사람 하나의 출력(kW)과 합창이 모은 것
 function outOf(X, m) { return P.kW * X.pow(m.C > 0.01 ? m.C : 0.01, P.outK) * fatK(m); }
@@ -52,6 +53,7 @@ module.exports = {
         const S = stOf(W), s = c.s, g = leadOf(W, m);
         if (S.calms.length && OFF[s.t]) { const p = X.formPoint(m, s, c.tx, c.ty); if (p) for (const k of S.calms) if (k.side === m.side && X.hyp(p[0] - k.x, p[1] - k.y) < k.r) { S.st.calmIn++; break; } }   // 고요한 원 안에서 선 과녁 자리 마법
         const b = S.big.get(m); if (b && b.c === c) { S.st.bigOk++; S.big.delete(m); }
+        if (g && c.tgt) { if (CHK.has(s.n)) { S.st.checkN++; S.chk.set(c.tgt, W.t); } else if (MATE.has(s.n)) { S.st.mateN++; const t = S.chk.get(c.tgt); if (t != null && W.t - t <= P.cm.chainT) S.st.chain++; } }   // 체크 뒤 메이트로 이어진 몫 (v2.35)
         if (g && W.rules.fatigue && !s.mundane && g.n > 1) {   // 머리 열은 나눠 낸다 (core가 이 뒤에 앞소리꾼에게 더한다)
           const heat = s.cost * (c.B ? 1.3 : 1) * (c.auto ? 0.8 : 1) * 1.6, n = g.n; m.fat -= heat * (n - 1) / n; for (const q of g.ms) if (q !== m && q.hp > 0) q.fat += heat / n; }
       },
@@ -91,21 +93,52 @@ module.exports = {
   }),
   brainTypes: () => ({ calm(W, m, K, o) { o.v = 0; }, limering(W, m, K, o) { o.v = 0; }, cloud(W, m, K, o) { o.v = 0; }, granary(W, m, K, o) { o.v = 0; }, cshield(W, m, K, o) { o.v = 0; } }),   // 값은 valueLate (앞소리꾼)
   brain: B => {
-    const C = B.C, hyp = B.hyp;
+    const C = B.C, hyp = B.hyp, PL = B.lib.plan, CM = P.cm;
+    // 과녁의 줄인 상태 (수읽기, SPEC 39장): 앞소리꾼마다 걸음마다 한 번
+    const stateOf = (W, m, e) => { const S = stOf(W); let x = S.es.get(m); if (!x) S.es.set(m, x = { s: PL.newSide(), step: -1, e: null, k: 0 }); const k = e.st.stun + e.st.root * 7 + e.z * 13; if (x.step !== W.step || x.e !== e || x.k !== k) { PL.build(W, e, m, x.s, PL.P.horizon, true); x.step = W.step; x.e = e; x.k = k; } return x.s; };
+    // τ s 안에 r m를 빠져나갈 수 있나: 옆 튀기·구르기·열린 피할 곳으로 움직이기 (막힌 곳: 벽·석회 고리·바위·소금·끝, 굳음·묶임·떨어짐은 S.up)
+    // 날 수 없는 과녁(S.a 0)은 피할 곳까지의 길도 본다: 석회 고리·벽·바위를 넘지 못한다. 날 수 있으면 굳음·떨어짐(S.up)이 풀린 뒤 넘는다
+    // 합창의 앞소리꾼이 나를 겨눈 번개, 또는 내 둘레의 합창 번개 구름
+    function chorusElec(W, m) {
+      for (const a of W.areas) if (a.src.side !== m.side && a.s.kind === 'elec' && hyp(a.x - m.x, a.y - m.y) < a.r + P.see.elecPad && leadOf(W, a.src)) return true;
+      for (const q of W.ms) { if (q.side === m.side || !(q.hp > 0)) continue; const c = q.cast; if (c && c.tgt === m && c.s.kind === 'elec' && leadOf(W, q)) return true; }
+      return false;
+    }
+    function escapes(W, e, S, tau, r) {
+      if (S.has & 2 && S.av[1] <= tau && PL.cutOK(S, tau - S.av[1], r)) return true;
+      if (S.has & 1 && S.av[0] <= tau && PL.rollOK(S, tau - S.av[0], r)) return true;
+      if (!PL.moveOK(S, tau, r)) return false;
+      for (let j = 1; j < 9; j++) if (S.blk[j] <= tau && (S.a > 0 || !C.blocked(W, e.x, e.y, S.bx[j], S.by[j], 0))) return true;
+      return false;
+    }
+    // 메이트(큰 수)의 맞을 가망: 터지기까지(예비동작 + 지연·나는 시간) 과녁이 반지름 밖으로 빠져나갈 수 있으면 escP, 못 하면 1 (막기가 있으면 × guardK)
+    function mateHit(W, m, e, s, o, g) {
+      const S = stateOf(W, m, e), k = pool(XX, W, g).out / outOf(XX, m), sig = TP.sig, Tc = B.castTime(W, m, o.Tw) * (sig + (1 - sig) / (k > 1 ? k : 1));
+      const tau = Tc + (s.t === 'area' ? s.delay : s.t === 'lob' ? s.flight : 0), r = (s.r || 1) * C.sizeOf(m, s) * Math.sqrt(g.n) + 0.3;
+      let p = escapes(W, e, S, tau, r) ? CM.escP : 1; if (S.has & 4 && S.av[2] <= tau) p *= CM.guardK;
+      const a = PL.aim(W, e, tau); o.tx = a.x; o.ty = a.y; return p;
+    }
     return {
       // 쥘 수 있는 고리: 앞소리꾼은 모은 고리 − 쥐고 있는 고요한 원, 다른 합창하는 사람은 박자 하나
       rings(W, m, r) { const g = CH.of(W, m); if (!g) return r; if (g.lead !== m) return 1; const S = ST.get(W); return pool(XX, W, g).rings - (S ? heldOf(S, g) : 0); },
       // 합창의 큰 수를 보고 깨러 온다
-      aim(W, m, K) { if (m.C < P.see.C || m.flee) return; const S = ST.get(W); if (!S || !S.big.size) return; let e = null, bd = P.see.R;
-        for (const [q, b] of S.big) { if (q.side === m.side || !(q.hp > 0) || q.cast !== b.c) continue; const d = hyp(q.x - m.x, q.y - m.y); if (d < bd) { bd = d; e = q; } } if (e) K.e = e; },
+      aim(W, m, K) { if (m.C < P.see.C || m.flee) return; const S = ST.get(W); if (!S) return; let e = null, bd = P.see.R;
+        if (S.big.size) for (const [q, b] of S.big) { if (q.side === m.side || !(q.hp > 0) || q.cast !== b.c) continue; const d = hyp(q.x - m.x, q.y - m.y); if (d < bd) { bd = d; e = q; } }
+        if (m.tac.chorusBreak && S.calms.length) for (const c of S.calms) { if (c.side === m.side || !(c.lead.hp > 0)) continue; const d = hyp(c.lead.x - m.x, c.lead.y - m.y) - P.calm.breakB; if (d < bd) { bd = d; e = c.lead; } }   // 합창 깨기(전설): 고요한 원을 쥔 앞소리꾼 (깨면 원이 사라진다, v2.35)
+        if (e) K.e = e; },
       steer(W, m, K) {   // 큰 수가 닿지 않으면 합창이 한 덩어리로 다가간다
-        if (K.dodge || m.flee) return; const g = CH.of(W, m); if (!g) return; const S = ST.get(W), p = S && S.push.get(g); if (!p || W.t > p.until || !(p.e.hp > 0)) return;
+        if (m.tac.chorusBreak && m.C >= P.see.C && !m.flyWant && m.fly !== 2 && !(m.cut && m.cut.cool) && chorusElec(W, m)) m.flyWant = true;   // 합창 깨기(전설): 합창의 번개(넓고 세다)엔 내려앉지 않고 날며 비킨다 (v2.35)
+        if (K.dodge || m.flee) return;
+        if (m.tac.chorusBreak && m.C >= P.see.C) { const S = ST.get(W); if (S) for (const c of S.calms) { if (c.side === m.side) continue; const dx = m.x - c.x, dy = m.y - c.y, l = hyp(dx, dy) || 0.1; if (l < c.r + P.calm.outPad) { K.vx = dx / l * P.calm.outV; K.vy = dy / l * P.calm.outV; return; } } }   // 합창 깨기(전설): 적의 고요한 원 안이면 밖으로 (그 안에선 내 마법이 서지 않는다)
+       const g = CH.of(W, m); if (!g) return; const S = ST.get(W), p = S && S.push.get(g); if (!p || W.t > p.until || !(p.e.hp > 0)) return;
         const dx = p.e.x - g.lead.x, dy = p.e.y - g.lead.y, l = hyp(dx, dy) || 1; if (l <= p.R) return; K.vx = dx / l * P.push.v; K.vy = dy / l * P.push.v; },
       valueLate(W, m, K, o) {
         const s = o.s; if (!s.ring && !s.chorusOnly && !(o.v > 0)) return;
         const e = K.e, S = stOf(W);
-        if (m.C >= P.see.C && e && o.v > 0 && isBind(s)) { const b = S.big.get(e); if (b && e.cast === b.c) o.v *= P.see.bind; }   // 짓는 앞소리꾼엔 묶는 수(굳히면 깨진다)
+        if (m.C >= P.see.C && e && o.v > 0 && isBind(s)) { const b = S.big.get(e); if ((b && e.cast === b.c) || (m.tac.chorusBreak && S.calms.some(c => c.lead === e))) o.v *= P.see.bind; }   // 짓는 앞소리꾼엔 묶는 수(굳히면 깨진다)
         if (s.ring && B.ringsOf(W, m) < s.ring) { o.v = 0; return; }   // 고리를 많이 먹는 마법은 쥘 고리가 있을 때만
+        if (MATE.has(s.n)) { const g = leadOf(W, m); if (!g || !e || !(e.hp > 0)) return; if (K.d > C.rangeOf(m, s)) { o.v = 0; return; }   // 메이트: 빠져나갈 수 없을 때만 (v2.35)
+          const p = mateHit(W, m, e, s, o, g); o.v = p >= CM.mateMin ? CM.mateV * p : 0; return; }
         if (!s.chorusOnly) return;
         const g = leadOf(W, m); if (!g || !e || !(e.hp > 0)) { o.v = 0; return; }
         const d = K.d, R = s.t === 'calm' ? P.calm.reach + s.r - P.calm.pad : C.rangeOf(m, s), strong = e.C >= P.calm.foeC * m.C;
@@ -116,6 +149,7 @@ module.exports = {
         else if (s.t === 'cloud') { if (strong && K.los && e.cast && g.ms.includes(e.cast.tgt) && !W.zones.some(z => z.k === 'smoke' && hyp(z.x - (m.x + e.x) / 2, z.y - (m.y + e.y) / 2) < z.r)) { v = P.cloud.v; tx = (m.x + e.x) / 2; ty = (m.y + e.y) / 2; } }   // 과녁이 우리를 겨눌 때 사이에 구름을 건다
         else if (s.t === 'granary') { if (W.rules.drain && strong && DR.around(W, e.x, e.y) > P.granary.min) v = P.granary.v; }
         else if (s.t === 'cshield') { for (const q of K.foes) if (q.hp > 0 && q.C >= m.C && q.cast && g.ms.includes(q.cast.tgt)) { v = P.shield.v; break; } tx = m.x; ty = m.y; }
+        if (v > 0 && CHK.has(s.n)) { const Sx = stateOf(W, m, e); if (PL.slack(Sx, CM.within) === 0 && s.t !== 'calm') v *= CM.noSlack; }   // 응수가 바닥난 과녁엔 체크보다 메이트
         if (v > 0 && s.t !== 'cshield' && d > R) { if (s.t !== 'cloud') { const p = S.push.get(g); if (!p || W.t > p.until) S.push.set(g, { e, R: R - P.push.pad, until: W.t + P.push.T }); } v = 0; }   // 닿지 않으면 한 덩어리로 다가간다
         o.v = v; if (v > 0) { o.tx = tx; o.ty = ty; }
       },

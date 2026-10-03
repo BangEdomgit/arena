@@ -56,6 +56,13 @@ function run() {
     assert.ok(st.bigN > 5 && st.bigOk > 0, JSON.stringify(st)); assert.ok(st.bigOk + st.bigBroke + st.bigCancel <= st.bigN); assert.ok(st.calmN >= 1 && st.calmIn > 0, '고요한 원');
     if (st.bigBroke) assert.ok(st.backDmg > 0, '역류');
   });
+  ok('v2.35 합창의 메이트: 빠져나갈 수 있는 과녁엔 큰 수를 쓰지 않고, 굳어 빠져나갈 수 없을 때 쓴다(겨냥은 그 자리). 체크 뒤 메이트를 센다', () => {
+    const a = choir('상위', 6), lead = a.g.lead, W = a.W, e = a.e, s = W.spells['대낙뢰']; e.x = lead.x + 15; e.y = lead.y; e.z = 0; e.fly = 0; e.st.stun = 0;
+    A.brain.think(W, lead); const vl = W._bh.valueLate, val = () => { const o = { s, v: 1, tx: e.x, ty: e.y, Tw: s.cast }, K = { e, d: 15, foes: [e], los: true }; for (const f of vl) f(W, lead, K, o); return o; };
+    assert.strictEqual(val().v, 0, '빠져나갈 수 있으면 메이트를 쓰지 않는다'); e.st.stun = 3; const o = val(); assert.ok(o.v > 1, '굳어 빠져나갈 수 없으면: ' + o.v); assert.ok(Math.hypot(o.tx - e.x, o.ty - e.y) < 1);
+    assert.ok(CC.P.cm.check.includes('번개 장막') && CC.P.cm.mate.includes('걸어둔 구름'));
+    const W2 = A.sceneWorld(Object.assign(A.scenario.build('c32', { seed: 3 }), { maxT: 40 })); while (!A.over(W2)) A.stepWorld(W2); const st = CC.stats(W2); assert.ok(st.checkN > 0 && st.chain <= st.mateN, JSON.stringify(st));
+  });
   return done();
 }
 module.exports = { run };
