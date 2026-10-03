@@ -1,7 +1,8 @@
 'use strict';
 /* 숨 결투장 v2.2.0 — 대마법사 대 무리 (v2.0 둘째 묶음, SPEC 25장 끝, reports/v2.1.0.md)
  *   node experiments/army.js [장면,…] [N]      장면마다 씨앗 1..N (병렬). 기본: 모든 장면, N = 20 → results/army.json
- *   node experiments/army.js scenes [이름,…]    대표 장면을 sandbox/scenes/v2-army-*.json으로 (그다음 node cli.js pack)
+ *   node experiments/army.js scenes [이름,…]    대표 장면을 sandbox/scenes/v2-army-*.json으로 (그다음 node cli.js pack. v2.33: 샌드박스의 군대 장면은 조건 c18~c26이다)
+ *   이름이 c + 수(c24)면 그 조건(data/conditions.json)을 씨앗마다 짓는다 (v2.33)
  * 장면 (모두 결정론, 대마법사 = 편 0의 첫 사람):
  *   field-musket / field-plain   들판 1 km: 대마법사가 250 m 떨어져 날아서 시작, 머스킷 100 (넷 줄, 돌아가며 쏘기) / 평범 100 (기본기)
  *   ambush                       기습: 30 m 안, 머스킷 40이 반지름 14 m 반원, 벽 없이

@@ -17,7 +17,7 @@ node cli.js duel 평범 평범 100     # 결투 N판 (등급A 등급B N 덱A 덱
 node cli.js ring 대마법사 평범 50 기본기 5
 node cli.js league 평범 20        # 원소 기본책끼리 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
-node cli.js scene sandbox/scenes/duel.json # 장면 한 판
+node cli.js scene c01 [씨앗]       # 조건 한 판 (data/conditions.json, 지금 엔진이 짓는다. 장면 파일도 된다)
 node cli.js pack                  # src/·metrics/·data/·장면을 고쳤으면 sandbox/arena.js 다시 싸기 (안 하면 시험이 알려 준다)
 node experiments/hash.js [--v1]   # 결과 지문 넷. 구조·속도만 고쳤으면 그대로여야 한다 (값은 reports/v2.15.0.md. --v1은 1.x 기본 A.V1_RULES 위에서, --rules '{…}'는 덧씌움)
 node cli.js suite [묶음]           # 표준 시험 묶음(약 20초, 코어 수만큼 병렬. --jobs 1이면 한 줄로): suite-baseline.json과 비교해 바뀐 줄만. 규칙·두뇌를 바꿨으면 돌린다
@@ -38,6 +38,7 @@ node cli.js audit                 # v2.30 지능 점검: 모든 장면 × 씨앗
 | `src/rules/*.js` | **규칙 하나 = 파일 하나** (목록과 차례는 `rules/index.js`). 엔진 훅·두뇌 훅·새 틀. 규칙의 수는 `data/rules/*.json` |
 | `src/math.js`, `src/data.js` | 결정론 수학, `data/` 읽기 |
 | `src/brain/` | 판단: `index.js`의 `think(W, m)` → `read`·`stance`·`move`·`choose`. 기술은 `techniques/`에 하나씩, 판단 수준은 `skills.js`. 새 두뇌도 `think` 모양으로 내보내면 바꿔 끼울 수 있다 |
+| `src/scenario.js` | 조건 짓개(v2.33, SPEC 55장): `data/conditions.json`의 조건을 지금 엔진의 수(장악 반경·사거리)로 배치해 장면으로. `A.scenario = { list, build }`. [지금] 장면은 조건으로 두고, `sandbox/scenes`엔 [역사] 장면만 |
 | `src/index.js` | 바깥 API: `TIERS`(등급), `DECKS`(덱), `BRAINS`, `SKILLS`, `mage`, `battle`, `duel`, 장면(`sceneWorld`, `runScene`, `recording`), `register`, `learn`, `look` |
 | `src/registry.js` | 등록: `register.spell / deck / tier / brain / rule / unrule` |
 | `data/` | JSON: `spells/원소.json`(마법, 이름이 키, `t`가 틀, 차례는 `spells/order.json`), `books.json`(원소별 기본책), `decks.json`, `tiers.json`, `skills.json`, `gear.json`, `blueprints.json`(청사진) |
@@ -49,7 +50,7 @@ node cli.js audit                 # v2.30 지능 점검: 모든 장면 × 씨앗
 | `test/suite.js`, `suite-baseline.json` | 표준 시험 묶음과 그 기준(SPEC 21장). 대진 줄의 id는 기준의 열쇠라 함부로 바꾸지 않는다 |
 | `viewer.html` | 녹화 보기. 혼자 도는 HTML 한 장(보기용 녹화 하나가 박혀 있다) |
 | `sandbox/index.html`, `sandbox/sandbox.js` | 샌드박스 화면. 묶음 `arena.js`를 읽는다(SPEC 19장) |
-| `sandbox/scenes/*.json` | 예시 장면 |
+| `sandbox/scenes/*.json` | [역사] 예시 장면(v2.33부터 지금 장면은 조건 `data/conditions.json`) |
 | `sandbox/arena.js` | **만든 파일**(`node cli.js pack`, `sandbox/pack.js`). 엔진 모듈·데이터·장면을 브라우저 전역(`Arena`, `ArenaData`, `ArenaWatch`…)으로 싼 것. 손으로 고치지 않는다 |
 
 데이터(`data/`) · 규칙(`core.js`와 `rules/`) · 판단(`brain/`)을 섞지 않는다.

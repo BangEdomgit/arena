@@ -1,4 +1,4 @@
-# 숨 결투장 v2.32.0
+# 숨 결투장 v2.33.0
 
 설정집 3판(`WORLD.md`)의 규칙으로 도는 마법 결투 시뮬레이터. 규격은 `SPEC.md`.
 
@@ -15,7 +15,7 @@ node cli.js ring 대마법사 평범 50 기본기 5  # 둘러싸기
 node cli.js ring 대마법사 병사 40 머스킷 5
 node cli.js league 평범 6                  # 원소 기본책 총당
 node cli.js replay 상위 상위 replay.json   # 녹화 → viewer.html에 끌어다 놓기
-node cli.js scene sandbox/scenes/duel.json  # 장면 한 판 (샌드박스와 같은 결과)
+node cli.js scene c01 [씨앗]                 # 조건 한 판 (data/conditions.json을 지금 엔진이 짓는다, 샌드박스와 같은 결과. 장면 파일도 된다)
 node cli.js suite                          # 표준 시험 묶음: 기준과 비교해 바뀐 줄만 (--save로 기준 저장, 코어 수만큼 병렬)
 node cli.js report                         # 성적표: 버전마다 같은 잣대로 재서 reports/scorecard.md에 쌓는다 (v2.9)
 ```
@@ -36,6 +36,7 @@ v2.15부터 판단 그림에 수읽기(체크·메이트·상대의 방어 자�
 | `src/rules/` | 규칙 하나에 한 파일: 장비, 지대, 소금 원, 파도, 몸 묶기, 하이 리스크, 도발, 서클, 화약통, 대응(풀기·대비·순간 반응), 은실 옷 |
 | `src/brain/` | 기본 두뇌 (바꿔 끼울 수 있음): 읽기·입장·움직임·고르기, `techniques/`(기술 하나에 한 파일), `skills.js`(판단 수준) |
 | `src/index.js` | 등급·덱·싸움 배치·장면·학습 API |
+| `src/scenario.js`, `data/conditions.json` | 조건 짓개(v2.33): 조건을 지금 엔진의 수로 배치한 장면으로 (`A.scenario`) |
 | `src/registry.js` | 등록: 마법·덱·등급·두뇌·규칙 |
 | `src/math.js`, `src/data.js` | 결정론 수학, 데이터 읽기 |
 | `data/` | 마법(원소마다 한 파일), 원소별 기본책, 덱, 등급, 판단 수준, 장비 (JSON) |

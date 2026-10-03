@@ -887,7 +887,7 @@ module.exports = { hooks, types };
 D["src/brain/index.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 기본 두뇌 v2.32.0
+ * 숨 결투장 — 기본 두뇌 v2.33.0
  * 판단 순서: 읽기(read) → 입장(stance) → 움직임(move) → 고르기(choose: 자동 진 → 칸 → 휴식 → 마법 고르기)
  * 기술(콤보·속임수·엄폐·유도·학습·덱 읽기·붙잡기…)은 techniques/에 하나씩, 어느 단계가 어떤 기술을 켜는지는 skills.js(data/skills.json).
  * 규칙(스위치)에 딸린 판단은 그 규칙 파일(src/rules/)의 brain 훅에 있다. 세계마다 켜진 규칙의 훅만 모은다(hooks.js).
@@ -919,7 +919,7 @@ function think(W, m) {
   decide(W, m, K);
 }
 
-module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.32.0' };
+module.exports = { think, plan, catOf: U.catOf, FORMNAME: U.FORMNAME, rollSide: U.rollSide, VERSION: '2.33.0' };
 }, {"./util":"src/brain/util.js","./hooks":"src/brain/hooks.js","./techniques/rhythm":"src/brain/techniques/rhythm.js","./techniques/engage":"src/brain/techniques/engage.js","./plan":"src/brain/plan/index.js","./read":"src/brain/read.js","./stance":"src/brain/stance.js","./move":"src/brain/move.js","./choose":"src/brain/choose.js"}];
 D["src/brain/lib/index.js"] = [function (module, exports, require) {
 'use strict';
@@ -2488,7 +2488,7 @@ module.exports = { hidesOf, heatOver, groundSafe, C, hyp, roleOf, NOKIND, NONE, 
 D["src/core.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 엔진 핵심 v2.32.0
+ * 숨 결투장 — 엔진 핵심 v2.33.0
  * 단위: m, s, kg, J. 고정 시간 간격 DT = 1/30 s. 같은 씨앗이면 같은 결과.
  * 규칙의 근거와 수식은 SPEC.md 참고. 이 파일을 바꾸면 SPEC과 버전을 같이 올린다.
  * 규칙(스위치)은 src/rules/에 하나에 한 파일로 있다. 핵심은 정해진 자리에서 켜진 규칙의 훅(W.H)만 부른다 (SPEC 22장).
@@ -2497,7 +2497,7 @@ D["src/core.js"] = [function (module, exports, require) {
 const { sin, cos, atan2, exp, log, pow, hyp, hyp3, clamp, mulberry32 } = require('./math');
 const { SPELLS } = require('./data');
 const R = require('./rules');
-const VERSION = '2.32.0';
+const VERSION = '2.33.0';
 const DT0 = 1 / 30; let DT = DT0;   // 걸음 간격: 세계마다 W.dt (fineStep이면 1/60, v2.14). stepWorld가 그 세계의 것으로 맞춘다
 
 // 1.x의 기본 동작 (SPEC 24장): rules에 주면 v2.0의 새 기본을 끈다
@@ -3231,7 +3231,7 @@ module.exports = { SPELLS: spells(), BOOKS: require('../data/books.json'), DECKS
 }, {"../data/spells/불.json":"data/spells/불.json","../data/spells/번개.json":"data/spells/번개.json","../data/spells/흙.json":"data/spells/흙.json","../data/spells/물.json":"data/spells/물.json","../data/spells/얼음.json":"data/spells/얼음.json","../data/spells/독.json":"data/spells/독.json","../data/spells/없음.json":"data/spells/없음.json","../data/spells/신호.json":"data/spells/신호.json","../data/spells/빛.json":"data/spells/빛.json","../data/spells/order.json":"data/spells/order.json","../data/books.json":"data/books.json","../data/decks.json":"data/decks.json","../data/tiers.json":"data/tiers.json","../data/skills.json":"data/skills.json","../data/gear.json":"data/gear.json"}];
 D["src/index.js"] = [function (module, exports, require) {
 'use strict';
-/* 숨 결투장 v2.32.0 — 바깥으로 내보내는 API
+/* 숨 결투장 v2.33.0 — 바깥으로 내보내는 API
  * Node: const A = require('./src')   브라우저: 전역 Arena (sandbox/arena.js 묶음, node cli.js pack)
  * 데이터(마법·마법책·덱·등급·판단 수준·장비)는 data/에 JSON으로 있다. 판단 수준은 brain/skills.js, 행동 지표는 metrics/look.js */
 const core = require('./core'), brain = require('./brain'), makeRegistry = require('./registry');
@@ -3388,7 +3388,7 @@ module.exports = { sin, cos, atan, atan2, exp, log, pow, hyp, hyp3, clamp, mulbe
 D["src/registry.js"] = [function (module, exports, require) {
 'use strict';
 /* =========================================================================
- * 숨 결투장 — 등록 v2.32.0
+ * 숨 결투장 — 등록 v2.33.0
  * 새 마법·덱·등급·두뇌·규칙을 붙이는 곳. Arena.register.spell(...) 모양으로 쓴다.
  * 등록한 것은 그 프로세스(브라우저 탭) 안의 모든 판에 붙는다. 한 장면에서만 덮으려면 장면의 spells·decks를 쓴다.
  * 규칙은 규칙 모듈(SPEC 22장)로 붙는다: src/rules/의 파일과 같은 모양
@@ -6736,5 +6736,5 @@ G.ArenaData = { spells: G.ArenaCore.SPELLS, books: load('data/books.json'), visu
   "smother": "덮기: 몸 둘레를 덮는 막",
   "blueprint": "청사진: 여러 칸을 한꺼번에"
  }
-}, scenes: {"v2-agile-legend":{"v":"2.32.0","name":"[역사] 대마법사 전설 대 대가: 반사 겹·끊는 움직임·청사진 (청사진 덱, 매 걸음 녹화, 200×150)","seed":4,"width":200,"height":150,"rules":{"profile":"청사진"},"recEvery":1,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 청사진"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 8/9)이 이기고 길이(69.87 s)가 가운데값(69.87 s)에 가장 가까운 판"},"v2-chess-legend":{"v":"2.32.0","name":"[역사] 대마법사 수읽기 전설 대 전설: 체크와 메이트 (수읽기 덱, 200×150)","seed":6,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]}],"note":"수읽기(v2.15)를 보는 장면: 큰 한 방(대낙뢰·화산 기둥)과 정석(폭풍의 세 수·바위 감옥)이 든 덱. 대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 5/9)이 이기고 길이(55.0 s)가 가운데값(54.9 s)에 가장 가까운 판"},"v2-fort-legend":{"v":"2.32.0","name":"[역사] 대마법사 전설 대 대가: 날기 끊기와 진지 (진지 덱, 날기 끊기·진지·함정 연쇄, 200×150)","seed":3,"width":200,"height":150,"rules":{"profile":"진지"},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 진지"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 진지"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(67.5 s)가 가운데값(67.5 s)에 가장 가까운 판"},"v2-master-legend":{"v":"2.32.0","name":"[역사] 대마법사 전설 대 대가: 떠보기·들어가기·빠지기, 지형 (운영 덱, 200×150)","seed":5,"width":200,"height":150,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 운영"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 운영"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 6/9)이 이기고 길이(54.07 s)가 가운데값(54.07 s)에 가장 가까운 판"},"v2-pace-compare":{"v":"2.32.0","name":"[역사] 나란히: 대마법사 전설 대 전설(빠른 판) · 평범 대 평범, 같은 시간","seed":3,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]}],"note":"샌드박스는 beside 장면을 오른쪽 칸에 같은 시간만큼 나란히 돌린다(명령줄은 왼쪽 판만). 아래 띠는 지금까지의 평균 속도·방향 전환·하는 일·교환 (v2.14). 씨앗 3: 편 1이 56.7 s에 이긴다","beside":{"name":"평범 대 평범 (합법 최강, 40×30)","seed":3,"width":40,"height":30,"maxT":120,"sides":[{"name":"평범 A","mages":[{"tier":"평범","deck":"합법 최강"}]},{"name":"평범 B","mages":[{"tier":"평범","deck":"합법 최강"}]}]}},"v2-tactics-legend":{"v":"2.32.0","name":"대마법사 결투장 전설 대 전설: 빠른 판·잘게 걷기 (결투 덱, 200×150)","seed":1,"width":200,"height":150,"rules":{"profile":"결투장"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 1, 5/9)이 이기고 길이(64.0 s)가 가운데값(64.0 s)에 가장 가까운 판"}} };
+}, scenes: {"v2-agile-legend":{"v":"2.33.0","name":"[역사] 대마법사 전설 대 대가: 반사 겹·끊는 움직임·청사진 (청사진 덱, 매 걸음 녹화, 200×150)","seed":4,"width":200,"height":150,"rules":{"profile":"청사진"},"recEvery":1,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 청사진"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 8/9)이 이기고 길이(69.87 s)가 가운데값(69.87 s)에 가장 가까운 판"},"v2-chess-legend":{"v":"2.33.0","name":"[역사] 대마법사 수읽기 전설 대 전설: 체크와 메이트 (수읽기 덱, 200×150)","seed":6,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 수읽기"}]}],"note":"수읽기(v2.15)를 보는 장면: 큰 한 방(대낙뢰·화산 기둥)과 정석(폭풍의 세 수·바위 감옥)이 든 덱. 대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 5/9)이 이기고 길이(55.0 s)가 가운데값(54.9 s)에 가장 가까운 판"},"v2-fort-legend":{"v":"2.33.0","name":"[역사] 대마법사 전설 대 대가: 날기 끊기와 진지 (진지 덱, 날기 끊기·진지·함정 연쇄, 200×150)","seed":3,"width":200,"height":150,"rules":{"profile":"진지"},"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 진지"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 진지"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 9/9)이 이기고 길이(67.5 s)가 가운데값(67.5 s)에 가장 가까운 판"},"v2-master-legend":{"v":"2.33.0","name":"[역사] 대마법사 전설 대 대가: 떠보기·들어가기·빠지기, 지형 (운영 덱, 200×150)","seed":5,"width":200,"height":150,"sides":[{"name":"전설","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 운영"}]},{"name":"대가","mages":[{"tier":"대마법사","skill":"대가","deck":"대마법사 운영"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 0, 6/9)이 이기고 길이(54.07 s)가 가운데값(54.07 s)에 가장 가까운 판"},"v2-pace-compare":{"v":"2.33.0","name":"[역사] 나란히: 대마법사 전설 대 전설(빠른 판) · 평범 대 평범, 같은 시간","seed":3,"width":200,"height":150,"rules":{"profile":"빠른 판"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 청사진"}]}],"note":"샌드박스는 beside 장면을 오른쪽 칸에 같은 시간만큼 나란히 돌린다(명령줄은 왼쪽 판만). 아래 띠는 지금까지의 평균 속도·방향 전환·하는 일·교환 (v2.14). 씨앗 3: 편 1이 56.7 s에 이긴다","beside":{"name":"평범 대 평범 (합법 최강, 40×30)","seed":3,"width":40,"height":30,"maxT":120,"sides":[{"name":"평범 A","mages":[{"tier":"평범","deck":"합법 최강"}]},{"name":"평범 B","mages":[{"tier":"평범","deck":"합법 최강"}]}]}},"v2-tactics-legend":{"v":"2.33.0","name":"대마법사 결투장 전설 대 전설: 빠른 판·잘게 걷기 (결투 덱, 200×150)","seed":1,"width":200,"height":150,"rules":{"profile":"결투장"},"sides":[{"name":"전설 A","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]},{"name":"전설 B","mages":[{"tier":"대마법사","skill":"전설","deck":"대마법사 결투"}]}],"note":"대표 판: 씨앗 1~9 중 많이 이긴 쪽(편 1, 5/9)이 이기고 길이(64.0 s)가 가운데값(64.0 s)에 가장 가까운 판"}} };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

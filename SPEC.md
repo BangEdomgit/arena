@@ -1,4 +1,4 @@
-# 숨 결투장 규격 v2.32.0
+# 숨 결투장 규격 v2.33.0
 
 이 문서가 결투장의 **유일한 기준**이다. 규칙을 바꾸려면 이 문서를 먼저 고치고, 코드를 맞추고, 시험을 돌리고, 버전을 올린다. 세계관의 근거는 `WORLD.md`(설정집 3판).
 
@@ -13,6 +13,8 @@
 5. **규칙은 스위치로, 규칙 모듈로만**: 새 규칙은 `rules`의 스위치를 가진 규칙 모듈(22장) 하나로 넣고, 정해진 훅에만 끼어든다. 끄면 이전 동작이 나와야 한다(꺼진 규칙의 훅은 모이지 않는다)
 
 ## 1. 버전과 업데이트 절차
+
+**v2.33.0 (조건 짓개·공성·갇힌 판·합창 깨기, 55장)**: 조건 짓개 `src/scenario.js`(`A.scenario = { list, build }`): 조건(`data/conditions.json`, 32개)을 부를 때마다 지금 엔진의 수(단계의 선명도 → 장악 반경 `domainR` × C, 덱 공격 마법 R의 가운데 → 사거리)로 배치해 장면을 짓는다. 규칙은 묶음 `지금` + 조건의 rules, 판 크기는 가장 먼 무리·지형에 맞춘다, 같은 조건·씨앗이면 같은 장면. 예전 [지금]·`x-*`·포 장면 파일을 조건으로 옮기고 [역사] 장면만 파일로 남겼다. 샌드박스 목록 맨 위에 "조건: 지금 엔진 vX가 배치", 주소 `#c:c19&seed=3&t=20`. 장면 칸 `timeWin`(시간이 다 되면 이기는 편)·`closed`(갇힌 판: 물러서거나 끝으로 빠질 수 없다). 둥근 탄은 거의 선 과녁이면 불을 댈 때 그 자리에 바로 대어(떠서 멈춘 과녁도 300 m에서 맞는다), 움직이는 과녁엔 25 m 안에서만 쏜다. 산탄은 120 m 밖으로 아낀다. 새 H23 공성(c24: 성벽·문의 포 일곱 + 머스킷 70, 대마법사는 150 m 밖에서, 시간이 다 되면 도시), 새 H17(c32: 소금 원에 갇힌 전설 대 둘러싼 전투단 50), 합창 깨기 지표(깬 합창·넓은 마법 몫·앞소리꾼 몫)와 전설의 기술 `tac.chorusBreak`. 끄면(장면이 켜지 않으면) 결과 지문·suite 그대로
 
 **v2.32.0 (무리의 손·포수·소금 길, 54장 끝)**: 합창은 맞출 땐 서로 `R`(6) m, 이어 갈 땐 `keepR`(9) m, 곁의 같은 편이 이어 가는 합창에 끼어든다(`join`, 다시 박자를 맞춘다): 오래 선 합창이 판마다 1.6 → 12번. `edgeCancel`은 합창이 맞춰진 사람의 수를 끊지 않는다. `crowdFire`는 때 고르기를 거두고 덮어 쏘기(명중 문턱에 막힌 직사도 값 `cover`)로. 포병: 쓰러진 포수 자리를 곁의 머스킷 병이 채운다(`crew.fill`), 흙 가마니(`gabion`, 기본 0줄). `saltWise`: 과녁이 멀어 소금으로 들어가야 하면 소금을 덜 밟는 길로(`route`). `unstuck`은 벽도 끼고 돈다. 문턱 H23·H24는 60판, H27(소금 도시 + 포 열, 모두 50 m 밖)
 
@@ -616,6 +618,7 @@ const res = await runJobs([{ mod: require.resolve('./test/suite'), fn: 'duelsFro
 
 - 사람 자리(`x`, `y`)를 모두 비우고 바위를 비우면 `A.battle`과 **같은 판**이 된다. 예: `archmage-50`은 `node cli.js ring 대마법사 평범 50 기본기`의 씨앗 1과 같다
 - `node cli.js scene 장면.json [녹화.json]`: 명령줄에서 장면 한 판
+- 조건 (엔진 v2.33, 55장): 장면 목록 맨 위의 묶음 "조건: 지금 엔진 vX가 배치"는 `Arena.scenario.list()`, 고르면 `Arena.scenario.build(id, { seed })`로 지어 연다. 주소 `#c:c19&seed=3&t=20`
 - 주소로 열기 (엔진 v2.30): `sandbox/index.html#장면&seed=2&t=34.5`는 그 장면(`sandbox/scenes`의 이름)을 그 씨앗으로 열어 그 시각까지 돌리고 멈춘다. 주소가 바뀌면(`hashchange`) 다시 연다. 지능 점검(`node cli.js audit`, 53장)의 사건마다 이 주소가 붙는다
 
 ### 등록 (`Arena.register`)
@@ -2489,6 +2492,26 @@ v2.19의 숨김은 싸고 완벽해서 숨기·벽·순간 켜기를 모두 쓸�
 - `unstuck`: 막은 것이 벽이어도 끼고 돈다(`walls`)
 - 문턱: H23·H24는 세 배 판(60판), H27 소금 도시 + 포 열(모두 시작 자리에서 50 m 밖, 처형 판 없이, 봄). 장면 `salt-city-gun8`·`10`·`12`(`army.js`, 50 m 밖)
 
+## 55. 조건 짓개·공성·갇힌 판·합창 깨기 (v2.33.0)
+
+**조건 짓개** (`src/scenario.js`, 조건은 `data/conditions.json`): 장면 파일은 그 버전의 수로 박제된다(장악 반경이 바뀌면 고리가 장악권 안에서 시작한다). 조건은 무엇이 어디에 몇 있는지만 적고, 자리는 부를 때마다 지금 엔진이 정한다.
+- 조건 = `{ id, name, note, field?, maxT?, timeWin?, closed?, margin?, rules?, decks?, layout?, terrain?, sides: [{ name, groups: [{ tier, n, skill, deck, form, d?, rows?, team?, out?, area?, step?, gates?, gabion?, squad?, chorus?, tac?, hp?, z?, name? }] }] }`. `skill`·`deck`이 배열이면 사람마다 돌려 가며
+- `build(조건 | id, { seed })` → 장면(`cond`, `info.prot { C, dom, range }`를 더한다). 주인공(첫 편 첫 무리의 첫 사람)이 (0, 0), 무리는 +x 쪽에. 단계의 선명도(`data/tiers.json`) → 장악 반경 `domainR` × C, 덱 공격 마법 R × √C의 가운데 → 사거리. 규칙은 `{ profile: '지금' }` 위에 조건의 rules(무리에 `squad`·`chorus`가 있으면 그 스위치, 포가 있으면 `artillery`와 포 덱). 판 크기는 사람·지형의 끝 + 둘레 `margin`(12 m), 주인공이 `edge`면 왼쪽 끝 6 m
+- 배치 `form`: `center`·`edge`·`near`(곁, 황금각) · `ring`(장악 반경 + 10 m 바깥의 황금각 나선, 한 사람이 `area` m²) · `squads`(`team`명씩 조, 조 사이 같은 각, 장악 반경 + `out`) · `arc`(반원, 거리 `d`) · `line`(거리 `d`, `rows`줄) · `cluster` · `inFort`(소금 성채 안) · `city`(소금 도시의 골목, 씨앗의 난수) · `battery`(포 `n`문, `d` m 밖 또는 문마다 5 m 안쪽(`gates`), 포수 넷, `gabion`이면 흙 가마니가 앞과 옆 270°, 앞의 포신 자리만 빈다) · `auto`(엔진이 놓는다, 장면의 `layout`)
+- 지형 `terrain`: `rocks`(바위 수, 사람을 피한다), `salt`: `under`(발밑) · `fort`(소금 마당 + 흙 성벽 고리, 문 넷) · `city`(골목 격자의 건물, 광장 셋만 맨땅, `wall`이면 서쪽 성벽에 문 `gates`개), `d`(지형의 가운데까지 m), `redoubt`(주인공 둘레 보루)
+- 같은 조건·씨앗이면 늘 같은 장면(난수는 씨앗의 mulberry32). 결정론 수학(`math.js`)만
+- 쓰는 곳: 샌드박스 목록 맨 위 "조건: 지금 엔진 vX가 배치"(주소 `#c:c19&seed=3&t=20`), `node cli.js scene c01 [씨앗]`, 점검(`audit`: 조건마다 씨앗마다 짓는다, 링크 `#c:`), 문턱(H8·H9·H12·H17·H23~H27), suite의 모습 줄(c06·c07·c09), `experiments/army.js`·`bound.js`(이름이 `c` + 수면 조건). [역사] 장면만 `sandbox/scenes`에 남는다
+
+**장면 칸** (`createWorld`의 `timeWin`·`closed`, 기본 −1·꺼짐이면 예전과 같다): `timeWin`이면 시간이 다 됐을 때 살아 있는 그 편이 이긴다(`byTime`). `closed`면 갇힌 판: 다수 모드의 물러서기(`squad`의 `losing`)가 서지 않고, 도망치는 사람도 판 끝에서 빠지지 않는다(`morale`)
+
+**둥근 탄** (`artillery`): 거의 선 과녁(`round.slowV` 3 m/s 아래)이면 불을 댈 때 그 자리에 바로 댄다(엔진 훅 `track`: 떠서 멈춘 과녁도 300 m에서 맞는다, 흔들림 `aimN` 0.0006 + `aimD` 1e-6 × 거리). 움직이는 과녁엔 `round.moveD`(25) m 안에서만 쏜다(겨눈 곳으로 곧게 가니 멀면 헛쏘고 30 s를 비운다). 산탄은 `canister.far`(120) m 밖으로 아낀다
+
+**공성** (조건 c24, 새 H23): 대마법사(대가, 성 덱)는 왼쪽 끝에서, 소금 도시(200 × 150, 가운데가 280 m 앞)의 서쪽 성벽에 문 셋, 포 일곱이 문 안쪽을 지키고(흙 가마니 270°) 머스킷 70이 골목에. 포는 시작 자리에서 150 m 넘게 떨어져 있다. 시간(240 s)이 다 되면 도시가 버틴 것(`timeWin` 1). 대마법사는 25 m/s로 날아 들어와 움직이며 곡사(돌 비)로 포수를 친다: 멈춰 서는 동안은 포의 시야 밖에 있었다(시야 안에 멈춘 시간 0 s). 포 수에 가파르다(머스킷 60에 포 여섯 60%·일곱 55%·여덟 23%·아홉 10%, 일곱 + 머스킷 70이 42%, 30~60판). 처형 판(3 s 안에 끝) 몫은 H27
+
+**갇힌 판** (조건 c32, 새 H17): 전설(서클 11, 결투 덱)이 가운데, 상위 전투단(대가·상급, 덱 셋, 합창)이 장악 반경 + 10 m 바깥 고리에서 둘러싸고 시작, 소금 원이 좁혀 든다, `closed`. 열린 판에선 지는 대마법사가 물러나는 것이 맞는 결과(잡으려면 가둬야 한다). 무리 50이면 쓰러짐 약 46%(24판), 45 약 38%, 55 75%, 70 88%
+
+**합창 깨기** (`chorus`): 지표 — 깬 합창(`brokeHit`: 맞춰진 합창이 한 명이 쓰러지거나 굳어 깨진 수), 선명도 `bigC`(5) 이상이 합창하는 사람에게 쏜 수(`atN`)·그중 넓은 마법(area·lob·cone, `wideN`)·앞소리꾼을 노린 것(`leadN`). 판단 수준의 기술 `tac.chorusBreak`(전설): 두뇌 훅 `aim`으로 `brk.R`(70) m 안 합창의 앞소리꾼을 노린다(거리 − 사람 수 × `nW` − 짓는 중이면 `castB`, 맞추는 중인 무리는 `formB`를 더 뺀다), `valueLate`로 묶는 수(굳히면 깨진다) × `bind`(짓는 중인 앞소리꾼엔 × `castK`), 넓은 마법 × `wide`, 넓은 곡사·지연 폭발은 합창의 가운데로 겨눈다. 재 보니 전설의 경계(막는 수, 서클 11 승률 50%의 무리 수)는 약 45로 기술 없이(약 43)와 거의 같다: 앞소리꾼을 노린 몫은 0.45 → 0.99로 바뀌었지만 판을 가르는 것은 앞소리꾼의 빠른 번개 그물(합창 위력 × √N^2.5, 대마법사가 입은 피해의 약 1/3)이고, 둘러싸인 판에선 거리를 둘 곳이 없다. 대가의 경계는 약 30(서클 8·11 모두). 합창을 끄면 전설은 50에 100%, 70에 88%
+
 ## 부록 A. 구현 메모 (v2.23.1에 CLAUDE.md에서 옮김)
 
 CLAUDE.md는 원칙과 어디를 볼지만 둔다. 버전마다 새로 생긴 상태·훅·기록의 자리와 실험 명령은 여기에 쌓는다(새 버전의 메모도 여기에).
@@ -2551,3 +2574,4 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 - **v2.1 (SPEC 25장)**: 장악권은 도달 반경(`domainR` × C) 안에서만 다투고 실은 길 전체로 선다. 부딪히는 피해는 굳은 살(`callus`)만큼 뺀다. 벽은 모두 `core.addWall`로 세운다(모양 고정, 재료 `mat`). 벽을 훑는 새 코드는 `wallsIn`(격자)을 쓴다. 무리·대마법사 두뇌는 `techniques/swarm.js`·`siege.js`(켜지는 때에만)
 - **v2.0 기본 (SPEC 24장)**: `risk`·`saltRing`·`wave`·`evade`·`flight`가 켜져 있고 `bodyK`는 2.3(`hpScale`은 끔). 비행은 높이 `z`를 더한다: 새 거리 계산은 높이를 넣어(`hyp3`), 땅에 서는 것(지대·함정·지연 폭발)은 `z ≥ 1`이면 건너뛴다. 1.x 동작을 볼 땐 `rules: A.V1_RULES`. 1.x를 전제로 한 시험은 `test/test.js`의 `legacy(true)` 구간에 둔다
 - **v2.24**: 시험 규칙 `rules/chipGuard`(스위치 `chipGuard`, `data/rules/chipGuard.json`, 기록 `mlog.chip`). `core.hurt`의 7번째 인자 `tick`(걸음마다 드는 피해), `hurtMod`는 `src`·`tick`도 받는다. core가 `hurt`를 내보낸다(시험)
+- **v2.33 (SPEC 55장)**: 조건 짓개는 `src/scenario.js`(`index.js`가 `scenario`로 내보낸다, 묶음에도 든다), 조건은 `data/conditions.json`. 세계의 새 칸 `W.timeWin`(−1)·`W.closed`(false)는 `createWorld`의 리터럴에, 장면에서 `sceneWorld`가 넘긴다. `closed`를 보는 곳: `rules/squad`의 `losing`, `rules/morale`의 끝에서 빼기. 합창 깨기는 `rules/chorus`의 두뇌 훅 `aim`·`valueLate`(`brain: B =>`로 바뀌었다), 지표는 `chorus.stats`의 `brokeHit`·`atN`·`wideN`·`leadN`(엔진 훅 `release`), 수는 `data/rules/chorus.json`의 `bigC`·`brk`. 둥근 탄의 바로 대기는 `artillery`의 엔진 훅 `track`. `experiments/bound.js`·`army.js`·`audit.js`·`test/suite.js`의 `sceneWins`는 이름이 `c` + 수면 조건을 짓는다. 새 훅은 없다
