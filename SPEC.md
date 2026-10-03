@@ -14,6 +14,8 @@
 
 ## 1. 버전과 업데이트 절차
 
+**v2.32.0 (무리의 손·포수·소금 길, 54장 끝)**: 합창은 맞출 땐 서로 `R`(6) m, 이어 갈 땐 `keepR`(9) m, 곁의 같은 편이 이어 가는 합창에 끼어든다(`join`, 다시 박자를 맞춘다): 오래 선 합창이 판마다 1.6 → 12번. `edgeCancel`은 합창이 맞춰진 사람의 수를 끊지 않는다. `crowdFire`는 때 고르기를 거두고 덮어 쏘기(명중 문턱에 막힌 직사도 값 `cover`)로. 포병: 쓰러진 포수 자리를 곁의 머스킷 병이 채운다(`crew.fill`), 흙 가마니(`gabion`, 기본 0줄). `saltWise`: 과녁이 멀어 소금으로 들어가야 하면 소금을 덜 밟는 길로(`route`). `unstuck`은 벽도 끼고 돈다. 문턱 H23·H24는 60판, H27(소금 도시 + 포 열, 모두 50 m 밖)
+
 **v2.31.0 (포병과 소금 탄, 54장 · 점검·경계 고침, 53장 끝)**: 규칙 `artillery`(기본 꺼짐, 포가 든 장면이 켠다): 청동포(산탄·둥근 탄·소금 탄)는 포수 넷이 곁에 있어야 쏘고 끌며, 마법 피해는 거의 받지 않는다. 산탄은 쇠공 60개 원뿔(석회 방패가 85%를 막는다), 둥근 탄은 방패를 뚫는 한 방, 소금 탄은 반지름 12 m 소금 안개(30 s): 안에선 마법이 서지 않고, 장악권·날기·몸 마법이 꺼진다. 대마법사는 안개와 포의 사선을 피하고 포수부터 노린다. 엔진에 시전 필드 `pierce`(방패를 뚫는 몫). 규칙 `edgeCancel`('지금'): 나보다 1.5배 넘게 선명한 과녁 앞에선 장악권에 흩어질 수를 짓지 않고, 짓다가 흩어지게 되면 끊고 물러난다. 점검: 도망은 상대가 3배 넘게 선명하면 세지 않는다, 합창 맞추기·닻 기다리기는 기회 놓침이 아니다, 포 탐지기 둘. 문턱 H23~H26
 
 **v2.30.0 (지능 점검과 원인 고침, 53장)**: 늘 돌릴 수 있는 지능 점검 `node cli.js audit`(모든 장면 × 씨앗, 탐지기 열다섯, 문턱은 `data/rules/audit.json`, 사건마다 샌드박스를 그 장면·씨앗·시각으로 여는 주소 `sandbox/index.html#장면&seed=2&t=34.5`). 찾은 것을 원인부터 고친 규칙 여섯(모두 기본 꺼짐, 끄면 결과 지문 그대로): `resolve`(사기의 버팀), `fireLane`(사선), `saltWise`(소금을 아는 대마법사), `selfSafe`(스스로 다치지 않기), `crowdFire`(갈라 쏘기), `unstuck`(막힘 풀기, 땅에 붙은 날기 버그 포함). 규칙 묶음 `지금`에 crowdFire를 뺀 다섯을 더했다(결투장 묶음과 전설 대 전설 줄은 그대로). 점검 장면 `x-*` 여섯
@@ -2477,6 +2479,16 @@ v2.19의 숨김은 싸고 완벽해서 숨기·벽·순간 켜기를 모두 쓸�
 
 **점검**: 포 사선에 아군(쏠 때 산탄 원뿔·둥근 탄 사선에 우리 편), 소금 안개 안에서 짓기
 
+**v2.32 덧붙임 (54장)**
+- 합창 (`rules/chorus`, `data/rules/chorus.json`): 잰 원인 — 상위 전투단 50(서클 11 전설) 세 판에서 합창이 깨진 259번 가운데 220번이 '멀어짐'(조원 사이가 R 6 m를 넘음), 합창의 가운데 지속 2.5 s(오래 선 합창의 문턱 3 s 아래), 무리 한 사람이 합창 중인 몫 10%. 이어 가는 합창은 `keepR`(9) m까지 버틴다. 끼어들기(`join`): 이어 가는 합창에 모두에게서 R 안인 같은 편(아직 합창하지 않는, 단계의 한계 안)이 들어오고, 들어오면 다시 `sync` s 맞춘다. 합창 중인 몫 24%, 오래 선 합창 판마다 0.7 → 13(같은 세 판). 막는 수 서클 8 대 상위 전투단 30: 100% → 63~67%(24판)
+- `edgeCancel`: 합창이 맞춰진 사람(`chorus.of`)의 수는 짓지 않거나 끊지 않는다
+- `crowdFire` 덮어 쏘기: 전투단의 직사가 사거리 안이면 명중 문턱에 막혀도 값 `cover`(0.5). 다시 잰 강요(원거리 덱 전투단 30 대 전설, 씨앗 여섯): 사격 315 → 331/분, 구르기 81 → 75·끊기 28 → 33·막기 6.4 → 6.3/분 — 직사는 이미 다시 쓰기 간격에 묶여 있어 문턱을 떼도 더 쏘지 못한다. '지금'에 넣지 않는다
+- 포수 채우기 (`artillery`, `crew.fill` 25 m, `crew.every` 걸음): 포에 붙은 포수(살아 있고 달아나지 않은)가 넷보다 적으면 곁의 머스킷 병을 가까운 차례로 포수로(`tac.crew`). 포수가 모두 없어도 채울 병이 있으면 버려지지 않는다. 기록 `stOf(W).filled`
+- 흙 가마니 (`gabion`, 장면 짓개 `army.js`의 `gabions`): 포 앞 `d` m에 포신 자리(± `gap`/2)를 비운 낮은 흙벽 `n`개. 처음 과녁 쪽으로만 서서, 과녁이 돌면 포가 제 가마니로 쏘게 된다. 소금 도시에서 대마법사 승률을 낮추지 못해(73~82%) 기본 `n` 0
+- 소금을 건너는 길 (`saltWise`, `route`): 맨땅에서 과녁이 멀어(손닿는 거리 밖) 다음 걸음이 소금이면, 16 방향마다 앞 `probe`(24) m를 2 m씩 재 (과녁 쪽으로 나아가는 거리 − `saltK`(1.5) × 소금 길이)가 가장 큰 쪽으로. 소금 판 넷의 위험 지대 43 → 31
+- `unstuck`: 막은 것이 벽이어도 끼고 돈다(`walls`)
+- 문턱: H23·H24는 세 배 판(60판), H27 소금 도시 + 포 열(모두 시작 자리에서 50 m 밖, 처형 판 없이, 봄). 장면 `salt-city-gun8`·`10`·`12`(`army.js`, 50 m 밖)
+
 ## 부록 A. 구현 메모 (v2.23.1에 CLAUDE.md에서 옮김)
 
 CLAUDE.md는 원칙과 어디를 볼지만 둔다. 버전마다 새로 생긴 상태·훅·기록의 자리와 실험 명령은 여기에 쌓는다(새 버전의 메모도 여기에).
@@ -2502,6 +2514,7 @@ node experiments/v2rules.js 1     # 대실험: 규칙 16조합 총당 (2·3단�
 
 ### A.2 버전마다의 자리
 
+- **v2.32**: `rules/chorus`의 `keepR`·`join`(이어 가기·끼어들기, `update` 안), api `forming`. `rules/artillery`의 `fill`(포수 채우기, `S.filled`), 장면 짓개 `army.js`의 `gabions`·`FAR`·`CITY8`. `rules/saltWise`의 `route`. `rules/crowdFire`는 `valueLate`만(때 고르기 거둠)
 - **v2.31**: `rules/artillery`(스위치 `artillery`, 엔진 훅 `world`·`speed`·`roll`·`hurtMod`·`mageStep`·`release`·`gate`·`share`·`lobLand`·`track`·`wallHit`, 틀 `canister`·`saltshell`, 두뇌 훅 `aim`·`valueLate`·`commit`·`steer`). 상태는 WeakMap(세계 → 포·포수·곁의 포수 수, 시전 → 늦춘 시간). 포·포수는 `tac.gun`·`tac.crew`. 엔진 시전 필드 `pierce`(`SPELL_KEYS`). `rules/edgeCancel`(두뇌 훅 `valueLate`·`cancel`·`steer`, WeakMap BACK). 점검이 읽는 api: `squad.phaseOf`, `chorus.forming`, `artillery.inFog`·`coneAlly`·`isGun`. `audit.dataCheck(scs)`·`run(…, opt.after)`
 - **v2.30**: 점검은 `experiments/audit.js`(`run(key, seed, rules, opt)`: 시험은 `opt.sc` 장면 객체·`prep`·`step`·`after`로 탐지기를 하나씩 일으킨다, `dataCheck`, `render`). 새 규칙 여섯은 모두 상태를 모듈의 WeakMap에(사람에 칸을 더하지 않는다): `fireLane`(BL 비킬 쪽·HOLD 늦춘 시간), `unstuck`(ST 잰 자리·돌기), `saltWise`·`selfSafe`·`crowdFire`(상태 없음). 다른 규칙 파일에 이 스위치를 보는 곳: `rules/gunfire`의 반사 방패·`rules/multiSlot`의 자동 진(saltWise), `rules/morale`의 `resolveK`(resolve, api). 새 훅은 없다. 샌드박스의 `openHash()`(`#장면&seed=&t=`)
 - **v2.29**: `rules/squad`의 닻(`b.ax`·`ay` 평균 자리, `b.cx`·`cy` 닻을 놓은 기준, `b.anc` 조마다 닻, `b.ts` 조의 차례), 장악권 규율(steer), 숨 돌리기(`S.solo`의 `thr`·`rest`), 무리 시간 지표(`stats.crowd`). `rules/chorus`의 `good`. `core.result`의 `dead`·`fled`

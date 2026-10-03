@@ -4,7 +4,7 @@
  *   eps m 아래로 내려오면 내려앉는다(rules/flight의 착지와 같다)
  * 판 끝: 판 밖으로 걸으려는 몫은 버리고 끝을 따라 미끄러진다(물러서다 모서리에 몰려 한 점에 쌓이지 않게)
  * 막혀 제자리: 걸으려는데(걸음 0.5 넘게) every s 동안 d m도 못 갔으면 hold s(거듭 막히면 네 배까지) 동안 옆으로 돌아간다.
- *   곁(near m)의 바위가 막았으면 바위를 끼고 돈다(가려던 쪽에 가까운 접선, 조금 밖으로 out), 아니면 직각으로 같은 쪽으로 가다가 세 번 막히면 쪽을 바꾼다 */
+ *   곁(near m)의 바위(v2.32부터 벽도)가 막았으면 바위를 끼고 돈다(가려던 쪽에 가까운 접선, 조금 밖으로 out), 아니면 직각으로 같은 쪽으로 가다가 세 번 막히면 쪽을 바꾼다 */
 const P = require('../../data/rules/unstuck.json');
 const ST = new WeakMap();   // 사람 → { x, y, t: 잰 시각, until: 돌아가는 끝 시각, sx: 쪽, n: 거듭 막힌 수, o: 막은 바위 }
 module.exports = {
@@ -26,6 +26,7 @@ module.exports = {
       const want = B.hyp(K.vx, K.vy) > 0.5 && !(m.st.root > 0) && !(m.st.stun > 0) && !m.cast;
       if (want && B.hyp(m.x - s.x, m.y - s.y) < P.d) { s.n++; s.until = W.t + P.hold * (s.n < 4 ? s.n : 4);
         let bo = null, bd = P.near; for (const o of W.obs) { const d = B.hyp(o.x - m.x, o.y - m.y) - o.r; if (d < bd) { bd = d; bo = o; } }   // 막은 바위
+        if (P.walls) for (const o of W.walls) { if (!(o.hp > 0)) continue; const d = B.hyp(o.x - m.x, o.y - m.y) - o.r; if (d < bd) { bd = d; bo = o; } }   // 벽도 (v2.32)
         s.o = bo; if (!bo && s.n % 3 === 0) s.sx = -s.sx; }
       else if (!want || B.hyp(m.x - s.x, m.y - s.y) > P.d * 4) s.n = 0;
       s.x = m.x; s.y = m.y; s.t = W.t;
