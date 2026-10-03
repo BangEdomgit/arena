@@ -10,6 +10,7 @@
  *   node cli.js pack                샌드박스가 읽을 sandbox/arena.js(엔진·데이터·장면 묶음) 다시 싸기
  *   node cli.js suite [묶음] [--save] [--jobs N]   표준 시험 묶음: 기준(suite-baseline.json)과 비교, --save면 기준 저장. 기본은 코어 수만큼 병렬(par.js)
  *   node cli.js report [--n 100] [--crowd 20] [--show]   성적표: 결투장 전설 대 전설·사다리·상위 무리 기준을 재서 reports/scorecard.json·.md에 이 버전으로 쌓는다 (v2.9)
+ *   node cli.js audit [--seeds 1,2,3] [--only 장면,…] [--rules '{…}'] [--save 이름]   지능 점검: 모든 장면 × 씨앗의 사건을 reports/audit.md에 (v2.30)
  *   node cli.js gate [--quick] [--show]               v3.0 문턱(GATE-v4.md 1장)을 재서 통과·불합격·못 잼을 reports/gate.json·.md에 이 버전으로 쌓는다 (v2.16)
  */
 const A = require('./src');
@@ -55,4 +56,5 @@ if (cmd === 'scene') {
 if (cmd === 'pack') console.log('쌈', require('./sandbox/pack').write());
 if (cmd === 'suite') require('./test/suite').main(args);
 if (cmd === 'report') require('./experiments/report').main(args).catch(e => { console.error(e); process.exitCode = 1; });   // 성적표 (v2.9, SPEC 33장)
+if (cmd === 'audit') require('./experiments/audit').main(args).catch(e => { console.error(e); process.exitCode = 1; });   // 지능 점검 (v2.30, SPEC 53장)
 if (cmd === 'gate') require('./experiments/gate').main(args).catch(e => { console.error(e); process.exitCode = 1; });   // v3.0 문턱 (v2.16, SPEC 40장, GATE-v4.md)

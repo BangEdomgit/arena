@@ -681,6 +681,13 @@ $('vLeg').onchange = renderLegend; renderLegend();
 window.Sandbox = { S, loadScene, step, runToEnd, seek, exportScene, exportRecording, importText, reset: () => { reset(); renderAll(); } };
 
 // 열면 첫 예시 장면이 바로 돈다
-loadScene(D.scenes.duel || Object.values(D.scenes)[0]); S.play = true; start(); syncButtons();
+// 주소로 열기 (v0.3, node cli.js audit의 링크): #장면&seed=2&t=34.5 → 그 장면·씨앗을 그 시각까지 돌려 멈춘다
+function openHash() {
+  const h = decodeURIComponent((location.hash || '').slice(1)); if (!h) return false; const [key, ...kv] = h.split('&'), o = {}; for (const x of kv) { const [k, v] = x.split('='); o[k] = v; }
+  const sc = D.scenes[key]; if (!sc) { note('주소의 장면이 없다: ' + key); return false; }
+  const c = clone(sc); if (o.seed) c.seed = +o.seed; loadScene(c); if (o.t) { seek(+o.t); S.play = false; } else { S.play = true; start(); } syncButtons(); note('주소로 열었다: ' + key + (o.seed ? ' · 씨앗 ' + o.seed : '') + (o.t ? ' · ' + o.t + ' s' : '')); return true;
+}
+window.addEventListener('hashchange', openHash);
+if (!openHash()) { loadScene(D.scenes.duel || Object.values(D.scenes)[0]); S.play = true; start(); syncButtons(); }
 requestAnimationFrame(loop);
 })();
