@@ -20,10 +20,15 @@ function update(X, W) {
   // 지난 합창을 먼저 이어 본다: 모두 서 있고 서로 R 안이면 그대로(깨지면 cd)
   for (const g of old) {
     let ok = true; for (const m of g.ms) if (!able(W, m, S) && !(m.st.stun > 0 && false)) { ok = false; break; }
-    if (ok) for (let i = 0; i < g.ms.length && ok; i++) for (let j = i + 1; j < g.ms.length; j++) if (X.hyp(g.ms[i].x - g.ms[j].x, g.ms[i].y - g.ms[j].y) > P.R) { ok = false; break; }
+    if (ok) for (let i = 0; i < g.ms.length && ok; i++) for (let j = i + 1; j < g.ms.length; j++) if (X.hyp(g.ms[i].x - g.ms[j].x, g.ms[i].y - g.ms[j].y) > (P.keepR || P.R)) { ok = false; break; }   // 이어 가는 거리 (v2.32): 맞출 땐 R, 이어 갈 땐 keepR
     if (!ok) { if (g.on) S.st.broke++; for (const m of g.ms) { S.of.delete(m); if (m.hp > 0) S.cd.set(m, W.t + P.cd); } continue; }
     for (const m of g.ms) used.add(m); now.push(g);
   }
+  // 끼어들기 (v2.32, join): 이어 가는 합창에 곁(모두에게서 R 안)의 같은 편이 한계까지 들어온다. 들어오면 박자를 다시 맞춘다(sync)
+  if (P.join) for (const g of now) { let lim = limitOf(g.ms[0]); for (const q of g.ms) { const l = limitOf(q); if (l < lim) lim = l; } if (g.ms.length >= lim) continue;
+    for (const q of W.ms) { if (g.ms.length >= lim) break; if (used.has(q) || q.side !== g.ms[0].side || !able(W, q, S) || limitOf(q) < g.ms.length + 1) continue;
+      let near = true; for (const r of g.ms) if (X.hyp(r.x - q.x, r.y - q.y) > P.R) { near = false; break; } if (!near) continue;
+      g.ms.push(q); used.add(q); g.n = g.ms.length; if (q.C > g.lead.C) g.lead = q; if (g.on) { g.on = false; g.t0 = W.t; } } }
   // 새로 모인다: 같은 편, 아직 합창하지 않는 사람끼리, 먼저 온 사람 둘레 R 안, 단계의 한계까지
   for (const m of W.ms) {
     if (used.has(m) || !able(W, m, S)) continue;

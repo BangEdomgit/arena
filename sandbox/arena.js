@@ -53,10 +53,10 @@ D["data/rules/chipGuard.json"] = [function (module, exports, require) {
 module.exports = {"desc":"작은 수 막기 (rules/chipGuard, v2.24, SPEC 47장, 기본 꺼짐). 응수가 있는 동안(몸을 쓸 수 있다: 굳음·묶임·떨어짐이 아니다) 떡대가 적의 한 방마다 cut을 뺀다(0 아래로는 안 간다). 선명도 cMin 이상만. 지대·빔·불·소금처럼 걸음마다 드는 피해(틱)는 빼지 않는다","cMin":8,"cut":1.5};
 }, {}];
 D["data/rules/chorus.json"] = [function (module, exports, require) {
-module.exports = {"desc":"합창 (rules.chorus, v2.27, SPEC 50장)","every":0.25,"R":6,"goodN":3,"goodT":3,"sync":1.5,"cd":2,"limit":[[4,6],[2,3]],"powK":2.5,"hold":0.3,"spread":3,"aimB":20,"out":12,"note":"R: 서로 이만큼 안(m). sync: 박자를 맞추는 시간(s). cd: 깨진 뒤 다시 맞출 수 있기까지(s). limit: [선명도 이상, 함께 맞출 수 있는 수] 차례대로(상위 C 5 → 6, 중간 C 2.5 → 3, 평범은 못 함). 합창하는 사람의 선명도 × √N(장악권), 앞소리꾼의 위력 × √N^powK(함께 짓는 큰 마법). hold: 앞소리꾼이 아닌 사람의 공격 값 × hold(박자를 지킨다, 묶는 수는 그대로). spread: 전투단(rules.squad)의 조원 사이를 이만큼으로 좁힌다. aimB: 대마법사의 다수 모드가 합창하는 사람을 고르는 덤(거리에서 뺀다, m)"};
+module.exports = {"desc":"합창 (rules.chorus, v2.27, SPEC 50장)","every":0.25,"R":6,"goodN":3,"goodT":3,"sync":1.5,"cd":2,"limit":[[4,6],[2,3]],"powK":2.5,"hold":0.3,"spread":3,"aimB":20,"out":12,"note":"R: 서로 이만큼 안(m). sync: 박자를 맞추는 시간(s). cd: 깨진 뒤 다시 맞출 수 있기까지(s). limit: [선명도 이상, 함께 맞출 수 있는 수] 차례대로(상위 C 5 → 6, 중간 C 2.5 → 3, 평범은 못 함). 합창하는 사람의 선명도 × √N(장악권), 앞소리꾼의 위력 × √N^powK(함께 짓는 큰 마법). hold: 앞소리꾼이 아닌 사람의 공격 값 × hold(박자를 지킨다, 묶는 수는 그대로). spread: 전투단(rules.squad)의 조원 사이를 이만큼으로 좁힌다. aimB: 대마법사의 다수 모드가 합창하는 사람을 고르는 덤(거리에서 뺀다, m)","keepR":9,"join":1};
 }, {}];
 D["data/rules/crowdFire.json"] = [function (module, exports, require) {
-module.exports = {"R":25,"n":2,"w":2,"lead":1,"slack":6};
+module.exports = {"R":25,"n":2,"w":2,"lead":1,"cover":0.5};
 }, {}];
 D["data/rules/drain.json"] = [function (module, exports, require) {
 module.exports = {"desc":"마름 (rules.drain, v2.28, SPEC 52장)","cell":10,"stock":1500,"regen":8.33,"reach":3,"k":1,"move":0.35,"lure":0.5,"lureR":25,"note":"땅을 cell m 칸으로 나누고 칸마다 곳간 stock. 마법이 서는 자리의 칸과 둘레 reach 칸(3 × 3)에서 에너지 = 비용 × 선명도^powerK × k를 꺼낸다(가까운 칸부터 고르게). 모자라면 위력이 꺼낸 몫만큼. 칸마다 초당 regen씩 다시 찬다(햇빛, stock / regen ≈ 3분). move: 대마법사(다수 모드)는 둘레 곳간이 이 몫 아래면 가장 찬 쪽으로 옮긴다. lure: 무리(선명도 5 아래)는 대마법사 lureR m 안에서 곳간이 이 몫 아래인 칸에 선다(그 자리에 서는 대마법사의 마법이 약하다)"};
@@ -4055,10 +4055,15 @@ function update(X, W) {
   // 지난 합창을 먼저 이어 본다: 모두 서 있고 서로 R 안이면 그대로(깨지면 cd)
   for (const g of old) {
     let ok = true; for (const m of g.ms) if (!able(W, m, S) && !(m.st.stun > 0 && false)) { ok = false; break; }
-    if (ok) for (let i = 0; i < g.ms.length && ok; i++) for (let j = i + 1; j < g.ms.length; j++) if (X.hyp(g.ms[i].x - g.ms[j].x, g.ms[i].y - g.ms[j].y) > P.R) { ok = false; break; }
+    if (ok) for (let i = 0; i < g.ms.length && ok; i++) for (let j = i + 1; j < g.ms.length; j++) if (X.hyp(g.ms[i].x - g.ms[j].x, g.ms[i].y - g.ms[j].y) > (P.keepR || P.R)) { ok = false; break; }   // 이어 가는 거리 (v2.32): 맞출 땐 R, 이어 갈 땐 keepR
     if (!ok) { if (g.on) S.st.broke++; for (const m of g.ms) { S.of.delete(m); if (m.hp > 0) S.cd.set(m, W.t + P.cd); } continue; }
     for (const m of g.ms) used.add(m); now.push(g);
   }
+  // 끼어들기 (v2.32, join): 이어 가는 합창에 곁(모두에게서 R 안)의 같은 편이 한계까지 들어온다. 들어오면 박자를 다시 맞춘다(sync)
+  if (P.join) for (const g of now) { let lim = limitOf(g.ms[0]); for (const q of g.ms) { const l = limitOf(q); if (l < lim) lim = l; } if (g.ms.length >= lim) continue;
+    for (const q of W.ms) { if (g.ms.length >= lim) break; if (used.has(q) || q.side !== g.ms[0].side || !able(W, q, S) || limitOf(q) < g.ms.length + 1) continue;
+      let near = true; for (const r of g.ms) if (X.hyp(r.x - q.x, r.y - q.y) > P.R) { near = false; break; } if (!near) continue;
+      g.ms.push(q); used.add(q); g.n = g.ms.length; if (q.C > g.lead.C) g.lead = q; if (g.on) { g.on = false; g.t0 = W.t; } } }
   // 새로 모인다: 같은 편, 아직 합창하지 않는 사람끼리, 먼저 온 사람 둘레 R 안, 단계의 한계까지
   for (const m of W.ms) {
     if (used.has(m) || !able(W, m, S)) continue;
@@ -4167,15 +4172,16 @@ D["src/rules/crowdFire.js"] = [function (module, exports, require) {
 /* 규칙: 갈라 쏘기 (rules.crowdFire, v2.30, SPEC 53장, 수는 data/rules/crowdFire.json) — 기본 꺼짐
  * 무리(전투단 tac.squad)가 같은 과녁에 투사체를 쏠 때 사람마다 몫을 나눈다(id mod 3): 가운데·왼쪽 피할 자리·오른쪽 피할 자리.
  *   피할 자리는 쏘는 줄에 직각으로 w m(과녁이 구르거나 옆으로 비키는 거리). 곁 R m 안에 같은 편이 n 넘게 있을 때만(혼자면 가운데를 쏜다)
- *   때 고르기: 과녁이 (모으는 시간 + 날아갈 시간) 동안 slack m 넘게 움직일 빠르기면 쏘지 않는다(멈추거나 모으거나 내려앉을 때를 기다린다)
+ *   덮어 쏘기 (v2.32): 명중 문턱 없이 사거리 안이면 값 cover 이상으로 쏜다(피하게 만드는 것). v2.30의 때 고르기(빠른 과녁을 기다림)는 사격을 6분의 1로 줄여 거뒀다
  *   과녁이 날아갈 동안 갈 자리를 앞질러 겨눈다(lead). 풀 때 겨냥을 고친다(track 훅, 감각 조준 rules/pace 뒤) */
 const P = require('../../data/rules/crowdFire.json');
 module.exports = {
   name: 'crowdFire', switch: 'crowdFire', api: { P },
   brain: B => ({
+    // 덮어 쏘기 (v2.32): 무리의 던지기는 맞히려는 게 아니라 피하게 만드는 것. 명중 문턱(빈틈 기다리기)에 막힌 직사도 값 cover로 쏜다
     valueLate(W, m, K, o) {
-      const s = o.s, e = K.e; if (s.t !== 'proj' || s.mundane || !m.tac.squad || !e || !(o.v > 0)) return;
-      const t = B.castTime(W, m, o.Tw) + B.hyp(e.x - m.x, e.y - m.y) / s.v; if (B.hyp(e.vx, e.vy) * t > P.slack) o.v = 0;
+      const s = o.s, e = K.e; if (s.t !== 'proj' || s.mundane || !m.tac.squad || !e || !(K.d <= B.C.rangeOf(m, s))) return;
+      if (o.wait || o.v < P.cover) { o.v = P.cover; o.wait = false; }
     },
   }),
   engine: X => ({
@@ -4253,20 +4259,21 @@ D["src/rules/edgeCancel.js"] = [function (module, exports, require) {
 /* 규칙: 장악권 경계 (rules.edgeCancel, v2.30.1, SPEC 53장 끝, 수는 data/rules/edgeCancel.json) — 기본 꺼짐
  * 잰 원인: 상위 무리의 헛시전 430 가운데 366은 짓기 시작할 때 이미 서는 자리의 장악 계수가 0.3 아래였다(값 × g로 깎일 뿐 고르긴 했다).
  *   나머지는 짓는 동안 과녁이 다가와(대마법사의 장악권은 움직인다) 서는 자리가 장악권 안이 된 것이다
- * 과녁이 나보다 ratio배 넘게 선명하면
+ * 과녁이 나보다 ratio배 넘게 선명하면(합창이 맞춰진 사람은 빼고, v2.32)
  *   짓지 않는다: 서는 자리의 장악 계수가 gStart 아래인 수는 값 0
  *   끊고 물러난다: 짓는 중에 서는 자리의 장악 계수가 gCut 아래로 떨어지면 끊고(당 70% 돌려받음), back s 동안 과녁 반대쪽으로 */
 const P = require('../../data/rules/edgeCancel.json');
 const BACK = new WeakMap();   // 사람 → 물러나는 끝 시각
-const strong = (m, e) => !!e && e.hp > 0 && e.C > m.C * P.ratio;
+const CH = require('./chorus').api;
+const strong = (W, m, e) => !!e && e.hp > 0 && e.C > m.C * P.ratio && !(W.rules.chorus && CH.of(W, m));   // 합창이 맞춰진 조는 합창의 선명도로 장악권 안에도 설 수 있다 (v2.32)
 module.exports = {
   name: 'edgeCancel', switch: 'edgeCancel', api: { P },
   brain: B => {
     const undo = B.lib.undo, C = B.C;
     return {
-      valueLate(W, m, K, o) { const s = o.s; if (!(o.v > 0) || s.mundane || !B.OFF[s.t] || !strong(m, K.e)) return; if (C.gAt(W, m, s, o.tx, o.ty) < P.gStart) o.v = 0; },
+      valueLate(W, m, K, o) { const s = o.s; if (!(o.v > 0) || s.mundane || !B.OFF[s.t] || !strong(W, m, K.e)) return; if (C.gAt(W, m, s, o.tx, o.ty) < P.gStart) o.v = 0; },
       cancel(W, m, K) {
-        const c = m.cast; if (!c || c.auto || c.s.mundane || !B.OFF[c.s.t] || !strong(m, c.tgt || K.e) || c.T - c.t < P.minLeft) return;
+        const c = m.cast; if (!c || c.auto || c.s.mundane || !B.OFF[c.s.t] || !strong(W, m, c.tgt || K.e) || c.T - c.t < P.minLeft) return;
         if (C.gAt(W, m, c.s, c.tx, c.ty) >= P.gCut) return;
         undo(m, c); BACK.set(m, W.t + P.back);
       },
@@ -4277,7 +4284,7 @@ module.exports = {
     };
   },
 };
-}, {"../../data/rules/edgeCancel.json":"data/rules/edgeCancel.json"}];
+}, {"../../data/rules/edgeCancel.json":"data/rules/edgeCancel.json","./chorus":"src/rules/chorus.js"}];
 D["src/rules/endure.js"] = [function (module, exports, require) {
 'use strict';
 /* 규칙: 버티기 (rules.endureK, v2.7, SPEC 31장) — 머리 회복과 당 회복의 선명도 배수
