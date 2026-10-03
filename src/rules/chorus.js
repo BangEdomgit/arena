@@ -3,7 +3,8 @@
  * 박자를 맞춘 무리는 한 사람처럼 선명하다. tac.squad(전투단)나 tac.chorus가 있는 사람만, 고리 하나를 박자 맞추기에 쥔다(두뇌 훅 circles: 서클 − 1).
  *   함께 맞출 수 있는 수는 단계마다 limit(상위 6, 중간 3, 평범은 못 함). 서로 R m 안에 sync s 머물러야 맞춰진다.
  *   맞춰지면: 모두의 선명도 × √N(엔진 훅 ceff: 장악권을 밀어내 그 안에 마법을 세운다), 앞소리꾼(가장 선명한, 같으면 먼저 온 사람)의 위력 × √N^powK(함께 짓는 큰 마법),
- *     그 지연 폭발·곡사의 반지름 × √N(엔진 훅 tune: 넓힌 사본으로 바꾼다). 장악권은 한 목소리: 어느 자리든 내 몫은 합창하는 모두의 신호의 합(엔진 훅 share).
+ *     그 지연 폭발·곡사의 반지름 × √N(엔진 훅 tune: 넓힌 사본으로 바꾼다). 장악권은 한 목소리: 어느 자리든 앞소리꾼의 몫은 합창하는 모두의 신호의 합(엔진 훅 share).
+ *     v2.36: 한 목소리(선명도 × √N, 합친 신호)는 함께 부르는 것에만 — 앞소리꾼의 수(합창이 함께 쥐는 마법 포함). 합창원이 제 손으로 쏘는 수는 제 선명도·제 신호로 다툰다(고요한 원 안은 예외, rules/chorusCast)
  *   나머지는 박자를 지킨다: 공격 값 × hold(묶는 수는 그대로, 두뇌 훅 valueLate)
  *   깨짐: 한 명이 쓰러지거나 굳거나 R m 밖으로 나가면 깨지고, 그 사람들은 cd s 동안 다시 못 맞춘다. 모여 있으니 넓은 마법에 약하다(따로 셈하지 않는다: 그대로 맞는다)
  * 지표 (v2.33): 깬 합창(brokeHit: 한 명이 쓰러지거나 굳어 깨진 것), 선명도 bigC 이상이 합창하는 사람에게 쏜 수(atN)·그중 넓은 마법(wideN)·앞소리꾼을 노린 것(leadN)
@@ -54,12 +55,12 @@ module.exports = {
     tune(W, m, c) { const g = of(W, m); if (g && g.lead === m && (c.s.t === 'area' || c.s.t === 'lob') && c.s.r > 0) c.s = bigOf(c.s, g.n); },   // 함께 짓는 큰 마법: 넓이 × √N
     // 한 목소리: 자리 (x, y)의 내 몫을 합창하는 모두의 신호의 합으로 (적의 몫은 그대로)
     share(W, m, x, y, f) {
-      const g = of(W, m); if (!g || !(f > 0) || f >= 1) return f;
+      const g = of(W, m); if (!g || g.lead !== m || !(f > 0) || f >= 1) return f;   // 함께 짓는 것(앞소리꾼의 수)에만 (v2.36): 합창원이 제 손으로 쏘는 수는 제 신호로 다툰다
       const L = W.rules.domainL, m0 = X.sigOf(W, m) / (1 + X.hyp(x - m.x, y - m.y) / L), other = m0 * (1 - f) / f; let mine = 0;
       for (const q of g.ms) mine += X.sigOf(W, q) / (1 + X.hyp(x - q.x, y - q.y) / L);
       return mine / (mine + other);
     },
-    ceff(W, m, x) { const g = of(W, m); return g ? x * Math.sqrt(g.n) : x; },
+    ceff(W, m, x) { const g = of(W, m); return g && g.lead === m ? x * Math.sqrt(g.n) : x; },   // 합창의 선명도도 앞소리꾼에만 (v2.36)
     power(W, m, s, x) { const g = of(W, m); return g && g.lead === m ? x * X.pow(Math.sqrt(g.n), P.powK) : x; },
     release(W, m, c) { const g = of(W, m); if (g && g.lead === m && OFF[c.s.t]) stOf(W).st.leadCasts++;
       if (m.C >= P.bigC && OFF[c.s.t] && c.tgt) { const h = of(W, c.tgt); if (h) { const st = stOf(W).st; st.atN++; if (WIDE[c.s.t]) st.wideN++; if (c.tgt === h.lead) st.leadN++; } } },   // 큰 사람이 합창에 쏜 것 (v2.33 지표): 넓은 마법의 몫, 앞소리꾼을 노린 몫

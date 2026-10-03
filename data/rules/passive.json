@@ -4,5 +4,6 @@
  "kinds": [["elec"], ["blunt"], ["fire", "heat"]],
  "names": ["절연 막", "굳은 살", "열 차단"],
  "k": 0.45, "stunK": 0.7, "onT": 0.05, "cd": 0.3, "heat": 1, "fatOff": 95, "okT": 0.3,
- "swap": 0.5, "lead": [0, 0, 0, 0.3, 0.1], "min": 0.12, "near": 2.2
+ "swap": 0.5, "lead": [0, 0, 0, 0.3, 0.1], "min": 0.12, "near": 2.2,
+ "hold": { "L": 4, "n": 2, "ang": 0.8, "within": 1.0, "keep": 2.0, "note": "v2.36 전설(tac.passive 4): within s 안에 나를 겨눈 전기 굳힘·실이 n개 이상, 방향이 ang rad 넘게 벌어졌으면 keep s 동안 절연 막을 켜 둔다(서클 하나·머리 열 그대로)" }
 }

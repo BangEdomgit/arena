@@ -63,6 +63,20 @@ function run() {
     assert.ok(CC.P.cm.check.includes('번개 장막') && CC.P.cm.mate.includes('걸어둔 구름'));
     const W2 = A.sceneWorld(Object.assign(A.scenario.build('c32', { seed: 3 }), { maxT: 40 })); while (!A.over(W2)) A.stepWorld(W2); const st = CC.stats(W2); assert.ok(st.checkN > 0 && st.chain <= st.mateN, JSON.stringify(st));
   });
+  ok('v2.36 한 목소리는 함께 부르는 것에만: 앞소리꾼은 합친 신호·선명도 × √N, 합창원은 제 신호·제 선명도 (고요한 원 안은 우리 편 누구나 1)', () => {
+    const a = choir('상위', 6), W = a.W, lead = a.g.lead, mem = a.ms.find(q => q !== lead), x = (lead.x + a.e.x) / 2 + 20, y = lead.y;
+    const fl = A.share(W, lead, x, y), fm = A.share(W, mem, x, y); assert.ok(fl > fm, '앞소리꾼 ' + fl + ' > 합창원 ' + fm);
+    const s = W.spells['고요한 원']; A.release(W, lead, { s, tgt: a.e, tx: a.e.x, ty: a.e.y, t: 0, T: 1, B: false, cost: s.cost, tz: 1, tf: 1, tv: 1, hid: false, unseen: false, tk: '', vis: 1 });
+    const c = CC.calms(W)[0]; assert.strictEqual(A.share(W, mem, c.x + 2, c.y), 1, '고요한 원 안은 합창원도');
+  });
+  ok('v2.36 전설: 굳히는 번개가 여러 방향에서 오면 절연 막을 켜 둔다 (대가는 순간 켜기 그대로)', () => {
+    const PS = require('../../src/rules/passive').api;
+    for (const [sk, want] of [['전설', true], ['대가', false]]) {
+      const W = A.createWorld({ seed: 1, obstacles: [], width: 100, height: 100, rules: { profile: '지금' } }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: sk, deck: '대마법사 결투' }), 0, 50, 50);
+      const q1 = A.addMage(W, A.mage({ tier: '상위', deck: '광역' }), 1, 70, 50), q2 = A.addMage(W, A.mage({ tier: '상위', deck: '광역' }), 1, 50, 70); A.stepWorld(W);
+      for (const q of [q1, q2]) q.cast = { s: W.spells['짧은 실'], tgt: m, tx: 50, ty: 50, t: 0, T: 0.9, B: false, cost: 1, tz: 1, tf: 1, tv: 1, hid: false, unseen: false, tk: '', vis: 1 };
+      A.brain.think(W, m); assert.strictEqual(PS.holdN(m) > 0, want, sk); }
+  });
   return done();
 }
 module.exports = { run };

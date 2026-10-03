@@ -24,7 +24,7 @@ const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, MINE = {
 const CHK = new Set(P.cm.check), MATE = new Set(P.cm.mate);
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const ST = new WeakMap();
-function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { big: new Map(), calms: [], push: new Map(), chk: new Map(), es: new Map(), st: { checkN: 0, mateN: 0, chain: 0, bigN: 0, bigOk: 0, bigBroke: 0, bigCancel: 0, by: {}, calmN: 0, calmT: 0, calmIn: 0, netHit: 0, limeN: 0, cloudN: 0, granN: 0, shieldN: 0, backDmg: 0 } }); return s; }
+function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { big: new Map(), calms: [], push: new Map(), chk: new Map(), es: new Map(), st: { bindN: 0, bindOk: 0, bindG: 0, checkN: 0, mateN: 0, chain: 0, bigN: 0, bigOk: 0, bigBroke: 0, bigCancel: 0, by: {}, calmN: 0, calmT: 0, calmIn: 0, netHit: 0, limeN: 0, cloudN: 0, granN: 0, shieldN: 0, backDmg: 0 } }); return s; }
 const fatK = m => { const k = 1 - Math.min(m.fat, 100) / 200; return k < 0.6 ? 0.6 : k; };
 // 사람 하나의 출력(kW)과 합창이 모은 것
 function outOf(X, m) { return P.kW * X.pow(m.C > 0.01 ? m.C : 0.01, P.outK) * fatK(m); }
@@ -53,6 +53,7 @@ module.exports = {
         const S = stOf(W), s = c.s, g = leadOf(W, m);
         if (S.calms.length && OFF[s.t]) { const p = X.formPoint(m, s, c.tx, c.ty); if (p) for (const k of S.calms) if (k.side === m.side && X.hyp(p[0] - k.x, p[1] - k.y) < k.r) { S.st.calmIn++; break; } }   // 고요한 원 안에서 선 과녁 자리 마법
         const b = S.big.get(m); if (b && b.c === c) { S.st.bigOk++; S.big.delete(m); }
+        if (c.tgt && c.tgt.C >= P.see.C && isBind(s) && !s.mundane) { const h = CH.of(W, m); if (h && h.lead !== m) { const p = X.formPoint(m, s, c.tx, c.ty) || [c.tx, c.ty], gg = X.gOf(W, X.share(W, m, p[0], p[1])); S.st.bindN++; S.st.bindG += gg; if (gg > 0.02) S.st.bindOk++; } }   // 합창원(앞소리꾼 빼고)의 굳히는 수가 대마법사에게 선 몫 (v2.36 지표)
         if (g && c.tgt) { if (CHK.has(s.n)) { S.st.checkN++; S.chk.set(c.tgt, W.t); } else if (MATE.has(s.n)) { S.st.mateN++; const t = S.chk.get(c.tgt); if (t != null && W.t - t <= P.cm.chainT) S.st.chain++; } }   // 체크 뒤 메이트로 이어진 몫 (v2.35)
         if (g && W.rules.fatigue && !s.mundane && g.n > 1) {   // 머리 열은 나눠 낸다 (core가 이 뒤에 앞소리꾼에게 더한다)
           const heat = s.cost * (c.B ? 1.3 : 1) * (c.auto ? 0.8 : 1) * 1.6, n = g.n; m.fat -= heat * (n - 1) / n; for (const q of g.ms) if (q !== m && q.hp > 0) q.fat += heat / n; }
