@@ -1,0 +1,56 @@
+{
+ "desc": "포병과 소금 탄 (rules.artillery, v2.31, SPEC 54장). 덱은 장면이 쓴다(decks): 데이터 덱 목록을 늘리면 결과 지문(mixed)이 바뀐다",
+ "decks": {
+  "청동포": [
+   "산탄",
+   "둥근 탄",
+   "소금 탄"
+  ],
+  "포수": []
+ },
+ "gun": {
+  "hp": 400,
+  "crew": 4,
+  "crewR": 5,
+  "speed": 0.12,
+  "reload": 30,
+  "lowZ": 2.2,
+  "muzzle": 1,
+  "magicK": 0.15,
+  "hold": 1.5,
+  "magicCap": 40
+ },
+ "canister": {
+  "n": 60,
+  "half": 0.05,
+  "elev": 0.27,
+  "close": 80
+ },
+ "round": {
+  "slowV": 3,
+  "wall": 1.4
+ },
+ "salt": {
+  "r": 12,
+  "t": 30,
+  "h": 6,
+  "spread": 0.04,
+  "min": 4,
+  "minD": 8,
+  "v": 90,
+  "tMin": 0.4,
+  "tMax": 2.5,
+  "lead": 1
+ },
+ "arch": {
+  "cMin": 5,
+  "hunt": 160,
+  "warn": 1.2,
+  "side": 3,
+  "fogPad": 3
+ },
+ "crew": {
+  "post": 3,
+  "side": 1.8
+ }
+}

@@ -375,6 +375,7 @@ function draw0(W, vp) {
       ctx.stroke(); ctx.setLineDash([]); }
     ctx.fillStyle = '#1b1c20'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.strokeStyle = c; ctx.lineWidth = 2.6; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(m.aim) * 13, y + Math.sin(m.aim) * 13); ctx.stroke();
+    if (m.tac.gun) { ctx.fillStyle = '#b08d57'; ctx.save(); ctx.translate(x, y); ctx.rotate(m.aim); ctx.fillRect(-4, -3, 18, 6); ctx.restore(); }   // 청동포: 포신 (rules/artillery, 엔진 v2.31)
     if (m.buf.front) { ctx.strokeStyle = '#d8d1c3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 13, m.aim - 0.9, m.aim + 0.9); ctx.stroke(); }
     if (m.flee && !dead) { ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.stroke(); ctx.setLineDash([]);
       if (W.ms.length <= 60) { ctx.font = '' + F(9) + 'px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd27a'; ctx.fillText('도망', x, y + 21); } }   // 사기가 꺾여 도망치는 사람 (rules/morale)

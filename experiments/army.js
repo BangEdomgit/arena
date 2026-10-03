@@ -1,13 +1,14 @@
 'use strict';
 /* 숨 결투장 v2.2.0 — 대마법사 대 무리 (v2.0 둘째 묶음, SPEC 25장 끝, reports/v2.1.0.md)
  *   node experiments/army.js [장면,…] [N]      장면마다 씨앗 1..N (병렬). 기본: 모든 장면, N = 20 → results/army.json
- *   node experiments/army.js scenes            대표 장면을 sandbox/scenes/v2-army-*.json으로 (그다음 node cli.js pack)
+ *   node experiments/army.js scenes [이름,…]    대표 장면을 sandbox/scenes/v2-army-*.json으로 (그다음 node cli.js pack)
  * 장면 (모두 결정론, 대마법사 = 편 0의 첫 사람):
  *   field-musket / field-plain   들판 1 km: 대마법사가 250 m 떨어져 날아서 시작, 머스킷 100 (넷 줄, 돌아가며 쏘기) / 평범 100 (기본기)
  *   ambush                       기습: 30 m 안, 머스킷 40이 반지름 14 m 반원, 벽 없이
  *   prepared / prepared-mix      준비: 같은 대진, 보루(흙 블록 열일곱)를 세운 뒤 / + 돌아가며 쏘기(넷 줄)·박격포 여섯
  *   salt-city                    소금 도시: 싸움터 대부분이 소금 땅, 건물(바위) 사이 골목, 광장 셋. 머스킷 60, 대마법사가 걸어서 들어간다
  *   throw-<덱>-<n>               장악권 밖 던지기: 평범 n(100·200)이 55~60 m 둘레에서 조약돌 / 무거운 돌 / 번쩍 돌
+ *   field-gun / ambush-gun / salt-city-gun / salt-fort-gun   포병 (v2.31, rules.artillery): 위 장면에 청동포(산탄·둥근 탄·소금 탄)와 포수 넷씩
  *   tier-<등급>-<n>              등급 무리 둘러싸기: 상위 3·5·8·12, 중간 10·20·40·80, 평범 100·200 (기본 규칙, 덱 기본기)
  * 지표: 이김, 시간 판정, 걸린 시간, 대마법사의 남은 체력, 무리가 무너진 시각(쓰러지거나 도망친 수가 80%), 도망친 몫,
  *   세운 벽 수, 벽 곁에 있던 시간, 평균 높이, 눈먼 횟수, 무거운 돌 시도·명중 */
@@ -20,6 +21,17 @@ const v = A.VERSION;
 function arc(n, cx, cy, R, mm) { const out = []; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + Math.PI * (i + 0.5) / n; out.push(Object.assign({ x: +(cx + Math.cos(a) * R).toFixed(2), y: +(cy + Math.sin(a) * R * 0.95).toFixed(2) }, mm)); } return out; }
 function ring(n, cx, cy, R0, R1, mm) { const out = []; for (let i = 0; i < n; i++) { const a = i / n * 2 * Math.PI, R = R0 + (R1 - R0) * ((i * 7) % 5) / 4; out.push(Object.assign({ x: +(cx + Math.cos(a) * R).toFixed(2), y: +(cy + Math.sin(a) * R).toFixed(2) }, mm)); } return out; }
 function fort(cx, cy, r = 2.2, n = 17) { const w = []; for (let k = 0; k < n; k++) { const a = k / n * 2 * Math.PI; w.push({ x: +(cx + Math.cos(a) * r).toFixed(2), y: +(cy + Math.sin(a) * r).toFixed(2), r: 0.45, hp: 256, mat: 'earth', thick: 0.5, grp: 1000 }); } return w; }
+// 포대 (v2.31, rules.artillery): 청동포 하나와 포수 넷. 포수는 과녁 쪽(fx, fy)의 반대편에 선다
+const ART = require('../data/rules/artillery.json');
+function battery(x, y, fx, fy) { const dx = x - fx, dy = y - fy, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, out = [{ tier: '병사', deck: '청동포', x, y, hp: ART.gun.hp, tac: { gun: 1, cancel: false, cancel2: false } }];
+  for (let k = 0; k < ART.gun.crew; k++) out.push({ tier: '병사', deck: '포수', x: +(x + ux * ART.crew.post - uy * (k - 1.5) * ART.crew.side).toFixed(2), y: +(y + uy * ART.crew.post + ux * (k - 1.5) * ART.crew.side).toFixed(2), tac: { crew: 1 } }); return out; }
+// 장면에 포대를 더한다: 규칙 artillery를 켜고 덱(청동포·포수)을 장면에 싣는다
+function withGuns(sc, pts, name) { const fx = sc.sides[0].mages[0].x, fy = sc.sides[0].mages[0].y; for (const [x, y] of pts) sc.sides[1].mages.push(...battery(x, y, fx, fy));
+  sc.rules = Object.assign({}, sc.rules, { artillery: true }); sc.decks = Object.assign({}, sc.decks, ART.decks); sc.name = name; if (sc.obstacles && sc.obstacles.length) sc.obstacles = sc.obstacles.filter(o => !pts.some(([x, y]) => Math.hypot(o.x - x, o.y - y) < o.r + 3)); return sc; }
+// 반원 위의 포 자리 (과녁 쪽을 향해 열린 반원의 가운데 둘레, ±12°씩)
+const GUNN = 2;   // 기습의 포 수 (v2.31: 둘이면 대마법사 약 55%, 셋이면 약 38%)
+function arcPts(n, cx, cy, R) { const out = []; for (let i = 0; i < n; i++) { const a = (i - (n - 1) / 2) * 0.21; out.push([+(cx + Math.cos(a) * R).toFixed(2), +(cy + Math.sin(a) * R * 0.95).toFixed(2)]); } return out; }
+const SALTFORT = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', 'x-salt-fort.json'), 'utf8'));
 const SCENES = {
   'field-musket': s => {
     const ms = []; for (let r = 0; r < 4; r++) for (let k = 0; k < 25; k++) ms.push({ tier: '병사', deck: '머스킷', x: 600 + r * 3, y: 263 + k * 3, tac: { volley: 4 } });
@@ -43,6 +55,12 @@ const SCENES = {
     return { v, name: '소금 도시: 걸어 들어가는 대마법사 대 머스킷 60 (골목, 광장 셋만 맨땅)', seed: s, width: 200, height: 150, maxT: 240, obstacles: obs.filter(o => !ms.some(m => Math.hypot(m.x - o.x, m.y - o.y) < o.r + 1)), salt: rects, rules: NOSALT,
       sides: [{ name: '대마법사', mages: [Object.assign({ x: 4, y: 75 }, ARCH)] }, { name: '총병', mages: ms.filter(m => !obs.some(o => Math.hypot(m.x - o.x, m.y - o.y) < o.r + 0.5)) }] };
   },
+  // 포병 (v2.31): 들판·기습·소금 도시·소금 성채에 포대를 더한다. 기습은 소금 탄까지(덱 그대로: 포는 셋 다 싣는다)
+  'field-gun': s => withGuns(SCENES['field-musket'](s), [[640, 280], [640, 300], [640, 320]], '들판 + 포: 대마법사 대 머스킷 100 + 청동포 셋'),
+  'ambush-gun': s => withGuns(SCENES.ambush(s), arcPts(GUNN, 6, 15, 14), '기습 + 포 + 소금: 대마법사 대 머스킷 40 반원 + 청동포 ' + GUNN + '(산탄·소금 탄)'),
+  'salt-city-gun': s => withGuns(SCENES['salt-city'](s), [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56]], '소금 도시 + 포: 대마법사 대 머스킷 60 + 청동포 셋'),
+  'salt-fort': s => Object.assign(JSON.parse(JSON.stringify(SALTFORT)), { seed: s }),
+  'salt-fort-gun': s => withGuns(SCENES['salt-fort'](s), [[150, 70], [150, 80]], '소금 성채 + 포: 대마법사 대 보루 안의 머스킷 34 + 청동포 둘'),
 };
 for (const deck of ['조약돌', '무거운 돌', '번쩍 돌']) for (const n of [100, 200]) SCENES[`throw-${deck}-${n}`] = s => ({ v, name: `장악권 밖 던지기: 평범 ${n} (${deck}) 55~60 m`, seed: s, width: 300, height: 300, maxT: 180, obstacles: 0, rules: NOSALT, sides: [{ name: '대마법사', mages: [Object.assign({ x: 150, y: 150 }, ARCH)] }, { name: '평범', mages: ring(n, 150, 150, 55, 60, { tier: '평범', deck }) }] });
 for (const [t, ns] of [['상위', [3, 5, 8, 12]], ['중간', [10, 20, 40, 80]], ['평범', [100, 200]]]) for (const n of ns) SCENES[`tier-${t}-${n}`] = s => ({ v, name: `둘러싸기: 대마법사 대 ${t} ${n}`, seed: s, maxT: 120, layout: 'ring', sides: [{ name: '대마법사', mages: [{ tier: '대마법사', deck: '광역' }] }, { name: t, mages: Array.from({ length: n }, () => ({ tier: t, deck: '기본기' })) }] });
@@ -79,7 +97,7 @@ async function main() {
 // 대표 장면: 씨앗 1~9 가운데 많이 난 결과 쪽이고 길이가 가운데값에 가장 가까운 판
 function scenes(only) {   // only: 다시 쓸 장면 이름(army.js의 이름, 예: salt-city)만
   const DIR = path.join(__dirname, '..', 'sandbox', 'scenes');
-  for (const [f, nm] of [['v2-army-field', 'field-musket'], ['v2-army-ambush', 'ambush'], ['v2-army-prepared', 'prepared'], ['v2-army-salt-city', 'salt-city']]) { if (only && !only.includes(nm)) continue;
+  for (const [f, nm] of [['v2-army-field', 'field-musket'], ['v2-army-ambush', 'ambush'], ['v2-army-prepared', 'prepared'], ['v2-army-salt-city', 'salt-city'], ['v2-army-field-gun', 'field-gun'], ['v2-army-ambush-gun', 'ambush-gun'], ['v2-army-salt-city-gun', 'salt-city-gun'], ['v2-army-salt-fort-gun', 'salt-fort-gun']]) { if (only && !only.includes(nm)) continue;
     const rs = []; for (let s = 1; s <= 9; s++) { const sc = SCENES[nm](s), r = A.runScene(sc); rs.push({ s, sc, w: r.winner, t: r.t }); }
     const cnt = {}; for (const r of rs) cnt[r.w] = (cnt[r.w] || 0) + 1; const w = +Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
     const ts = rs.map(r => r.t).sort((a, b) => a - b), med = ts[ts.length >> 1], best = rs.filter(r => r.w === w).sort((a, b) => Math.abs(a.t - med) - Math.abs(b.t - med) || a.s - b.s)[0];

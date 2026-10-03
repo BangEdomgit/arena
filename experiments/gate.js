@@ -75,7 +75,7 @@ const ROWS = [
   ...['읽는 깊이', '분당 체크', '속임수 시도', '판당 수의 종류', '순간 켜기 성공'].map(k => [`Gs-${k}`, `계단: ${k} (초보→전설)`, B, 'b']),
   ['H. 힘과 무리'], ['H1-중간', '한 등급 위 1대1: 중간 / 평범', G(0.95, 1), '%'], ['H1-상위', '한 등급 위 1대1: 상위 / 중간', G(0.95, 1), '%'], ['H2', '대마법사 1 대 상위 1', G(0.95, 1), '%'], ['H3', '상위 1 대 평범 30', G(0.9, 1), '%'],
   ['H4', '대마법사 1 대 흩어진 상위 20', G(0.8, 1), '%'], ['H5', '대마법사 1 대 흩어진 상위 30', G(0.4, 0.6), '%'], ['H6', '대마법사 1 대 상위 전투단 10', G(0.4, 0.6), '%'], ['H7', '대마법사 1 대 평범 100 둘러싸기', G(0.95, 1), '%'],
-  ['H8', '머스킷 기습, 총만 (대마법사 승률)', G(0.85, 0.95), '%'], ['H9', '군대 들판 (대마법사 승률)', G(0.95, 1), '%'], ['H9m', '군대 들판: 사기로 무너진 판 몫 (무리의 반 넘게 도망치기 시작)', G(0.5, 1), '%'], ['H12', '소금 도시 머스킷 60, 총만 (대마법사 승률)', I, '%'], ['H13', '낮은 단계 결투의 폭주(파도) 피해 몫 (평범·중간)', G(0, 0.1), '%'],
+  ['H8', '머스킷 기습, 총만 (대마법사 승률)', G(0.85, 0.95), '%'], ['H9', '군대 들판 (대마법사 승률)', G(0.95, 1), '%'], ['H9m', '군대 들판: 사기로 무너진 판 몫 (무리의 반 넘게 도망치기 시작)', G(0.5, 1), '%'], ['H12', '소금 도시 머스킷 60, 총만 (대마법사 승률)', I, '%'], ['H23', '포병: 소금 도시 + 포 여덟 (대마법사 승률)', G(0.3, 0.5), '%'], ['H24', '포병: 기습 + 포 둘·소금 탄 (대마법사 승률)', G(0.4, 0.6), '%'], ['H25', '포병: 들판 + 포 셋 (대마법사 승률)', I, '%'], ['H26', '포병: 소금 성채 + 포 둘 (대마법사 승률)', I, '%'], ['H13', '낮은 단계 결투의 폭주(파도) 피해 몫 (평범·중간)', G(0, 0.1), '%'],
   ['H14', '막는 수: 서클 8 대가 대 상위 전투단 30 (대마법사 승률, 합창)', G(0.3, 0.7), '%'], ['H15', '잡는 수: 서클 8 대가 대 상위 전투단 100 (대마법사 쓰러짐)', G(0.3, 0.7), '%'],
   ['H16', '막는 수: 서클 11 전설 대 상위 전투단 50 (대마법사 승률, 합창)', G(0.3, 0.7), '%'], ['H17', '잡는 수: 서클 11 전설 대 상위 전투단 70 (대마법사 쓰러짐)', G(0.3, 0.7), '%'],
   ['H17r', '물러남: 위 넷의 대마법사가 물러선 판 몫', I, '%'],
@@ -149,7 +149,7 @@ async function measure(q) {
   for (let s = 1; s <= NC; s += 2) add('squad:10', 'squadJob', [10, s, Math.min(2, NC - s + 1)]);
   const C8 = { skill: '대가', circles: 8 }, NB = Math.min(NC, 8); for (const [k, n, a] of [['b8:30', 30, C8], ['b8:100', 100, C8], ['b11:50', 50, null], ['b11:70', 70, null]]) for (let s = 0; s < NB; s++) add(k, 'boundJob', [n, s, 1, a]);
   for (let s = 0; s < NC; s += 5) { add('ring30', 'ringJob', [{ tier: '상위' }, { tier: '평범', deck: '기본기' }, 30, s, Math.min(5, NC - s), 120]); add('ring100', 'ringJob', [{ tier: '대마법사', deck: '광역' }, { tier: '평범', deck: '기본기' }, 100, s, Math.min(5, NC - s), 90]); }
-  for (const nm of ['ambush', 'field-musket', 'salt-city', 'throw-조약돌-100', 'throw-번쩍 돌-100']) for (let s = 0; s < NC; s += 5) add('army:' + nm, 'armyJob', [nm, s, Math.min(5, NC - s)]);
+  for (const nm of ['ambush', 'field-musket', 'salt-city', 'throw-조약돌-100', 'throw-번쩍 돌-100', 'salt-city-gun', 'ambush-gun', 'field-gun', 'salt-fort-gun']) for (let s = 0; s < NC; s += 5) add('army:' + nm, 'armyJob', [nm, s, Math.min(5, NC - s)]);
   for (const t of ['평범', '중간']) for (let s = 0; s < N; s += 25) add('low:' + t, 'lowJob', [t, s, Math.min(25, N - s)]);   // 낮은 단계 결투의 폭주 (v2.24.1)
   for (const ring of [true, false]) for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) add(`el:${ring}:${i}:${j}`, 'duels', [{ tier: '평범', skill: '상급', deck: ELEMS[i] }, { tier: '평범', skill: '상급', deck: ELEMS[j] }, 0, NI, { saltRing: ring }]);
   for (const t of ['평범', '중간', '상위']) for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) add(`ty:${t}:${i}:${j}`, 'duels', [{ tier: t, skill: '상급', type: TYPES[i] }, { tier: t, skill: '상급', type: TYPES[j] }, 0, NI]);
@@ -178,7 +178,7 @@ async function measure(q) {
   const win = k => { const r = (R[k] || []); const n = r.reduce((a, p) => a + p.n, 0); return Pr(r.reduce((a, p) => a + p.win, 0), n); };
   o.H3 = win('ring30'); o.H4 = (() => { const g = flat('crowd:20'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })(); o.H5 = (() => { const g = flat('crowd:30'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })();
   o.H6 = (() => { const g = flat('squad:10'); return Pr(g.reduce((a, x) => a + x.win, 0), g.length); })(); o.H7 = win('ring100'); o.H8 = win('army:ambush'); o.H9 = win('army:field-musket'); o.H10 = win('army:throw-조약돌-100'); o.H11 = win('army:throw-번쩍 돌-100');
-  { const f = R['army:field-musket'] || []; let mb = 0, n = 0; for (const p of f) { mb += p.mb || 0; n += p.n; } o.H9m = n ? Pr(mb, n) : null; o.H12 = win('army:salt-city');
+  { const f = R['army:field-musket'] || []; let mb = 0, n = 0; for (const p of f) { mb += p.mb || 0; n += p.n; } o.H9m = n ? Pr(mb, n) : null; o.H12 = win('army:salt-city'); o.H23 = win('army:salt-city-gun'); o.H24 = win('army:ambush-gun'); o.H25 = win('army:field-gun'); o.H26 = win('army:salt-fort-gun');   // 포병 (v2.31)
     let w = 0, t = 0; for (const k of ['low:평범', 'low:중간']) for (const p of R[k] || []) { w += p.wave; t += p.tot; } o.H13 = t ? X(w / t, '평범·중간 합법 최강 대 기본기') : null; }
   { const pr = (k, f) => { const g = flat(k); return Pr(g.reduce((a, x) => a + x[f], 0), g.length); }; o.H14 = pr('b8:30', 'win'); o.H15 = pr('b8:100', 'dead'); o.H16 = pr('b11:50', 'win'); o.H17 = pr('b11:70', 'dead');
     const all = ['b8:30', 'b8:100', 'b11:50', 'b11:70'].flatMap(flat); o.H17r = Pr(all.reduce((a, x) => a + x.retreat, 0), all.length);
