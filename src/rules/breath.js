@@ -39,6 +39,7 @@ module.exports = {
       if (!go && K.low && r < (EP || (EP = require('../../data/engage.json'))).breathR && !threat) go = true;   // 몰린 쪽은 깊이 마신다 (v2.13)
       if (!go && T.breathPre && r < T.breathPre && !threat && m.op && (m.op.cur === 'press' || m.op.cur === 'finish') && W.t - m.op.t0 < P.pre) go = true;   // 몰아치기 직전에 미리 (대가·전설)
       if (go && T.breathSafe && K.los && B.hidesOf(K.e)) go = false;   // 숨긴 수를 쓰는 상대: 언제 올지 모르니 엄폐 뒤(시야가 막힌 곳)에서만 마신다 (v2.20)
+      if (go) { const hb = W._bh.breath; for (let i = 0; i < hb.length; i++) go = hb[i](W, m, K, go); }   // 마실 때를 규칙이 더 고른다 (v2.38, rules/ringLedger: 쥔 수·곧 닿을 수)
       if (!go) return restNow;
       m.st.breath = P.T; m.mlog.breath++; m.mlog.brHitF = false; m.mlog.brV = Math.max(B.C.hyp(m.vx, m.vy) * P.slow, 2.5); m.relT = null; return true;
     },

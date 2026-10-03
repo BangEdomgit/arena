@@ -6,7 +6,7 @@
  *   고리가 모자라 못 받은 일은 내려놓는다: 날기 → 내려앉는다(두뇌 훅 bound가 flyWant를 끈다), 잔기술 → 끈다, 붙잡음 → 거둔다, 자동 진 → 쉰다(두뇌 훅 circles)
  * 동시에 짓기 = 빈 고리만큼(엔진의 두 칸 + 셋째 칸부터 X, 두뇌 훅 slot). X는 이 규칙이 쥐고 걸음마다 지어 풀며(엔진 훅 mageStep), 굳거나 쓰러지면 모두 흩어진다
  *   k번째 X: 머리 열 × (1 + x.heat (k + 1))·당 × (1 + x.glu (k + 1)). 동시에 짓는 수 n이 셋 넘으면 초당 머리 holdHeat × (n − 2): 많이 쥘 수 있어도 오래는 못 쥔다
- *   X는 상대의 예비동작 읽기(cast·castB)에 보이지 않는다(지금 엔진의 한계, 59장)
+ *   X도 상대의 예비동작 읽기에 보인다 (v2.38: 두뇌 훅 casts → brain/lib/casts, 읽는 자리가 cast·castB 다음에 본다)
  * 지표 (api.stats): 단계마다 고리가 꽉 찬 시간·고리 쓰임·내려놓은 시간, 시작할 때 동시에 짓는 수의 분포, X의 수·풀림·흩어짐 */
 const P = require('../../data/rules/ringLedger.json'), CH = require('./chorus').api, PS = require('./passive').api;
 let XX = null;   // 엔진의 것
@@ -20,6 +20,11 @@ const KS = ['chorus', 'B', 'hold', 'fly', 'film', 'psv', 'auto'], VAL = [0, 0, 0
 const TU = require('./tune').api, LN2 = Math.LN2;
 // 한 시전이 풀릴 때의 머리 열 (손잡이를 돌렸으면 그 값: rules/tune의 비용 × log₂(1 + E), 숨기면 더)
 function heatOf(c) { const s = c.s; let k = 1; if (c.tk) { const E = TU.energy(s, c.tz, c.tf, c.tv); k = XX.log(1 + E) / LN2 * (c.hid ? 1 + TU.P.hide.heat : 1); } return s.cost * 1.6 * k; }
+function xAt(q, m) { const s = ST.get(q); if (!s) return false; for (let i = 0; i < s.X.length; i++) if (s.X[i].tgt === m) return true; return false; }   // 셋째 칸부터 나를 겨눴나
+// 둘러싸여 위협이 많은가 (v2.38): 산 적이 all 이상(다수와 싸움)이거나, R m 안에 산 적이 n 이상이거나, 나를 겨눈 예비동작이 aim 이상이면 셋째 칸을 열지 않는다
+function crowded(m, K) { const C = P.x.crowd; if (!C) return false; let near = 0, aim = 0, all = 0; const fs = K.foes;
+  for (let i = 0; i < fs.length; i++) { const q = fs[i]; if (!(q.hp > 0)) continue; all++; const dx = q.x - m.x, dy = q.y - m.y; if (dx * dx + dy * dy < C.R * C.R) near++; if ((q.cast && q.cast.tgt === m) || (q.castB && q.castB.tgt === m) || xAt(q, m)) aim++; }
+  return all >= C.all || near >= C.n || aim >= C.aim; }
 function pend(m, S) { let h = 0; if (m.cast) h += heatOf(m.cast); if (m.castB) h += heatOf(m.castB) * 1.3; for (let i = 0; i < S.X.length; i++) h += heatOf(S.X[i]) * (1 + P.x.heat * (i + 2)); return h; }
 // 장부: 이번 걸음의 일과 고리를 나눈다 (걸음마다, 새 객체 없이)
 function alloc(X, W, m) {
@@ -30,7 +35,7 @@ function alloc(X, W, m) {
   const flying = W.rules.flight && ((m.z >= 1 && m.fly === 1) || m.flyWant);
   let danger = false; if (flying) { for (const a of W.areas) if (a.src.side !== m.side && !a.vis && X.hyp(a.x - m.x, a.y - m.y) < a.r + P.danger) { danger = true; break; }
     if (!danger) for (const t of W.traps) if (t.src.side !== m.side && X.hyp(t.x - m.x, t.y - m.y) < P.danger) { danger = true; break; } }
-  let aimed = false; if (W.rules.circles && m.circles >= 3) for (const q of W.foes[m.side]) if (q.hp > 0 && ((q.cast && q.cast.tgt === m) || (q.castB && q.castB.tgt === m))) { aimed = true; break; }
+  let aimed = false; if (W.rules.circles && m.circles >= 3) for (const q of W.foes[m.side]) if (q.hp > 0 && ((q.cast && q.cast.tgt === m) || (q.castB && q.castB.tgt === m) || xAt(q, m))) { aimed = true; break; }
   const b = m.castB, held = !!(b && b.hold && b.t >= b.T);
   HAS[0] = !!CH.of(W, m); VAL[0] = V.chorus; HAS[1] = !!b && !held; VAL[1] = V.B; HAS[2] = held; VAL[2] = V.hold;
   HAS[3] = !!flying; VAL[3] = danger ? V.flyDanger : V.fly; HAS[4] = !!flying && m.airFilm; VAL[4] = V.film;
@@ -52,8 +57,8 @@ module.exports = {
         const S = stOf(m), dt = W.dt;
         if (S.X.length) {   // 셋째 칸부터: 짓고 풀고, 굳거나 쓰러지면 흩어진다
           const by = wsOf(W).by[tierOf(m)];
-          if (m.st.stun > 0 || !(m.hp > 0)) { if (by) by.xLost += S.X.length; S.X.splice(0); }
-          else { let w = 0; for (let i = 0; i < S.X.length; i++) { const c = S.X[i]; c.t += dt; if (c.t >= c.T) { const k = XK.get(c) || 1; if (W.rules.fatigue && !c.s.mundane && m.fat + heatOf(c) * (1 + P.x.heat * (k + 1)) > P.x.dropAt) { if (by) by.xDrop++; continue; } if (by) by.xRel++; X.release(W, m, c); } else S.X[w++] = c; } if (w < S.X.length) S.X.splice(w); }   // 풀면 머리가 넘칠 X는 놓는다(흩어짐, 머리 열 없이)
+          if (!(m.hp > 0) || (m.st.stun > 0 && P.x.lose)) { if (by) by.xLost += S.X.length; S.X.splice(0); }
+          else if (!(m.st.stun > 0)) { let w = 0; for (let i = 0; i < S.X.length; i++) { const c = S.X[i]; c.t += dt; if (c.t >= c.T) { const k = XK.get(c) || 1; if (W.rules.fatigue && !c.s.mundane && m.fat + heatOf(c) * (1 + P.x.heat * (k + 1)) > P.x.dropAt) { if (by) by.xDrop++; continue; } if (by) by.xRel++; X.release(W, m, c); } else S.X[w++] = c; } if (w < S.X.length) S.X.splice(w); }   // 풀면 머리가 넘칠 X는 놓는다(흩어짐, 머리 열 없이)
         }
         const n = (m.cast || m.chan ? 1 : 0) + (m.castB ? 1 : 0) + S.X.length; if (n > 2 && W.rules.fatigue) m.fat += P.holdHeat * (n - 2) * dt;   // 오래는 못 쥔다
         const s = alloc(X, W, m);
@@ -67,12 +72,18 @@ module.exports = {
     };
   },
   brain: B => ({
+    // 숨 고를 때 (v2.38): 셋째 칸부터 쥔 수가 있으면 먼저 푼다. 상대의 보이는 공격(모든 칸)이 숨이 끝나기 전(breath.T + br.pad s)에 내 둘레(br.r m)에 닿으면 기다린다
+    breath(W, m, K, go) { const s = ST.get(m); if (!go || !s) return go; if (s.X.length) return false; const BR = P.br, lim = BR.T + BR.pad;
+      for (const q of K.foes) { if (!(q.hp > 0)) continue; const d = B.C.hyp(q.x - m.x, q.y - m.y); for (let j = 0, xs = B.castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const c = B.castAt(q, j, xs);
+        if (!c || c.unseen || !B.OFF[c.s.t] || c.T - c.t + B.landDelay(c.s, d) > lim) continue; if (c.tgt === m || B.C.hyp(c.tx - m.x, c.ty - m.y) < BR.r + (c.s.r || 0)) return false; } }
+      return go; },
+    casts(W, q, a) { const s = ST.get(q); return s && s.X.length ? s.X : a; },   // 셋째 칸부터의 시전 (예비동작 읽기가 본다, v2.38)
     heat(W, m, h) { const s = ST.get(m); if (!s || !s.X.length) return h; let x = 0; for (let i = 0; i < s.X.length; i++) x += heatOf(s.X[i]) * (1 + P.x.heat * (i + 2)); return h + x + P.holdHeat * Math.max(0, (m.cast || m.chan ? 1 : 0) + (m.castB ? 1 : 0) + s.X.length - 2); },   // 쥔 셋째 칸부터의 수가 풀릴 때의 머리 열 + 1 s의 오래 쥠 (손잡이·스스로 죽지 않기가 본다)
     circles(W, q, c) { const s = ST.get(q); if (!s) return c; return s.auto ? 3 : s.F >= 1 ? 2 : 1; },   // 장부가 정한 수: 자동 진이 고리를 받았나, 두 번째 칸에 빈 고리가 있나 (맨 뒤라 다른 규칙의 깎기를 덮는다)
     slot(W, m, K, slot) {
       const s = ST.get(m); if (!s) return slot;
       if (slot === 'B' && s.F < 1) return '';
-      if (!slot && (m.cast || m.chan) && m.castB && s.F >= 1 && K.T.slotB && m.fat < P.x.fatMax && m.glu > P.x.gluMin) return 'X';   // 빈 고리만큼 더
+      if (!slot && (m.cast || m.chan) && m.castB && s.F >= 1 && K.T.slotB && m.fat < P.x.fatMax && m.glu > P.x.gluMin && !crowded(m, K)) return 'X';   // 빈 고리만큼 더 (둘러싸였으면 열지 않는다, v2.38)
       return slot;
     },
     commit(W, m, K, best, cast) {

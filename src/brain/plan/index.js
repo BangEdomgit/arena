@@ -8,7 +8,7 @@
  *     slip s 동안 걸음을 바꾼다(가까운 바위 뒤로 떨어져 엄폐, 없으면 상대에게서 멀리 가장 열린 쪽으로) · 벽 마법 × wall · 가장 빠른 체크로 역체크 × counter. 정석을 알면 받는 법(away·keep·cast)
  *   commit: 시전에 cast.chk(체크)·cast.mate(메이트). 기록 m.mlog: chk·mate·brk·plN(읽은 수)·plNodes(본 마디) */
 const ST = require('./state'), SE = require('./search'), JO = require('./joseki'), P = ST.P;
-const { C, hyp, OFF, landDelay, castTime } = require('../util');
+const { C, hyp, OFF, landDelay, castTime, castsX, castAt } = require('../util');
 const on = (m, K) => m.tac.read > 0 && m.C >= 5 && K.foes && K.foes.length === 1;
 const SD = new WeakMap(), TMP = ST.newSide();
 function sides(m) { let o = SD.get(m); if (!o) { o = { e: ST.newSide(), me: ST.newSide() }; SD.set(m, o); } return o; }
@@ -42,7 +42,7 @@ function net(W, m, K) {
   const e = K.e, S = ST.build(W, m, e, sides(m).me, 0.5, !!W.rules.stunRes); K.netN = ST.slack(S, 0.3);
   const L = JO.read(W, m, K); K.jsL = L;
   if (K.brk > W.t) return;
-  let busy = false; for (let j = 0; j < 2; j++) { const c = j ? e.castB : e.cast; if (c && !c.unseen && !c.auto && OFF[c.s.t] && c.tgt === m) busy = true; }
+  let busy = false; for (let j = 0, xs = castsX(W, e), jn = 2 + xs.length; j < jn; j++) { const c = castAt(e, j, xs); if (c && !c.unseen && !c.auto && OFF[c.s.t] && c.tgt === m) busy = true; }
   const away = L && L.answer.do === 'away';
   if (!((K.netN <= P.net.low && busy) || away)) return;
   // 깨기: 바위 뒤(상대와 사이에 두고) 또는 상대에게서 멀리, 가장 열린 쪽으로

@@ -2,7 +2,7 @@
 /* 숨 결투장 — 두뇌 1: 읽기 (과녁과 성향, 위협)
  * 과녁: 약자부터(focusLow) 또는 가장 가까운 자. 성향(prefR·aggr·dodge·rest)은 새 객체를 만들지 않고 K에 둔다 (속도, 1.11.1). 규칙의 aim 훅이 고친다(파도).
  * 위협: 날아오는 투사체, 적의 예비동작(읽기, 초보는 못 한다), 보이는 구름, 해로운 지대. 피할 쪽을 정하고 구른다 */
-const { C, hyp, deck } = require('./util');
+const U = require('./util'), { C, hyp, deck } = U;
 const learn = require('./techniques/learn'), position = require('./techniques/position');
 // 과녁과 성향: 과녁이 없으면 false
 function aimAt(W, m, K) {
@@ -37,14 +37,14 @@ function readThreats(W, m, K) {
     const vv = p.vx * p.vx + p.vy * p.vy, t = (rx * p.vx + ry * p.vy) / vv;
     if (t > 0 && t < 0.8 && hyp(p.x + p.vx * t - m.x, p.y + p.vy * t - m.y) < 0.55) { dodge = { x: -p.vy, y: p.vx, perp: 1 }; aimed = true; }
   }
-  if (T.readCast) for (let i = 0; i < foes.length; i++) for (let j = 0; j < 2; j++) {   // 초보는 날아오는 투사체만 본다: 예비동작·구름·지대를 못 읽는다
-    const q = foes[i], c = j ? q.castB : q.cast;
+  if (T.readCast) for (let i = 0; i < foes.length; i++) { const q = foes[i], xs = U.castsX(W, q); for (let j = 0, jn = 2 + xs.length; j < jn; j++) {   // 초보는 날아오는 투사체만 본다: 예비동작·구름·지대를 못 읽는다. 셋째 칸부터도 (v2.38)
+    const c = U.castAt(q, j, xs);
     if (!c || !C.THREAT[c.s.t]) continue;
     if (hc.length && hidden(hc, W, q, c, m)) continue;
     const r = c.s.t === 'area' ? c.s.r * C.sizeOf(q, c.s) + 0.4 : 0.8;
     if (blindR) { if (hyp(c.tx - m.x, c.ty - m.y) < r && c.T - c.t < 0.2) { late = c; late.by = q; } continue; }
     if (hyp(c.tx - m.x, c.ty - m.y) < r) { aimed = true; threat = c; threat.by = q; if (c.T - c.t < 0.5) dodge = dodge || { x: -uy, y: ux, perp: 1 }; }
-  }
+  } }
   for (const a of W.areas) if ((a.src.side !== m.side && a.vis && T.readCast && !blindR || a.src === m) && hyp(a.x - m.x, a.y - m.y) < a.r + 0.5) dodge = { x: m.x - a.x || 0.1, y: m.y - a.y || 0.1 };
   // 날아오는 돌(곡사)도 떨어질 자리를 보고 비킨다 (v2.0. 1.x에선 곡사를 읽지 않아 아무도 피하지 않았다)
   if (T.readCast && !blindR && T.readLob) for (const l of W.lobs) if (l.src.side !== m.side && hyp(l.x - m.x, l.y - m.y) < l.r + 0.5) dodge = { x: m.x - l.x || 0.1, y: m.y - l.y || 0.1 };

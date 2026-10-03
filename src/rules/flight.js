@@ -15,6 +15,7 @@ const { pow, hyp, clamp } = require('../math');
 const F = require('../../data/rules/flight.json');
 const { saltR } = require('./saltRing').api, SR = require('./saltRing').api;
 const { aOf } = require('./snap').api;   // 끊는 움직임 (v2.4): 옆·오르내림 가속의 바닥
+const { castsX, castAt } = require('../brain/lib/casts');   // 셋째 칸부터의 시전도 읽는다 (v2.38)
 const G = F.g, M = F.mass, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, CU = F.cut;
 // 출력 (W). C^2.5는 선명도마다 한 번
 function outP(m) { if (m._flC !== m.C) { m._flC = m.C; m._flP = F.P0 * pow(Math.max(m.C, 0.01), F.Pk); } return m._flP * Math.max(0.6, 1 - Math.min(m.fat, 100) / 200); }
@@ -79,7 +80,7 @@ function cutBrain(W, m, K, lv) {
   // 상급부터: 땅에서 발밑·함정·지대로 나를 노리는 수가 곧 풀리면 튀어오른다
   if (m.fly === 0) {
     if (!read) return;
-    for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (c && !c.unseen && c.tgt === m && GROUND(c.s) && c.T - c.t < CBR.hopRead) { m.cut.w = 3; CB.want = true;
+    for (const q of K.foes) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const c = castAt(q, j, xs); if (c && !c.unseen && c.tgt === m && GROUND(c.s) && c.T - c.t < CBR.hopRead) { m.cut.w = 3; CB.want = true;
         if (CB.fz < F.brain.zLow) CB.fz = F.brain.zLow; return; } }
     return;
   }
@@ -228,7 +229,7 @@ module.exports = {
         let near = 0, guns = 0, gunsFar = 0; for (const q of K.foes) { const dq = hyp(q.x - m.x, q.y - m.y); if (dq < Bn.crowd) near++;
           if (q._gun === undefined) q._gun = q.book.some(n => W.spells[n] && W.spells[n].mundane && W.spells[n].t === 'proj'); if (q._gun && dq < Bn.gunR) guns++;
           if (q._gun && dq < Bn.gunFar) gunsFar++; } if (near >= 3) ground++;
-        if (T.readCast) for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast;
+        if (T.readCast) for (const q of K.foes) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const c = castAt(q, j, xs);
           if (c && !c.unseen && (c.s.kind === 'elec' || c.s.t === 'thread') && hyp(c.tx - m.x, c.ty - m.y) < 3) elecT = true; }
         const ec = T.readCast ? e.cast : null, eBig = !!(ec && ec.s.big), myBig = !!(m.cast && m.cast.s.big), far = K.stance === 'kite' || K.stance === 'breakout';
         let want = true, fv = F.corner, fz = Bn.z;
@@ -269,7 +270,7 @@ module.exports = {
         const S = Bn.survive, c = m.cut;
         if (m.wave) c.cool = false; else if (m.fat > S.land) c.cool = true; else if (m.fat < S.up) c.cool = false;
         let risk = m.fat > S.low;
-        if (!risk) for (const q of K.foes) for (let j = 0; j < 2; j++) { const x = j ? q.castB : q.cast;
+        if (!risk) for (const q of K.foes) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const x = castAt(q, j, xs);
           if (x && !x.unseen && x.tgt === m && (binds(x.s) || x.s.kind === 'elec') && x.T - x.t < S.lowT) risk = true; }
         if (c.cool) risk = true;
         if (B.lib.behind(W, m, K)) risk = true;   // 세운 벽 뒤: 낮게 (벽은 2 m 넘게 뜬 사람을 가리지 않는다, v2.8)

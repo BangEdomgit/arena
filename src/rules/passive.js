@@ -8,6 +8,7 @@
  * 두뇌 (tac.passive): 1 중급 늘 켬(상대 책의 공격 가운데 가장 많은 종류) · 2 상급 바꿔 낌(보이는 위협 → 상대가 마지막에 푼 공격 → 책)
  *   · 3 대가 위협이 lead s 안에 닿을 때만 · 4 전설 같게, 더 짧은 lead (맞기 직전에만) */
 const P = require('../../data/rules/passive.json'), GF = require('./gunfire').api;
+const { castsX, castAt } = require('../brain/lib/casts');   // 셋째 칸부터의 시전도 읽는다 (v2.38)
 const KIND = {}; P.kinds.forEach((ks, i) => { for (const k of ks) KIND[k] = i + 1; });   // 피해 종류 → 잔기술
 const HOLD = new WeakMap();   // 사람 → { t: 절연 막을 켜 둘 때까지, n: 켜 둔 번 수 } (v2.36)
 const on = (W, m) => m.C >= P.cMin && m.tac.passive > 0;
@@ -35,7 +36,7 @@ module.exports = {
     // 가장 먼저 닿는 위협의 잔기술 (within s 안). 없으면 0
     function threat(W, m, K, within) {
       let best = within, p = 0;
-      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || c.unseen || !B.OFF[c.s.t]) continue; const t = c.T - c.t; if (t >= best) continue; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * t, c.ty - m.y - m.vy * t) < P.near + (c.s.r || 0)) { best = t; p = psvOf(c.s); } }
+      for (const q of K.foes) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const c = castAt(q, j, xs); if (!c || c.unseen || !B.OFF[c.s.t]) continue; const t = c.T - c.t; if (t >= best) continue; if (c.tgt === m || B.C.hyp(c.tx - m.x - m.vx * t, c.ty - m.y - m.vy * t) < P.near + (c.s.r || 0)) { best = t; p = psvOf(c.s); } }
       for (const a of W.areas) if (a.src.side !== m.side && a.t < best && B.C.hyp(a.x - m.x - m.vx * a.t, a.y - m.y - m.vy * a.t) < a.r + 0.6) { best = a.t; p = psvOf(a.s); }
       for (const pr of W.proj) { if (pr.dead || !pr.src || pr.src.side === m.side) continue; const dx = m.x - pr.x, dy = m.y - pr.y, v2 = pr.vx * pr.vx + pr.vy * pr.vy; if (!v2) continue; const t = (dx * pr.vx + dy * pr.vy) / v2; if (t > 0 && t < best && B.C.hyp(pr.x + pr.vx * t - m.x, pr.y + pr.vy * t - m.y) < 1.2) { best = t; p = psvOf(pr.s); } }
       return p;
@@ -43,7 +44,7 @@ module.exports = {
     // 굳히는 번개가 여러 방향에서 오나 (v2.36, 전설): within s 안에 나를 겨눈 전기 굳힘·실이 hold.n개 넘게, 그 방향들이 hold.ang rad 넘게 벌어졌으면
     function multiElec(W, m, K) {
       const H = P.hold; let n = 0, a0 = 0, lo = 9, hi = -9;
-      for (const q of K.foes) for (let j = 0; j < 2; j++) { const c = j ? q.castB : q.cast; if (!c || c.unseen || c.tgt !== m || c.T - c.t > H.within) continue; const s = c.s; if (!(s.t === 'thread' || (kindOf(s) === 'elec' && (s.stun || (s.hit && s.hit.stun))))) continue;
+      for (const q of K.foes) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) { const c = castAt(q, j, xs); if (!c || c.unseen || c.tgt !== m || c.T - c.t > H.within) continue; const s = c.s; if (!(s.t === 'thread' || (kindOf(s) === 'elec' && (s.stun || (s.hit && s.hit.stun))))) continue;
         let a = B.C.atan2(q.y - m.y, q.x - m.x); if (!n) a0 = a; let d = a - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; if (d < lo) lo = d; if (d > hi) hi = d; n++; }
       for (const a of W.areas) { if (a.src.side === m.side || a.t > H.within || a.s.kind !== 'elec' || !a.s.stun || B.C.hyp(a.x - m.x, a.y - m.y) > a.r + 0.6) continue;   // 떨어지는 번개 그물도 (치는 사람 쪽에서 온다)
         let ang = B.C.atan2(a.src.y - m.y, a.src.x - m.x); if (!n) a0 = ang; let d = ang - a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; if (d < lo) lo = d; if (d > hi) hi = d; n++; }

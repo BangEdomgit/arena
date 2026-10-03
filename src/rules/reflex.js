@@ -18,6 +18,7 @@
  *   나를 겨눈 공격이 흔든 뒤(0.4 s 안에 풀림)·안 흔든 뒤에 빗나간 수 */
 const { hyp } = require('../math');
 const P = require('../../data/rules/reflex.json'), SR = require('./saltRing').api;
+const { castsX, castAt } = require('../brain/lib/casts');   // 셋째 칸부터의 시전도 읽는다 (v2.38, 공용: 순환 없음)
 const LEAD = { proj: 1, thread: 1 }, OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const canRoll = m => m.roll <= 0 && m.rollCd <= 0 && m.stam > 1.5 && !(m.st.stun > 0 || m.st.root > 0 || m.st.mycel > 0 || m.st.cramp > 0);
 const TH = { th: null, q: null, kind: 0, dx: 0, dy: 0 };   // 찾은 위협 (새로 만들지 않는다)
@@ -38,8 +39,8 @@ function scan(W, m) {
   }
   if (TH.th || !m.tac.readCast || m.st.blind > 0) return;
   const v2 = m.vx * m.vx + m.vy * m.vy;
-  for (const q of W.foes[m.side]) for (let j = 0; j < 2; j++) {
-    const c = j ? q.castB : q.cast; if (!(c && !c.unseen && c.tgt === m && LEAD[c.s.t] && c.T - c.t < P.read)) continue;
+  for (const q of W.foes[m.side]) for (let j = 0, xs = castsX(W, q), jn = 2 + xs.length; j < jn; j++) {
+    const c = castAt(q, j, xs); if (!(c && !c.unseen && c.tgt === m && LEAD[c.s.t] && c.T - c.t < P.read)) continue;
     const ax = c.tx - m.x, ay = c.ty - m.y, d = hyp(ax, ay), s = v2 > 1 ? (ax * m.vx + ay * m.vy) / v2 : 0;   // 겨눈 자리가 내 앞길의 s초 뒤인가
     if (d >= P.aheadMin && s > P.aheadT[0] && s < P.aheadT[1] && hyp(ax - m.vx * s, ay - m.vy * s) < P.aheadR) { TH.th = c; TH.q = q; TH.kind = 3; return; }   // 앞길을 겨눴다: 흔든다
     if (d < P.aheadMin) { const k = d > 0.1 ? d : 1; TH.th = c; TH.q = q; TH.kind = 4; TH.dx = d > 0.1 ? -ax / k : -(q.y - m.y); TH.dy = d > 0.1 ? -ay / k : q.x - m.x; return; }   // 거의 나를 겨눴다: 겨눈 자리에서 비킨다
