@@ -641,7 +641,8 @@ function renderAll() {
   renderSides(); renderMageEd(); renderRules(); renderSceneTab(); renderStats(); syncButtons();
   $('seed').value = S.scene.seed;
   const sel = $('scenes'); if (!sel.options.length) { sel.append(el('option', { value: '' }, '예시 장면…'));
-    for (const [k, v] of Object.entries(D.scenes)) sel.append(el('option', { value: k }, v.name || k)); }
+    const cg = el('optgroup', { label: '조건: 지금 엔진 v' + A.VERSION + '가 배치' }); for (const c of A.scenario.list()) cg.append(el('option', { value: 'c:' + c.id }, c.id + ' ' + c.name)); sel.append(cg);   // 조건 짓개 (v2.33): 부를 때 지금 엔진의 수로 짓는다
+    const fg = el('optgroup', { label: '장면 파일' }); for (const [k, v] of Object.entries(D.scenes)) fg.append(el('option', { value: k }, v.name || k)); sel.append(fg); }
 }
 function syncButtons() { $('play').textContent = S.play ? '멈춤' : (S.W && A.over(S.W) ? '다시' : '재생'); $('exportRec').disabled = !S.W; }
 function togglePlay() { if (S.W && A.over(S.W)) { reset(); } S.play = !S.play; if (S.play) { start(); last = performance.now(); } syncButtons(); }
@@ -668,7 +669,8 @@ $('seed').onchange = e => edit(sc => { sc.seed = Math.round(+e.target.value) || 
 for (const b of document.querySelectorAll('#tools [data-tool]')) b.onclick = () => setTool(b.dataset.tool);
 for (const b of document.querySelectorAll('[data-tab]')) b.onclick = () => { S.tab = b.dataset.tab; for (const x of document.querySelectorAll('[data-tab]')) x.classList.toggle('on', x === b);
   $('tab-rules').hidden = S.tab !== 'rules'; $('tab-scene').hidden = S.tab !== 'scene'; };
-$('scenes').onchange = e => { if (e.target.value) { loadScene(D.scenes[e.target.value]); S.play = true; start(); syncButtons(); } e.target.value = ''; };
+const sceneOf = (key, seed) => key.startsWith('c:') ? (A.scenario.list().some(c => c.id === key.slice(2)) ? A.scenario.build(key.slice(2), { seed: seed || 1 }) : null) : D.scenes[key];   // 'c:c19' → 조건으로 짓기
+$('scenes').onchange = e => { const sc = e.target.value && sceneOf(e.target.value); if (sc) { loadScene(sc); S.play = true; start(); syncButtons(); } e.target.value = ''; };
 $('exportScene').onclick = () => download((S.scene.name || 'scene').replace(/[^\w가-힣-]+/g, '_').slice(0, 40) + '.json', exportScene());
 $('exportRec').onclick = () => { const t = exportRecording(); if (t) download('replay.json', t); };
 $('file').onchange = e => { const f = e.target.files[0]; if (f) f.text().then(importText); e.target.value = ''; };
@@ -682,13 +684,13 @@ $('vLeg').onchange = renderLegend; renderLegend();
 window.Sandbox = { S, loadScene, step, runToEnd, seek, exportScene, exportRecording, importText, reset: () => { reset(); renderAll(); } };
 
 // 열면 첫 예시 장면이 바로 돈다
-// 주소로 열기 (v0.3, node cli.js audit의 링크): #장면&seed=2&t=34.5 → 그 장면·씨앗을 그 시각까지 돌려 멈춘다
+// 주소로 열기 (v0.3, node cli.js audit의 링크): #장면&seed=2&t=34.5, 조건은 #c:c19&seed=3&t=20 (v2.33) → 그 장면·씨앗을 그 시각까지 돌려 멈춘다
 function openHash() {
   const h = decodeURIComponent((location.hash || '').slice(1)); if (!h) return false; const [key, ...kv] = h.split('&'), o = {}; for (const x of kv) { const [k, v] = x.split('='); o[k] = v; }
-  const sc = D.scenes[key]; if (!sc) { note('주소의 장면이 없다: ' + key); return false; }
+  const sc = sceneOf(key, o.seed && +o.seed); if (!sc) { note('주소의 장면이 없다: ' + key); return false; }
   const c = clone(sc); if (o.seed) c.seed = +o.seed; loadScene(c); if (o.t) { seek(+o.t); S.play = false; } else { S.play = true; start(); } syncButtons(); note('주소로 열었다: ' + key + (o.seed ? ' · 씨앗 ' + o.seed : '') + (o.t ? ' · ' + o.t + ' s' : '')); return true;
 }
 window.addEventListener('hashchange', openHash);
-if (!openHash()) { loadScene(D.scenes.duel || Object.values(D.scenes)[0]); S.play = true; start(); syncButtons(); }
+if (!openHash()) { loadScene(sceneOf('c:c01') || Object.values(D.scenes)[0]); S.play = true; start(); syncButtons(); }
 requestAnimationFrame(loop);
 })();

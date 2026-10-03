@@ -111,7 +111,8 @@ function soloOn(W, m) { if (m.C < SO.cMin) return false; let n = 0; const f = W.
 // 받는 위협: 지난 rest.threatT s의 피해를 체력 몫으로 (지수로 잊는다, 세계 훅이 0.25 s마다)
 function soloOf(S, m) { let o = S.solo.get(m); if (!o) S.solo.set(m, o = { hp: m.hp, thr: 0, rest: 0 }); return o; }
 function tired(W, m) { const R = SO.rest; return m.glu < R.glu * m.gluMax || m.fat > R.fat; }
-function losing(W, m) { const R = SO.retreat; if (!R) return false; let n = 0; for (const q of W.foes[m.side]) if (q.hp > 0 && !q.flee) n++; if (n < R.foes) return false;
+function losing(W, m) { const R = SO.retreat; if (!R || W.closed) return false;   // 갇힌 판(장면의 closed, v2.33)엔 물러설 곳이 없다
+  let n = 0; for (const q of W.foes[m.side]) if (q.hp > 0 && !q.flee) n++; if (n < R.foes) return false;
   const dry = W.rules.drain ? DR.around(W, m.x, m.y) : 1, hp = m.hp / m.hpMax;
   const S = STATE.get(W), thr = S ? soloOf(S, m).thr : 0;
   return hp < R.hp || (hp < R.hpDry && dry < R.dry) || (tired(W, m) && thr > SO.rest.threat); }   // v2.29: 지쳤어도 위협이 약하면 숨 돌리기(물러남이 아니다)

@@ -17,7 +17,7 @@ function run() {
     const [f1, g1] = rec('대마법사', {}), [f0, g0] = rec('대마법사', { endureK: 0 }), k = Math.pow(4, A.DEFAULT_RULES.endureK);
       assert.ok(Math.abs(f1 / f0 - k) < 1e-6 && Math.abs(g1 / g0 - k) < 1e-6, '대마법사 × ' + k);
     // 대마법사 둘 대 상위 여섯(상위는 돌 비가 든 덱): 대마법사가 이긴다
-    const sc = SCENES['v2-archmage-2v6']; for (let s2 = 1; s2 <= 4; s2++) assert.strictEqual(A.runScene(Object.assign({}, sc, { seed: s2 })).winner, 0, '씨앗 ' + s2);
+    for (let s2 = 1; s2 <= 4; s2++) assert.strictEqual(A.runScene(A.scenario.build('c07', { seed: s2 })).winner, 0, '씨앗 ' + s2);   // 조건 c07 (v2.33, 예전 v2-archmage-2v6)
     // 박자 흔들기: 날카롭게(대가부터)는 한 번의 확률이 판단 간격에 비례한다(0.13 s에 20%), 몰아칠 때(과녁이 굳음)는 쉬지 않는다
     const tempo = require('../../src/brain/techniques/tempo'), W = A.createWorld({ seed: 1 }), m = A.addMage(W, A.mage({ tier: '대마법사', skill: '전설' }), 0, 10, 10), e = A.addMage(W, A.mage({ tier: '대마법사' }), 1, 30, 10);
     let n = 0; for (let i = 0; i < 4000; i++) { m.hold = 0; if (tempo.hold(W, m, { T: m.tac, slot: 'A', aimed: false, e })) n++;

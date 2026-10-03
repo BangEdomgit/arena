@@ -6,13 +6,14 @@
  *     그 지연 폭발·곡사의 반지름 × √N(엔진 훅 tune: 넓힌 사본으로 바꾼다). 장악권은 한 목소리: 어느 자리든 내 몫은 합창하는 모두의 신호의 합(엔진 훅 share).
  *   나머지는 박자를 지킨다: 공격 값 × hold(묶는 수는 그대로, 두뇌 훅 valueLate)
  *   깨짐: 한 명이 쓰러지거나 굳거나 R m 밖으로 나가면 깨지고, 그 사람들은 cd s 동안 다시 못 맞춘다. 모여 있으니 넓은 마법에 약하다(따로 셈하지 않는다: 그대로 맞는다)
+ * 지표 (v2.33): 깬 합창(brokeHit: 한 명이 쓰러지거나 굳어 깨진 것), 선명도 bigC 이상이 합창하는 사람에게 쏜 수(atN)·그중 넓은 마법(wideN)·앞소리꾼을 노린 것(leadN)
  * 사람에 칸을 더하지 않는다: 상태는 세계마다 WeakMap. api: of(W, m) → 합창 { n, lead, t0, on } 또는 null, stats(W) */
 const P = require('../../data/rules/chorus.json');
-const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
+const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 }, WIDE = { area: 1, lob: 1, cone: 1 };
 const isBind = s => !!(OFF[s.t] && (s.t === 'thread' || s.stun || s.root || (s.hit && (s.hit.stun || s.hit.root)) || s.t === 'cage'));
 const ST = new WeakMap(), BIG = new WeakMap();   // 마법 → [N마다 넓힌 사본] (앞소리꾼의 큰 마법)
 const bigOf = (s, n) => { let a = BIG.get(s); if (!a) BIG.set(s, a = []); return a[n] || (a[n] = Object.assign({}, s, { r: s.r * Math.sqrt(n) })); };
-function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { of: new Map(), cd: new Map(), groups: [], st: { formed: 0, broke: 0, onT: 0, leadCasts: 0, leadDmg: 0, maxN: 0, good: 0 } }); return s; }
+function stOf(W) { let s = ST.get(W); if (!s) ST.set(W, s = { of: new Map(), cd: new Map(), groups: [], st: { formed: 0, broke: 0, onT: 0, leadCasts: 0, leadDmg: 0, maxN: 0, good: 0, brokeHit: 0, atN: 0, wideN: 0, leadN: 0 } }); return s; }
 const limitOf = m => { for (const [c, n] of P.limit) if (m.C >= c) return n; return 0; };
 const able = (W, m, S) => m.hp > 0 && !m.flee && (m.tac.squad || m.tac.chorus) && limitOf(m) > 1 && !(m.st.stun > 0) && !((S.cd.get(m) || -9) > W.t);
 function update(X, W) {
@@ -21,7 +22,7 @@ function update(X, W) {
   for (const g of old) {
     let ok = true; for (const m of g.ms) if (!able(W, m, S) && !(m.st.stun > 0 && false)) { ok = false; break; }
     if (ok) for (let i = 0; i < g.ms.length && ok; i++) for (let j = i + 1; j < g.ms.length; j++) if (X.hyp(g.ms[i].x - g.ms[j].x, g.ms[i].y - g.ms[j].y) > (P.keepR || P.R)) { ok = false; break; }   // 이어 가는 거리 (v2.32): 맞출 땐 R, 이어 갈 땐 keepR
-    if (!ok) { if (g.on) S.st.broke++; for (const m of g.ms) { S.of.delete(m); if (m.hp > 0) S.cd.set(m, W.t + P.cd); } continue; }
+    if (!ok) { if (g.on) { S.st.broke++; for (const m of g.ms) if (m.hp <= 0 || m.st.stun > 0) { S.st.brokeHit++; break; } } for (const m of g.ms) { S.of.delete(m); if (m.hp > 0) S.cd.set(m, W.t + P.cd); } continue; }   // 깬 합창 (v2.33): 한 명이 쓰러지거나 굳어서
     for (const m of g.ms) used.add(m); now.push(g);
   }
   // 끼어들기 (v2.32, join): 이어 가는 합창에 곁(모두에게서 R 안)의 같은 편이 한계까지 들어온다. 들어오면 박자를 다시 맞춘다(sync)
@@ -60,11 +61,19 @@ module.exports = {
     },
     ceff(W, m, x) { const g = of(W, m); return g ? x * Math.sqrt(g.n) : x; },
     power(W, m, s, x) { const g = of(W, m); return g && g.lead === m ? x * X.pow(Math.sqrt(g.n), P.powK) : x; },
-    release(W, m, c) { const g = of(W, m); if (g && g.lead === m && OFF[c.s.t]) stOf(W).st.leadCasts++; },
+    release(W, m, c) { const g = of(W, m); if (g && g.lead === m && OFF[c.s.t]) stOf(W).st.leadCasts++;
+      if (m.C >= P.bigC && OFF[c.s.t] && c.tgt) { const h = of(W, c.tgt); if (h) { const st = stOf(W).st; st.atN++; if (WIDE[c.s.t]) st.wideN++; if (c.tgt === h.lead) st.leadN++; } } },   // 큰 사람이 합창에 쏜 것 (v2.33 지표): 넓은 마법의 몫, 앞소리꾼을 노린 몫
     hurt(W, m, v, src) { if (src) { const g = of(W, src); if (g && g.lead === src && m.side !== src.side) stOf(W).st.leadDmg += v; } },
   }),
-  brain: () => ({
+  brain: B => ({
     circles(W, q, c) { const S = ST.get(W); return S && S.of.has(q) ? Math.max(1, c - 1) : c; },   // 박자 맞추기에 고리 하나
-    valueLate(W, m, K, o) { if (!(o.v > 0) || !OFF[o.s.t]) return; const g = of(W, m); if (g && g.lead !== m && !isBind(o.s)) o.v *= P.hold; },
+    // 합창 깨기 (v2.33, 판단 수준의 tac.chorusBreak: 전설): 선 합창의 앞소리꾼을 노린다(크게 짓는 중이면 먼저, 큰 합창 먼저). 거기엔 묶는 수(굳히면 깨진다)·넓은 마법을 더 친다
+    aim(W, m, K) { if (!m.tac.chorusBreak || m.C < P.bigC || m.flee) return; const S = ST.get(W); if (!S) return; const R = P.brk;
+      let e = null, bs = 1e9; for (const g of S.groups) { const q = g.lead; if (q.side === m.side || !(q.hp > 0) || q.flee) continue; const d = B.hyp(q.x - m.x, q.y - m.y); if (d > R.R) continue;
+        const sc = d - g.n * R.nW - (g.on ? (q.cast ? R.castB : 0) : R.formB); if (sc < bs) { bs = sc; e = q; } }   // 맞추는 중인 무리(아직 한 목소리가 아니다)를 먼저: 모여 있고 아직 세지 않다
+      if (e) K.e = e; },
+    valueLate(W, m, K, o) { if (!(o.v > 0) || !OFF[o.s.t]) return; const g = of(W, m); if (g && g.lead !== m && !isBind(o.s)) o.v *= P.hold;
+      if (m.tac.chorusBreak && K.e && m.C >= P.bigC) { const S = ST.get(W), h = S && S.of.get(K.e); if (!h) return; o.v *= isBind(o.s) ? P.brk.bind * (K.e.cast ? P.brk.castK : 1) : WIDE[o.s.t] ? P.brk.wide : 1;
+        if ((o.s.t === 'area' || o.s.t === 'lob') && o.s.r > 0) { let x = 0, y = 0, n = 0; for (const q of h.ms) if (q.hp > 0) { x += q.x; y += q.y; n++; } if (n) { o.tx = x / n; o.ty = y / n; } } } },   // 넓은 마법은 합창의 가운데로 (몇이 함께 맞고, 피하면 박자가 깨진다)
   }),
 };

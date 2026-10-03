@@ -37,7 +37,6 @@ const GUNN = 2;   // 기습의 포 수 (v2.31: 둘이면 대마법사 약 55%, �
 function arcPts(n, cx, cy, R) { const out = []; for (let i = 0; i < n; i++) { const a = (i - (n - 1) / 2) * 0.21; out.push([+(cx + Math.cos(a) * R).toFixed(2), +(cy + Math.sin(a) * R * 0.95).toFixed(2)]); } return out; }
 const CITY8 = [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56]];   // 소금 도시의 포 자리: 맨땅 띠 여섯·광장 둘, 모두 시작 자리에서 35 m 밖
 const FAR = [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56], [3, 2], [8, 148], [160, 55], [110, 100]];   // 소금 도시의 먼 포 자리 (시작 (4, 75)에서 50 m 밖)
-const SALTFORT = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', 'x-salt-fort.json'), 'utf8'));
 const SCENES = {
   'field-musket': s => {
     const ms = []; for (let r = 0; r < 4; r++) for (let k = 0; k < 25; k++) ms.push({ tier: '병사', deck: '머스킷', x: 600 + r * 3, y: 263 + k * 3, tac: { volley: 4 } });
@@ -69,7 +68,7 @@ const SCENES = {
   'salt-city-gun8': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 8), '소금 도시 + 포 여덟 (50 m 밖)'),
   'salt-city-gun10': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 10), '소금 도시 + 포 열 (50 m 밖)'),
   'salt-city-gun12': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 12), '소금 도시 + 포 열둘 (50 m 밖)'),
-  'salt-fort': s => Object.assign(JSON.parse(JSON.stringify(SALTFORT)), { seed: s }),
+  'salt-fort': s => A.scenario.build('c25', { seed: s }),
   'salt-fort-gun': s => withGuns(SCENES['salt-fort'](s), [[150, 70], [150, 80]], '소금 성채 + 포: 대마법사 대 보루 안의 머스킷 34 + 청동포 둘'),
 };
 for (const deck of ['조약돌', '무거운 돌', '번쩍 돌']) for (const n of [100, 200]) SCENES[`throw-${deck}-${n}`] = s => ({ v, name: `장악권 밖 던지기: 평범 ${n} (${deck}) 55~60 m`, seed: s, width: 300, height: 300, maxT: 180, obstacles: 0, rules: NOSALT, sides: [{ name: '대마법사', mages: [Object.assign({ x: 150, y: 150 }, ARCH)] }, { name: '평범', mages: ring(n, 150, 150, 55, 60, { tier: '평범', deck }) }] });
@@ -77,13 +76,13 @@ for (const [t, ns] of [['상위', [3, 5, 8, 12]], ['중간', [10, 20, 40, 80]], 
 
 // 한 장면 N판의 지표 합 (씨앗 from+1 ..)
 function run(name, from, N, rules) {
-  const o = { n: 0, win: 0, byTime: 0, t: 0, hp: 0, breakT: 0, broke: 0, fled: 0, army: 0, walls: 0, wallT: 0, z: 0, blind: 0, heavyTry: 0, heavyHit: 0, flashHit: 0, mb: 0 };
+  const o = { n: 0, win: 0, byTime: 0, t: 0, hp: 0, breakT: 0, broke: 0, fled: 0, army: 0, walls: 0, wallT: 0, z: 0, blind: 0, heavyTry: 0, heavyHit: 0, flashHit: 0, mb: 0, exec: 0 };
   for (let k = from; k < from + N; k++) {
-    const sc = SCENES[name](k + 1); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
+    const sc = /^c\d+$/.test(name) ? A.scenario.build(name, { seed: k + 1 }) : SCENES[name](k + 1); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
     const W = A.sceneWorld(sc), c = W.ms[0]; let zs = 0, zn = 0;
     while (!A.over(W)) { A.stepWorld(W); if (c.hp > 0 && W.step % 15 === 0) { zs += c.z; zn++; } }
     const r = A.result(W), army = W.ms.filter(m => m.side !== 0), gone = army.map(m => m.alog.fledT ?? m.deathT).filter(x => x != null).sort((a, b) => a - b), need = Math.ceil(army.length * 0.8);
-    o.n++; if (r.winner === 0) o.win++; if (r.byTime) o.byTime++; o.t += r.t; o.hp += Math.max(0, c.hp) / c.hpMax;
+    o.n++; if (r.winner === 0) o.win++; if (r.t < 3) o.exec++; if (r.byTime) o.byTime++; o.t += r.t; o.hp += Math.max(0, c.hp) / c.hpMax;
     if (gone.length >= need) { o.broke++; o.breakT += gone[need - 1]; }
     const fl = army.filter(m => m.alog.fled).length, fs = army.filter(m => m.flee).length; o.fled += fl; o.army += army.length; if (fs >= army.length * 0.5) o.mb++;   // 사기로 무너진 판: 무리의 반 넘게 도망치기 시작했다 (v2.24.1, v2.26.1부터 끝에 닿지 못하고 쓰러진 사람도 센다)
     o.walls += c.alog.walls; o.wallT += c.alog.wallT; o.z += zn ? zs / zn : 0; o.blind += c.alog.blinded;
@@ -91,13 +90,13 @@ function run(name, from, N, rules) {
   }
   return o;
 }
-const rate = o => ({ games: o.n, win: +(o.win / o.n).toFixed(3), byTime: +(o.byTime / o.n).toFixed(3), len: +(o.t / o.n).toFixed(1), hp: +(o.hp / o.n).toFixed(3), breakT: o.broke ? +(o.breakT / o.broke).toFixed(1) : null, broke: +(o.broke / o.n).toFixed(3), mb: +(o.mb / o.n).toFixed(3), fled: +(o.fled / o.army).toFixed(3), walls: +(o.walls / o.n).toFixed(2), wallT: +(o.wallT / o.n).toFixed(1), z: +(o.z / o.n).toFixed(1), blind: +(o.blind / o.n).toFixed(2), heavy: o.heavyTry ? `${o.heavyHit}/${o.heavyTry}` : null });
+const rate = o => ({ games: o.n, win: +(o.win / o.n).toFixed(3), byTime: +(o.byTime / o.n).toFixed(3), len: +(o.t / o.n).toFixed(1), hp: +(o.hp / o.n).toFixed(3), breakT: o.broke ? +(o.breakT / o.broke).toFixed(1) : null, broke: +(o.broke / o.n).toFixed(3), mb: +(o.mb / o.n).toFixed(3), exec: +(o.exec / o.n).toFixed(3), fled: +(o.fled / o.army).toFixed(3), walls: +(o.walls / o.n).toFixed(2), wallT: +(o.wallT / o.n).toFixed(1), z: +(o.z / o.n).toFixed(1), blind: +(o.blind / o.n).toFixed(2), heavy: o.heavyTry ? `${o.heavyHit}/${o.heavyTry}` : null });
 async function main() {
   const args = process.argv.slice(2), R = args.indexOf('--rules'), rules = R >= 0 ? JSON.parse(args[R + 1]) : null, pos = args.filter((a, i) => !a.startsWith('--') && !(R >= 0 && i === R + 1));
   if (pos[0] === 'scenes') return scenes(pos[1] ? pos[1].split(',') : null);
   const names = pos[0] && pos[0] !== 'all' ? pos[0].split(',') : Object.keys(SCENES), N = +(pos[1] || 20), CH = 2;
   const { runJobs } = require('./par'), jobs = [], own = [];
-  for (const nm of names) { if (!SCENES[nm]) throw new Error('없는 장면: ' + nm + ' (' + Object.keys(SCENES).join(', ') + ')'); for (let f = 0; f < N; f += CH) { jobs.push({ mod: __filename, fn: 'run', args: [nm, f, Math.min(CH, N - f), rules] }); own.push(nm); } }
+  for (const nm of names) { if (!SCENES[nm] && !/^c\d+$/.test(nm)) throw new Error('없는 장면: ' + nm + ' (' + Object.keys(SCENES).join(', ') + ')'); for (let f = 0; f < N; f += CH) { jobs.push({ mod: __filename, fn: 'run', args: [nm, f, Math.min(CH, N - f), rules] }); own.push(nm); } }
   const t0 = Date.now(), res = await runJobs(jobs), sum = {};
   res.forEach((r, i) => { const s = sum[own[i]] || (sum[own[i]] = {}); for (const k in r) s[k] = (s[k] || 0) + r[k]; });
   const out = {}; for (const nm of names) { out[nm] = rate(sum[nm]); console.log(nm.padEnd(22), JSON.stringify(out[nm])); }

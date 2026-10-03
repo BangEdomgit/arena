@@ -1,7 +1,7 @@
 'use strict';
 /* 숨 결투장 — 지능 점검 (v2.30, SPEC 53장): node cli.js audit [--seeds 1,2,3] [--only 장면,…] [--rules '{…}'] [--save 이름]
- * 모든 장면(sandbox/scenes, 이름이 [역사]로 시작하는 것 빼고) × 씨앗을 돌리며 사람마다 아래를 재고, 문턱(data/rules/audit.json)을 넘으면 사건으로 적는다:
- *   장면 · 씨앗 · 판 시각 · 누가 · 무엇 · 값. 샌드박스 주소(sandbox/index.html#장면&seed=2&t=34.5)로 그 시각을 바로 연다
+ * 모든 조건(data/conditions.json, v2.33: 씨앗마다 지금 엔진이 짓는다)과 장면(sandbox/scenes, 이름이 [역사]로 시작하는 것 빼고) × 씨앗을 돌리며 사람마다 아래를 재고, 문턱(data/rules/audit.json)을 넘으면 사건으로 적는다:
+ *   장면 · 씨앗 · 판 시각 · 누가 · 무엇 · 값. 샌드박스 주소(sandbox/index.html#장면&seed=2&t=34.5, 조건은 #c:c19&seed=3&t=20)로 그 시각을 바로 연다
  * 탐지기: 기회 놓침 · 헛시전(알 수 있었던 것 따로) · 명중 · 떨림 · 막혀 제자리 · 위험 지대 · 아군 피해 · 스스로 입은 피해 · 역류 · 체력 남기고 도망 ·
  *   끝나지 않는 판 · 같은 수 되풀이 · 대마법사(총 앞에 서 있음·소금 위·떠 있음·속도) · 오류(NaN·판 밖·예외·느린 걸음) · 데이터(덱·장면·마법 칸)
  *   포병(v2.31, rules.artillery): 포 사선에 아군(쏠 때 산탄 원뿔·둥근 탄 사선에 우리 편), 소금 안개 안에서 짓기
@@ -11,7 +11,8 @@ const ROOT = path.join(__dirname, '..'), SC = path.join(ROOT, 'sandbox', 'scenes
 const OFF = { proj: 1, thread: 1, area: 1, touch: 1, cone: 1, lob: 1 };
 const LANE = require('../src/rules/fireLane').api.lane, CHO = require('../src/rules/chorus').api, SQ = require('../src/rules/squad').api, ART = require('../src/rules/artillery').api;   // 사선이 막힌 총은 쏠 수 없다 (rules.fireLane이 켜졌을 때)
 const BAD = { fire: 1, h2s: 1, nh3: 1, acid: 1, spore: 1, ice: 0, pit: 0 };
-function scenes(only) { const out = {}; for (const f of fs.readdirSync(SC).filter(f => f.endsWith('.json')).sort()) { const k = f.slice(0, -5), sc = JSON.parse(fs.readFileSync(path.join(SC, f), 'utf8')); if ((sc.name || '').startsWith('[역사]')) continue; if (only && !only.includes(k)) continue; out[k] = sc; } return out; }
+const isCond = k => /^c\d+$/.test(k);   // 조건 id (v2.33: data/conditions.json, 씨앗마다 지금 엔진이 짓는다)
+function scenes(only) { const out = {}; for (const c of A.scenario.list()) if (!only || only.includes(c.id)) out[c.id] = A.scenario.build(c.id, { seed: 1 }); for (const f of fs.readdirSync(SC).filter(f => f.endsWith('.json')).sort()) { const k = f.slice(0, -5), sc = JSON.parse(fs.readFileSync(path.join(SC, f), 'utf8')); if ((sc.name || '').startsWith('[역사]')) continue; if (only && !only.includes(k)) continue; out[k] = sc; } return out; }
 // 마법이 서는 자리 (core의 formPoint와 같은 셈: core가 내보내지 않는다)
 function formPt(m, s, tx, ty) { const k = C.FORM[s.t], d = Math.hypot(tx - m.x, ty - m.y) || 1; if (k === 'target' || k === 'path') return [tx, ty]; if (k === 'front') { const L = Math.min(d, s.L || 3) * 0.4; return [m.x + (tx - m.x) / d * L, m.y + (ty - m.y) / d * L]; } if (k === 'self') return [m.x + (tx - m.x) / d * 0.5, m.y + (ty - m.y) / d * 0.5]; return null; }
 const tierOf = m => m.C >= 8 ? '대마법사' : m.C >= 4 ? '상위' : m.C >= 2 ? '중간' : m.C >= 0.9 ? '평범' : '병사';
@@ -26,7 +27,7 @@ function fleeWrong(W, m) {
 // 한 판: 사건 목록과 사람마다의 합
 // opt (시험용): sc 장면 객체(key 대신), prep(W) 세계를 만든 뒤 한 번, step(W)·after(W) 걸음마다 그 앞·뒤 (탐지기 훅 뒤에 부른다)
 function run(key, seed, rules, opt) {
-  const sc = Object.assign({}, opt && opt.sc || scenes([key])[key], { seed }); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
+  const sc = Object.assign({}, opt && opt.sc || (isCond(key) ? A.scenario.build(key, { seed }) : scenes([key])[key]), { seed }); if (rules) sc.rules = Object.assign({}, sc.rules, rules);
   const ev = [], add = (t, who, what, v) => ev.push({ scene: key, seed, t: +t.toFixed(2), who, what, v: typeof v === 'number' ? +v.toFixed(3) : v });
   let W; try { W = A.sceneWorld(sc); } catch (e) { add(0, '-', '오류: 장면을 못 만듦', String(e.message || e)); return { ev, sum: {} }; }
   const n = W.ms.length, S = W.ms.map(() => ({ idle: 0, idleRep: false, stuckT: 0, sx: 0, sy: 0, flips: [], jitRep: false, dang: 0, dangRep: false, gun: 0, gunRep: false, salt: 0, air: 0, sp: 0, k: 0, lmx: 0, lmy: 0, fizzS: 0, fizzF: 0, rel: 0, ff: 0, self: 0, tot: 0, fled: false, nan: false, out: false, fogC: null }));
@@ -95,7 +96,7 @@ function dataCheck(scs) {   // scs: 장면 { 이름: 장면 } (시험용, 없으
     if (mm.x != null && sc.width && (mm.x < 0 || mm.x > sc.width || mm.y < 0 || mm.y > sc.height)) add(k, '데이터: 장면의 자리가 판 밖', mm.x + ',' + mm.y); }
   return ev;
 }
-const link = e => e.scene === '데이터' ? '' : `[열기](../sandbox/index.html#${encodeURIComponent(e.scene)}&seed=${e.seed}&t=${e.t})`;
+const link = e => e.scene === '데이터' ? '' : `[열기](../sandbox/index.html#${isCond(e.scene) ? 'c:' : ''}${encodeURIComponent(e.scene)}&seed=${e.seed}&t=${e.t})`;   // 조건은 #c:c19&seed=3&t=20 (v2.33)
 const kind = what => what.replace(/ \(.*$/, '');
 function render(all, sums, meta) {
   const by = {}; for (const e of all) (by[kind(e.what)] = by[kind(e.what)] || []).push(e);

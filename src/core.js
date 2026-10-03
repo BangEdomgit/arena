@@ -135,7 +135,7 @@ function createWorld(opt = {}) {
     rng: mulberry32((opt.seed >>> 0) || 1), rules: rulesOf(opt.rules),
     spells: Object.assign({}, opt.spells || SPELLS), brain: opt.brain || null,   // 책에 든 마법은 addMage가 모양을 맞춘다
     obs: [], walls: [], proj: [], lobs: [], areas: [], zones: [], traps: [], barrels: [], ms: [], fx: [],
-    foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120,
+    foes: [[], []], _nF: null, _alive: null, _cloak: false, rec: opt.record ? [] : null, sides: 2, maxT: opt.maxT || 120, timeWin: opt.timeWin != null ? opt.timeWin : -1, closed: !!opt.closed,
     H: null, mods: null, _bh: null, _fly: false, _recN: opt.recEvery >= 1 ? Math.floor(opt.recEvery) : 2, dt: DT0, sk: 1, _grp: 0, _sideN: null, _wv: 0, _wgN: -1, _wg: null, _wq: [], _en: null,   // 벽 격자 (벽이 많을 때, 속도): 벽 목록의 판번호·격자를 만든 판번호·격자·찾은 목록
     salt: Array.isArray(opt.salt) ? opt.salt.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })) : [],   // salt: 소금 땅 사각형 (rules/saltLand)   // _grp: 벽 무리의 다음 번호 (rules/bulwark)
       // 켜진 규칙의 엔진 훅, 켜진 규칙 모듈, 두뇌 훅(두뇌가 채운다), 비행이 켜졌나(녹화에 높이를 적는다)
@@ -708,7 +708,8 @@ function run(W) {
 function result(W) {
   const alive = []; for (let s = 0; s < W.sides; s++) if (aliveSide(W, s)) alive.push(s);
   let winner = alive.length === 1 ? alive[0] : -1, byTime = false;
-  if (alive.length > 1) {
+  if (alive.length > 1 && W.timeWin >= 0 && alive.includes(W.timeWin)) { winner = W.timeWin; byTime = true; }   // 시간이 다 되면 이 편이 이긴다 (장면의 timeWin, v2.33: 공성에서 버틴 쪽)
+  else if (alive.length > 1) {
     const avg = alive.map(s => { const g = W.ms.filter(m => m.side === s); return g.reduce((a, m) => a + Math.max(0, m.hp) / m.hpMax, 0) / g.length; });
     const best = Math.max(...avg), i = avg.indexOf(best), second = Math.max(...avg.filter((_, j) => j !== i));
     if (best - second > 0.04) { winner = alive[i]; byTime = true; }

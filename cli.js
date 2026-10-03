@@ -6,7 +6,7 @@
  *   node cli.js ring 대마법사 평범 50 [기본기]   한 명을 가운데 두고 둘러쌈
  *   node cli.js league 상위 10      원소 기본책끼리 총당
  *   node cli.js replay 상위 상위 out.json   한 판 녹화
- *   node cli.js scene sandbox/scenes/duel.json   장면 한 판 (샌드박스와 같은 결과)
+ *   node cli.js scene c01 [씨앗]                 조건 한 판 (v2.33, data/conditions.json을 지금 엔진이 짓는다. 장면 파일도 된다: sandbox/scenes/v2-tactics-legend.json)
  *   node cli.js pack                샌드박스가 읽을 sandbox/arena.js(엔진·데이터·장면 묶음) 다시 싸기
  *   node cli.js suite [묶음] [--save] [--jobs N]   표준 시험 묶음: 기준(suite-baseline.json)과 비교, --save면 기준 저장. 기본은 코어 수만큼 병렬(par.js)
  *   node cli.js report [--n 100] [--crowd 20] [--show]   성적표: 결투장 전설 대 전설·사다리·상위 무리 기준을 재서 reports/scorecard.json·.md에 이 버전으로 쌓는다 (v2.9)
@@ -48,8 +48,8 @@ if (cmd === 'replay') {
   console.log('녹화', file, r.rec.length, '프레임, 승자', r.winner);
 }
 if (cmd === 'scene') {
-  const [file, rec] = args; if (!file) throw new Error('장면 파일을 준다: node cli.js scene sandbox/scenes/duel.json [녹화.json]');
-  const sc = JSON.parse(require('fs').readFileSync(file, 'utf8')), W = A.sceneWorld(sc, { record: !!rec }), r = A.run(W);
+  const cond = /^c\d+$/.test(args[0] || ''), file = args[0], rec = cond ? args[2] : args[1]; if (!file) throw new Error('장면 파일이나 조건 id를 준다: node cli.js scene c01 [씨앗] [녹화.json] · node cli.js scene sandbox/scenes/v2-tactics-legend.json [녹화.json]');
+  const sc = cond ? A.scenario.build(file, { seed: +args[1] || 1 }) : JSON.parse(require('fs').readFileSync(file, 'utf8')), W = A.sceneWorld(sc, { record: !!rec }), r = A.run(W);
   if (rec) require('fs').writeFileSync(rec, JSON.stringify(A.recording(W)));
   console.log(JSON.stringify({ 장면: sc.name || file, 씨앗: sc.seed, 승자: r.winner === -1 ? '무승부' : (sc.sides[r.winner].name || r.winner), 시간판정: r.byTime, 시간: r.t, 남은: r.ms.filter(m => m.hp > 0).map(m => m.name + ':' + Math.round(m.hp)) }));
 }

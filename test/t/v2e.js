@@ -72,8 +72,8 @@ function run() {
     assert.ok(!AU.dataCheck().some(e => e.what === '데이터: 마법 이름 칸이 키와 다름'), '얼음 담 같은 이름 칸 (v2.28.1)');
   });
   ok('v2.30 점검: 같은 씨앗이면 같은 사건, 판에는 닿지 않는다(점검을 붙여도 결과가 같다)', () => {
-    const a = AU.run('duel', 2), b = AU.run('duel', 2); assert.deepStrictEqual(a.ev, b.ev);
-    const W = A.sceneWorld(Object.assign({}, require('../../sandbox/scenes/duel.json'), { seed: 2 })); while (!A.over(W)) A.stepWorld(W); assert.strictEqual(+W.t.toFixed(2), a.sum.t ? +a.sum.t.toFixed(2) : -1);
+    const a = AU.run('c01', 2), b = AU.run('c01', 2); assert.deepStrictEqual(a.ev, b.ev);
+    const W = A.sceneWorld(A.scenario.build('c01', { seed: 2 })); while (!A.over(W)) A.stepWorld(W); assert.strictEqual(+W.t.toFixed(2), a.sum.t ? +a.sum.t.toFixed(2) : -1);
   });
   // ---- 고침의 스위치 ----
   ok('v2.30 사선 (fireLane): 쏘는 줄·과녁 너머에 우리 편이 있으면 막혔다, 옆이면 열렸다. 붙어 선 사람은 총구에서 맞는다', () => {
@@ -84,7 +84,7 @@ function run() {
     q.x = 10.3; q.y = 29.8; assert.ok(L(W, m, 50, 30, 100) !== 0, '붙어 선 사람'); q.x = 9.8; assert.ok(L(W, m, 50, 30, 100) !== 0, '등 뒤에 붙은 사람'); q.x = 9; assert.strictEqual(L(W, m, 50, 30, 100), 0, '등 뒤 1 m');
   });
   ok('v2.30 사선 (fireLane): 둘러싼 총병이 서로를 덜 쏜다 (소금 성채, 씨앗 1~2)', () => {
-    const ff = sw => { let n = 0; for (const seed of [1, 2]) { const W = A.sceneWorld(Object.assign({}, require('../../sandbox/scenes/x-salt-fort.json'), { seed, maxT: 30, rules: { profile: '지금', saltRing: false, fireLane: sw } }));
+    const ff = sw => { let n = 0; for (const seed of [1, 2]) { const W = A.sceneWorld(Object.assign(A.scenario.build('c25', { seed }), { maxT: 30, rules: { profile: '지금', saltRing: false, fireLane: sw } }));
       W.H.hurt.push((W, m, v, src, name) => { if (src && src.side === m.side && W.spells[name] && W.spells[name].mundane) n++; }); while (!A.over(W)) A.stepWorld(W); } return n; };
     const a = ff(false), b = ff(true); assert.ok(b < a, a + ' → ' + b);
   });

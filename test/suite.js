@@ -55,8 +55,8 @@ function arena(file, N) {
 
 // 장면 N판의 이긴 몫과 길이 (v2.7): 앞 편(0)이 이긴 몫, 판 길이
 function sceneWins(file, N) {
-  const sc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', file), 'utf8')), w = [], t = [];
-  for (let k = 1; k <= N; k++) { const r = A.runScene(Object.assign({}, sc, { seed: k })); w.push(r.winner === 0 ? 1 : 0); t.push(r.t); }
+  const cond = /^c\d+$/.test(file), sc = cond ? null : JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', file), 'utf8')), w = [], t = [];   // 조건 id면 씨앗마다 짓는다 (v2.33)
+  for (let k = 1; k <= N; k++) { const r = A.runScene(cond ? A.scenario.build(file, { seed: k }) : Object.assign({}, sc, { seed: k })); w.push(r.winner === 0 ? 1 : 0); t.push(r.t); }
   const st = xs => { const mu = xs.reduce((a, b) => a + b, 0) / xs.length, sd = Math.sqrt(xs.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(1, xs.length - 1)); return { m: +mu.toFixed(3), sd: +sd.toFixed(3) }; };
   return { N, look: { '앞 편 이긴 몫': st(w), '판 길이 (s)': st(t) } };
 }
@@ -94,9 +94,9 @@ function table() {
   // 싸우는 모습 (1.7.0): 판단 수준마다 같은 단계끼리
   for (const t of ['평범', '중간']) for (const sk of SK) T.push({ id: '모습: ' + t + ' ' + sk, group: '모습', N: 40, job: { fn: 'looks', args: [t, sk, 40] } });
   T.push({ id: '모습: 대마법사 결투장 전설 대 전설', group: '모습', N: 20, job: { fn: 'arena', args: ['v2-tactics-legend.json', 20] } });   // 걸음마다 본 지표 (v2.6)
-  T.push({ id: '모습: 대마법사 둘 대 상위 여섯', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['v2-archmage-2v6.json', 20] } });   // 상위의 부딪힘이 대마법사를 한 방에 죽이지 않는가 (v2.7)
-  T.push({ id: '모습: 대마법사 하나 대 상위 열', group: '모습', N: 40, job: { fn: 'sceneWins', args: ['v2-archmage-1v10.json', 40] } });   // 대마법사 하나가 상위 열과 반반인가 (v2.8, WORLD 4-1)
-  T.push({ id: '모습: 상위 무리 기준 1 대 20', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['v2-crowd-1v20.json', 20] } });   // 상위 무리 기준(대가·상급 반반, 덱 섞기, 결투장 들판)의 1 대 20 (v2.9)
+  T.push({ id: '모습: 대마법사 둘 대 상위 여섯', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['c07', 20] } });   // 상위의 부딪힘이 대마법사를 한 방에 죽이지 않는가 (v2.7)
+  T.push({ id: '모습: 대마법사 하나 대 상위 열', group: '모습', N: 40, job: { fn: 'sceneWins', args: ['c06', 40] } });   // 대마법사 하나가 상위 열과 반반인가 (v2.8, WORLD 4-1)
+  T.push({ id: '모습: 상위 무리 기준 1 대 20', group: '모습', N: 20, job: { fn: 'sceneWins', args: ['c09', 20] } });   // 상위 무리 기준(대가·상급 반반, 덱 섞기, 결투장 들판)의 1 대 20 (v2.9)
   // 힘 대 판단: 한 등급 위의 초보 대 한 등급 아래의 전설
   duel('힘 대 판단', { tier: '중간', skill: '초보' }, { tier: '평범', skill: '전설' }, 100);
   duel('힘 대 판단', { tier: '상위', skill: '초보' }, { tier: '중간', skill: '전설' }, 100);

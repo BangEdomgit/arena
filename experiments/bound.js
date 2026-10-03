@@ -19,10 +19,10 @@ function scene(tier, n, seed, opt = {}) {
 }
 // 무리의 모습 (v2.29): 한 사람의 시간(짓는 중·움직임·과녁 장악 반경 안), 전투단 포위각(과녁 평균 자리 기준), 오래 선 합창(셋 넘게 3 s 넘게), 대마법사의 숨 돌리기·물러날 때의 체력
 function crowdOf(W) { const SQ = require('../src/rules/squad').api.stats(W), c = SQ.stats.crowd, b = SQ.b[1], CH = W.rules.chorus ? require('../src/rules/chorus').api.stats(W) : null;
-  return { cCast: c.n ? c.cast / c.n : 0, cMove: c.n ? c.move / c.n : 0, cDom: c.n ? c.dom / c.n : 0, enc: b.log.encN ? b.log.enc / b.log.encN * 57.3 : 0, good: CH ? CH.good : 0, formed: CH ? CH.formed : 0, rests: SQ.stats.rests, retreatHp: SQ.stats.retreatHp }; }
-function run(tier, n, s0, cnt, opt) {
+  return { cCast: c.n ? c.cast / c.n : 0, cMove: c.n ? c.move / c.n : 0, cDom: c.n ? c.dom / c.n : 0, enc: b.log.encN ? b.log.enc / b.log.encN * 57.3 : 0, good: CH ? CH.good : 0, formed: CH ? CH.formed : 0, brokeHit: CH ? CH.brokeHit : 0, atN: CH ? CH.atN : 0, wideN: CH ? CH.wideN : 0, leadN: CH ? CH.leadN : 0, rests: SQ.stats.rests, retreatHp: SQ.stats.retreatHp }; }
+function run(tier, n, s0, cnt, opt) {   // tier가 조건 id('c32')면 그 조건의 장면 (v2.33)
   const o = []; for (let s = s0; s < s0 + cnt; s++) {
-    const sc = scene(tier, n, s + 1, opt), W = A.sceneWorld(sc), t0 = Date.now(); while (!A.over(W)) A.stepWorld(W); const ms = Date.now() - t0;
+    const sc = /^c\d+$/.test(tier) ? A.scenario.build(tier, { seed: s + 1 }) : scene(tier, n, s + 1, opt), W = A.sceneWorld(sc), t0 = Date.now(); while (!A.over(W)) A.stepWorld(W); const ms = Date.now() - t0;
     const am = W.ms[0], r = A.result(W), tk = am.log.taken, tot = Object.values(tk).reduce((a, b) => a + b, 0) || 1, by = {}; for (const k in tk) by[k] = tk[k] / tot;
     o.push({ win: r.winner === 0 && !r.byTime && !am.flee ? 1 : 0, dead: am.hp <= 0 && !am.flee ? 1 : 0, retreat: am.flee ? 1 : 0, byTime: r.byTime && !am.flee && am.hp > 0 ? 1 : 0, t: W.t, kills: W.ms.filter((m, i) => i > 0 && m.hp <= 0 && !m.alog.fled).length, hp: Math.max(0, am.hp) / am.hpMax, fat: am.fat, glu: am.glu / am.gluMax, stam: am.stam,
       breaths: am.mlog.breath, over: am.log.over, by, msPerS: ms / W.t,

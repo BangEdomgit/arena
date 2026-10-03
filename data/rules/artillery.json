@@ -24,11 +24,13 @@
   "n": 60,
   "half": 0.05,
   "elev": 0.27,
-  "close": 80
+  "close": 80,
+  "far": 120
  },
  "round": {
   "slowV": 3,
-  "wall": 1.4
+  "wall": 1.4,
+  "moveD": 25
  },
  "salt": {
   "r": 12,

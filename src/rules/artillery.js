@@ -78,7 +78,9 @@ module.exports = {
       return mine / (mine + other);
     },
     lobLand(W, l) { if (l.s.n !== '소금 탄') return; X.addZone(W, l.src, { k: 'saltfog', n: '소금 안개', shape: 'circle', r: P.salt.r, d: P.salt.t, dps: 0 }, l.x, l.y, 0, 1); },
-    track(W, m, c) { if (c.s.t !== 'canister') return; const q = c.tgt; if (!q || !(q.hp > 0)) return; const f = X.hyp(q.x - m.x, q.y - m.y) / c.s.v; c.tx = q.x + q.vx * f; c.ty = q.y + q.vy * f; },   // 산탄은 불을 댈 때 과녁을 따라 돌린다(앞질러)
+    track(W, m, c) { const q = c.tgt; if (!q || !(q.hp > 0)) return;
+      if (c.s.n === '둥근 탄') { if (X.hyp(q.vx, q.vy) < P.round.slowV) { c.tx = q.x; c.ty = q.y; } return; }   // 둥근 탄: 거의 선 과녁이면 불을 댈 때 그 자리에 바로 댄다(떠서 멈춘 과녁은 300 m에서도 맞는다, v2.33). 움직이면 겨눈 곳 그대로
+      if (c.s.t !== 'canister') return; const f = X.hyp(q.x - m.x, q.y - m.y) / c.s.v; c.tx = q.x + q.vx * f; c.ty = q.y + q.vy * f; },   // 산탄은 불을 댈 때 과녁을 따라 돌린다(앞질러)
     wallHit(W, p, o, wd) { return p.s.n === '둥근 탄' ? p.s.wallDmg : wd; },
   }),
   types: X => ({
@@ -107,9 +109,9 @@ module.exports = {
         const s = o.s; if (!GUNS[s.n] || !isGun(m)) return; const e = K.e, S = stOf(W);
         if (!e || !(S.n.get(m) > 0) || !K.los) { o.v = 0; return; }
         const d = K.d, sp = hyp(e.vx, e.vy);
-        if (s.n === '산탄') { o.v = e.z <= d * P.canister.elev + G.muzzle + 1 && d <= s.R && !coneAlly(W, m, e.x, e.y) ? (inFog(W, e.x, e.y, e.z) ? 1.6 : d <= P.canister.close ? 1.1 : 0.5) : 0; return; }   // 앙각 안의 과녁: 소금 안개 안(방패·날기가 꺼졌다)이면 먼저, 가까우면(close m)
+        if (s.n === '산탄') { o.v = e.z <= d * P.canister.elev + G.muzzle + 1 && d <= Math.min(s.R, P.canister.far) && !coneAlly(W, m, e.x, e.y) ? (inFog(W, e.x, e.y, e.z) ? 1.6 : d <= P.canister.close ? 1.1 : 0.5) : 0; return; }   // far m 밖으론 아껴 둔다 (v2.33: 다시 채우는 데 30 s)   // 앙각 안의 과녁: 소금 안개 안(방패·날기가 꺼졌다)이면 먼저, 가까우면(close m)
         if (s.n === '소금 탄') { o.v = e.C >= 2 && d >= P.salt.minD && d <= s.R && !inFog(W, e.x, e.y, 0) && !saltComing(W, m, e) ? 1.3 : 0; if (o.v) { const f = d / P.salt.v; o.tx = e.x + e.vx * f * P.salt.lead; o.ty = e.y + e.vy * f * P.salt.lead; } return; }   // 다른 포가 소금을 쏘는 중이거나 날아가는 중이면 산탄
-        o.v = (sp < P.round.slowV ? 1.2 : 0.3) * (LANE(W, m, e.x, e.y, s.R) ? 0 : 1);   // 둥근 탄: 거의 선 과녁(짓기·모으기·떠 있기)이면 한 방. 사선에 우리 편이면 쏘지 않는다 (rules/fireLane의 셈)
+        o.v = (sp < P.round.slowV ? 1.2 : d <= P.round.moveD ? 0.3 : 0) * (LANE(W, m, e.x, e.y, s.R) ? 0 : 1);   // 움직이는 과녁엔 moveD m 안에서만 (v2.33: 멀리서 헛쏘고 30 s를 비우지 않는다)   // 둥근 탄: 거의 선 과녁(짓기·모으기·떠 있기)이면 한 방. 사선에 우리 편이면 쏘지 않는다 (rules/fireLane의 셈)
       },
       commit(W, m, K, best, cast) { if (best.s.n !== '소금 탄') return; const d = Math.max(P.salt.min, hyp(best.tx - m.x, best.ty - m.y) * P.salt.spread); cast.tx += W.rnd(-d, d); cast.ty += W.rnd(-d, d); },   // 소금 탄은 ± max(min, spread × 거리)
       steer(W, m, K) {

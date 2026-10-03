@@ -37,7 +37,7 @@ module.exports = {
     },
     // 끝에 닿으면 빠진다
     mageStep(W, m) {
-      if (!m.flee) return; const e = M.edge;
+      if (!m.flee || W.closed) return; const e = M.edge;   // 갇힌 판(closed, v2.33)엔 빠질 끝이 없다
       if (m.x < e || m.y < e || m.x > W.width - e || m.y > W.height - e) { m.alog.fled = 1; m.hp = 0; m.deathT = W.t; }
     },
   }),

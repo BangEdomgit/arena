@@ -78,7 +78,7 @@ function sceneLib(sc) { return { spells: Object.assign({}, core.SPELLS, sc.spell
 function sceneWorld(sc, opt = {}) {
   const lib = sceneLib(sc), sides = sc.sides || [], specs = sides.map((s, i) => s.mages.map((mm, k) => { const sp = sceneMage(mm, s, lib); if (sp.name == null) sp.name = (s.name || '편' + i) + (k + 1); return sp; }));
   const A = arena(sc, sc.rules, [].concat(...specs));
-  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, recEvery: opt.recEvery || sc.recEvery, maxT: sc.maxT, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, salt: sc.salt, spells: lib.spells, brain });
+  const W = core.createWorld({ seed: sc.seed, rules: sc.rules, record: opt.record, recEvery: opt.recEvery || sc.recEvery, maxT: sc.maxT, timeWin: sc.timeWin, closed: sc.closed, width: A.width, height: A.height, obstacles: sc.obstacles, barrels: sc.barrels, walls: sc.walls, salt: sc.salt, spells: lib.spells, brain });
   place(W, specs, sc.layout, sides.map(s => s.mages));
   return W;
 }
@@ -95,4 +95,4 @@ function learn(spec, m, rate = 0.3) {
   return spec;
 }
 
-module.exports = Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, CIRCLES, register, mage, place, battle, duel, look, sceneWorld, runScene, recording, learn });
+module.exports = Object.assign({}, core, { brain, TIERS, DECKS, BRAINS, SKILLS, CIRCLES, register, mage, place, battle, duel, look, sceneWorld, runScene, recording, learn, scenario: require('./scenario') });

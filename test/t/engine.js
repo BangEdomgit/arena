@@ -28,12 +28,12 @@ function run() {
       const sc = { seed: k, sides: [{ mages: [{ tier: '중간' }] }, { mages: [{ tier: '중간', deck: '기본기' }] }] };
       assert.strictEqual(dig(A.runScene(sc)), dig(A.duel(A.mage({ tier: '중간' }), A.mage({ tier: '중간', deck: '기본기' }), { seed: k })));
     }
-    const ring = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 50 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 1, layout: 'ring', maxT: 90, rules: SCENES['archmage-50'].rules });
-    assert.strictEqual(dig(A.runScene(SCENES['archmage-50'])), dig(ring));
+    const ring = A.battle([A.mage({ tier: '대마법사', deck: '광역' })], Array.from({ length: 50 }, () => A.mage({ tier: '평범', deck: '기본기' })), { seed: 1, layout: 'ring', maxT: 90, rules: A.scenario.build('c02').rules });
+    assert.strictEqual(dig(A.runScene(A.scenario.build('c02'))), dig(ring));   // 조건 c02 (v2.33, 예전 archmage-50 장면)
   });
   ok('장면: 걸음씩 돌려도(샌드박스) 한 번에 돌린 것과 같다', () => {
-    const W = A.sceneWorld(SCENES.duel, { record: true }); while (!A.over(W)) A.stepWorld(W);
-    assert.strictEqual(dig(A.result(W)), dig(A.runScene(SCENES.duel)));
+    const D1 = A.scenario.build('c01'), W = A.sceneWorld(D1, { record: true }); while (!A.over(W)) A.stepWorld(W);
+    assert.strictEqual(dig(A.result(W)), dig(A.runScene(D1)));
     const rec = A.recording(W); assert.ok(rec.frames.length > 10 && rec.names.length === 2 && rec.winner === A.result(W).winner);
   });
   ok('sandbox/arena.js는 원본(src·metrics·data·장면)과 맞다 (어긋나면 node cli.js pack)', () => {

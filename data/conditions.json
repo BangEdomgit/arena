@@ -1,0 +1,1300 @@
+[
+ {
+  "id": "c01",
+  "name": "1대1: 중간 합법 최강 대 중간 기본기",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 120,
+  "rules": {
+   "barrels": true
+  },
+  "terrain": {
+   "rocks": 5
+  },
+  "note": "예전 duel",
+  "sides": [
+   {
+    "name": "청",
+    "groups": [
+     {
+      "tier": "중간",
+      "deck": "합법 최강",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "적",
+    "groups": [
+     {
+      "tier": "중간",
+      "deck": "기본기",
+      "form": "line",
+      "d": 28
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c02",
+  "name": "대마법사 대 평범 50 (둘러싸기, node cli.js ring 씨앗 1과 같다)",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "layout": "ring",
+  "note": "예전 archmage-50. 배치는 엔진(auto, ring)",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "deck": "광역"
+     }
+    ]
+   },
+   {
+    "name": "무리",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "기본기",
+      "n": 50
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c03",
+  "name": "원소 리그: 평범 여섯이 원소 기본책으로 난전",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 300,
+  "note": "예전 element-league",
+  "sides": [
+   {
+    "name": "불",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "불"
+     }
+    ]
+   },
+   {
+    "name": "번개",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "번개"
+     }
+    ]
+   },
+   {
+    "name": "흙",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "흙"
+     }
+    ]
+   },
+   {
+    "name": "물",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "물"
+     }
+    ]
+   },
+   {
+    "name": "얼음",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "얼음"
+     }
+    ]
+   },
+   {
+    "name": "독",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "독"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c04",
+  "name": "머스킷 반원: 대마법사 대 병사 20",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "terrain": {
+   "rocks": 2
+  },
+  "note": "예전 musket-arc",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "deck": "광역",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 20,
+      "form": "arc",
+      "d": 14
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c05",
+  "name": "대마법사 대 평범 100 둘러싸기",
+  "field": [
+   200,
+   150
+  ],
+  "maxT": 90,
+  "layout": "ring",
+  "note": "예전 v2-archmage-100",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "deck": "광역"
+     }
+    ]
+   },
+   {
+    "name": "평범",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "기본기",
+      "n": 100
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c06",
+  "name": "대마법사 하나 대 상위 열 (기본 덱)",
+  "field": [
+   200,
+   150
+  ],
+  "note": "예전 v2-archmage-1v10",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 10
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c07",
+  "name": "대마법사 둘 대 상위 여섯 (대마법사 운영 덱)",
+  "field": [
+   200,
+   150
+  ],
+  "note": "예전 v2-archmage-2v6",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "n": 2
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "deck": "대마법사 운영",
+      "n": 6
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c08",
+  "name": "평범 전설 1 대 초보 3",
+  "field": [
+   40,
+   30
+  ],
+  "note": "예전 v2-challenger-3",
+  "sides": [
+   {
+    "name": "전설",
+    "groups": [
+     {
+      "tier": "평범",
+      "skill": "전설"
+     }
+    ]
+   },
+   {
+    "name": "초보",
+    "groups": [
+     {
+      "tier": "평범",
+      "skill": "초보",
+      "n": 3
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c09",
+  "name": "대마법사 하나 대 상위 20 (상위 무리 기준: 대가·상급, 광역·기술·합법 최강)",
+  "field": [
+   200,
+   150
+  ],
+  "note": "예전 v2-crowd-1v20",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 청사진"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 20,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c10",
+  "name": "머스킷 반원: 대마법사 대 병사 40",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 v2-musket-40",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "deck": "광역",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 40,
+      "form": "arc",
+      "d": 14
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c11",
+  "name": "중간 대가 대 상급",
+  "field": [
+   40,
+   30
+  ],
+  "note": "예전 v2-neighbor-mid",
+  "sides": [
+   {
+    "name": "대가",
+    "groups": [
+     {
+      "tier": "중간",
+      "skill": "대가"
+     }
+    ]
+   },
+   {
+    "name": "상급",
+    "groups": [
+     {
+      "tier": "중간",
+      "skill": "상급"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c12",
+  "name": "평범 전설 대 대가",
+  "field": [
+   40,
+   30
+  ],
+  "note": "예전 v2-neighbor-plain",
+  "sides": [
+   {
+    "name": "전설",
+    "groups": [
+     {
+      "tier": "평범",
+      "skill": "전설"
+     }
+    ]
+   },
+   {
+    "name": "대가",
+    "groups": [
+     {
+      "tier": "평범",
+      "skill": "대가"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c13",
+  "name": "날아다니는 대마법사(비행 판단 초보) 대 머스킷 20",
+  "field": [
+   200,
+   150
+  ],
+  "maxT": 90,
+  "note": "예전 v2-sky-musket",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "광역",
+      "form": "center",
+      "tac": {
+       "flySkill": 1
+      }
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 20,
+      "form": "ring",
+      "area": 400
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c14",
+  "name": "대마법사 대가 대 상급, 좁은 곳",
+  "field": [
+   40,
+   30
+  ],
+  "note": "예전 v2-sky-narrow",
+  "sides": [
+   {
+    "name": "대가",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 결투"
+     }
+    ]
+   },
+   {
+    "name": "상급",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "상급",
+      "deck": "대마법사 결투"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c15",
+  "name": "대마법사 전설 대 대가, 넓은 곳 공중전",
+  "field": [
+   200,
+   150
+  ],
+  "note": "예전 v2-sky-wide",
+  "sides": [
+   {
+    "name": "전설",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 결투"
+     }
+    ]
+   },
+   {
+    "name": "대가",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 결투"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c16",
+  "name": "대마법사 전설 대 흩어진 상위 10",
+  "field": [
+   200,
+   150
+  ],
+  "rules": {
+   "squad": true
+  },
+  "note": "예전 v2-squad-10-scattered",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 청사진"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 10,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c17",
+  "name": "대마법사 전설 대 상위 전투단 10",
+  "field": [
+   200,
+   150
+  ],
+  "note": "예전 v2-squad-10",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 청사진"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 10,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ],
+      "squad": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c18",
+  "name": "기습: 대마법사 대 머스킷 40 반원 (14 m, 벽 없이)",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 v2-army-ambush (army.js ambush)",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 40,
+      "form": "arc",
+      "d": 14
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c19",
+  "name": "기습 + 포 둘·소금 탄: 대마법사 대 머스킷 40 반원 + 청동포 둘",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 v2-army-ambush-gun. 문턱 H24",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 40,
+      "form": "arc",
+      "d": 14
+     },
+     {
+      "tier": "병사",
+      "n": 2,
+      "form": "battery",
+      "d": 14,
+      "step": 0.21
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c20",
+  "name": "들판: 대마법사 대 머스킷 100 (넷 줄, 돌아가며 쏘기)",
+  "field": [
+   1000,
+   600
+  ],
+  "maxT": 360,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 v2-army-field. 문턱 H9",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge",
+      "z": 10
+     }
+    ]
+   },
+   {
+    "name": "군대",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 100,
+      "form": "line",
+      "d": 250,
+      "rows": 4,
+      "tac": {
+       "volley": 4
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c21",
+  "name": "들판 + 포 셋",
+  "field": [
+   1000,
+   600
+  ],
+  "maxT": 360,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 v2-army-field-gun. 문턱 H25",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge",
+      "z": 10
+     }
+    ]
+   },
+   {
+    "name": "군대",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 100,
+      "form": "line",
+      "d": 250,
+      "rows": 4,
+      "tac": {
+       "volley": 4
+      }
+     },
+     {
+      "tier": "병사",
+      "n": 3,
+      "form": "battery",
+      "d": 290,
+      "step": 0.069
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c22",
+  "name": "준비: 보루 안의 대마법사 대 머스킷 40 반원",
+  "field": [
+   40,
+   30
+  ],
+  "maxT": 90,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0,
+   "redoubt": true
+  },
+  "note": "예전 v2-army-prepared",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 40,
+      "form": "arc",
+      "d": 14
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c23",
+  "name": "소금 도시: 걸어 들어가는 대마법사 대 머스킷 60",
+  "maxT": 240,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "salt": "city",
+   "d": 115,
+   "w": 200,
+   "h": 150
+  },
+  "note": "예전 v2-army-salt-city. 문턱 H12 (봄)",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 60,
+      "form": "city"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c24",
+  "name": "공성: 소금 도시의 성벽·문을 지키는 포 대 밖에서 오는 대마법사",
+  "maxT": 240,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "salt": "city",
+   "d": 280,
+   "w": 200,
+   "h": 150,
+   "wall": true,
+   "gates": 3
+  },
+  "note": "v2.33 새 H23: 대마법사는 포의 사거리 밖(문에서 150 m 넘게)에서 시작해 300 s 안에 도시의 무리를 꺾어야 이긴다(시간이 다 되면 도시가 버틴 것, timeWin). 처형 판(3 s 안에 끝) 5% 아래",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 70,
+      "form": "city"
+     },
+     {
+      "tier": "병사",
+      "n": 7,
+      "form": "battery",
+      "gates": true,
+      "gabion": true
+     }
+    ]
+   }
+  ],
+  "timeWin": 1
+ },
+ {
+  "id": "c25",
+  "name": "소금 성채: 대마법사 대 성채 안의 머스킷 34",
+  "maxT": 240,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "salt": "fort",
+   "d": 146
+  },
+  "note": "예전 x-salt-fort",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 34,
+      "form": "inFort"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c26",
+  "name": "소금 성채 + 포 둘",
+  "maxT": 240,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "salt": "fort",
+   "d": 146
+  },
+  "note": "예전 v2-army-salt-fort-gun. 문턱 H26",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 34,
+      "form": "inFort"
+     },
+     {
+      "tier": "병사",
+      "n": 2,
+      "form": "battery",
+      "gates": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c27",
+  "name": "합동: 대마법사 대 머스킷 40 + 상위 8",
+  "field": [
+   80,
+   60
+  ],
+  "maxT": 150,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 x-joint",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "대가",
+      "deck": "대마법사 성",
+      "form": "edge"
+     }
+    ]
+   },
+   {
+    "name": "총병",
+    "groups": [
+     {
+      "tier": "병사",
+      "deck": "머스킷",
+      "n": 40,
+      "form": "arc",
+      "d": 13
+     },
+     {
+      "tier": "상위",
+      "n": 8,
+      "skill": [
+       "상급",
+       "대가"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ],
+      "form": "cluster",
+      "d": 40
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c28",
+  "name": "대마법사 전설 대 흩어진 상위 30",
+  "maxT": 180,
+  "rules": {
+   "saltRing": false,
+   "squad": true
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 x-scattered-30",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 결투",
+      "form": "center"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 30,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ],
+      "form": "ring",
+      "area": 300
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c29",
+  "name": "대마법사 전설 대 상위 전투단 30 + 합창",
+  "maxT": 180,
+  "rules": {
+   "saltRing": false
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 x-squad-30",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 결투",
+      "form": "center"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 30,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ],
+      "form": "squads",
+      "team": 5,
+      "squad": true,
+      "chorus": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c30",
+  "name": "대마법사 전설 대 상위 전투단 30 원거리 덱 + 합창",
+  "maxT": 180,
+  "rules": {
+   "saltRing": false
+  },
+  "decks": {
+   "무리 원거리": [
+    "저격 창",
+    "돌 압축탄",
+    "돌 창",
+    "얼음 창",
+    "체인",
+    "짧은 실",
+    "낙뢰",
+    "번개 그물",
+    "돌 비",
+    "석회 방패",
+    "석회 기둥",
+    "솟는 발판",
+    "근육 폭주"
+   ]
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "예전 x-squad-30-ranged",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 결투",
+      "form": "center"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 30,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": "무리 원거리",
+      "form": "squads",
+      "team": 5,
+      "squad": true,
+      "chorus": true
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c31",
+  "name": "상위 대가 하나 대 평범 30 둘러싸기",
+  "field": [
+   80,
+   60
+  ],
+  "note": "예전 x-top-vs-plain30",
+  "sides": [
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "skill": "대가",
+      "deck": "광역",
+      "form": "center"
+     }
+    ]
+   },
+   {
+    "name": "평범",
+    "groups": [
+     {
+      "tier": "평범",
+      "deck": "기본기",
+      "n": 30,
+      "form": "ring"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "c32",
+  "name": "잡는 수: 소금 원에 갇힌 서클 11 전설 대 상위 전투단 50 + 합창",
+  "maxT": 300,
+  "rules": {
+   "saltRing": true
+  },
+  "terrain": {
+   "rocks": 0
+  },
+  "note": "v2.33 새 H17: 둘러싼 채 시작하고 소금 원이 좁혀 든다. 갇힌 판(closed)이라 물러서거나 끝으로 빠질 수 없다. 열린 판의 물러남은 맞는 결과",
+  "sides": [
+   {
+    "name": "대마법사",
+    "groups": [
+     {
+      "tier": "대마법사",
+      "skill": "전설",
+      "deck": "대마법사 결투",
+      "form": "center"
+     }
+    ]
+   },
+   {
+    "name": "상위",
+    "groups": [
+     {
+      "tier": "상위",
+      "n": 50,
+      "skill": [
+       "대가",
+       "상급"
+      ],
+      "deck": [
+       "광역",
+       "기술",
+       "합법 최강"
+      ],
+      "form": "ring",
+      "area": 40,
+      "squad": true,
+      "chorus": true
+     }
+    ]
+   }
+  ],
+  "closed": true
+ }
+]
