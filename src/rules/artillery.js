@@ -2,6 +2,7 @@
 /* 규칙: 포병과 소금 탄 (rules.artillery, v2.31, SPEC 54장, 수는 data/rules/artillery.json, 마법은 data/spells/없음.json의 산탄·둥근 탄·소금 탄) — 기본 꺼짐
  * WORLD 5-1 "대포는 마법사 사냥꾼", 4-5 대마법사가 못 하는 것: 대포알 막기(마법이 아니라 장악권이 못 빼앗는다)
  * 청동포(장면의 tac.gun, 덱 '청동포', 체력 gun.hp): 포수(tac.crew, 덱 '포수')가 곁(crewR m)에 있어야 쏘고 끌고 간다.
+ *   쓰러지거나 달아난 포수 자리는 곁(crew.fill m)의 머스킷 병이 채운다(v2.32). 흙 가마니(장면의 낮은 흙벽, 포 앞에 포신 자리를 비운 줄)가 포수를 직사·실에서 가린다
  *   다시 채우기 reload s × crew / 곁의 포수(셋 다 함께 돈다), 걸음 × speed × 곁의 포수 / crew. 구르지 않고 달아나지 않는다. 포수가 모두 쓰러지거나 달아나면 버려진다(빠진 것으로 센다)
  *   산탄(틀 canister): 불을 댈 때 과녁을 따라 돌려(앞질러) 과녁 높이로 들어(앙각 elev 한도) 쇠공 n개가 반각 half rad의 원뿔로(옆·위아래) 포구(muzzle m)에서.
  *     공 하나는 머스킷 탄쯤(60). 앙각보다 높이 나는 과녁엔 닿지 않는다. 석회 방패는 공의 1 − pierce를 막는다
@@ -23,7 +24,7 @@ const ST = new WeakMap(), HOLD = new WeakMap();   // HOLD: 시전 → 늦춘 시
    // 세계 → { guns: [], crew: Map(포수 → 포), n: Map(포 → 곁의 포수 수), fog: 안개 수, last: 센 걸음 }
 const isGun = m => !!m.tac.gun, isCrew = m => !!m.tac.crew;
 function stOf(W) {
-  let S = ST.get(W); if (S) return S; S = { guns: [], crew: new Map(), n: new Map(), fog: 0 }; ST.set(W, S);
+  let S = ST.get(W); if (S) return S; S = { guns: [], crew: new Map(), n: new Map(), fog: 0, filled: 0 }; ST.set(W, S);
   for (const m of W.ms) if (isGun(m)) { S.guns.push(m); S.n.set(m, 0); }
   const left = new Map(S.guns.map(g => [g, G.crew]));   // 포수는 가까운 포에 (포마다 crew명까지)
   for (const m of W.ms) { if (!isCrew(m)) continue; let b = null, bd = 1e9; for (const g of S.guns) if (g.side === m.side && left.get(g) > 0) { const d = hyp(g.x - m.x, g.y - m.y); if (d < bd) { bd = d; b = g; } } if (b) { S.crew.set(m, b); left.set(b, left.get(b) - 1); } }
@@ -32,6 +33,13 @@ function stOf(W) {
 // 이 과녁 둘레에 소금이 이미 오는가: 같은 편 포가 소금 탄을 짓는 중이거나 날아가는 소금 탄
 function saltComing(W, m, e) { for (const g of W.ms) if (g !== m && g.side === m.side && g.hp > 0 && g.cast && g.cast.s.n === '소금 탄') return true;
   for (const l of W.lobs) if (l.src.side === m.side && l.s.n === '소금 탄' && hyp(l.x - e.x, l.y - e.y) < P.salt.r * 2) return true; return false; }
+// 포수 채우기: 포에 붙은 포수(살아 있고 달아나지 않은)가 crew보다 적으면 곁(crew.fill m)의 머스킷 병을 가까운 차례로 포수로 (tac.crew, 그 포에 붙는다)
+function fill(X, W, S, g) {
+  let k = 0; for (const [c, gg] of S.crew) if (gg === g && c.hp > 0 && !c.flee) k++;
+  let got = false; while (k < G.crew) { let b = null, bd = P.crew.fill; for (const q of W.ms) { if (q.side !== g.side || !(q.hp > 0) || q.flee || q.tac.gun || q.tac.crew || q.book.indexOf('머스킷') < 0) continue; const d = X.hyp(q.x - g.x, q.y - g.y); if (d < bd) { bd = d; b = q; } }
+    if (!b) return got; b.tac.crew = 1; S.crew.set(b, g); S.filled++; k++; got = true; }
+  return got;
+}
 const fogs = W => { let n = 0; for (const z of W.zones) if (z.k === 'saltfog') n++; return n; };
 function inFog(W, x, y, z) { if (z >= P.salt.h) return false; for (const f of W.zones) if (f.k === 'saltfog' && hyp(x - f.x, y - f.y) < f.r) return true; return false; }
 // 산탄의 원뿔(반각 + 여유) 안의 우리 편
@@ -48,6 +56,7 @@ module.exports = {
       for (const g of S.guns) { if (!(g.hp > 0)) continue; let n = 0, any = false;
         for (const [c, gg] of S.crew) if (gg === g && c.hp > 0 && !c.flee) { any = true; if (X.hyp(c.x - g.x, c.y - g.y) < G.crewR) n++; }
         S.n.set(g, n); g.flee = 0;   // 포는 달아나지 않는다
+        if (P.crew.fill > 0 && (!any || W.step % P.crew.every === 0) && fill(X, W, S, g)) any = true;   // 쓰러진 포수 자리를 곁의 머스킷 병이 채운다 (v2.32)
         if (!any) { g.alog.fled = 1; g.hp = 0; g.deathT = W.t; g.cast = null; } }   // 포수가 모두 없으면 버려진다
       if (S.fog) for (const m of W.ms) { if (!(m.hp > 0) || !inFog(W, m.x, m.y, m.z)) continue;
         if (W.rules.flight && (m.fly === 1 || m.fly === 3)) { m.fly = 2; m.fallZ = m.z; if (m.vz > 0) m.vz = 0; }   // 안개 안에선 날 수 없다

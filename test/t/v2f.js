@@ -65,6 +65,28 @@ function run() {
       if (W.step === 8) { const e = W.ms[3]; e.cast = { s: W.spells['불덩이'], tgt: W.ms[2], tx: 30, ty: 30, t: 0, T: 9, cost: 1 }; } } });
     assert.ok(r.ev.some(e => e.what === '포 사선에 아군') && r.ev.some(e => e.what === '소금 안개 안에서 짓기'), JSON.stringify(r.ev));
   });
+  ok('v2.32 합창: 이어 가는 거리(keepR)와 끼어들기(join) — 맞출 땐 R, 이어 갈 땐 keepR, 곁의 같은 편이 들어오면 다시 맞춘다', () => {
+    const CHP = require('../../src/rules/chorus').api; assert.ok(CHP.P.keepR > CHP.P.R && CHP.P.join);
+    const W = A.createWorld({ seed: 1, obstacles: [], width: 200, height: 100, rules: { chorus: true, squad: true } }), sq = { squad: 1 };
+    const a = A.addMage(W, A.mage({ tier: '상위', deck: '광역', tac: sq }), 0, 50, 50), b = A.addMage(W, A.mage({ tier: '상위', deck: '광역', tac: sq }), 0, 54, 50); A.addMage(W, A.mage({ tier: '대마법사', deck: '대마법사 성' }), 1, 190, 50);
+    for (const m of W.ms) m.thinkT = 1e9; for (let i = 0; i < 120; i++) A.stepWorld(W); const g = CHP.of(W, a); assert.ok(g && g.n === 2, '둘이 맞췄다');
+    b.x = 50 + (CHP.P.R + CHP.P.keepR) / 2; for (let i = 0; i < 20; i++) A.stepWorld(W); assert.ok(CHP.of(W, a), 'R보다 멀어도 keepR 안이면 이어 간다');
+    b.x = 54; const c = A.addMage(W, A.mage({ tier: '상위', deck: '광역', tac: sq }), 0, 52, 53); c.thinkT = 1e9; for (let i = 0; i < 20; i++) A.stepWorld(W);
+    const g2 = CHP.forming(W, a) || CHP.of(W, a); assert.ok(g2, '셋째가 들어와 다시 맞춘다');
+  });
+  ok('v2.32 장악권 경계는 합창이 맞춰진 사람의 수를 끊지 않는다', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../../src/rules/edgeCancel.js'), 'utf8'); assert.ok(/CH\.of\(W, m\)/.test(src));
+  });
+  ok('v2.32 포수 채우기: 쓰러진 포수 자리를 곁(crew.fill m)의 머스킷 병이 채운다, 포가 버려지지 않는다', () => {
+    const W = world(); const [g, crew] = gun(W, 0, 20, 50); const mk = A.addMage(W, A.mage({ tier: '병사', deck: '머스킷' }), 0, 30, 50); A.addMage(W, A.mage({ tier: '대마법사', deck: '대마법사 성' }), 1, 150, 50);
+    A.stepWorld(W); for (const c of crew) c.hp = 0; A.stepWorld(W); assert.ok(g.hp > 0 && mk.tac.crew === 1 && ART.stOf(W).crew.get(mk) === g && ART.stOf(W).filled === 1);
+  });
+  ok('v2.32 소금을 건너는 길: 과녁이 멀면 소금을 덜 밟는 쪽으로, 앞 probe m 안 (saltWise route)', () => {
+    const W = A.createWorld({ seed: 1, obstacles: [], width: 200, height: 100, salt: [{ x: 50, y: 0, w: 20, h: 70 }], rules: { saltWise: true } });
+    const m = A.addMage(W, A.mage({ tier: '대마법사', skill: '대가', deck: '대마법사 성' }), 0, 49.5, 40), e = A.addMage(W, A.mage({ tier: '평범', deck: '기본기' }), 1, 190, 40);
+    A.stepWorld(W); const st = require('../../src/rules/saltWise').brain(require('../../src/brain/util')).steer, K = { vx: 2.5, vy: 0, dodge: null, e, d: 145, prefR: 7 }; m.z = 0; st(W, m, K);
+    assert.ok(K.vx < 1 && Math.abs(K.vy) > 1.5, '소금 띠를 곧바로 건너지 않고 옆으로 돈다: ' + K.vx.toFixed(2) + ',' + K.vy.toFixed(2));
+  });
   return done();
 }
 module.exports = { run };

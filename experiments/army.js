@@ -23,14 +23,20 @@ function ring(n, cx, cy, R0, R1, mm) { const out = []; for (let i = 0; i < n; i+
 function fort(cx, cy, r = 2.2, n = 17) { const w = []; for (let k = 0; k < n; k++) { const a = k / n * 2 * Math.PI; w.push({ x: +(cx + Math.cos(a) * r).toFixed(2), y: +(cy + Math.sin(a) * r).toFixed(2), r: 0.45, hp: 256, mat: 'earth', thick: 0.5, grp: 1000 }); } return w; }
 // 포대 (v2.31, rules.artillery): 청동포 하나와 포수 넷. 포수는 과녁 쪽(fx, fy)의 반대편에 선다
 const ART = require('../data/rules/artillery.json');
+// 흙 가마니 (v2.32): 포 앞 gabion.d m에 포신 자리(가운데 ± gap/2)를 비운 낮은 흙벽 줄. 포수를 직사·실에서 가린다(곡사·지역은 넘는다)
+function gabions(x, y, fx, fy) { const G = ART.gabion, out = []; if (!G || !G.n) return out; const dx = fx - x, dy = fy - y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
+  for (let k = 0; k < G.n; k++) { const o = (G.gap / 2 + G.r + Math.floor(k / 2) * G.step) * (k % 2 ? -1 : 1); out.push({ x: +(x + ux * G.d - uy * o).toFixed(2), y: +(y + uy * G.d + ux * o).toFixed(2), r: G.r, hp: G.hp, mat: 'earth' }); }
+  return out; }
 function battery(x, y, fx, fy) { const dx = x - fx, dy = y - fy, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l, out = [{ tier: '병사', deck: '청동포', x, y, hp: ART.gun.hp, tac: { gun: 1, cancel: false, cancel2: false } }];
   for (let k = 0; k < ART.gun.crew; k++) out.push({ tier: '병사', deck: '포수', x: +(x + ux * ART.crew.post - uy * (k - 1.5) * ART.crew.side).toFixed(2), y: +(y + uy * ART.crew.post + ux * (k - 1.5) * ART.crew.side).toFixed(2), tac: { crew: 1 } }); return out; }
 // 장면에 포대를 더한다: 규칙 artillery를 켜고 덱(청동포·포수)을 장면에 싣는다
-function withGuns(sc, pts, name) { const fx = sc.sides[0].mages[0].x, fy = sc.sides[0].mages[0].y; for (const [x, y] of pts) sc.sides[1].mages.push(...battery(x, y, fx, fy));
+function withGuns(sc, pts, name) { const fx = sc.sides[0].mages[0].x, fy = sc.sides[0].mages[0].y; for (const [x, y] of pts) { sc.sides[1].mages.push(...battery(x, y, fx, fy)); const gb = gabions(x, y, fx, fy); if (gb.length) sc.walls = (sc.walls || []).concat(gb); }
   sc.rules = Object.assign({}, sc.rules, { artillery: true }); sc.decks = Object.assign({}, sc.decks, ART.decks); sc.name = name; if (sc.obstacles && sc.obstacles.length) sc.obstacles = sc.obstacles.filter(o => !pts.some(([x, y]) => Math.hypot(o.x - x, o.y - y) < o.r + 3)); return sc; }
 // 반원 위의 포 자리 (과녁 쪽을 향해 열린 반원의 가운데 둘레, ±12°씩)
 const GUNN = 2;   // 기습의 포 수 (v2.31: 둘이면 대마법사 약 55%, 셋이면 약 38%)
 function arcPts(n, cx, cy, R) { const out = []; for (let i = 0; i < n; i++) { const a = (i - (n - 1) / 2) * 0.21; out.push([+(cx + Math.cos(a) * R).toFixed(2), +(cy + Math.sin(a) * R * 0.95).toFixed(2)]); } return out; }
+const CITY8 = [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56]];   // 소금 도시의 포 자리: 맨땅 띠 여섯·광장 둘, 모두 시작 자리에서 35 m 밖
+const FAR = [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [110, 84], [60, 56], [3, 2], [8, 148], [160, 55], [110, 100]];   // 소금 도시의 먼 포 자리 (시작 (4, 75)에서 50 m 밖)
 const SALTFORT = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'sandbox', 'scenes', 'x-salt-fort.json'), 'utf8'));
 const SCENES = {
   'field-musket': s => {
@@ -58,7 +64,11 @@ const SCENES = {
   // 포병 (v2.31): 들판·기습·소금 도시·소금 성채에 포대를 더한다. 기습은 소금 탄까지(덱 그대로: 포는 셋 다 싣는다)
   'field-gun': s => withGuns(SCENES['field-musket'](s), [[640, 280], [640, 300], [640, 320]], '들판 + 포: 대마법사 대 머스킷 100 + 청동포 셋'),
   'ambush-gun': s => withGuns(SCENES.ambush(s), arcPts(GUNN, 6, 15, 14), '기습 + 포 + 소금: 대마법사 대 머스킷 40 반원 + 청동포 ' + GUNN + '(산탄·소금 탄)'),
-  'salt-city-gun': s => withGuns(SCENES['salt-city'](s), [[3, 8], [8, 142], [3, 16], [8, 134], [3, 25], [8, 125], [3, 40], [8, 110], [110, 84], [60, 56]], '소금 도시 + 포: 대마법사 대 머스킷 60 + 청동포 열 (맨땅 띠를 따라 여덟, 광장에 둘)'),
+  'salt-city-gun': s => withGuns(SCENES['salt-city'](s), CITY8.concat([[3, 40], [8, 110]]), '소금 도시 + 포: 대마법사 대 머스킷 60 + 청동포 열 (맨땅 띠를 따라 여덟, 광장에 둘)'),
+  // 포 수를 바꿔 재는 소금 도시 (v2.32): 모두 시작 자리에서 50 m 밖(첫 산탄 한 방으로 끝나는 처형 판을 빼려고)
+  'salt-city-gun8': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 8), '소금 도시 + 포 여덟 (50 m 밖)'),
+  'salt-city-gun10': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 10), '소금 도시 + 포 열 (50 m 밖)'),
+  'salt-city-gun12': s => withGuns(SCENES['salt-city'](s), FAR.slice(0, 12), '소금 도시 + 포 열둘 (50 m 밖)'),
   'salt-fort': s => Object.assign(JSON.parse(JSON.stringify(SALTFORT)), { seed: s }),
   'salt-fort-gun': s => withGuns(SCENES['salt-fort'](s), [[150, 70], [150, 80]], '소금 성채 + 포: 대마법사 대 보루 안의 머스킷 34 + 청동포 둘'),
 };
